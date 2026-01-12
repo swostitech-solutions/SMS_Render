@@ -465,24 +465,19 @@ useEffect(() => {
                     </InputGroup>
                   </Form.Group>
 
-                  <Form.Group className="mb-4 ... w-100">
+                  <Form.Group className="mb-4 d-flex flex-column align-items-start w-100">
                     <Form.Label className="fw-bold">Institute</Form.Label>
-                    <Form.Control
-                      list="institutes"
+                    <Form.Select
                       name="institute"
-                      value={
-                        formData.institute?.label || formData.institute || ""
-                      }
+                      value={formData.institute?.value || ""}
                       onChange={(e) => {
-                        const input = e.target.value;
+                        const selectedValue = e.target.value;
                         const selected = instituteOptions.find(
-                          (inst) =>
-                            inst.label === input ||
-                            inst.value.toString() === input
+                          (inst) => inst.value.toString() === selectedValue
                         );
                         setFormData({
                           ...formData,
-                          institute: selected || input,
+                          institute: selected || "",
                         });
                       }}
                       disabled={instituteOptions.length === 1}
@@ -490,13 +485,16 @@ useEffect(() => {
                         borderRadius: "2px",
                         minHeight: "38px",
                         width: "100%",
+                        textAlign: "left",
                       }}
-                    />
-                    <datalist id="institutes">
+                    >
+                      <option value="">-- Select Institute --</option>
                       {instituteOptions.map((inst) => (
-                        <option key={inst.value} value={inst.label} />
+                        <option key={inst.value} value={inst.value}>
+                          {inst.label}
+                        </option>
                       ))}
-                    </datalist>
+                    </Form.Select>
                   </Form.Group>
 
                   {/* Sign In + Forgot Password */}
