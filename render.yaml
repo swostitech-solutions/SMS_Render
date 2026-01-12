@@ -1,0 +1,48 @@
+services:
+  # Django Web Service
+  - type: web
+    name: schoolmanagement-backend
+    env: python
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: SchoolManagementBackend/CollegeManagement
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn Swostitech_Acadix.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    healthCheckPath: /admin/
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: schoolmanagement-db
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+databases:
+  - name: schoolmanagement-db
+    databaseName: schoolmanagement
+    user: schoolmanagement
+    plan: free
+    region: singapore
+    ipAllowList: []
