@@ -3,6 +3,9 @@
 
 set -o errexit  # Exit on error
 
+# Add current directory to Python path
+export PYTHONPATH="${PYTHONPATH}:${PWD}"
+
 echo "Installing dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
