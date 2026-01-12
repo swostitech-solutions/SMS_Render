@@ -226,30 +226,30 @@ MEDIA_ROOT = BASE_DIR / 'SWOSTITECH_CMS'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Configuration
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOW_CREDENTIALS = True
 else:
     CORS_ALLOWED_ORIGINS_ENV = os.getenv('CORS_ALLOWED_ORIGINS', '')
-    if CORS_ALLOWED_ORIGINS_ENV:
+    if CORS_ALLOWED_ORIGINS_ENV and CORS_ALLOWED_ORIGINS_ENV != '*':
+        # Use specific origins from environment variable
         CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(',') if origin.strip()]
         CORS_ALLOW_ALL_ORIGINS = False
     else:
-        # Fallback: allow all origins if environment variable is not set
+        # Fallback: allow all origins if environment variable is not set or is '*'
         CORS_ALLOW_ALL_ORIGINS = True
-    
-    CORS_ALLOW_CREDENTIALS = True
-    CORS_ALLOW_HEADERS = [
-        'accept',
-        'accept-encoding',
-        'authorization',
-        'content-type',
-        'dnt',
-        'origin',
-        'user-agent',
-        'x-csrftoken',
-        'x-requested-with',
-    ]
 
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
