@@ -132,7 +132,10 @@ coverage.xml
 *.cover
 .hypothesis/
 *.pytest_cache/
-migrations/
+
+# Uncomment below if you want to ignore migrations (NOT recommended for deployment)
+# migrations/
+
 # IDEs
 .vscode/
 .idea/
