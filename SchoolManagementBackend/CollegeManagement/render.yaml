@@ -1,12 +1,4 @@
 services:
-  # PostgreSQL Database
-  - type: pserv
-    name: schoolmanagement-db
-    env: docker
-    plan: free
-    region: singapore
-    ipAllowList: []
-    
   # Django Web Service
   - type: web
     name: schoolmanagement-backend
@@ -14,16 +6,18 @@ services:
     region: singapore
     plan: free
     branch: main
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn Swostitech_Acadix.wsgi:application --bind 0.0.0.0:$PORT"
-    healthCheckPath: /api/token/
+    rootDir: SchoolManagementBackend/CollegeManagement
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn Swostitech_Acadix.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    healthCheckPath: /admin/
+    autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.0
+        value: "3.13.0"
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: False
+        value: "False"
       - key: ALLOWED_HOSTS
         sync: false
       - key: DATABASE_URL
@@ -35,9 +29,9 @@ services:
       - key: EMAIL_HOST
         value: smtp.gmail.com
       - key: EMAIL_PORT
-        value: 587
+        value: "587"
       - key: EMAIL_USE_TLS
-        value: True
+        value: "True"
       - key: EMAIL_HOST_USER
         sync: false
       - key: EMAIL_HOST_PASSWORD
@@ -51,3 +45,4 @@ databases:
     user: schoolmanagement
     plan: free
     region: singapore
+    ipAllowList: []
