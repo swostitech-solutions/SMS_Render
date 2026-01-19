@@ -1569,6 +1569,26 @@ class StudentBasicDetailSerializer(serializers.ModelSerializer):
                                                  validators=[MinValueValidator(1)])
     user_name = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     profile_pic = serializers.ImageField(required=False, allow_null=True)
+    
+    # Optional fields for student registration - using IntegerField for FK fields
+    date_of_admission = serializers.DateField(required=False, allow_null=True)
+    date_of_join = serializers.DateField(required=False, allow_null=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
+    student_aadhaar_no = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    registration_no = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    
+    # Optional parent details
+    father_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    father_profession = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    father_contact_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    father_email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
+    father_aadhaar_no = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    mother_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    mother_profession = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    mother_contact_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    mother_email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
+    mother_aadhaar_no = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = StudentRegistration
@@ -1586,6 +1606,14 @@ class StudentBasicDetailSerializer(serializers.ModelSerializer):
             'mother_contact_number', 'mother_email', 'mother_aadhaar_no', 'status',
             'is_active', 'created_by'
         ]
+
+    def to_internal_value(self, data):
+        # Handle empty string dates by converting them to None
+        date_fields = ['date_of_admission', 'date_of_join', 'date_of_birth']
+        for field in date_fields:
+            if field in data and data[field] == '':
+                data[field] = None
+        return super().to_internal_value(data)
 
     def validate_first_name(self, value):
         if not value.strip():
@@ -1612,78 +1640,13 @@ class StudentBasicDetailSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("semester cannot be blank.")
         return value
 
-    def validate_gender(self, value):
-        if not value:
-            raise serializers.ValidationError("gender cannot be blank.")
-        return value
-
-    def validate_date_of_admission(self, value):
-        if not value:
-            raise serializers.ValidationError("date_of_admission cannot be blank.")
-        return value
-
-    def validate_date_of_join(self, value):
-        if not value:
-            raise serializers.ValidationError("date_of_join cannot be blank.")
-        return value
-
-    def validate_house(self, value):
-        if not value:
-            raise serializers.ValidationError("house cannot be blank.")
-        return value
-
-    def validate_religion(self, value):
-        if not value:
-            raise serializers.ValidationError("religion cannot be blank.")
-        return value
-
-    def validate_category(self, value):
-        if not value:
-            raise serializers.ValidationError("category cannot be blank.")
-        return value
-
-    def validate_nationality(self, value):
-        if not value:
-            raise serializers.ValidationError("nationality cannot be blank.")
-        return value
-
-    def validate_date_of_birth(self, value):
-        if not value:
-            raise serializers.ValidationError("date_of_birth cannot be blank.")
-        return value
-
-    def validate_father_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("father_name cannot be blank.")
-        return value
-
-    def validate_father_profession(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("father_profession cannot be blank.")
-        return value
-
-    def validate_father_contact_number(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("father_contact_number cannot be blank.")
-        return value
-
-    def validate_mother_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("mother_name cannot be blank.")
-        return value
-
-    def validate_mother_profession(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("mother_profession cannot be blank.")
-        return value
-
-    def validate_mother_contact_number(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("mother_contact_number cannot be blank.")
-        return value
+    # The following fields are now OPTIONAL for student registration:
+    # gender, date_of_admission, date_of_join, house, religion, category,
+    # nationality, date_of_birth, father_name, father_profession, 
+    # father_contact_number, mother_name, mother_profession, mother_contact_number
 
     def validate_email(self, value):
-        if StudentRegistration.objects.filter(email=value).exists():
+        if value and StudentRegistration.objects.filter(email=value).exists():
             raise serializers.ValidationError("Email already exists.")
         return value
 
@@ -1731,80 +1694,13 @@ class StudentBasicDetailUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("first_name cannot be blank.")
         return value
 
-    def validate_gender(self, value):
-        if not value:
-            raise serializers.ValidationError("gender cannot be blank.")
-        return value
-
-    def validate_date_of_admission(self, value):
-        if not value:
-            raise serializers.ValidationError("date_of_admission cannot be blank.")
-        return value
-
-    def validate_date_of_join(self, value):
-        if not value:
-            raise serializers.ValidationError("doj cannot be blank.")
-        return value
-
-    def validate_house(self, value):
-        if not value:
-            raise serializers.ValidationError("house cannot be blank.")
-        return value
-
-    def validate_religion(self, value):
-        if not value:
-            raise serializers.ValidationError("religion cannot be blank.")
-        return value
-
-    def validate_category(self, value):
-        if not value:
-            raise serializers.ValidationError("category cannot be blank.")
-        return value
-
-    def validate_nationality(self, value):
-        if not value:
-            raise serializers.ValidationError("nationality cannot be blank.")
-        return value
-
-    def validate_date_of_birth(self, value):
-        if not value:
-            raise serializers.ValidationError("date_of_birth cannot be blank.")
-        return value
-
-    def validate_father_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("father_name cannot be blank.")
-        return value
-
-    def validate_father_profession(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("father_profession cannot be blank.")
-        return value
-
-    def validate_father_contact_number(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("father_contact_number cannot be blank.")
-        return value
-
-    def validate_mother_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("mother_name cannot be blank.")
-        return value
-
-    def validate_mother_profession(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("mother_profession cannot be blank.")
-        return value
-
-    def validate_mother_contact_number(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("mother_contact_number cannot be blank.")
-        return value
+    # Strict validators for optional fields (gender, house, religion, etc.) have been removed 
+    # to allow updates with partial data or empty values.
 
 
 class StudentFeeAppliedDetail(serializers.Serializer):
-    fee_group = serializers.IntegerField(allow_null=False)
-    fee_applied_from = serializers.IntegerField(allow_null=False)
+    fee_group = serializers.IntegerField(allow_null=False, required=True)
+    fee_applied_from = serializers.IntegerField(allow_null=False, required=True)
 
 
 class StudentTransportAvailedDetail(serializers.Serializer):
@@ -1816,6 +1712,20 @@ class StudentTransportAvailedDetail(serializers.Serializer):
 
 class AddressDetailsSerializer(serializers.ModelSerializer):
     usertype = serializers.CharField(read_only=True)  # Add usertype as a read-only field
+    
+    # Make all fields optional
+    present_address = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    present_pincode = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    present_city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    present_state = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    present_country = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    present_phone_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_address = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_pincode = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_state = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_country = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_phone_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Address
@@ -1913,64 +1823,39 @@ class AddressDetailsSerializer(serializers.ModelSerializer):
 #
 
 class StudentEmergencyContactDetailsSerializer(serializers.ModelSerializer):
+    # Make all fields optional
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    relationship = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    mobile_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    remark = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
     class Meta:
         model = StudentEmergencyContact
         fields = ['id', 'name', 'relationship', 'mobile_number', 'remark', 'is_active', 'created_at', 'updated_at']
 
-    def validate_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Name Can not be blank.")
-        return value
-
-    def validate_relationship(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Relationship Can not be blank.")
-        return value
-
-    def validate_mobile_number(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Mobile Number Can not be blank.")
-        return value
-
 
 class AuthorisedPickupDetailsSerializer(serializers.ModelSerializer):
+    # Make all fields optional
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    relationship = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    mobile_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    remark = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
     class Meta:
         model = AuthorisedPickup
         fields = ['id', 'name', 'relationship', 'mobile_number', 'remark', 'is_active', 'created_at', 'updated_at']
 
-    def validate_name(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Name Can not be blank.")
-        return value
-
-    def validate_relationship(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Relationship Can not be blank.")
-        return value
-
-    def validate_mobile_number(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Mobile Number Can not be blank.")
-        return value
-
 
 class StudentDocumentDetailsSerializer(serializers.ModelSerializer):
-    # document_url = serializers.SerializerMethodField()
+    # Make all fields optional
+    document_no = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    document_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
     class Meta:
         model = StudentDocument
         fields = ['id', 'document_no', 'document_type', 'document_pic', 'document_url', 'start_from', 'end_to',
                   'is_active', 'created_at',
                   'updated_at']
-
-    def validate_document_no(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("document_no Can not be blank.")
-        return value
-
-    def validate_document_type(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("document_type Can not be blank.")
-        return value
 
 
 class StudentPreviousEducationDetailsSerializer(serializers.ModelSerializer):
@@ -1999,7 +1884,7 @@ class StudentRegistrationSerializer(serializers.Serializer):
     student_basic_detail = StudentBasicDetailSerializer(required=True)
     fee_detail = StudentFeeAppliedDetail(required=True)
     transport_detail = StudentTransportAvailedDetail(required=False, allow_null=True)
-    address_detail = AddressDetailsSerializer(required=True)
+    address_detail = AddressDetailsSerializer(required=False, allow_null=True)
     sibling_detail = serializers.ListSerializer(child=StudentSiblingDetailSerializer(), required=False)
     emergency_contact = serializers.ListSerializer(child=StudentEmergencyContactDetailsSerializer(), required=False)
     authorized_pickup = serializers.ListSerializer(child=AuthorisedPickupDetailsSerializer(), required=False)
@@ -2056,7 +1941,7 @@ class StudentRegistrationUpdateSerializer(serializers.Serializer):
     student_basic_detail = StudentBasicDetailUpdateSerializer(required=True)
     # feeDetails= StudentFeeAppliedDetails(required=True)
     # transportDetails= StudentTransport_availedDetails(required=False)
-    address_detail = AddressDetailsSerializer(required=True)
+    address_detail = AddressDetailsSerializer(required=False, allow_null=True)
     sibling_detail = serializers.ListSerializer(child=StudentSiblingDetailSerializer(), required=False)
     emergency_contact = serializers.ListSerializer(child=StudentEmergencyContactDetailsSerializer(), required=False)
     authorized_pickup = serializers.ListSerializer(child=AuthorisedPickupDetailsSerializer(), required=False)

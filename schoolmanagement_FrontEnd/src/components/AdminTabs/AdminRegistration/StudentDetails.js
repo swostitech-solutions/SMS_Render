@@ -754,7 +754,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-sm-6 col-md-3 mb-2">
                       <label htmlFor="gender" className="form-label">
-                        Gender<span style={{ color: "red" }}>*</span>
+                        Gender
                       </label>
                       <Select
                         id="gender"
@@ -765,31 +765,31 @@ const AdmAttendanceEntry = ({
                           genderLoading
                             ? "Loading genders..."
                             : genderError
-                            ? "Error loading genders"
-                            : "Select Gender"
+                              ? "Error loading genders"
+                              : "Select Gender"
                         }
                         isLoading={genderLoading}
                         isDisabled={genderLoading || !!genderError}
                         options={
                           Array.isArray(genders)
                             ? genders.map((g) => ({
-                                value: g.id,
-                                label: g.gender_name, // ✅ uses API field
-                              }))
+                              value: g.id,
+                              label: g.gender_name, // ✅ uses API field
+                            }))
                             : []
                         }
                         value={
                           formData?.gender
                             ? genders
-                                .map((g) => ({
-                                  value: g.id,
-                                  label: g.gender_name,
-                                }))
-                                .find(
-                                  (opt) =>
-                                    Number(opt.value) ===
-                                    Number(formData.gender)
-                                ) || null
+                              .map((g) => ({
+                                value: g.id,
+                                label: g.gender_name,
+                              }))
+                              .find(
+                                (opt) =>
+                                  Number(opt.value) ===
+                                  Number(formData.gender)
+                              ) || null
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -852,11 +852,11 @@ const AdmAttendanceEntry = ({
                         value={
                           BatchList?.find((b) => b.id === selectedSession)
                             ? {
-                                value: selectedSession,
-                                label: BatchList.find(
-                                  (b) => b.id === selectedSession
-                                )?.batch_description,
-                              }
+                              value: selectedSession,
+                              label: BatchList.find(
+                                (b) => b.id === selectedSession
+                              )?.batch_description,
+                            }
                             : null
                         }
                         onChange={(opt) => {
@@ -887,11 +887,11 @@ const AdmAttendanceEntry = ({
                         value={
                           CourseList?.find((c) => c.id === selectedCourse)
                             ? {
-                                value: selectedCourse,
-                                label: CourseList.find(
-                                  (c) => c.id === selectedCourse
-                                )?.course_name,
-                              }
+                              value: selectedCourse,
+                              label: CourseList.find(
+                                (c) => c.id === selectedCourse
+                              )?.course_name,
+                            }
                             : null
                         }
                         onChange={(opt) => {
@@ -922,11 +922,11 @@ const AdmAttendanceEntry = ({
                         value={
                           BranchList?.find((d) => d.id === selectedDepartment)
                             ? {
-                                value: selectedDepartment,
-                                label: BranchList.find(
-                                  (d) => d.id === selectedDepartment
-                                )?.department_description,
-                              }
+                              value: selectedDepartment,
+                              label: BranchList.find(
+                                (d) => d.id === selectedDepartment
+                              )?.department_description,
+                            }
                             : null
                         }
                         onChange={(opt) => {
@@ -959,11 +959,11 @@ const AdmAttendanceEntry = ({
                             (y) => y.id === Number(selectedAcademicYear)
                           )
                             ? {
-                                value: selectedAcademicYear,
-                                label: AcademicYearList.find(
-                                  (y) => y.id === Number(selectedAcademicYear)
-                                )?.academic_year_description,
-                              }
+                              value: selectedAcademicYear,
+                              label: AcademicYearList.find(
+                                (y) => y.id === Number(selectedAcademicYear)
+                              )?.academic_year_description,
+                            }
                             : null
                         }
                         onChange={(opt) => {
@@ -994,11 +994,11 @@ const AdmAttendanceEntry = ({
                         value={
                           SemesterList?.find((s) => s.id === selectedSemester)
                             ? {
-                                value: selectedSemester,
-                                label: SemesterList.find(
-                                  (s) => s.id === selectedSemester
-                                )?.semester_description,
-                              }
+                              value: selectedSemester,
+                              label: SemesterList.find(
+                                (s) => s.id === selectedSemester
+                              )?.semester_description,
+                            }
                             : null
                         }
                         onChange={(opt) => {
@@ -1029,11 +1029,11 @@ const AdmAttendanceEntry = ({
                         value={
                           SectionList?.find((s) => s.id === selectedSection)
                             ? {
-                                value: selectedSection,
-                                label: SectionList.find(
-                                  (s) => s.id === selectedSection
-                                )?.section_name,
-                              }
+                              value: selectedSection,
+                              label: SectionList.find(
+                                (s) => s.id === selectedSection
+                              )?.section_name,
+                            }
                             : null
                         }
                         onChange={(opt) => {
@@ -1056,7 +1056,6 @@ const AdmAttendanceEntry = ({
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date_of_admission" className="form-label">
                         Date Of Admission{" "}
-                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -1086,9 +1085,9 @@ const AdmAttendanceEntry = ({
                         value={
                           formData.admission_type
                             ? {
-                                value: formData.admission_type,
-                                label: formData.admission_type,
-                              }
+                              value: formData.admission_type,
+                              label: formData.admission_type,
+                            }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1104,7 +1103,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="doj" className="form-label">
-                        Date Of Join <span style={{ color: "red" }}>*</span>
+                        Date Of Join
                       </label>
                       <input
                         type="date"
@@ -1148,7 +1147,7 @@ const AdmAttendanceEntry = ({
                         name="barcode"
                         value={formData.barcode}
                         onChange={handleInputChange}
-                        // disabled
+                      // disabled
                       />
                       {errors.barcode && (
                         <small style={{ color: "red" }}>{errors.barcode}</small>
@@ -1167,7 +1166,7 @@ const AdmAttendanceEntry = ({
                         name="registration_no"
                         value={formData.registration_no}
                         onChange={handleInputChange}
-                        // disabled
+                      // disabled
                       />
                       {errors.registration_no && (
                         <small style={{ color: "red" }}>
@@ -1178,7 +1177,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="house" className="form-label">
-                        House<span style={{ color: "red" }}>*</span>
+                        House
                       </label>
 
                       <Select
@@ -1190,30 +1189,30 @@ const AdmAttendanceEntry = ({
                           loadingHouses
                             ? "Loading houses..."
                             : errorHouses
-                            ? "Error loading houses"
-                            : "Select House"
+                              ? "Error loading houses"
+                              : "Select House"
                         }
                         isLoading={loadingHouses}
                         options={
                           Array.isArray(houses)
                             ? houses.map((house) => ({
-                                value: house.id, // store id as value
-                                label: house.house_name, // show name in dropdown
-                              }))
+                              value: house.id, // store id as value
+                              label: house.house_name, // show name in dropdown
+                            }))
                             : []
                         }
                         value={
                           formData.house
                             ? {
-                                value: Number(formData.house),
-                                label:
-                                  formData.house_label ||
-                                  houses.find(
-                                    (h) =>
-                                      Number(h.id) === Number(formData.house)
-                                  )?.house_name ||
-                                  "Select House",
-                              }
+                              value: Number(formData.house),
+                              label:
+                                formData.house_label ||
+                                houses.find(
+                                  (h) =>
+                                    Number(h.id) === Number(formData.house)
+                                )?.house_name ||
+                                "Select House",
+                            }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1229,7 +1228,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="religion" className="form-label">
-                        Religion<span style={{ color: "red" }}>*</span>
+                        Religion
                       </label>
                       <Select
                         id="religion"
@@ -1240,30 +1239,30 @@ const AdmAttendanceEntry = ({
                           loading
                             ? "Loading religions..."
                             : error
-                            ? "Error loading religions"
-                            : "Select Religion"
+                              ? "Error loading religions"
+                              : "Select Religion"
                         }
                         isLoading={loading}
                         options={
                           Array.isArray(religions)
                             ? religions.map((religion) => ({
-                                value: religion.id, // store id
-                                label: religion.religion_name, // show readable name
-                              }))
+                              value: religion.id, // store id
+                              label: religion.religion_name, // show readable name
+                            }))
                             : []
                         }
                         value={
                           formData.religion
                             ? {
-                                value: Number(formData.religion),
-                                label:
-                                  formData.religion_label ||
-                                  religions.find(
-                                    (r) =>
-                                      Number(r.id) === Number(formData.religion)
-                                  )?.religion_name ||
-                                  "Select Religion",
-                              }
+                              value: Number(formData.religion),
+                              label:
+                                formData.religion_label ||
+                                religions.find(
+                                  (r) =>
+                                    Number(r.id) === Number(formData.religion)
+                                )?.religion_name ||
+                                "Select Religion",
+                            }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1279,7 +1278,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="category" className="form-label">
-                        Category<span style={{ color: "red" }}>*</span>
+                        Category
                       </label>
 
                       <Select
@@ -1291,28 +1290,28 @@ const AdmAttendanceEntry = ({
                           loadingCategories
                             ? "Loading categories..."
                             : errorCategories
-                            ? "Error loading categories"
-                            : "Select Category"
+                              ? "Error loading categories"
+                              : "Select Category"
                         }
                         isLoading={loadingCategories}
                         options={
                           Array.isArray(categories)
                             ? categories.map((cat) => ({
-                                value: cat.id,
-                                label: cat.category_name,
-                              }))
+                              value: cat.id,
+                              label: cat.category_name,
+                            }))
                             : []
                         }
                         value={
                           formData?.category
                             ? {
-                                value: formData.category,
-                                label:
-                                  categories.find(
-                                    (c) =>
-                                      Number(c.id) === Number(formData.category)
-                                  )?.category_name || "Select Category",
-                              }
+                              value: formData.category,
+                              label:
+                                categories.find(
+                                  (c) =>
+                                    Number(c.id) === Number(formData.category)
+                                )?.category_name || "Select Category",
+                            }
                             : null
                         }
                         onChange={(selectedOption) => {
@@ -1378,7 +1377,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="language" className="form-label">
-                        Mother Tongue<span style={{ color: "red" }}>*</span>
+                        Mother Tongue
                       </label>
                       <Select
                         id="language"
@@ -1389,27 +1388,27 @@ const AdmAttendanceEntry = ({
                           loadingLanguages
                             ? "Loading languages..."
                             : errorLanguages
-                            ? "Error loading languages"
-                            : "Select Mother Tongue"
+                              ? "Error loading languages"
+                              : "Select Mother Tongue"
                         }
                         isLoading={loadingLanguages}
                         options={
                           Array.isArray(languages)
                             ? languages.map((lang) => ({
-                                value: lang.id, // send ID to backend
-                                label: lang.language_desc, // show user-friendly name
-                              }))
+                              value: lang.id, // send ID to backend
+                              label: lang.language_desc, // show user-friendly name
+                            }))
                             : []
                         }
                         value={
                           formData.language
                             ? {
-                                value: formData.language,
-                                label:
-                                  languages.find(
-                                    (l) => l.id === formData.language
-                                  )?.language_desc || "Select Language",
-                              }
+                              value: formData.language,
+                              label:
+                                languages.find(
+                                  (l) => l.id === formData.language
+                                )?.language_desc || "Select Language",
+                            }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1425,7 +1424,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="blood_group" className="form-label">
-                        Blood Group<span style={{ color: "red" }}>*</span>
+                        Blood Group
                       </label>
                       <Select
                         id="blood_group"
@@ -1436,30 +1435,30 @@ const AdmAttendanceEntry = ({
                           loadingBloodGroups
                             ? "Loading blood groups..."
                             : errorBloodGroups
-                            ? "Error loading blood groups"
-                            : "Select Blood Group"
+                              ? "Error loading blood groups"
+                              : "Select Blood Group"
                         }
                         isLoading={loadingBloodGroups}
                         options={
                           Array.isArray(bloodGroups)
                             ? bloodGroups.map((bg) => ({
-                                value: bg.id, // ✅ backend ID
-                                label: bg.blood_name, // ✅ readable name
-                              }))
+                              value: bg.id, // ✅ backend ID
+                              label: bg.blood_name, // ✅ readable name
+                            }))
                             : []
                         }
                         value={
                           formData.blood_group_id
                             ? {
-                                value: formData.blood_group_id,
-                                label:
-                                  formData.blood_group_name ||
-                                  bloodGroups.find(
-                                    (b) =>
-                                      b.id === Number(formData.blood_group_id)
-                                  )?.blood_name ||
-                                  "",
-                              }
+                              value: formData.blood_group_id,
+                              label:
+                                formData.blood_group_name ||
+                                bloodGroups.find(
+                                  (b) =>
+                                    b.id === Number(formData.blood_group_id)
+                                )?.blood_name ||
+                                "",
+                            }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1475,7 +1474,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="nationality" className="form-label">
-                        Nationality<span style={{ color: "red" }}>*</span>
+                        Nationality
                       </label>
                       <Select
                         id="nationality"
@@ -1486,29 +1485,29 @@ const AdmAttendanceEntry = ({
                           loadingNationalities
                             ? "Loading nationalities..."
                             : errorNationalities
-                            ? "Error loading nationalities"
-                            : "Select Nationality"
+                              ? "Error loading nationalities"
+                              : "Select Nationality"
                         }
                         isLoading={loadingNationalities}
                         options={
                           Array.isArray(nationalities)
                             ? nationalities.map((nat) => ({
-                                value: String(nat.id), // ✅ ensure string
-                                label: nat.nationality_name,
-                              }))
+                              value: String(nat.id), // ✅ ensure string
+                              label: nat.nationality_name,
+                            }))
                             : []
                         }
                         value={
                           formData.nationality
                             ? {
-                                value: String(formData.nationality),
-                                label:
-                                  nationalities.find(
-                                    (n) =>
-                                      String(n.id) ===
-                                      String(formData.nationality)
-                                  )?.nationality_name || "Select Nationality",
-                              }
+                              value: String(formData.nationality),
+                              label:
+                                nationalities.find(
+                                  (n) =>
+                                    String(n.id) ===
+                                    String(formData.nationality)
+                                )?.nationality_name || "Select Nationality",
+                            }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1524,7 +1523,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="status" className="form-label">
-                        Status<span style={{ color: "red" }}>*</span>
+                        Status
                       </label>
                       <Select
                         className="detail"
@@ -1564,7 +1563,7 @@ const AdmAttendanceEntry = ({
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="email" className="form-label">
                         {" "}
-                        Email<span style={{ color: "red" }}>*</span>
+                        Email
                       </label>
                       <input
                         type="text"
@@ -1582,7 +1581,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date-of-birth" className="form-label">
-                        Date Of Birth <span style={{ color: "red" }}>*</span>
+                        Date Of Birth
                       </label>
                       <input
                         type="date"
@@ -1591,7 +1590,6 @@ const AdmAttendanceEntry = ({
                         name="dob"
                         value={formData.dob || ""}
                         onChange={handleInputChange}
-                        required
                         disabled={isDisabled}
                       />
                     </div>
@@ -1623,7 +1621,7 @@ const AdmAttendanceEntry = ({
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="student-aadhar-no" className="form-label">
                         {" "}
-                        Student Aadhar No<span style={{ color: "red" }}>*</span>
+                        Student Aadhar No
                       </label>
                       <input
                         type="text"
@@ -1686,7 +1684,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-6 mb-3">
                       <label htmlFor="profilePic" className="form-label">
-                        Profile Picture<span style={{ color: "red" }}>*</span>
+                        Profile Picture
                       </label>
 
                       {/* ✅ Flex container to align upload input and image preview in one row */}
