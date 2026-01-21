@@ -1179,6 +1179,7 @@ class StaffRegistrationDetailsRetrieveAPIView(RetrieveAPIView):
                 'date_of_birth': EmployeeMasterInstance.date_of_birth,
                 'marital_status': EmployeeMasterInstance.marital_status,
                 'gender': EmployeeMasterInstance.gender.gender_name,
+                'gender_id': EmployeeMasterInstance.gender.id,
                 'nationality': EmployeeMasterInstance.nationality.nationality_code,
                 'religion': EmployeeMasterInstance.religion.religion_code,
                 'email': EmployeeMasterInstance.email,
@@ -1194,6 +1195,7 @@ class StaffRegistrationDetailsRetrieveAPIView(RetrieveAPIView):
                 'highest_qualification': EmployeeMasterInstance.highest_qualification,
                 'emergency_contact_number': EmployeeMasterInstance.emergency_contact_number,
                 'mother_tongue': EmployeeMasterInstance.mother_tongue.mother_tongue_name,
+                'mother_tongue_id': EmployeeMasterInstance.mother_tongue.id,
                 'profile':EmployeeMasterInstance.profile_photo_path
                 # 'profile':profile
             }

@@ -71,7 +71,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
       );
       const motherTongueObj = languages.find(
         (l) =>
-          (l.language_desc || "").toLowerCase() ===
+          (l.mother_tongue_name || "").toLowerCase() ===
           (employeeDetails.mother_tongue || "").toLowerCase()
       );
 
@@ -103,8 +103,8 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
         bloodGroup: bloodGroupObj ? bloodGroupObj.id : "",
         nationality: nationalityObj ? nationalityObj.id : "",
         religion: religionObj ? religionObj.id : "",
-        gender: genderValue,
-        motherTongue: motherTongueObj ? motherTongueObj.id : "",
+        gender: employeeDetails.gender_id ? parseInt(employeeDetails.gender_id) : "",
+        motherTongue: employeeDetails.mother_tongue_id ? parseInt(employeeDetails.mother_tongue_id) : "",
 
         //  Directly assign employee_type_id
         employeeType: employeeDetails.employee_type_id || employeeDetails.employee_type || "",
@@ -115,6 +115,13 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
         emergencyContactNumber: employeeDetails.emergency_contact_number || "",
         profilePicture: employeeDetails.profile || "",
       });
+
+      // Debug logs
+      console.log("Employee Details:", employeeDetails);
+      console.log("Gender ID from API:", employeeDetails.gender_id);
+      console.log("Mother Tongue ID from API:", employeeDetails.mother_tongue_id);
+      console.log("Gender value set:", employeeDetails.gender_id ? parseInt(employeeDetails.gender_id) : "");
+      console.log("Mother Tongue value set:", employeeDetails.mother_tongue_id ? parseInt(employeeDetails.mother_tongue_id) : "");
       // Set profile image preview
       setFrontCover(employeeDetails.profile || "");
     }
@@ -216,7 +223,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
 
       // If both are valid, call the second API
       if (employeeId && employeeTypeId) {
-        const secondApiUrl = `${ApiUrl.apiurl}STAFF / RegistrationAddressDetailsRetrieve /? organization_id = ${orgId} & branch_id=${branchId} & employee_id=${employeeId} & employee_type_id=${employeeTypeId}`;
+        const secondApiUrl = `${ApiUrl.apiurl}STAFF/RegistrationAddressDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}&employee_type_id=${employeeTypeId}`;
         const secondResponse = await fetch(secondApiUrl);
 
         if (!secondResponse.ok) {
