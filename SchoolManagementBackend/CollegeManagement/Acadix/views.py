@@ -47,7 +47,7 @@ from .models import UserType, ExceptionTrack, Employee, Login, AcademicYear, Cou
     StudentDocument, StudentPreviousEducation, Organization, Department, StudentRegistration, Parent, StudentCourse, \
     UserLogin, FeeStructureMaster, FeeStructureDetail, Period, FeeFrequency, StudentFeeDetail, Address, \
     FeeElementType, House, Religion, Category, Nationality, Country, \
-    State, City, Profession, Document, Language, Blood, \
+    State, City, Profession, Document, Language, MotherTongue, Blood, \
     PaymentMethod, CourseDepartmentSubject, StudentFeeReceiptHeader, \
     StudentPayment, StudentFeeReceiptDetail, MessageType, MessageInitiated, StudentMessagesHistory, \
     StudentCircular, Bank, BankAccountDetail, \
@@ -9955,6 +9955,48 @@ class LanguageListAPIView(ListAPIView):
         ExceptionTrack.objects.create(
             request=str(request),
             process_name='languagelist',
+            message=error_message,
+        )
+
+
+class MotherTongueListAPIView(ListAPIView):
+    queryset = MotherTongue.objects.all()
+    serializer_class = MotherTongueSerializer
+
+    def list(self, request, *args, **kwargs):
+        try:
+            response = super().list(request, *args, **kwargs)
+            resdata = response.data
+
+            if resdata:
+                responsedata = []
+                for item in resdata:
+                    if item.get('is_active') == True:
+                        # Prepare the custom response data
+                        responsedata.append({
+                            'id': item.get('id'),
+                            'mother_tongue_code': item.get('mother_tongue_code'),
+                            'mother_tongue_name': item.get('mother_tongue_name')
+                        })
+                    else:
+                        continue
+                if responsedata:
+                    return Response({'message': 'Success', 'data': responsedata}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'message': 'No Record Found!'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'No Record Found!'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # Log the exception
+            error_message = str(e)
+            self.log_exception(request, error_message)
+            return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def log_exception(self, request, error_message):
+        ExceptionTrack.objects.create(
+            request=str(request),
+            process_name='mothertong uelist',
             message=error_message,
         )
 

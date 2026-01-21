@@ -11,7 +11,7 @@ from Acadix.models import UserType, Employee, Login, AcademicYear, Course, Secti
     StudentPreviousEducation, Organization, Batch, StudentRegistration, StudentCourse, FeeStructureMaster, \
     FeeStructureDetail, Period, UserLogin, Address, StudentFeeDetail, FeeElementType, House, \
     Religion, Category, Nationality, Country, State, City, \
-    Profession, StudentDocument, Language, Blood, FeeFrequency, \
+    Profession, StudentDocument, Language, MotherTongue, Blood, FeeFrequency, \
     PaymentMethod, CourseDepartmentSubject, MessageType, MessageInitiated, \
     StudentCircular, Bank, BankAccountDetail, StudentAssignment, \
     EmployeeMaster, EmployeeType, City, SiblingDetail, Lecture, EmployeeDetail, CourseSemesterSectionBind, Department, \
@@ -1388,6 +1388,12 @@ class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ['id', 'language_code', 'language_desc', 'is_active']
+
+
+class MotherTongueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MotherTongue
+        fields = ['id', 'organization', 'branch', 'mother_tongue_code', 'mother_tongue_name', 'is_active']
 
 
 class BloodSerializer(serializers.ModelSerializer):

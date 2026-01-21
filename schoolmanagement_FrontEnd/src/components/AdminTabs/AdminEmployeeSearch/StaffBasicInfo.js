@@ -21,6 +21,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
   const { religions } = useFetchReligions();
   const { data: languages } = useFetchLanguages();
   const [employeeTypeOptions, setEmployeeTypeOptions] = useState([]);
+  const [genders, setGenders] = useState([]);
 
   const [formData, setFormData] = useState({
     employeeId: "",
@@ -137,10 +138,6 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
     { value: "1", label: "Single" },
     { value: "2", label: "Married" },
   ];
-  const genderOptions = [
-    { value: "1", label: "Male" },
-    { value: "2", label: "Female" },
-  ];
 
   const handleFrontCoverChange = (e) => {
     const file = e.target.files[0];
@@ -176,6 +173,19 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
       });
   }, []);
 
+  // Fetch genders from API
+  useEffect(() => {
+    fetch(`${ApiUrl.apiurl}Gender/GetAllGenderList/`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.message === "Success") {
+          setGenders(data.data || []);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching genders:", err);
+      });
+  }, []);
 
   const handleNext = async () => {
     const requiredFields = [
@@ -206,7 +216,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
 
       // If both are valid, call the second API
       if (employeeId && employeeTypeId) {
-        const secondApiUrl = `${ApiUrl.apiurl}STAFF/RegistrationAddressDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}&employee_type_id=${employeeTypeId}`;
+        const secondApiUrl = `${ApiUrl.apiurl}STAFF / RegistrationAddressDetailsRetrieve /? organization_id = ${orgId} & branch_id=${branchId} & employee_id=${employeeId} & employee_type_id=${employeeTypeId}`;
         const secondResponse = await fetch(secondApiUrl);
 
         if (!secondResponse.ok) {
@@ -497,10 +507,16 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
                         inputId="gender"
                         classNamePrefix="marital-status-select"
                         className="detail"
-                        options={genderOptions}
-                        value={genderOptions.find(
-                          (option) => option.value === formData.gender
-                        )}
+                        options={genders.map((item) => ({
+                          value: item.id,
+                          label: item.gender_name,
+                        }))}
+                        value={genders
+                          .map((item) => ({
+                            value: item.id,
+                            label: item.gender_name,
+                          }))
+                          .find((option) => option.value === formData.gender)}
                         onChange={(selectedOption) =>
                           setFormData({
                             ...formData,
@@ -521,12 +537,12 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
                         className="detail"
                         options={languages.map((item) => ({
                           value: item.id,
-                          label: item.language_desc,
+                          label: item.mother_tongue_name,
                         }))}
                         value={languages
                           .map((item) => ({
                             value: item.id,
-                            label: item.language_desc,
+                            label: item.mother_tongue_name,
                           }))
                           .find(
                             (option) => option.value === formData.motherTongue

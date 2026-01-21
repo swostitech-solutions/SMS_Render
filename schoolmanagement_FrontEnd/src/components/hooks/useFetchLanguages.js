@@ -23,8 +23,8 @@ const useFetchLanguages = () => {
           return;
         }
 
-        const url = `${ApiUrl.apiurl}LANGUAGE/GetAllLanguageList/`;
-        console.log("Language API URL:", url);
+        const url = `${ApiUrl.apiurl}MOTHERTONGUE/GetAllMotherTongueList/`;
+        console.log("MotherTongue API URL:", url);
 
         const response = await fetch(url, {
           method: "GET",

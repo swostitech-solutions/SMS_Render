@@ -128,7 +128,10 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                 EmployeeMaster_Records = None
             # Map existing Emplyee by employee_id for fast lookup
             employee_map = {doc.id: doc for doc in EmployeeMaster_Records}
-            designation_instance = Designation.objects.first()
+            
+            # Get the first available designation (user has already set it up in DB)
+            designation_instance = Designation.objects.filter(is_active=True).first()
+            
             # create staff
             if EmployeeMaster_Records:
                 staffcreateInstance = employee_map[serializer.validated_data.get('id')]
@@ -261,10 +264,12 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
             return Response({'error': f'An unexpected error occurred: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     def log_exception(self, request, error_message):
+        # Truncate error message to prevent exceeding varchar(200) limit
+        truncated_message = error_message[:195] + "..." if len(error_message) > 195 else error_message
         ExceptionTrack.objects.create(
-            request=str(request),
+            request=str(request)[:195],
             process_name='Staff-Registration-Create',
-            message=error_message,
+            message=truncated_message,
         )
 
 

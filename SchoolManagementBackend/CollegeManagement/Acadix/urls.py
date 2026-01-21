@@ -287,6 +287,8 @@ urlpatterns = [
 
     path('api/LANGUAGE/GetAllLanguageList/', views.LanguageListAPIView.as_view(), name='findlanguagelist'),
 
+    path('api/MOTHERTONGUE/GetAllMotherTongueList/', views.MotherTongueListAPIView.as_view(), name='find mothertong uelist'),
+
     path('api/BLOODGROUP/GetAllBloodGroupList/', views.BloodGroupListAPIView.as_view(), name='findbloodlist'),
 
     path('api/Gender/GetAllGenderList/', views.GenderListAPIView.as_view(), name='genderlist'),
