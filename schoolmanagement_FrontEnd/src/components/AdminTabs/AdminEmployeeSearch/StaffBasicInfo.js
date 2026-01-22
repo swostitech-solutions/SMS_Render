@@ -136,9 +136,9 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
 
 
   const titleOptions = [
-    { value: "mr", label: "MR" },
-    { value: "ms", label: "Ms" },
-    { value: "mrs", label: "Mrs" },
+    { value: "MR", label: "MR" },
+    { value: "Ms", label: "Ms" },
+    { value: "Mrs", label: "Mrs" },
   ];
 
   const maritalStatusOptions = [
@@ -221,9 +221,18 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
       const orgId = localStorage.getItem("orgId");
       const branchId = localStorage.getItem("branchId");
 
+      // Debug logging
+      console.log("=== handleNext Debug ===");
+      console.log("formData:", formData);
+      console.log("employeeId:", employeeId);
+      console.log("employeeTypeId:", employeeTypeId);
+      console.log("orgId:", orgId);
+      console.log("branchId:", branchId);
+
       // If both are valid, call the second API
       if (employeeId && employeeTypeId) {
         const secondApiUrl = `${ApiUrl.apiurl}STAFF/RegistrationAddressDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}&employee_type_id=${employeeTypeId}`;
+        console.log("Calling address API:", secondApiUrl);
         const secondResponse = await fetch(secondApiUrl);
 
         if (!secondResponse.ok) {
@@ -241,6 +250,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
         }
       } else {
         console.warn("Skipping address API. Missing employeeId or employeeTypeId.");
+        console.warn("employeeId is:", employeeId, "employeeTypeId is:", employeeTypeId);
       }
 
       // Proceed to next tab regardless of API result

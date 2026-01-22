@@ -459,19 +459,23 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
   }, [documentDetails]);
 
   useEffect(() => {
-    // Hardcoded document list
-    const hardcodedDocuments = [
-      { value: 1, label: "Experience Certificate" },
-      { value: 2, label: "PAN Card" },
-      { value: 3, label: "Aadhaar Card" },
-      { value: 4, label: "UG Degree" },
-      { value: 5, label: "UG Experience" },
-      { value: 6, label: "PG Degree" },
-      { value: 7, label: "PG Experience" },
-      { value: 8, label: "Registration Number" },
-      { value: 9, label: "NUID" },
-    ];
-    setDocumentTypes(hardcodedDocuments);
+    fetch(`${ApiUrl.apiurl}DOCUMENT/GetAllDocumentList/`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Document Types API Response:", data); // Debug log
+        if (data.message === "Success") {
+          const formattedOptions = data.data.map((doc) => {
+            return {
+              value: doc.id,
+              label: doc.document_desc, // Correct field name with underscore
+            };
+          });
+          setDocumentTypes(formattedOptions);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching document types:", error);
+      });
   }, []);
 
   const handleNextClick = async () => {

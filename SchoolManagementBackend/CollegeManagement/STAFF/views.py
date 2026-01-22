@@ -300,7 +300,10 @@ class StaffRegistrationAddressCreateUpdateAPIView(UpdateAPIView):
 
 
             try:
-                instance = Address.objects.get(reference_id=employee_id, usertype=employeetypeInstance.employee_type_code,is_active=True)
+                # Query by reference_id only to handle employee type changes
+                instance = Address.objects.get(reference_id=employee_id, is_active=True)
+                # Update usertype in case it changed
+                instance.usertype = employeetypeInstance.employee_type_code
             except:
                 instance= None
 
@@ -1253,8 +1256,9 @@ class StaffAddressDetailsRetrieveAPIView(RetrieveAPIView):
 
 
             try:
-                addressinstance = Address.objects.get(reference_id=employee_id,usertype=employeetypeInstance.employee_type_code,
-                                                   is_active=True)
+                # Query by reference_id only, not by usertype
+                # This allows address to be retrieved even when employee_type is changed in the form
+                addressinstance = Address.objects.get(reference_id=employee_id, is_active=True)
 
             except:
                 addressinstance = None
@@ -1485,6 +1489,7 @@ class StaffFamilyDetailsRetrieveAPIView(RetrieveAPIView):
                     'employee_relation_name': relation_name,
                     'relation_dob': item.relation_dob,
                     'relation_gender': item.relation_gender.gender_name,
+                    'relation_gender_id': item.relation_gender.id,
                     'relation_marital_status':item.relation_marital_status,
                     'relation_occupation':  item.relation_occupation,
                     'relation_dependent': item.relation_dependent,

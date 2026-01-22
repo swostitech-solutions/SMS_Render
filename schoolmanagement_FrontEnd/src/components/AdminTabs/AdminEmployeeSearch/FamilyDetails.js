@@ -176,6 +176,23 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
   });
 
   const [dataList, setDataList] = useState([]);
+  const [genderList, setGenderList] = useState([]);
+
+  useEffect(() => {
+    // Fetch Gender List
+    const fetchGenders = async () => {
+      try {
+        const response = await fetch(`${ApiUrl.apiurl}Gender/GetAllGenderList/`);
+        const data = await response.json();
+        if (data.message === "Success") {
+          setGenderList(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching genders:", error);
+      }
+    };
+    fetchGenders();
+  }, []);
   useEffect(() => {
     if (relationDetails && relationDetails.length > 0) {
       const formatted = relationDetails.map((item, index) => ({
@@ -188,7 +205,7 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
         },
         relation: item.employee_relation || "", // Fixed: backend returns employee_relation not emp_relation
         dob: item.relation_dob || "",
-        gender: item.relation_gender || "Select", // Backend returns gender text like "Male"
+        gender: item.relation_gender_id || "Select", // Use ID directly if available
         married: item.relation_marital_status || "Select",
         employed: item.relation_employed || "",
         occupation: item.relation_occupation || "",
@@ -479,7 +496,9 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
                 </td>
                 <td>{data.relation}</td>
                 <td>{data.dob}</td>
-                <td>{data.gender}</td>
+                <td>
+                  {genderList.find((g) => g.id == data.gender)?.gender_name || data.gender}
+                </td>
                 <td>{data.married}</td>
                 <td>{data.employed}</td>
                 <td>{data.occupation}</td>
@@ -563,8 +582,11 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
                   onChange={(e) => handleChange("gender", e.target.value)}
                 >
                   <option value="">Select</option>
-                  <option value="1">Male</option>
-                  <option value="2">Female</option>
+                  {genderList.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.gender_name}
+                    </option>
+                  ))}
                 </select>
               </td>
               <td>

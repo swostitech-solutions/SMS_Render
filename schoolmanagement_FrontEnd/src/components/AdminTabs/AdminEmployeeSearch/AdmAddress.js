@@ -96,9 +96,9 @@ const ParentDetailsForm = ({
           permanentPincode: addrData.permanent_pincode || "",
           permanentPhone: addrData.permanent_phone_number || "",
         };
-        
+
         console.log("Setting form values:", newFormValues);
-        
+
         setFormValues((prev) => ({
           ...prev,
           ...newFormValues,
@@ -619,7 +619,7 @@ const ParentDetailsForm = ({
       console.log("=== PHONE NUMBER DEBUG ===");
       console.log("formValues.residencePhone:", formValues.residencePhone, "type:", typeof formValues.residencePhone);
       console.log("formValues.permanentPhone:", formValues.permanentPhone, "type:", typeof formValues.permanentPhone);
-      
+
       const requestData = {
         present_address: formValues.residenceAddress,
         present_country: selectedCountry?.value || null,
@@ -674,7 +674,9 @@ const ParentDetailsForm = ({
 
       // Step 3: Retrieve Document Details
       const documentUrl = `${ApiUrl.apiurl}STAFF/RegistrationDocumentDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employee_id}`;
+      console.log("Fetching Documents from:", documentUrl);
       const docResponse = await fetch(documentUrl);
+      console.log("Document Fetch Status:", docResponse.status);
 
       if (docResponse.status === 204) {
         console.warn("Document API returned 204 No Content");
