@@ -751,34 +751,47 @@ class GetDashBoardData(APIView):
             total_active_student_count = StudentRegistration.objects.filter(organization_id=organization_id,branch_id=branch_id,is_active=True).count()
             total_active_teacher_count = EmployeeMaster.objects.filter(organization_id=organization_id,branch_id=branch_id, is_active=True).count()
             total_student_present = Attendance.objects.filter(organization_id=organization_id,branch_id=branch_id,present__iexact='P',attendance_date=date.today()).count()
-            total_present_student_percentage = total_student_present / total_active_student_count * 100
-            # grievance_details = GRIEVANCE.objects.filter(organization_id=organization_id,branch_id=branch_id)
-            grievance_details = Grievance.objects.filter(organization_id=organization_id,branch_id=branch_id).order_by('-created_at')[:5]
-            document_details = DocumentFile.objects.filter(group__organization_id=organization_id,group__branch_id=branch_id).order_by('-uploaded_at')[:5]
-
+            
+            # Prevent division by zero
+            if total_active_student_count > 0:
+                total_present_student_percentage = (total_student_present / total_active_student_count) * 100
+            else:
+                total_present_student_percentage = 0
+            
+            # Fetch grievances (handle if table is empty or doesn't have data)
             grievances = []
-            for item in grievance_details:
-                data = {
-                    'Grievance_id': item.id,
-                    'GrievanceNumber': item.grievance_number,
-                    'details': item.details,
-                    'submitted_date': item.created_at,
-                    'ActionTaken': item.action_taken,
-                    'ActionTakenDateTime': item.action_taken_date_time.strftime(
-                        "%Y-%m-%d %H:%M:%S") if item.action_taken_date_time else None,
-                    'status': item.status
-                }
+            try:
+                grievance_details = Grievance.objects.filter(organization_id=organization_id,branch_id=branch_id).order_by('-created_at')[:5]
+                for item in grievance_details:
+                    data = {
+                        'Grievance_id': item.id,
+                        'GrievanceNumber': item.grievance_number,
+                        'details': item.details,
+                        'submitted_date': item.created_at,
+                        'ActionTaken': item.action_taken,
+                        'ActionTakenDateTime': item.action_taken_date_time.strftime(
+                            "%Y-%m-%d %H:%M:%S") if item.action_taken_date_time else None,
+                        'status': item.status
+                    }
+                    grievances.append(data)
+            except Exception as e:
+                # If grievance data doesn't exist or has errors, return empty list
+                grievances = []
 
-                grievances.append(data)
-
+            # Fetch documents (handle if table is empty or doesn't have data)
             documents = []
-            for item in document_details:
-                data = {
-                    "document_id": item.id,
-                    "remarks": item.remarks,
-                    "uploaded_at": item.uploaded_at
-                }
-                documents.append(data)
+            try:
+                document_details = DocumentFile.objects.filter(group__organization_id=organization_id,group__branch_id=branch_id).order_by('-uploaded_at')[:5]
+                for item in document_details:
+                    data = {
+                        "document_id": item.id,
+                        "remarks": item.remarks,
+                        "uploaded_at": item.uploaded_at
+                    }
+                    documents.append(data)
+            except Exception as e:
+                # If document data doesn't exist or has errors, return empty list
+                documents = []
 
             data = {
                     "total_active_student_count":total_active_student_count,

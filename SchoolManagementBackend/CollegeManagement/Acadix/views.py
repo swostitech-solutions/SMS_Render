@@ -13892,15 +13892,18 @@ class GetSubjectsBasedonLectureAPIView(ListAPIView):
             serializer = self.get_serializer(data=request.query_params)
             serializer.is_valid(raise_exception=True)
 
-            # if not serializer.validated_data.get('lecture_id'):
+            # Get and validate date parameter
             date = request.query_params.get('date')
-            if date:
-                try:
-                    date_obj = datetime.strptime(date, '%Y-%m-%d')
-                    day_of_week = date_obj.strftime('%A')  # Converts to full weekday name, e.g., "Monday"
-                except ValueError:
-                    return Response({"error": "Invalid date format. Use 'YYYY-MM-DD'."},
-                                    status=status.HTTP_400_BAD_REQUEST)
+            if not date:
+                return Response({"error": "Date parameter is required."},
+                                status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                date_obj = datetime.strptime(date, '%Y-%m-%d')
+                day_of_week = date_obj.strftime('%A')  # Converts to full weekday name, e.g., "Monday"
+            except ValueError:
+                return Response({"error": "Invalid date format. Use 'YYYY-MM-DD'."},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             try:
                 TimeTableInstance = TimeTable.objects.filter(
@@ -13919,7 +13922,10 @@ class GetSubjectsBasedonLectureAPIView(ListAPIView):
                     # subject_group_id=serializer.validated_data.get('subject_group_id'),
 
                     is_active=True)
-            except:
+            except Exception as e:
+                # Log the specific database query error
+                error_message = f"TimeTable query error: {str(e)}"
+                self.log_exception(request, error_message)
                 TimeTableInstance = []
 
             # else:
@@ -20182,8 +20188,8 @@ class SearchStudentCourseListAPIView(ListAPIView):
                         'fee_applied_from_id': semester_data['semester_id'],
                         'fee_applied_from_name': semester_data['semester_description'],
                         'choice_semester': item.choice_semester,
-                        'house_id': item.house.id,
-                        'house': item.house.house_name,
+                        'house_id': item.house.id if item.house else None,
+                        'house': item.house.house_name if item.house else '',
                         'hostel_availed': item.hostel_availed,
                         'hostel_choice_semester': item.hostel_choice_semester,
                         'transport_availed': item.transport_availed,

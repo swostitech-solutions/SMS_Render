@@ -543,7 +543,7 @@ class TimeTable(models.Model):
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
-    lecture_period = models.ForeignKey(LecturePeriod, on_delete=models.CASCADE)
+    lecture_period = models.ForeignKey(LecturePeriod, on_delete=models.CASCADE, db_column='lecture_id')
     # lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
     professor = models.ForeignKey(EmployeeMaster, on_delete=models.CASCADE)
     subject = models.ForeignKey(CourseDepartmentSubject, on_delete=models.CASCADE)
@@ -794,9 +794,9 @@ class FeeStructureDetail(models.Model):    # done
 
 
 class ExceptionTrack(models.Model):
-    request= models.CharField(max_length=100)
+    request= models.CharField(max_length=500)
     process_name= models.CharField(max_length=100)
-    message= models.CharField(max_length=200, blank=True, default='')
+    message= models.TextField(blank=True, default='')  # Changed to TextField for unlimited length
     data= models.CharField(max_length=500, blank=True, default='')
     created_date= models.DateTimeField(auto_now_add=True)
     updated_date= models.DateTimeField(auto_now_add=True)
