@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
+const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationData }) => {
   const [formData, setFormData] = useState({
     qualification: "",
     yearFrom: "",
@@ -18,10 +18,14 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const newForm = { ...formData, [name]: value };
+    setFormData(newForm);
+
+    if (setEducationData) {
+      // Sync combined data (Form + List)
+      const combined = [newForm, ...dataList].filter(i => i.qualification);
+      setEducationData(combined);
+    }
   };
 
 
@@ -40,10 +44,10 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
       }));
 
       // Set the first item into input fields
-      // Load ALL rows into the table
-      setDataList(formatted);
-
-      // Reset form data to empty state
+      setFormData(formatted[0]); // Load first row into form
+      setDataList(formatted.slice(1)); // Add remaining rows to table
+    } else {
+      // Reset form data to empty state if educationData is empty or null
       setFormData({
         qualification: "",
         yearFrom: "",
@@ -56,11 +60,20 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
     }
   }, [educationData]);
 
+  // Sync with Parent
+  // Sync with Parent removed (handled in handlers)
+
 
 
   const handleAdd = () => {
     // Add the form data to the end of the list
-    setDataList((prev) => [...prev, formData]);
+    const updatedList = [...dataList, formData];
+    setDataList(updatedList);
+
+    if (setEducationData) {
+      // Sync updated list (formData is about to be cleared, so ignored)
+      setEducationData(updatedList);
+    }
 
     // Reset the form
     setFormData({
@@ -78,6 +91,12 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
     // Remove the row at the given index
     const updatedData = dataList.filter((_, i) => i !== index);
     setDataList(updatedData);
+
+    if (setEducationData) {
+      // Sync combined data
+      const combined = [formData, ...updatedData].filter(i => i.qualification);
+      setEducationData(combined);
+    }
   };
 
   // const handleNext = async () => {

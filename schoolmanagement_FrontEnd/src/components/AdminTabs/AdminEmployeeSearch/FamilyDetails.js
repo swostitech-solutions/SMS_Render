@@ -158,7 +158,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const FamilyDetails = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelationDetails }) => {
+const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelationDetails }) => {
   const [formData, setFormData] = useState({
     srNo: "",
     name: { first: "", second: "", last: "", title: "Select" },
@@ -234,28 +234,7 @@ const FamilyDetails = ({ goToTab, relationDetails, setEducationDetailsInParent, 
     }
   }, [relationDetails]);
 
-  // Sync with Parent
-  useEffect(() => {
-    if (setRelationDetails) {
-      const backendFormat = dataList.map(entry => ({
-        family_details_id: entry.family_details_id,
-        employee_relation: entry.relation,
-        relation_title: entry.name.title,
-        relation_first_name: entry.name.first,
-        relation_middle_name: entry.name.second,
-        relation_last_name: entry.name.last,
-        relation_dob: entry.dob,
-        relation_gender: entry.gender === "Select" ? "" : entry.gender,
-        relation_marital_status: entry.married === "Select" ? "" : entry.married,
-        relation_employed: entry.employed,
-        relation_occupation: entry.occupation,
-        relation_dependent: entry.dependent,
-        relation_pf_nominee: entry.pfNominee,
-        relation_pf_share: entry.pfShare
-      }));
-      setRelationDetails(backendFormat);
-    }
-  }, [dataList, setRelationDetails]);
+  // Sync with Parent removed (handled in handlers)
 
 
 
@@ -276,7 +255,28 @@ const FamilyDetails = ({ goToTab, relationDetails, setEducationDetailsInParent, 
       srNo: dataList.length + 1, // Assign next serial number
     };
 
-    setDataList((prev) => [...prev, newEntry]); // Add at the bottom
+    const newList = [...dataList, newEntry];
+    setDataList(newList); // Add at the bottom
+
+    if (setRelationDetails) {
+      const backendFormat = newList.map(entry => ({
+        family_details_id: entry.family_details_id,
+        employee_relation: entry.relation,
+        relation_title: entry.name.title,
+        relation_first_name: entry.name.first,
+        relation_middle_name: entry.name.second,
+        relation_last_name: entry.name.last,
+        relation_dob: entry.dob,
+        relation_gender: entry.gender === "Select" ? "" : entry.gender,
+        relation_marital_status: entry.married === "Select" ? "" : entry.married,
+        relation_employed: entry.employed,
+        relation_occupation: entry.occupation,
+        relation_dependent: entry.dependent,
+        relation_pf_nominee: entry.pfNominee,
+        relation_pf_share: entry.pfShare
+      }));
+      setRelationDetails(backendFormat);
+    }
 
     // Reset form
     setFormData({
@@ -305,6 +305,26 @@ const FamilyDetails = ({ goToTab, relationDetails, setEducationDetailsInParent, 
     }));
 
     setDataList(reNumberedData);
+
+    if (setRelationDetails) {
+      const backendFormat = reNumberedData.map(entry => ({
+        family_details_id: entry.family_details_id,
+        employee_relation: entry.relation,
+        relation_title: entry.name.title,
+        relation_first_name: entry.name.first,
+        relation_middle_name: entry.name.second,
+        relation_last_name: entry.name.last,
+        relation_dob: entry.dob,
+        relation_gender: entry.gender === "Select" ? "" : entry.gender,
+        relation_marital_status: entry.married === "Select" ? "" : entry.married,
+        relation_employed: entry.employed,
+        relation_occupation: entry.occupation,
+        relation_dependent: entry.dependent,
+        relation_pf_nominee: entry.pfNominee,
+        relation_pf_share: entry.pfShare
+      }));
+      setRelationDetails(backendFormat);
+    }
   };
 
   // const handleNext = () => {

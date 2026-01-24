@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const App = ({ goToTab, prefilledCourses, setLanguageDataInParent }) => {
+const App = ({ goToTab, prefilledCourses, setLanguageDataInParent, setCourseDetails }) => {
   const [formData, setFormData] = useState({
     courseName: "",
     coursePlace: "",
@@ -38,7 +38,9 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent }) => {
         ...formData,
       };
 
-      setTableData([newRow, ...tableData]);
+      const updated = [newRow, ...tableData];
+      setTableData(updated);
+      if (setCourseDetails) setCourseDetails(updated); // Sync to parent handled in handlers
 
       setFormData({
         courseName: "",
@@ -64,6 +66,7 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent }) => {
     }));
 
     setTableData(reNumberedData);
+    if (setCourseDetails) setCourseDetails(reNumberedData);
   };
 
   useEffect(() => {

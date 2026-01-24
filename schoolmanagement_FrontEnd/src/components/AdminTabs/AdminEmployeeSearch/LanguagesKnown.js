@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const App = ({ goToTab, languageData, setExperienceDataInParent }) => {
+const App = ({ goToTab, languageData, setExperienceDataInParent, setLanguageData }) => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [languageId, setLanguageId] = useState(0);
 
@@ -17,35 +17,44 @@ const App = ({ goToTab, languageData, setExperienceDataInParent }) => {
   };
 
   const handleLanguageClick = (language) => {
-    setSelectedLanguages((prev) => {
-      if (prev.includes(language)) {
-        return prev.filter((lang) => lang !== language);
-      } else {
-        return [...prev, language];
-      }
-    });
+    let newLanguages;
+    if (selectedLanguages.includes(language)) {
+      newLanguages = selectedLanguages.filter((lang) => lang !== language);
+    } else {
+      newLanguages = [...selectedLanguages, language];
+    }
+    setSelectedLanguages(newLanguages);
+
+    if (setLanguageData) {
+      const codemap = { HINDI: "1", ENGLISH: "2", SANSKRIT: "3", URDU: "4" };
+      const codes = newLanguages.map(lang => codemap[lang]).join(",");
+      setLanguageData({
+        employee_language_id: languageId || 0,
+        language_code: codes
+      });
+    }
   };
 
 
   useEffect(() => {
     if (languageData && languageData.language_code) {
       // Handle CSV string or single value
-      const codes = languageData.language_code.toString().split(",");
-      const foundLanguages = [];
-
-      codes.forEach(c => {
-        const entry = Object.entries(languageCodes).find(
-          ([_, code]) => code.toString() === c.trim()
-        );
-        if (entry) foundLanguages.push(entry[0]);
-      });
-
-      if (foundLanguages.length > 0) {
+      const codes = (languageData.language_code || "").toString().split(",");
+      const foundLanguages = languages.filter((lang) =>
+        codes.some((c) => {
+          const found = Object.entries(languageCodes).find(
+            ([_, code]) => (code || "").toString() === c.trim()
+          );
+          return found && found[0] === lang;
+        })
+      ); if (foundLanguages.length > 0) {
         setSelectedLanguages(foundLanguages);
       }
       setLanguageId(languageData.employee_language_id || 0);
     }
   }, [languageData]);
+
+  // Sync with Parent removed (handled in handler)
 
   // const handleNextClick = async () => {
   //   if (!selectedLanguage) {

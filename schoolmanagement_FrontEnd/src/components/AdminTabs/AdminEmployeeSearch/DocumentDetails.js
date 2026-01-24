@@ -405,7 +405,7 @@ import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
+const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocumentDetails }) => {
   const [documentTypes, setDocumentTypes] = useState([]);
   const [tableData, setTableData] = useState([]);
 
@@ -455,6 +455,9 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
       console.log("No document details received or empty array");
     }
   }, [documentDetails]);
+
+  // Sync with Parent removed to prevent loop. Syncing handlers instead.
+
 
   useEffect(() => {
     fetch(`${ApiUrl.apiurl}DOCUMENT/GetAllDocumentList/`)
@@ -603,7 +606,10 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
   const handleAddRow = () => {
     const newRow = { ...formData, srNo: tableData.length + 1 };
 
-    setTableData([...tableData, newRow]); // Add at top
+    const updatedTable = [...tableData, newRow];
+    setTableData(updatedTable); // Add at top
+    if (setDocumentDetails) setDocumentDetails(updatedTable); // Sync to Parent
+
     // Clear input fields
     setFormData({
       srNo: "",
@@ -625,6 +631,9 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
       ...row,
       srNo: i + 1,
     }));
+
+    setTableData(reNumberedData);
+    if (setDocumentDetails) setDocumentDetails(reNumberedData); // Sync to Parent
 
     setTableData(reNumberedData);
   };
@@ -655,7 +664,7 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
                     {
                       documentTypes.find(
                         (doc) =>
-                          doc.value.toString() === row.documentType.toString()
+                          (doc.value || "").toString() === (row.documentType || "").toString()
                       )?.label
                     }
                   </td>
