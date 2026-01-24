@@ -1559,7 +1559,7 @@ class GetAllAcademicSessionYearDetailByFilterView(ListAPIView):
             if not (organization_id and batch_id and course_id and department_id):
                 return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_200_OK)
 
-            filterdata = AcademicYear.objects.filter(is_active=True)
+            filterdata = AcademicYear.objects.filter(is_active=True).order_by('display_order', 'id')
 
             if filterdata:
                 if organization_id:
@@ -26450,7 +26450,7 @@ class GetAcademicYearData(APIView):
         if not (organization_id and branch_id and batch_id and course_id and department_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
         academic_years = AcademicYear.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id,
-                                                     course=course_id, department=department_id)
+                                                     course=course_id, department=department_id).order_by('display_order', 'id')
         serializer = AcademicYear_Serializer(academic_years, many=True)
         return Response(serializer.data)
 
@@ -26492,7 +26492,7 @@ class GetAcademicYearByOrgBranch(APIView):
                 organization_id=organization_id,
                 branch_id=branch_id,
                 is_active=True
-            ).order_by('-date_from', '-created_at').distinct()
+            ).order_by('display_order', 'id').distinct()
 
             response_data = []
             for ay in academic_years:

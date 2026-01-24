@@ -310,6 +310,7 @@ class AcademicYear(models.Model):   # done
     academic_year_description = models.CharField(max_length=50, null=True, blank=True)
     date_from = models.DateField()
     date_to = models.DateField()
+    display_order = models.IntegerField(default=0)  # For sorting academic years properly
 
     is_active = models.BooleanField(default=True)
     created_by = models.PositiveIntegerField()
