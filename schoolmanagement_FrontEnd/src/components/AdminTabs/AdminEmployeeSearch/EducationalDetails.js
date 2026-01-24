@@ -36,10 +36,15 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
         institution: item.institution || "",
         div: item.marks || "",
         highestQualification: item.highest_qualification || item.qualification || "",
+        employee_qualification_id: item.employee_qualification_id, // Store ID
       }));
 
       // Set the first item into input fields
-      setFormData(formatted[0] || {
+      // Load ALL rows into the table
+      setDataList(formatted);
+
+      // Reset form data to empty state
+      setFormData({
         qualification: "",
         yearFrom: "",
         yearTo: "",
@@ -48,9 +53,6 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
         div: "",
         highestQualification: "",
       });
-
-      // Put remaining items in table
-      setDataList(formatted.slice(1));
     }
   }, [educationData]);
 
@@ -181,7 +183,7 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent }) => {
     const payload = {
       created_by: sessionStorage.getItem("userId") || "1",
       qualifications_details: dataList.map((item) => ({
-        employee_qualification_id: 0, // For new qualifications
+        employee_qualification_id: item.employee_qualification_id || 0, // Use existing ID if available
         qualification: item.qualification, // Changed from qualification_type
         highest_qualification: item.highestQualification, // Added this required field
         date_from: formatYearToDate(item.yearFrom), // Changed from year_from

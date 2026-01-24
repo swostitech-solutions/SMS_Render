@@ -222,7 +222,7 @@ const PreviousExperience = ({ goToTab, setExperienceData, experienceData }) => {
       setDataList(formatted);
       setIsInitialized(true);
     }
-  }, [isInitialized]); // ✅ Removed experienceData dependency to prevent re-triggering
+  }, [experienceData, isInitialized]);
 
 
 

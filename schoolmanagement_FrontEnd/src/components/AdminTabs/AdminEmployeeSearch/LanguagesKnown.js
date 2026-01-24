@@ -4,6 +4,7 @@ import { ApiUrl } from "../../../ApiUrl";
 
 const App = ({ goToTab, languageData, setExperienceDataInParent }) => {
   const [selectedLanguages, setSelectedLanguages] = useState([]);
+  const [languageId, setLanguageId] = useState(0);
 
   const languages = ["HINDI", "ENGLISH", "SANSKRIT", "URDU"];
 
@@ -28,13 +29,21 @@ const App = ({ goToTab, languageData, setExperienceDataInParent }) => {
 
   useEffect(() => {
     if (languageData && languageData.language_code) {
-      const codeToLanguage = Object.entries(languageCodes).find(
-        ([_, code]) => code === languageData.language_code
-      );
+      // Handle CSV string or single value
+      const codes = languageData.language_code.toString().split(",");
+      const foundLanguages = [];
 
-      if (codeToLanguage) {
-        setSelectedLanguages([codeToLanguage[0]]); // Set language name like "ENGLISH" as array
+      codes.forEach(c => {
+        const entry = Object.entries(languageCodes).find(
+          ([_, code]) => code.toString() === c.trim()
+        );
+        if (entry) foundLanguages.push(entry[0]);
+      });
+
+      if (foundLanguages.length > 0) {
+        setSelectedLanguages(foundLanguages);
       }
+      setLanguageId(languageData.employee_language_id || 0);
     }
   }, [languageData]);
 
@@ -101,7 +110,7 @@ const App = ({ goToTab, languageData, setExperienceDataInParent }) => {
       .join(",");
 
     const payload = {
-      employee_language_id: 0,
+      employee_language_id: languageId || 0,
       language_code: languageCodesString,
       created_by: parseInt(createdBy),
     };

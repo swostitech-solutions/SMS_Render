@@ -520,7 +520,10 @@ const ParentDetailsForm = ({
         formData.append("first_name", tempFormData.firstName);
         formData.append("middle_name", tempFormData.middleName || "");
         formData.append("last_name", tempFormData.lastName);
-        formData.append("date_of_birth", tempFormData.dob);
+        // Only send date_of_birth if it exists
+        if (tempFormData.dob && tempFormData.dob !== "") {
+          formData.append("date_of_birth", tempFormData.dob);
+        }
         formData.append("place_of_birth", tempFormData.placeOfBirth || "");
         formData.append("marital_status", tempFormData.maritalStatus || "unmarried");
         formData.append("gender", tempFormData.gender);

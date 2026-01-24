@@ -317,13 +317,13 @@ class StaffRegistrationAddressCreateUpdateAPIView(UpdateAPIView):
                 instance.present_city = serializer.validated_data.get('present_city')
                 instance.present_state = serializer.validated_data.get('present_state')
                 instance.present_country = serializer.validated_data.get('present_country')
-                instance.present_phone_number = serializer.validated_data.get('present_phone')
+                instance.present_phone_number = serializer.validated_data.get('present_phone_number')
                 instance.permanent_address = serializer.validated_data.get('permanent_address')
                 instance.permanent_pincode = serializer.validated_data.get('permanent_pincode')
                 instance.permanent_city = serializer.validated_data.get('permanent_city')
                 instance.permanent_state = serializer.validated_data.get('permanent_state')
                 instance.permanent_country = serializer.validated_data.get('permanent_country')
-                instance.permanent_phone_number = serializer.validated_data.get('permanent_phone')
+                instance.permanent_phone_number = serializer.validated_data.get('permanent_phone_number')
                 # instance.created_by = serializer.validated_data.get('created_by')
                 instance.updated_by = serializer.validated_data.get('updated_by')
                 instance.save()
@@ -382,6 +382,7 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
     def update(self, request, *args, **kwargs):
         data = request.data
         try:
+            debug_logs = []
             organization_id = request.query_params.get('organization_id')
             branch_id = request.query_params.get('branch_id')
             employee_id = request.query_params.get('employee_id')
@@ -419,7 +420,7 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
             # Read profile photo
             document_details = data['document_details']
             # Map existing docs by document_type_id for fast lookup
-            doc_map = {doc.document_type_id: doc for doc in SCH_EMPLOYEE_DOCUMENTS_Records}
+            doc_map = {doc.document_type_id: doc for doc in SCH_EMPLOYEE_DOCUMENTS_Records} if SCH_EMPLOYEE_DOCUMENTS_Records else {}
 
             if SCH_EMPLOYEE_DOCUMENTS_Records:
                 for item,document_record,doc_file in zip(json.loads(document_details),SCH_EMPLOYEE_DOCUMENTS_Records,document_files) :
@@ -484,27 +485,48 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
             else:
                 # create document details
                 try:
-                    for item, doc_file in zip(json.loads(document_details), document_files):
+                    print("DEBUG: Creating Documents")
+                    print("DEBUG: document_details raw:", document_details)
+                    print("DEBUG: request.FILES keys:", request.FILES.keys())
+                    print("DEBUG: document_files list:", document_files)
+                    
+                    parsed_details = json.loads(document_details)
+                    print("DEBUG: Parsed details length:", len(parsed_details))
+                    print("DEBUG: Files length:", len(document_files))
+
+                    print("DEBUG: Parsed details length:", len(parsed_details))
+                    print("DEBUG: Files length:", len(document_files))
+
+                    for item, doc_file in zip(parsed_details, document_files):
+                        debug_logs.append(f"Processing item: {item}")
                         document_type_id = item.get('document_type_id')
-                        EmployeeDocumentInstance = EmployeeDocument.objects.create(
-                            organization=Organization.objects.get(id=organization_id),
-                            branch=Branch.objects.get(id=branch_id),
-                            # batch=Batch.objects.get(id=item.get('batch')),
-                            employee_id= EmployeeInstance,
-                            document_type= Document.objects.get(id=document_type_id),
-                            document_number = item.get('document_number'),
-                            # document_path = full_file_path,
-                            document_file = doc_file,
-                            document_path = "",
-                            valid_from= item.get('valid_from'),
-                            valid_to = item.get('valid_to'),
-                            created_by= data['created_by']
-                        )
-                        EmployeeDocumentInstance.document_path = request.build_absolute_uri(EmployeeDocumentInstance.document_file.url)
-                        EmployeeDocumentInstance.save()
+                        try:
+                            EmployeeDocumentInstance = EmployeeDocument.objects.create(
+                                organization=Organization.objects.get(id=organization_id),
+                                branch=Branch.objects.get(id=branch_id),
+                                employee_id= EmployeeInstance.id, # Ensure we pass ID or Object correctly
+                                document_type= Document.objects.get(id=document_type_id),
+                                document_number = item.get('document_number'),
+                                document_file = doc_file,
+                                document_path = "",
+                                valid_from= item.get('valid_from'),
+                                valid_to = item.get('valid_to'),
+                                created_by= data['created_by']
+                            )
+                            # Update path after save - Refresh to ensure file name includes upload_to prefix
+                            EmployeeDocumentInstance.refresh_from_db()
+                            EmployeeDocumentInstance.document_path = request.build_absolute_uri(EmployeeDocumentInstance.document_file.url)
+                            EmployeeDocumentInstance.save()
+                            debug_logs.append(f"Saved successfully: {EmployeeDocumentInstance.document_path}")
+                        except Exception as inner_e:
+                             print(f"Error saving doc: {inner_e}")
+                             debug_logs.append(f"Error: {str(inner_e)}")
+
                 except Exception as e:
                     print(e)
-            return Response({'message':'success','employee_id':EmployeeInstance.id},status=status.HTTP_200_OK)
+                    debug_logs.append(f"Outer Error: {str(e)}")
+            
+            return Response({'message':'success','employee_id':EmployeeInstance.id, 'debug_logs': debug_logs},status=status.HTTP_200_OK)
         except ValidationError as e:
             # Rollback the transaction on validation error
             return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
@@ -575,7 +597,7 @@ class StaffRegistrationFamilyCreateUpdateAPIView(UpdateAPIView):
             family_details = serializer.validated_data.get('family_details', [])
 
             # Map existing docs by document_type_id for fast lookup
-            family_map = {doc.family_details_id: doc for doc in EmployeeFamilyDetailRecords}
+            family_map = {doc.family_detail_id: doc for doc in EmployeeFamilyDetailRecords}
 
 
             for item in family_details:
@@ -1708,12 +1730,17 @@ class StaffLanguageDetailsRetrieveAPIView(RetrieveAPIView):
 
             if organization_id and branch_id and employee_id:
                 try:
-                    language_instance = EmployeeLanguage.objects.get(employee=employee_id,
-                                                                    organization=organization_id,
-                                                                    branch=branch_id,
-                                                                    is_active=True)
-                except EmployeeLanguage.DoesNotExist:
-                    return Response({"message": "No Record found"}, status=status.HTTP_204_NO_CONTENT)
+                    language_instance = EmployeeLanguage.objects.filter(
+                        employee=employee_id,
+                        organization=organization_id,
+                        branch=branch_id,
+                        is_active=True
+                    ).first()
+                    
+                    if not language_instance:
+                        return Response({"message": "No Record found"}, status=status.HTTP_204_NO_CONTENT)
+                except Exception as e:
+                     raise e
             else:
                 return Response({"message": "organization_id, branch_id and employee_id is required !!!"},
                                 status=status.HTTP_404_NOT_FOUND)

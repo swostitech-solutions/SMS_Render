@@ -56,23 +56,32 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
     if (employeeDetails) {
       const bloodGroupObj = bloodGroups.find(
         (bg) =>
-          (bg.blood_name || "").toLowerCase() ===
-          (employeeDetails.blood_group || "").toLowerCase()
+          bg.id === parseInt(employeeDetails.blood_group) ||
+          (bg.blood_name || "").toLowerCase().trim() === (employeeDetails.blood_group || "").toString().toLowerCase().trim() ||
+          (bg.blood_code || "").toLowerCase().trim() === (employeeDetails.blood_group || "").toString().toLowerCase().trim() ||
+          (bg.blood_group_name || "").toLowerCase().trim() === (employeeDetails.blood_group || "").toString().toLowerCase().trim()
       );
       const nationalityObj = nationalities.find(
         (n) =>
-          (n.nationality_name || "").toLowerCase() ===
-          (employeeDetails.nationality || "").toLowerCase()
+          n.id === parseInt(employeeDetails.nationality) ||
+          (n.nationality_name || "").toLowerCase().trim() === (employeeDetails.nationality || "").toString().toLowerCase().trim() ||
+          (n.nationality_code || "").toLowerCase().trim() === (employeeDetails.nationality || "").toString().toLowerCase().trim()
       );
+      console.log("Matching Religion:", employeeDetails.religion);
+      console.log("Available Religions:", religions);
+
       const religionObj = religions.find(
         (r) =>
-          (r.religion_name || "").toLowerCase() ===
-          (employeeDetails.religion || "").toLowerCase()
+          r.id === parseInt(employeeDetails.religion) ||
+          (r.religion_name || "").toLowerCase().trim() === (employeeDetails.religion || "").toString().toLowerCase().trim() ||
+          (r.religion_code || "").toLowerCase().trim() === (employeeDetails.religion || "").toString().toLowerCase().trim()
       );
+      console.log("Found Religion Obj:", religionObj);
       const motherTongueObj = languages.find(
         (l) =>
-          (l.mother_tongue_name || "").toLowerCase() ===
-          (employeeDetails.mother_tongue || "").toLowerCase()
+          l.id === parseInt(employeeDetails.mother_tongue) ||
+          (l.mother_tongue_name || "").toLowerCase().trim() === (employeeDetails.mother_tongue || "").toString().toLowerCase().trim() ||
+          (l.mother_tongue_code || "").toLowerCase().trim() === (employeeDetails.mother_tongue || "").toString().toLowerCase().trim()
       );
 
       // Map gender text to ID
@@ -196,6 +205,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
 
   const handleNext = async () => {
     const requiredFields = [
+      "dob",
       "bloodGroup",
       "nationality",
       "religion",
@@ -205,7 +215,7 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
     const missingFields = requiredFields.filter((field) => !formData[field]);
 
     if (missingFields.length > 0) {
-      alert(`Please select: ${missingFields.join(", ")}`);
+      alert(`Please fill in: ${missingFields.join(", ")}`);
       return;
     }
 

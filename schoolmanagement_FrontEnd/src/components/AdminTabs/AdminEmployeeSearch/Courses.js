@@ -80,10 +80,21 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent }) => {
         dateTo: item.date_to || "",
         validUpTo: item.valid_upto || "",
         grade: item.course_results || "",
+        employee_course_id: item.employee_course_id, // Store ID
       }));
 
-      setFormData(formatted[0]); // Fill the first course into input fields
-      setTableData(formatted.slice(1)); // Put the rest in table
+      setTableData(formatted); // Load ALL rows into the table
+
+      // Reset form data
+      setFormData({
+        srNo: "",
+        courseName: "",
+        coursePlace: "",
+        dateFrom: "",
+        dateTo: "",
+        validUpTo: "",
+        grade: "",
+      });
     }
   }, [prefilledCourses]);
 
@@ -155,7 +166,7 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent }) => {
     const payload = {
       created_by: parseInt(createdBy),
       course_details: tableData.map((row) => ({
-        course_id: 0,
+        course_id: row.employee_course_id || 0, // Use existing ID if available
         course_name: row.courseName,
         course_place: row.coursePlace,
         date_from: row.dateFrom,

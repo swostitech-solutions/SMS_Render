@@ -436,23 +436,21 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
 
       console.log("Mapped document data:", mappedData);
 
-      // Load only the FIRST row into input form
-      setFormData(
-        mappedData[0] || {
-          srNo: "",
-          documentType: "",
-          documentNumber: "",
-          documentFile: "",
-          validFrom: "",
-          validTo: "",
-          enabled: false,
-        }
-      );
+      // Load ALL rows into the table
+      setTableData(mappedData);
 
-      // Show remaining rows in the table (excluding the first)
-      setTableData(mappedData.slice(1));
-      console.log("Document form data set to:", mappedData[0]);
-      console.log("Document table data set to:", mappedData.slice(1));
+      // Reset form data to empty state
+      setFormData({
+        srNo: "",
+        documentType: "",
+        documentNumber: "",
+        documentFile: "",
+        validFrom: "",
+        validTo: "",
+        enabled: false,
+      });
+
+      console.log("Document table data set to:", mappedData);
     } else {
       console.log("No document details received or empty array");
     }
@@ -488,43 +486,26 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
         return;
       }
 
-      const convertFileToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
-        });
-      };
+      const formData = new FormData();
+      formData.append("created_by", userId);
 
-      const formattedDocuments = await Promise.all(
-        tableData.map(async (doc) => {
-          let base64File = "";
-          let filename = "";
+      // Prepare metadata array
+      const docDetailsMetadata = tableData.map(doc => ({
+        document_type_id: doc.documentType,
+        document_number: doc.documentNumber,
+        valid_from: doc.validFrom,
+        valid_to: doc.validTo,
+        enabled: doc.enabled
+      }));
 
-          if (typeof doc.documentFile === "string") {
-            base64File = doc.documentFile;
-          } else if (doc.documentFile) {
-            base64File = await convertFileToBase64(doc.documentFile);
-            filename = doc.documentFile.name;
-          }
+      formData.append("document_details", JSON.stringify(docDetailsMetadata));
 
-          return {
-            document_type_id: doc.documentType,
-            document_number: doc.documentNumber,
-            document_file: base64File,
-            filename: filename,
-            valid_from: doc.validFrom,
-            valid_to: doc.validTo,
-            enabled: doc.enabled,
-          };
-        })
-      );
-
-      const payload = {
-        created_by: userId,
-        document_details: formattedDocuments,
-      };
+      // Append files
+      tableData.forEach((doc, index) => {
+        if (doc.documentFile) {
+          formData.append(`document_file_${index}`, doc.documentFile);
+        }
+      });
 
       // Step 1: Upload documents
       const orgId = localStorage.getItem("orgId");
@@ -533,10 +514,8 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent }) => {
       const uploadUrl = `${ApiUrl.apiurl}STAFF/RegistrationDocumentUploadCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        // headers: { "Content-Type": "application/json" }, // DO NOT SET CONTENT-TYPE for FormData
+        body: formData,
       });
 
       const uploadText = await uploadResponse.text();

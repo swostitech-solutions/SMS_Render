@@ -154,13 +154,11 @@
 
 
 
-
-
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
+const FamilyDetails = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelationDetails }) => {
   const [formData, setFormData] = useState({
     srNo: "",
     name: { first: "", second: "", last: "", title: "Select" },
@@ -212,10 +210,15 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
         dependent: item.relation_dependent === 1 ? 1 : 0,
         pfNominee: item.relation_pf_nominee === "T" ? "T" : "F", // Keep T/F format
         pfShare: item.relation_pf_share || "",
+        family_details_id: item.family_detail_id, // Store ID for updates
       }));
 
       // Load first row into form
-      setFormData(formatted[0] || {
+      // Load ALL rows into the table
+      setDataList(formatted);
+
+      // Reset form data to empty state
+      setFormData({
         srNo: "",
         name: { first: "", second: "", last: "", title: "Select" },
         relation: "",
@@ -228,11 +231,31 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
         pfNominee: "",
         pfShare: "",
       });
-
-      // Push the remaining into table
-      setDataList(formatted.slice(1));
     }
   }, [relationDetails]);
+
+  // Sync with Parent
+  useEffect(() => {
+    if (setRelationDetails) {
+      const backendFormat = dataList.map(entry => ({
+        family_details_id: entry.family_details_id,
+        employee_relation: entry.relation,
+        relation_title: entry.name.title,
+        relation_first_name: entry.name.first,
+        relation_middle_name: entry.name.second,
+        relation_last_name: entry.name.last,
+        relation_dob: entry.dob,
+        relation_gender: entry.gender === "Select" ? "" : entry.gender,
+        relation_marital_status: entry.married === "Select" ? "" : entry.married,
+        relation_employed: entry.employed,
+        relation_occupation: entry.occupation,
+        relation_dependent: entry.dependent,
+        relation_pf_nominee: entry.pfNominee,
+        relation_pf_share: entry.pfShare
+      }));
+      setRelationDetails(backendFormat);
+    }
+  }, [dataList, setRelationDetails]);
 
 
 
@@ -366,6 +389,7 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent }) => {
 
       // Format family details - using exact field names from Postman collection
       const formattedFamilyDetails = dataList.map((entry) => ({
+        family_details_id: entry.family_details_id, // include ID for updates
         employee_relation: entry.relation, // Changed from emp_relation
         relation_title: entry.name.title,
         relation_first_name: entry.name.first,

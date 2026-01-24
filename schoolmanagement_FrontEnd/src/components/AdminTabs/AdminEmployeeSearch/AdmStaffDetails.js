@@ -224,12 +224,12 @@ export default function BasicTabs() {
               body: JSON.stringify({
                 created_by: parseInt(userId),
                 experience_details: experienceData.map((item) => ({
-                  experience_id: 0,
-                  previous_company_worked: item.organization,
-                  date_from: item.monthYearFrom,
-                  date_to: item.monthYearTo,
-                  reason_for_leaving: item.reasonForLeaving,
-                  experience_letter_provided: item.experienceLetterProvided,
+                  experience_id: item.experience_id || 0,
+                  previous_company_worked: item.previous_company_worked || item.organization,
+                  date_from: item.date_from || item.monthYearFrom,
+                  date_to: item.date_to || item.monthYearTo,
+                  reason_for_leaving: item.reason_for_leaving || item.reasonForLeaving,
+                  experience_letter_provided: item.experience_letter_provided || item.experienceLetterProvided,
                 })),
               }),
             }
@@ -270,16 +270,23 @@ export default function BasicTabs() {
       // Save Family
       if (relationDetails && relationDetails.length > 0) {
         try {
-          const relationResponse = await fetch(
-            `${ApiUrl.apiurl}STAFF/RegistrationRelationCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
+          const familyResponse = await fetch(
+            `${ApiUrl.apiurl}STAFF/RegistrationFamilyRelationCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ created_by: userId, relation_details: relationDetails }),
+              body: JSON.stringify({
+                created_by: userId,
+                family_details: relationDetails.map(item => ({
+                  family_details_id: item.family_detail_id || item.family_details_id || 0,
+                  employee_relation: item.employee_relation || item.relation_employed,
+                  ...item
+                }))
+              }),
             }
           );
-          const relationResult = await relationResponse.json();
-          if (relationResponse.ok && relationResult.message?.toLowerCase() === "success") {
+          const familyResult = await familyResponse.json();
+          if (familyResponse.ok && familyResult.message?.toLowerCase() === "success") {
             savedSections.push("Family");
           } else {
             failedSections.push("Family");
@@ -293,11 +300,23 @@ export default function BasicTabs() {
       if (educationData && educationData.length > 0) {
         try {
           const eduResponse = await fetch(
-            `${ApiUrl.apiurl}STAFF/RegistrationEducationCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
+            `${ApiUrl.apiurl}STAFF/RegistrationQualificationCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ created_by: userId, education_details: educationData }),
+              body: JSON.stringify({
+                created_by: userId,
+                education_details: educationData.map(item => ({
+                  employee_qualification_id: item.employee_qualification_id || 0,
+                  qualification: item.qualification,
+                  highest_qualification: item.highest_qualification || item.highestQualification,
+                  date_from: item.date_from || item.yearFrom,
+                  date_to: item.date_to || item.yearTo,
+                  university: item.university,
+                  institution: item.institution,
+                  marks: item.marks || item.div
+                }))
+              }),
             }
           );
           const eduResult = await eduResponse.json();
@@ -319,7 +338,18 @@ export default function BasicTabs() {
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ created_by: userId, course_details: courseDetails }),
+              body: JSON.stringify({
+                created_by: userId,
+                course_details: courseDetails.map(row => ({
+                  course_id: row.course_id || row.employee_course_id || 0,
+                  course_name: row.course_name || row.courseName,
+                  course_place: row.course_place || row.coursePlace,
+                  date_from: row.date_from || row.dateFrom,
+                  date_to: row.date_to || row.dateTo,
+                  valid_upto: row.valid_upto || row.validUpTo,
+                  course_results: row.course_results || row.grade
+                }))
+              }),
             }
           );
           const courseResult = await courseResponse.json();
@@ -337,11 +367,15 @@ export default function BasicTabs() {
       if (languageData) {
         try {
           const langResponse = await fetch(
-            `${ApiUrl.apiurl}STAFF/RegistrationLanguageCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
+            `${ApiUrl.apiurl}STAFF/RegistrationLANGUAGECreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ created_by: userId, language_data: languageData }),
+              body: JSON.stringify({
+                created_by: userId,
+                employee_language_id: languageData.employee_language_id || 0,
+                language_code: languageData.language_code
+              }),
             }
           );
           const langResult = await langResponse.json();
@@ -359,7 +393,7 @@ export default function BasicTabs() {
       console.log("❌ Failed:", failedSections);
 
       if (failedSections.length === 0) {
-        alert(`✅ All staff data saved successfully!\n\nSaved: ${savedSections.join(", ") || "None"}`);
+        alert(" Staff data saved successfully!");
         localStorage.removeItem("employeeId");
         localStorage.removeItem("employeeTypeId");
         window.location.href = "/admin/employee-search";
@@ -433,19 +467,19 @@ export default function BasicTabs() {
         <AdmAddress goToTab={goToTab} addressDetails={addressDetails} setDocumentDetailsInParent={setDocumentDetails} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        <DocumentDetails goToTab={goToTab} documentDetails={documentDetails} setRelationDetailsInParent={setRelationDetails} />
+        <DocumentDetails goToTab={goToTab} documentDetails={documentDetails} setRelationDetailsInParent={setRelationDetails} setDocumentDetails={setDocumentDetails} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={3}>
-        <FamilyDetails goToTab={goToTab} relationDetails={relationDetails} setEducationDetailsInParent={setEducationData} />
+        <FamilyDetails goToTab={goToTab} relationDetails={relationDetails} setEducationDetailsInParent={setEducationData} setRelationDetails={setRelationDetails} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={4}>
-        <EducationalDetails goToTab={goToTab} educationData={educationData} setCourseDetailsInParent={setCourseDetails} />
+        <EducationalDetails goToTab={goToTab} educationData={educationData} setCourseDetailsInParent={setCourseDetails} setEducationData={setEducationData} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={5}>
-        <Courses goToTab={goToTab} prefilledCourses={courseDetails} setLanguageDataInParent={setLanguageData} />
+        <Courses goToTab={goToTab} prefilledCourses={courseDetails} setLanguageDataInParent={setLanguageData} setCourseDetails={setCourseDetails} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={6}>
-        <LanguagesKnown goToTab={goToTab} languageData={languageData} setExperienceDataInParent={setExperienceData} />
+        <LanguagesKnown goToTab={goToTab} languageData={languageData} setExperienceDataInParent={setExperienceData} setLanguageData={setLanguageData} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={7}>
         <PreviousExperience
