@@ -44,8 +44,17 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
       }));
 
       // Set the first item into input fields
-      setFormData(formatted[0]); // Load first row into form
-      setDataList(formatted.slice(1)); // Add remaining rows to table
+      setFormData({
+        qualification: "",
+        yearFrom: "",
+        yearTo: "",
+        university: "",
+        institution: "",
+        div: "",
+        highestQualification: "",
+      });
+      // Load ALL rows into the table
+      setDataList(formatted);
     } else {
       // Reset form data to empty state if educationData is empty or null
       setFormData({
@@ -57,6 +66,7 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
         div: "",
         highestQualification: "",
       });
+      setDataList([]);
     }
   }, [educationData]);
 

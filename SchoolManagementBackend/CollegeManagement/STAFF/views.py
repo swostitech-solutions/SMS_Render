@@ -419,11 +419,34 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
 
             # Read profile photo
             document_details = data['document_details']
+            
+            # Handle if it's a list (e.g. from QueryDict with multiple values, or pre-parsed list)
+            if isinstance(document_details, list):
+                # If it's a list of strings, maybe take the first?
+                # If it's a list of dicts, it's already parsed!
+                if len(document_details) > 0 and isinstance(document_details[0], (dict, list)):
+                    parsed_details = document_details
+                elif len(document_details) > 0 and isinstance(document_details[0], str):
+                     # Try parsing the first string
+                     try:
+                        parsed_details = json.loads(document_details[0])
+                     except:
+                        # Maybe the string IS the JSON (if list wrapper was accidental)
+                        parsed_details = json.loads(document_details) 
+                else:
+                    parsed_details = document_details # Empty or unknown
+            elif isinstance(document_details, dict):
+                parsed_details = [document_details] # Wrap in list if single dict
+            elif isinstance(document_details, (str, bytes, bytearray)):
+                parsed_details = json.loads(document_details)
+            else:
+                parsed_details = []
+
             # Map existing docs by document_type_id for fast lookup
             doc_map = {doc.document_type_id: doc for doc in SCH_EMPLOYEE_DOCUMENTS_Records} if SCH_EMPLOYEE_DOCUMENTS_Records else {}
 
             if SCH_EMPLOYEE_DOCUMENTS_Records:
-                for item,document_record,doc_file in zip(json.loads(document_details),SCH_EMPLOYEE_DOCUMENTS_Records,document_files) :
+                for item,document_record,doc_file in zip(parsed_details,SCH_EMPLOYEE_DOCUMENTS_Records,document_files) :
 
                     # Initialize the file path
                     full_file_path = ""
@@ -490,7 +513,7 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
                     print("DEBUG: request.FILES keys:", request.FILES.keys())
                     print("DEBUG: document_files list:", document_files)
                     
-                    parsed_details = json.loads(document_details)
+                    # parsed_details already parsed above
                     print("DEBUG: Parsed details length:", len(parsed_details))
                     print("DEBUG: Files length:", len(document_files))
 
@@ -598,6 +621,21 @@ class StaffRegistrationFamilyCreateUpdateAPIView(UpdateAPIView):
 
             # Map existing docs by document_type_id for fast lookup
             family_map = {doc.family_detail_id: doc for doc in EmployeeFamilyDetailRecords}
+            
+            # Identify IDs to keep and delete the rest (Handle Clean up/De-duplication)
+            keep_ids = [item.get('family_details_id') for item in family_details if item.get('family_details_id')]
+            
+            if organization_id and branch_id and employee_id:
+                try:
+                    # Delete records not in the payload
+                    EmployeeFamilyDetail.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        employee=employee_id,
+                        is_active=True
+                    ).exclude(family_detail_id__in=keep_ids).delete()
+                except Exception as e:
+                    print(f"Error deleting missing family records: {e}")
 
 
             for item in family_details:
@@ -606,10 +644,10 @@ class StaffRegistrationFamilyCreateUpdateAPIView(UpdateAPIView):
 
 
                 if family_details_id in family_map:
-                    relation_employed = item.relation_employed if item.relation_employed else 'N'
+                    relation_employed = item.get('relation_employed') if item.get('relation_employed') else 'N'
 
                     family_instance = family_map[family_details_id]
-                    family_instance.emp_relation= item.get('emp_relation')
+                    family_instance.employee_relation= item.get('employee_relation')
                     family_instance.relation_title = item.get('relation_title')
                     family_instance.relation_first_name= item.get('relation_first_name')
                     family_instance.relation_middle_name = item.get('relation_middle_name')

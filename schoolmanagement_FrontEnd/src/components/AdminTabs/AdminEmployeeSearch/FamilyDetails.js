@@ -193,25 +193,37 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelatio
   }, []);
   useEffect(() => {
     if (relationDetails && relationDetails.length > 0) {
-      const formatted = relationDetails.map((item, index) => ({
-        srNo: index + 1,
-        name: {
-          title: item.relation_title || "Select",
-          first: item.relation_first_name || "",
-          second: item.relation_middle_name || "", // Fixed: backend returns relation_middle_name
-          last: item.relation_last_name || "",
-        },
-        relation: item.employee_relation || "", // Fixed: backend returns employee_relation not emp_relation
-        dob: item.relation_dob || "",
-        gender: item.relation_gender_id || "Select", // Use ID directly if available
-        married: item.relation_marital_status || "Select",
-        employed: item.relation_employed || "",
-        occupation: item.relation_occupation || "",
-        dependent: item.relation_dependent === 1 ? 1 : 0,
-        pfNominee: item.relation_pf_nominee === "T" ? "T" : "F", // Keep T/F format
-        pfShare: item.relation_pf_share || "",
-        family_details_id: item.family_detail_id, // Store ID for updates
-      }));
+      const formatted = relationDetails.map((item, index) => {
+        const getGenderId = (val) => {
+          if (!val) return "Select";
+          if (typeof val === 'object') return val.id || "Select";
+          // Check if it's already an ID (numeric or string number)
+          if (genderList.some(g => g.id == val)) return val;
+          // Check name match
+          const match = genderList.find(g => g.gender_name?.toLowerCase() === String(val).toLowerCase());
+          return match ? match.id : "Select";
+        };
+
+        return {
+          srNo: index + 1,
+          name: {
+            title: item.relation_title || "Select",
+            first: item.relation_first_name || "",
+            second: item.relation_middle_name || "", // Fixed: backend returns relation_middle_name
+            last: item.relation_last_name || "",
+          },
+          relation: item.employee_relation || "", // Fixed: backend returns employee_relation not emp_relation
+          dob: item.relation_dob || "",
+          gender: getGenderId(item.relation_gender || item.relation_gender_id),
+          married: (item.relation_marital_status?.id || item.relation_marital_status) || "Select",
+          employed: (item.relation_employed?.id || item.relation_employed) || "",
+          occupation: item.relation_occupation || "",
+          dependent: item.relation_dependent === 1 ? 1 : 0,
+          pfNominee: item.relation_pf_nominee === "T" ? "T" : "F", // Keep T/F format
+          pfShare: item.relation_pf_share || "",
+          family_details_id: item.family_details_id || item.family_detail_id || item.id, // Store ID for updates
+        }
+      });
 
       // Load first row into form
       // Load ALL rows into the table
@@ -232,7 +244,7 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelatio
         pfShare: "",
       });
     }
-  }, [relationDetails]);
+  }, [relationDetails, genderList]);
 
   // Sync with Parent removed (handled in handlers)
 

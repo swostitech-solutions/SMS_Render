@@ -248,12 +248,34 @@ export default function BasicTabs() {
       // Save Documents  
       if (documentDetails && documentDetails.length > 0) {
         try {
+          const formData = new FormData();
+          formData.append("created_by", userId);
+          // Map document details for metadata 
+          const metadata = documentDetails.map((d, index) => {
+            // If there is a new file (File object), we handle it via index
+            // But simpler: just append all file objects to 'document_file' key?
+            // Backend expects 'document_file' in FILES.
+            // We need to sync metadata index with FILES order?
+            // Backend zip(parsed_details, document_files).
+            // So we must append files in same order.
+            if (d.documentFile instanceof File) {
+              formData.append("document_files", d.documentFile); // Backend iterates all files
+            }
+            return {
+              ...d,
+              document_file: "", // Clear file object from metadata
+            };
+          });
+
+          formData.append("document_details", JSON.stringify(metadata));
+
+          // Note: Do NOT set Content-Type header for FormData
+
           const docResponse = await fetch(
             `${ApiUrl.apiurl}STAFF/RegistrationDocumentUploadCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`,
             {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ created_by: userId, document_details: documentDetails }),
+              body: formData,
             }
           );
           const docResult = await docResponse.json();
@@ -278,9 +300,10 @@ export default function BasicTabs() {
               body: JSON.stringify({
                 created_by: userId,
                 family_details: relationDetails.map(item => ({
-                  family_details_id: item.family_detail_id || item.family_details_id || 0,
-                  employee_relation: item.employee_relation || item.relation_employed,
-                  ...item
+                  family_details_id: item.family_detail_id || item.family_details_id || item.id,
+                  employee_relation: item.employee_relation || item.relation_employed, // logic from before
+                  ...item,
+                  relation_gender: item.relation_gender_id || item.relation_gender, // Override with ID
                 }))
               }),
             }
@@ -306,8 +329,8 @@ export default function BasicTabs() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 created_by: userId,
-                education_details: educationData.map(item => ({
-                  employee_qualification_id: item.employee_qualification_id || 0,
+                qualifications_details: educationData.map((item) => ({
+                  employee_qualification_id: item.employee_qualification_id || item.employee_qualification_id || item.id, // Handle variant keys if needed
                   qualification: item.qualification,
                   highest_qualification: item.highest_qualification || item.highestQualification,
                   date_from: item.date_from || item.yearFrom,
