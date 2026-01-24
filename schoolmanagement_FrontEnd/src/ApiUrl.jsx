@@ -1,11 +1,11 @@
 // API URL Configuration
-// Uses environment variable in production, falls back to development URL
+// Reads from .env file - REACT_APP_API_URL
+// Fallback to Render production if not set (safer for production deployments)
 export const ApiUrl = {
-  apiurl: process.env.REACT_APP_API_URL || "http://127.0.0.1:8000/api/",
+  apiurl: process.env.REACT_APP_API_URL || "https://schoolmanagement-backend-tqnd.onrender.com/api/",
 };
 
-// Development URLs (for reference)
-// Local: http://127.0.0.1:8000/api/
-// Remote Dev: http://31.97.63.174:9000/api/
-// Production: Set via REACT_APP_API_URL environment variable
-
+// Available URLs:
+// Local Backend: http://127.0.0.1:8000/api/
+// Render Backend: https://schoolmanagement-backend-tqnd.onrender.com/api/
+// Set via REACT_APP_API_URL in .env file

@@ -13942,7 +13942,8 @@ class GetSubjectsBasedonLectureAPIView(ListAPIView):
 
                 for item in TimeTableInstance:
 
-                    if item.subject.is_active == True and item.subject.id not in unique_id:
+                    # Check if subject exists and is active
+                    if item.subject and item.subject.is_active == True and item.subject.id not in unique_id:
 
                         data = {
                             'id': item.subject.id,
