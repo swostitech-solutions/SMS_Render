@@ -36,6 +36,7 @@ export default function BasicTabs() {
   const [educationData, setEducationData] = useState([]);
   const [courseDetails, setCourseDetails] = useState([]);
   const [languageData, setLanguageData] = useState(null);
+  const [basicInfoData, setBasicInfoData] = useState(null); // Lifted state for Basic Info
   const [isEditMode, setIsEditMode] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -213,6 +214,78 @@ export default function BasicTabs() {
     let failedSections = [];
 
     try {
+      // Save Basic Info (New Logic)
+      if (basicInfoData) {
+        try {
+          // Construct Payload matching backend expectation (similar to RegistrationCreate but flatten/mapped)
+          const basicPayload = new FormData();
+          // Append all necessary fields. 
+          // Since basicInfoData comes from StaffBasicInfo, it should align with what we need.
+          // However, `StaffBasicInfo` formData structure (camelCase) might need mapping to snake_case for API
+
+          // If basicInfoData is FormData object already? No, it's state object.
+          // Let's assume we map it here or in StaffBasicInfo. 
+          // Better to Map here.
+
+          basicPayload.append("organization", basicInfoData.orgId || orgId);
+          basicPayload.append("branch", basicInfoData.branchId || branchId);
+          basicPayload.append("employee_code", basicInfoData.employeeCode);
+          basicPayload.append("title", basicInfoData.title);
+          basicPayload.append("first_name", basicInfoData.firstName);
+          basicPayload.append("middle_name", basicInfoData.middleName || "");
+          basicPayload.append("last_name", basicInfoData.lastName);
+          if (basicInfoData.dob) basicPayload.append("date_of_birth", basicInfoData.dob);
+          basicPayload.append("place_of_birth", basicInfoData.placeOfBirth || "");
+          basicPayload.append("marital_status", basicInfoData.maritalStatus || "1"); // ID
+          basicPayload.append("gender", basicInfoData.gender); // ID
+          basicPayload.append("nationality", basicInfoData.nationality); // ID
+          basicPayload.append("religion", basicInfoData.religion); // ID
+          if (!employeeId) {
+            // Only send email for new records to avoid "email already exists" error during update
+            basicPayload.append("email", basicInfoData.email || "");
+          }
+          basicPayload.append("phone_number", basicInfoData.phoneNumber);
+          basicPayload.append("office_email", basicInfoData.officeEmail || "");
+          basicPayload.append("employee_type", basicInfoData.employeeType); // ID
+          basicPayload.append("emergency_contact_number", basicInfoData.emergencyContactNumber || "");
+          basicPayload.append("mother_tongue", basicInfoData.motherTongue || "");
+          basicPayload.append("blood_group", basicInfoData.bloodGroup || "");
+          basicPayload.append("updated_by", userId);
+
+          // Handle Profile Picture
+          if (basicInfoData.profilePicture && basicInfoData.profilePicture instanceof File) {
+            basicPayload.append("profile_pic", basicInfoData.profilePicture);
+          }
+
+          // Append required fields "batch" and "created_by"
+          basicPayload.append("batch", 1); // Default batch as per existing logic
+          basicPayload.append("created_by", userId);
+
+          // Append ID to trigger update logic in backend (Upsert)
+          basicPayload.append("id", employeeId);
+
+          // Determine Endpoint
+          // Using RegistrationCreate with POST (Backend handles update if ID is present)
+          const basicUrl = `${ApiUrl.apiurl}STAFF/RegistrationCreate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
+
+          const basicResponse = await fetch(basicUrl, {
+            method: "POST",
+            body: basicPayload,
+          });
+
+          const basicResult = await basicResponse.json();
+          if (basicResponse.ok && basicResult.message?.toLowerCase() === "success") {
+            savedSections.push("Basic Info");
+          } else {
+            console.error("Basic Info Save Failed:", basicResult);
+            failedSections.push("Basic Info");
+          }
+        } catch (error) {
+          console.error("Basic Info Error:", error);
+          failedSections.push("Basic Info");
+        }
+      }
+
       // Save Experience
       if (experienceData && experienceData.length > 0) {
         try {
@@ -484,7 +557,7 @@ export default function BasicTabs() {
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
-        <StaffBasicInfo goToTab={goToTab} setAddressDetails={setAddressDetails} />
+        <StaffBasicInfo goToTab={goToTab} setAddressDetails={setAddressDetails} setBasicInfoDataInParent={setBasicInfoData} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
         <AdmAddress goToTab={goToTab} addressDetails={addressDetails} setDocumentDetailsInParent={setDocumentDetails} />

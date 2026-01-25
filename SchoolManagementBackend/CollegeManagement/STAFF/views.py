@@ -122,7 +122,7 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
             # Check all active  employee
             try:
                 EmployeeMaster_Records = EmployeeMaster.objects.filter(
-                    is_active=True,id=serializer.validated_data.get('id'),organization=serializer.validated_data.get('organization'),branch=serializer.validated_data.get('branch')
+                    is_active=True,id=request.data.get('id')
                 )
             except:
                 EmployeeMaster_Records = None
@@ -134,7 +134,7 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
             
             # create staff
             if EmployeeMaster_Records:
-                staffcreateInstance = employee_map[serializer.validated_data.get('id')]
+                staffcreateInstance = employee_map[int(request.data.get('id'))]
                 staffcreateInstance.organization= serializer.validated_data.get('organization')
                 staffcreateInstance.branch = serializer.validated_data.get('branch')
                 staffcreateInstance.employee_code = serializer.validated_data.get('employee_code')
@@ -152,15 +152,22 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                 staffcreateInstance.gender = serializer.validated_data.get('gender')
                 staffcreateInstance.mother_tongue = serializer.validated_data.get('mother_tongue')
                 staffcreateInstance.employee_type = serializer.validated_data.get('employee_type')
-                staffcreateInstance.email = serializer.validated_data.get('email')
+                if serializer.validated_data.get('email'):
+                    staffcreateInstance.email = serializer.validated_data.get('email')
                 staffcreateInstance.office_email = serializer.validated_data.get('office_email')
                 staffcreateInstance.phone_number = serializer.validated_data.get('phone_number')
                 staffcreateInstance.emergency_contact_number = serializer.validated_data.get('emergency_contact_number')
-                staffcreateInstance.profile_pic = serializer.validated_data.get('profile_pic')
+                if serializer.validated_data.get('profile_pic'):
+                    staffcreateInstance.profile_pic = serializer.validated_data.get('profile_pic')
                 staffcreateInstance.updated_by = serializer.validated_data.get('created_by')
-                staffcreateInstance.profile_photo_path =request.build_absolute_uri(staffcreateInstance.profile_pic.url)
+                if staffcreateInstance.profile_pic:
+                    staffcreateInstance.profile_photo_path =request.build_absolute_uri(staffcreateInstance.profile_pic.url)
 
                 staffcreateInstance.save()
+                response_data = {'message': 'Successfully updated.'}
+
+            elif request.data.get('id'):
+                return Response({'message': f'Update failed: Employee with ID {request.data.get("id")} not found.'}, status=status.HTTP_404_NOT_FOUND)
 
             else:
                 # Check if email already exists in UserLogin to prevent 500 error
@@ -200,7 +207,8 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                     profile_photo_path =""
                 )
 
-                staffcreateInstance.profile_photo_path = request.build_absolute_uri(staffcreateInstance.profile_pic.url)
+                if staffcreateInstance.profile_pic:
+                    staffcreateInstance.profile_photo_path = request.build_absolute_uri(staffcreateInstance.profile_pic.url)
                 staffcreateInstance.save()
 
                 user_type_instance = UserType.objects.get(id=3,is_active=True)
@@ -266,6 +274,8 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             # Rollback the transaction on any other exception
+            import traceback
+            traceback.print_exc()
             self.log_exception(request, str(e))
             return Response({'error': f'An unexpected error occurred: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)

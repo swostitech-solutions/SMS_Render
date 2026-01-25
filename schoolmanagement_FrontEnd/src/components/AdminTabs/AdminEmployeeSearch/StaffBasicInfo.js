@@ -9,7 +9,7 @@ import useFetchLanguages from "../../hooks/useFetchLanguages";
 import { ApiUrl } from "../../../ApiUrl";
 import { useLocation } from "react-router-dom";
 
-const StaffInfo = ({ goToTab, setAddressDetails }) => {
+const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent }) => {
   // const [frontCover, setFrontCover] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,7 +47,15 @@ const StaffInfo = ({ goToTab, setAddressDetails }) => {
     phoneNumber: "",
     emergencyContactNumber: "",
     createdBy: "",
+    profilePicture: null,
   });
+
+  // Sync data to parent whenever formData changes
+  useEffect(() => {
+    if (setBasicInfoDataInParent) {
+      setBasicInfoDataInParent(formData);
+    }
+  }, [formData, setBasicInfoDataInParent]);
 
   const [frontCover, setFrontCover] = useState(null); // for the profile picture
 
