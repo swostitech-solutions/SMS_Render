@@ -646,8 +646,8 @@ class Attendance(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
     subject = models.ForeignKey(CourseDepartmentSubject, on_delete=models.CASCADE)
-    lecture_period = models.ForeignKey(LecturePeriod, on_delete=models.CASCADE)
-    # lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
+    lecture_period = models.ForeignKey(LecturePeriod, on_delete=models.CASCADE, null=True)
+    lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE, null=True)
 
     professor = models.ForeignKey(EmployeeMaster, on_delete=models.CASCADE)
     attendance_date = models.DateField()

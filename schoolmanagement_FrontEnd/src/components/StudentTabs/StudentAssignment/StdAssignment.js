@@ -161,8 +161,8 @@ function Assignment() {
                         <tr>
                           <td colSpan="7" className="text-center">
                             {assignmentsError
-                              ? "Unable to load assignments. Please try again later."
-                              : "No assignments found for your current semester."}
+                              ? "No Record Found"
+                              : "No assignments found."}
                           </td>
                         </tr>
                       )}

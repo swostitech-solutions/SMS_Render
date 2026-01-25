@@ -12187,7 +12187,7 @@ class StudentFilterListAPIView(CreateAPIView):
                 except StudentRegistration.DoesNotExist:
 
                     return Response({"message": f"{student_id} not matched any student !!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                                    status=status.HTTP_200_OK)
 
             elif barcode:
                 try:
@@ -12195,16 +12195,17 @@ class StudentFilterListAPIView(CreateAPIView):
                 except StudentRegistration.DoesNotExist:
 
                     return Response({"message": f"{barcode} not matched any student !!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                                    status=status.HTTP_200_OK)
 
             elif college_admission_no:
-                try:
-                    StudentInstance = StudentRegistration.objects.get(college_admission_no=college_admission_no,
-                                                                      is_active=True)
-                except StudentRegistration.DoesNotExist:
+                StudentInstance = StudentRegistration.objects.filter(
+                    Q(college_admission_no=college_admission_no) | Q(admission_no=college_admission_no),
+                    is_active=True
+                ).first()
 
-                    return Response({"message": f"{college_admission_no} not matched any student !!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                if not StudentInstance:
+                     return Response({"message": f"{college_admission_no} not matched any student !!"},
+                                    status=status.HTTP_200_OK)
 
             # Get Student Details
 
@@ -15170,22 +15171,23 @@ class StudentSearchBasedOnIdBarcodeCollegeAdmissionNo(ListAPIView):
                 # except StudentRegistration.DoesNotExist:
                 except StudentCourse.DoesNotExist:
                     return Response({"message": f"{studentCourseId} not matched any student !!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                                    status=status.HTTP_200_OK)
 
             elif barcode:
                 try:
                     StudentCourseInstance = StudentCourse.objects.get(student__barcode=barcode, is_active=True)
                 except StudentCourse.DoesNotExist:
                     return Response({"message": f"{barcode} not matched any student !!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                                    status=status.HTTP_200_OK)
 
             elif college_admission_no:
-                try:
-                    StudentCourseInstance = StudentCourse.objects.get(
-                        student__college_admission_no=college_admission_no, is_active=True)
-                except StudentCourse.DoesNotExist:
+                StudentCourseInstance = StudentCourse.objects.filter(
+                    Q(student__college_admission_no=college_admission_no) | Q(student__admission_no=college_admission_no),
+                    is_active=True
+                ).first()
+                if not StudentCourseInstance:
                     return Response({"message": f"{college_admission_no} not matched any student !!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                                    status=status.HTTP_200_OK)
 
             if StudentCourseInstance:
 
@@ -15292,7 +15294,7 @@ class StudentSearchBasedOnIdBarcodeCollegeAdmissionNo(ListAPIView):
                         'course_name': courseInstance.course_name,
                         'section_name': sectionInstance.section_name,
                         'enrollment_no': StudentCourseInstance.enrollment_no,
-                        'house': StudentCourseInstance.house.house_name,
+                        'house': StudentCourseInstance.house.house_name if StudentCourseInstance.house else '',
                         'feegroupId': FeeStructureMasterInstance.id if FeeStructureMasterInstance else None,
                         # 'feegroup': FeeStructureMasterInstance.fee_structure_code if FeeStructureMasterInstance else None,
                         'feegroup': FeeStructureMasterInstance.fee_structure_description if FeeStructureMasterInstance else '',
@@ -24992,7 +24994,7 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
 
             # try:
             #     AttendanceRecord = Attendance.objects.filter(organization=organization_id,branch=branch_id,batch=batch_id,course=course_id,department=department_id,academic_year=academic_year_id,semester=semester_id,section=section_id,
-            #                                                 lecture=lecture_id,subject=subject_id,
+            #                                                 lecture_period=lecture_period_id,subject=subject_id,
             #                                                 professor=professor_id,attendance_date=date,is_active=True)
             # except:
             #     AttendanceRecord=[]
