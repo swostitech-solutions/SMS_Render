@@ -21757,18 +21757,22 @@ class StudentCourseRetriveAPIView(RetrieveAPIView):
             except ObjectDoesNotExist:
                 return Response({'message': f"No Academic year Record Found"}, status=status.HTTP_404_NOT_FOUND)
 
-            try:
-                feestructuremasterInstance = FeeStructureMaster.objects.get(id=studentcourseInstance.fee_group.id,
-                                                                            is_active=True)
-            except ObjectDoesNotExist:
-                feestructuremasterInstance = None  # Assign None if not found
+            feestructuremasterInstance = None
+            if studentcourseInstance.fee_group:
+                try:
+                    feestructuremasterInstance = FeeStructureMaster.objects.get(id=studentcourseInstance.fee_group.id,
+                                                                                is_active=True)
+                except ObjectDoesNotExist:
+                    feestructuremasterInstance = None  # Assign None if not found
 
             # Get Record feeappfrom Instance
             feeperiodInstance = None
-            try:
-                feeSemesterInstance = Semester.objects.get(id=studentcourseInstance.fee_applied_from.id, is_active=True)
-            except ObjectDoesNotExist:
-                feeperiodInstance = None  # Assign None if not found
+            feeSemesterInstance = None
+            if studentcourseInstance.fee_applied_from:
+                try:
+                    feeSemesterInstance = Semester.objects.get(id=studentcourseInstance.fee_applied_from.id, is_active=True)
+                except ObjectDoesNotExist:
+                    feeSemesterInstance = None
 
             # # Get Record fee group
             # try:
@@ -21880,6 +21884,7 @@ class StudentCourseRetriveAPIView(RetrieveAPIView):
                 'semester_id')
             # Data representation
             data = {
+                'id': studentcourseInstance.id,
                 'organization_id': studentcourseInstance.organization.id,
                 'organization': studentcourseInstance.organization.organization_code,
                 'branch_id': studentcourseInstance.branch.id,
@@ -21905,8 +21910,8 @@ class StudentCourseRetriveAPIView(RetrieveAPIView):
                 'father_name': studentregistrationInstance.father_name,
                 'mother_name': studentregistrationInstance.mother_name,
                 'enrollment_no': studentcourseInstance.enrollment_no,
-                'house_id': studentcourseInstance.house.id,
-                'house': studentcourseInstance.house.house_name,
+                'house_id': studentcourseInstance.house.id if studentcourseInstance.house else None,
+                'house': studentcourseInstance.house.house_name if studentcourseInstance.house else None,
                 'FeeStructureMasterId': feestructuremasterInstance.id if feestructuremasterInstance else None,
                 'FeeStructureMaster': feestructuremasterInstance.fee_structure_description if feestructuremasterInstance else None,
                 'fee_applied_fromId': feeSemesterInstance.id if feeSemesterInstance else None,

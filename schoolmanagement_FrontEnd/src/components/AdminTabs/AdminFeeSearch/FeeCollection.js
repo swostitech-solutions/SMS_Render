@@ -404,8 +404,8 @@
 //     fetchAccountDetails();
 //   }, [selectedBankId]);
 
-  
-  
+
+
 
 //   const fetchStudentData = async ({ id, barcode, admissionNo } = {}) => {
 //     // Validate that at least one identifier is provided
@@ -2407,7 +2407,7 @@ const FeeCollection = () => {
     queryParams.append("barcode", barcode || "");
     queryParams.append("college_admission_no", admissionNo || "");
 
-    const url = `http://31.97.63.174:9000/api/Filter/GetFilterStudentFilterdataBasedOnCondition/?${queryParams.toString()}`;
+    const url = `${ApiUrl.apiurl}Filter/GetFilterStudentFilterdataBasedOnCondition/?${queryParams.toString()}`;
 
     try {
       const response = await fetch(url, {
@@ -2479,19 +2479,7 @@ const FeeCollection = () => {
   };
 
   // Trigger the API call if any identifier is available in selectedStudent
-  useEffect(() => {
-    if (
-      selectedStudent.id ||
-      selectedStudent.barcode ||
-      selectedStudent.admissionNo
-    ) {
-      fetchStudentData({
-        id: selectedStudent.id,
-        barcode: selectedStudent.barcode,
-        admissionNo: selectedStudent.admissionNo,
-      });
-    }
-  }, [selectedStudent]);
+
   // const handleSave = async () => {
   //   const apiUrl = `${ApiUrl.apiurl}FeeReceipt/FeeReceiptCreate/`;
 
@@ -3158,6 +3146,7 @@ const FeeCollection = () => {
         setStudentName(student.student_name || "");
 
         setSelectedStudent({
+          id: student.id,
           name: student.student_name || "",
           barcode: student.barcode || "",
           admissionNo: student.college_admission_no || "",
@@ -3232,7 +3221,7 @@ const FeeCollection = () => {
 
   useEffect(() => {
     if (
-      selectedStudent.studentId ||
+      selectedStudent.id ||
       selectedStudent.barcode ||
       selectedStudent.admissionNo
     ) {
@@ -3241,7 +3230,7 @@ const FeeCollection = () => {
       setSelectedFeeDetails([]);
 
       fetchStudentData({
-        studentId: selectedStudent.studentId,
+        id: selectedStudent.id,
         barcode: selectedStudent.barcode,
         admissionNo: selectedStudent.admissionNo,
       });
@@ -3626,15 +3615,15 @@ const FeeCollection = () => {
                                               <td>{item.balance}</td>
                                               <td>
                                                 {parseFloat(item.balance) >
-                                                0 ? (
+                                                  0 ? (
                                                   <input
                                                     type="checkbox"
                                                     checked={selectedFeeDetails.some(
                                                       (detail) =>
                                                         detail.period ===
-                                                          row.period &&
+                                                        row.period &&
                                                         detail.element_name ===
-                                                          item.element_name
+                                                        item.element_name
                                                     )}
                                                     onChange={() =>
                                                       handleNestedCheckboxChange(
@@ -3714,10 +3703,7 @@ const FeeCollection = () => {
                       <tbody>
                         {uniquePeriods
                           .filter((row) => {
-                            const total = Number(row.totalAmount);
-                            const paid = Number(row.paidAmount);
-
-                            return paid >= total / 2; // FULL or HALF paid
+                            return Number(row.totalAmount) > 0; // Show all periods with fees
                           })
                           .map((row, index) => (
                             <React.Fragment key={index}>
@@ -3883,46 +3869,46 @@ const FeeCollection = () => {
                     {/* RTGS/NEFT Fields */}
                     {(selectedPaymentMethodLabel.includes("rtgs") ||
                       selectedPaymentMethodLabel.includes("neft")) && (
-                      <>
-                        <div className="col-md-3">
-                          <label className="form-label">UTR No</label>
-                          <input
-                            type="text"
-                            className="form-control detail"
-                            value={rtgsUtrNo}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '');
-                              if (value.length <= 22) setRtgsUtrNo(value);
-                            }}
-                            maxLength="22"
-                            placeholder="Enter UTR No (22 digits)"
-                          />
-                        </div>
+                        <>
+                          <div className="col-md-3">
+                            <label className="form-label">UTR No</label>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={rtgsUtrNo}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                if (value.length <= 22) setRtgsUtrNo(value);
+                              }}
+                              maxLength="22"
+                              placeholder="Enter UTR No (22 digits)"
+                            />
+                          </div>
 
-                        <div className="col-md-3">
-                          <label className="form-label">Sender Bank</label>
-                          <input
-                            type="text"
-                            className="form-control detail"
-                            value={rtgsSenderBank}
-                            onChange={(e) => setRtgsSenderBank(e.target.value)}
-                            placeholder="Sender Bank"
-                          />
-                        </div>
+                          <div className="col-md-3">
+                            <label className="form-label">Sender Bank</label>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={rtgsSenderBank}
+                              onChange={(e) => setRtgsSenderBank(e.target.value)}
+                              placeholder="Sender Bank"
+                            />
+                          </div>
 
 
-                        <div className="col-md-3">
-                          <label className="form-label">Account No</label>
-                          <input
-                            type="text"
-                            className="form-control detail"
-                            value={rtgsAccountNo}
-                            onChange={(e) => setRtgsAccountNo(e.target.value)}
-                            placeholder="Account No"
-                          />
-                        </div>
-                      </>
-                    )}
+                          <div className="col-md-3">
+                            <label className="form-label">Account No</label>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={rtgsAccountNo}
+                              onChange={(e) => setRtgsAccountNo(e.target.value)}
+                              placeholder="Account No"
+                            />
+                          </div>
+                        </>
+                      )}
 
                     {/* Bank Name */}
                     <div className="col-md-3">
@@ -3937,8 +3923,8 @@ const FeeCollection = () => {
                         value={
                           selectedBankId
                             ? bankOptions.find(
-                                (option) => option.value === selectedBankId
-                              )
+                              (option) => option.value === selectedBankId
+                            )
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -3966,8 +3952,8 @@ const FeeCollection = () => {
                         value={
                           selectedAccountId
                             ? accountNumberOptions.find(
-                                (option) => option.value === selectedAccountId
-                              )
+                              (option) => option.value === selectedAccountId
+                            )
                             : null
                         }
                         onChange={(selectedOption) =>

@@ -2752,7 +2752,7 @@ const AdmADHOCFee = () => {
           return;
         }
 
-        const url = `http://31.97.63.174:9000/api/Semester/GetSemesterByDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`;
+        const url = `${ApiUrl.apiurl}Semester/GetSemesterByDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`;
 
         const response = await fetch(url, {
           method: "GET",
@@ -2886,19 +2886,18 @@ const AdmADHOCFee = () => {
     }
 
     try {
-      const url = `${
-        ApiUrl.apiurl
-      }Filter/GetStudentBasedCourseSection/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${selectedSessionIds.join(
-        ","
-      )}&course_ids=${selectedCourseIds.join(
-        ","
-      )}&department_ids=${selectedDepartmentIds.join(
-        ","
-      )}&academic_year_id=${selectedAcademicYearIds.join(
-        ","
-      )}&semester_ids=${selectedSemesterIds.join(
-        ","
-      )}&section_ids=${selectedSectionIds.join(",")}`;
+      const url = `${ApiUrl.apiurl
+        }Filter/GetStudentBasedCourseSection/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${selectedSessionIds.join(
+          ","
+        )}&course_ids=${selectedCourseIds.join(
+          ","
+        )}&department_ids=${selectedDepartmentIds.join(
+          ","
+        )}&academic_year_id=${selectedAcademicYearIds.join(
+          ","
+        )}&semester_ids=${selectedSemesterIds.join(
+          ","
+        )}&section_ids=${selectedSectionIds.join(",")}`;
 
       console.log("Fetching students from:", url);
 
@@ -2917,17 +2916,17 @@ const AdmADHOCFee = () => {
       const result = await response.json();
       console.log("Student API Response:", result);
 
-    if (
-      result.message?.toLowerCase() === "success" &&
-      Array.isArray(result.data)
-    ) {
-      setStudents(result.data);
-      setCurrentPage(0);
-      setShowTable(true);
-    } else {
-      console.error("Failed to fetch student data:", result.message);
-      setShowTable(false);
-    }
+      if (
+        result.message?.toLowerCase() === "success" &&
+        Array.isArray(result.data)
+      ) {
+        setStudents(result.data);
+        setCurrentPage(0);
+        setShowTable(true);
+      } else {
+        console.error("Failed to fetch student data:", result.message);
+        setShowTable(false);
+      }
     } catch (error) {
       console.error("Error fetching student data:", error);
       alert("An error occurred while fetching student data. Please try again.");
@@ -3109,41 +3108,41 @@ const AdmADHOCFee = () => {
 
       const result = await response.json();
 
-    if (response.ok) {
-      console.log("Assigned Data Response:", result);
-      alert("Data assigned successfully!");
+      if (response.ok) {
+        console.log("Assigned Data Response:", result);
+        alert("Data assigned successfully!");
 
-      // ✅ CLEAR EVERYTHING HERE (ONLY AFTER ASSIGN)
-      setStudents([]);
-      setShowTable(false);
+        // ✅ CLEAR EVERYTHING HERE (ONLY AFTER ASSIGN)
+        setStudents([]);
+        setShowTable(false);
 
-      setSelectedSessions({});
-      setIsAllSessionsSelected(false);
+        setSelectedSessions({});
+        setIsAllSessionsSelected(false);
 
-      setSelectedCourses({});
-      setIsAllCoursesSelected(false);
+        setSelectedCourses({});
+        setIsAllCoursesSelected(false);
 
-      setSelectedDepartments({});
-      setIsAllDepartmentsSelected(false);
+        setSelectedDepartments({});
+        setIsAllDepartmentsSelected(false);
 
-      setSelectedAcademicYears({});
-      setIsAllAcademicYearsSelected(false);
+        setSelectedAcademicYears({});
+        setIsAllAcademicYearsSelected(false);
 
-      setSelectedSemesters({});
-      setIsAllSemestersSelected(false);
+        setSelectedSemesters({});
+        setIsAllSemestersSelected(false);
 
-      setSelectedSections({});
-      setIsAllSectionsSelected(false);
+        setSelectedSections({});
+        setIsAllSectionsSelected(false);
 
-      setSelectedFeePeriods({});
-      setSelectedElements({});
-      setAmounts({});
-      setRemarks({});
+        setSelectedFeePeriods({});
+        setSelectedElements({});
+        setAmounts({});
+        setRemarks({});
 
-    } else {
-      console.error("Failed to assign data:", result);
-      alert(result.message || "An error occurred while assigning data.");
-    }
+      } else {
+        console.error("Failed to assign data:", result);
+        alert(result.message || "An error occurred while assigning data.");
+      }
     } catch (error) {
       console.error("Error while assigning data:", error);
       alert("An unexpected error occurred. Please try again.");
@@ -3774,77 +3773,77 @@ const AdmADHOCFee = () => {
           </div>
         </div>
       </div>
-      
-        <div className="table-responsive">
-          {showTable && students.length > 0 ? (
-            <table className=" table  table-bordered">
-              <thead>
-                <tr>
-                  <th>
+
+      <div className="table-responsive">
+        {showTable && students.length > 0 ? (
+          <table className=" table  table-bordered">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={isAllChecked}
+                    onChange={handleSelectAllStudents}
+                  />
+                </th>
+                <th>Course Name</th>
+                <th>Branch</th>
+                <th>Name</th>
+                <th>Academic Year</th>
+                <th>Semester</th>
+                <th>Section</th>
+                <th>Admission Number</th>
+                <th>Father Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentStudents.map((student) => (
+                <tr key={student.student_id}>
+                  <td>
                     <input
                       type="checkbox"
-                      checked={isAllChecked}
-                      onChange={handleSelectAllStudents}
+                      checked={student.checked || false}
+                      onChange={() =>
+                        handleCheckboxChange(student.student_id)
+                      }
                     />
-                  </th>
-                  <th>Course Name</th>
-                  <th>Branch</th>
-                  <th>Name</th>
-                  <th>Academic Year</th>
-                  <th>Semester</th>
-                  <th>Section</th>
-                  <th>Admission Number</th>
-                  <th>Father Name</th>
+                  </td>
+                  <td>{student.course_name}</td>
+                  <td>{student.department}</td>
+                  <td>{student.student_name}</td>
+                  <td>{student.academic_year}</td>
+                  <td>{student.semester}</td>
+                  <td>{student.section}</td>
+                  <td>{student.college_admission_no}</td>
+                  <td>{student.father_name}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {currentStudents.map((student) => (
-                  <tr key={student.student_id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={student.checked || false}
-                        onChange={() =>
-                          handleCheckboxChange(student.student_id)
-                        }
-                      />
-                    </td>
-                    <td>{student.course_name}</td>
-                    <td>{student.department}</td>
-                    <td>{student.student_name}</td>
-                    <td>{student.academic_year}</td>
-                    <td>{student.semester}</td>
-                    <td>{student.section}</td>
-                    <td>{student.college_admission_no}</td>
-                    <td>{student.father_name}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            showTable && <p>No data available </p>
-          )}
-          <ReactPaginate
-            previousLabel={"Previous"}
-            nextLabel={"Next"}
-            breakLabel={"..."}
-            breakClassName={"page-item"}
-            breakLinkClassName={"page-link"}
-            pageCount={pageCount}
-            marginPagesDisplayed={2}
-            pageRangeDisplayed={5}
-            onPageChange={handlePageClick}
-            containerClassName={"pagination justify-content-center"}
-            pageClassName={"page-item"}
-            pageLinkClassName={"page-link"}
-            previousClassName={"page-item"}
-            previousLinkClassName={"page-link"}
-            nextClassName={"page-item"}
-            nextLinkClassName={"page-link"}
-            activeClassName={"active"}
-          />
-        </div>
-      
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          showTable && <p>No data available </p>
+        )}
+        <ReactPaginate
+          previousLabel={"Previous"}
+          nextLabel={"Next"}
+          breakLabel={"..."}
+          breakClassName={"page-item"}
+          breakLinkClassName={"page-link"}
+          pageCount={pageCount}
+          marginPagesDisplayed={2}
+          pageRangeDisplayed={5}
+          onPageChange={handlePageClick}
+          containerClassName={"pagination justify-content-center"}
+          pageClassName={"page-item"}
+          pageLinkClassName={"page-link"}
+          previousClassName={"page-item"}
+          previousLinkClassName={"page-link"}
+          nextClassName={"page-item"}
+          nextLinkClassName={"page-link"}
+          activeClassName={"active"}
+        />
+      </div>
+
     </div>
   );
 };
