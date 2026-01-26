@@ -84,7 +84,7 @@ const HostelEdit = ({
 
     setHostelAvailed(
       transportDetails.hostel_availed === true ||
-        transportDetails.hostel_availed === "true"
+      transportDetails.hostel_availed === "true"
     );
   }, [transportDetails]);
 
@@ -330,9 +330,9 @@ const HostelEdit = ({
                         type="checkbox"
                         className="form-check-input me-2"
                         checked={month.checked}
-                        disabled={month.disabled} // ❌ PREVENT CHANGE
+                        disabled={month.disabled || !hostelAvailed} // Only enable if Hostel Availed is checked
                         onChange={() => {
-                          if (!month.disabled) {
+                          if (!month.disabled && hostelAvailed) {
                             handleMonthToggle(month.id);
                           }
                         }}
