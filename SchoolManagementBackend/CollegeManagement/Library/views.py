@@ -1285,8 +1285,13 @@ class LibraryBookCreateAPIView(CreateAPIView):
             # Get organization and branch instances first (needed for LibraryBranch creation)
             organization_instance = Organization.objects.get(id=libraryBookdetails['org_id'],
                                                              is_active=True)
-            branch_instance = Batch.objects.get(id=libraryBookdetails['branch_id'],
-                                                is_active=True)
+            
+            # Fetch AcademicYear first to derive the correct Batch
+            AcademicYearinstance = AcademicYear.objects.get(id=libraryBookdetails['academicyearId'],
+                                                            is_active=True)
+            
+            # Use the Batch associated with the Academic Year
+            branch_instance = AcademicYearinstance.batch
 
             # Library branch is optional - create if it doesn't exist
             Library_branch_instance = None
@@ -1307,8 +1312,7 @@ class LibraryBookCreateAPIView(CreateAPIView):
                         is_active=True
                     )
 
-            AcademicYearinstance = AcademicYear.objects.get(id=libraryBookdetails['academicyearId'],
-                                                            is_active=True)
+            # AcademicYearinstance is already fetched above
 
             # Save Library Book record
             library_book_instance = LibraryBook.objects.create(
@@ -2046,17 +2050,16 @@ class LibraryBookUpdateAPIView(APIView):
             except ObjectDoesNotExist:
                 return Response({'message': 'provided academic year Id not exist'}, status=status.HTTP_404_NOT_FOUND)
 
+            # Derive branchInstance (Batch) from AcademicYear
+            branchInstance = academicyearInstance.batch
+
             try:
                 organizationInstance = Organization.objects.get(id=libraryBookdetails.get('org_id'),
                                                                 is_active=True)
             except ObjectDoesNotExist:
                 return Response({'message': 'provided organization Id not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-            try:
-                branchInstance = Batch.objects.get(id=libraryBookdetails.get('branch_id'),
-                                                   is_active=True)
-            except ObjectDoesNotExist:
-                return Response({'message': 'provided branch Id not exist'}, status=status.HTTP_404_NOT_FOUND)
+            # branchInstance will be derived from AcademicYear below
 
             try:
                 bookInstance = LibraryBook.objects.get(id=libraryBookdetails.get('bookId'),

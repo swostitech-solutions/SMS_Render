@@ -33,7 +33,18 @@ class ExpenseIncomeCategoryCreateAPIView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
-            serializer = self.get_serializer(data=request.data)
+            # Map branch_id (sent as batch) to actual batch_id
+            data = request.data.copy()
+            provided_batch_id = data.get('batch')
+            if provided_batch_id:
+                try:
+                    actual_batch = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                    if actual_batch:
+                        data['batch'] = actual_batch.id
+                except Exception:
+                    pass
+
+            serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
 
             # Get Validate Data
@@ -126,6 +137,15 @@ class ExpenseIncomeCategoryListAPIView(ListAPIView):
             organization_id = request.query_params.get('organization_id')
             batch_id = request.query_params.get('batch_id')
 
+            # Correctly handle branch_id -> batch_id mapping for list filtering
+            if batch_id:
+               try:
+                   actual_batch = Batch.objects.filter(branch_id=batch_id, is_active=True).first()
+                   if actual_batch:
+                       batch_id = actual_batch.id
+               except Exception:
+                   pass
+
             resdata = ExpenseCategoryMaster.objects.filter(organization=organization_id, batch=batch_id)
 
             if resdata:
@@ -200,7 +220,17 @@ class ExpenseIncomeCategoryUpdateAPIView(UpdateAPIView):
             ExpenseIncomeInstance = self.get_object()
 
             # validate input data
-            serializer = self.get_serializer(ExpenseIncomeInstance, data=request.data, partial=partial)
+            data = request.data.copy()
+            provided_batch_id = data.get('batch')
+            if provided_batch_id:
+                try:
+                     actual_batch = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                     if actual_batch:
+                         data['batch'] = actual_batch.id
+                except Exception:
+                    pass
+
+            serializer = self.get_serializer(ExpenseIncomeInstance, data=data, partial=partial)
             serializer.is_valid(raise_exception=True)
 
             # expense_category_id = request.data.get('expense_category_id')
@@ -280,7 +310,23 @@ class PartyMasterCreateAPIView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
-            serializer = self.get_serializer(data=request.data)
+            # Create a mutable copy of the data
+            data = request.data.copy()
+            
+            # Frontend sends branch_id as 'batch'. We need to map it to the actual Batch ID.
+            provided_batch_id = data.get('batch')
+            if provided_batch_id:
+                try:
+                    # Find a Batch associated with this Branch
+                    # We pick the first active batch found for this branch
+                    actual_batch = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                    if actual_batch:
+                        data['batch'] = actual_batch.id
+                    # If no batch found, we leave it as is, and serializer validation will likely fail or handle it
+                except Exception as e:
+                    pass
+
+            serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
 
             # get validate data
@@ -398,6 +444,15 @@ class PartyMasterListAPIView(ListAPIView):
         try:
             organization_id = request.query_params.get('organization_id')
             batch_id = request.query_params.get('batch_id')
+
+            # Frontend sends branch_id as 'batch_id'. We need to map it to the actual Batch ID.
+            if batch_id:
+                try:
+                    actual_batch = Batch.objects.filter(branch_id=batch_id, is_active=True).first()
+                    if actual_batch:
+                        batch_id = actual_batch.id
+                except Exception:
+                    pass
 
             # Get Party List based on OrgId & BatchId
             try:
@@ -540,7 +595,17 @@ class PartyMasterUpdateAPIView(UpdateAPIView):
             PartyMasterInstance = self.get_object()
 
             # validate input data
-            serializer = self.get_serializer(PartyMasterInstance, data=request.data, partial=partial)
+            data = request.data.copy()
+            provided_batch_id = data.get('batch')
+            if provided_batch_id:
+                try:
+                     actual_batch = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                     if actual_batch:
+                         data['batch'] = actual_batch.id
+                except Exception:
+                    pass
+
+            serializer = self.get_serializer(PartyMasterInstance, data=data, partial=partial)
             serializer.is_valid(raise_exception=True)
 
             # Get Validate data
@@ -684,6 +749,19 @@ class PartyMasterSearchListAPIView(ListAPIView):
             if not is_active:
                 return Response({'message': 'Please provide active data '}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Correctly handle branch_id -> batch_id mapping
+            if batch_id:
+               try:
+                   actual_batch = Batch.objects.filter(branch_id=batch_id, is_active=True).first()
+                   if actual_batch:
+                       batch_id = actual_batch.id
+               except Exception:
+                   pass
+
+            # Convert is_active string to boolean if needed, or rely on capitalization if that's what the model expects (it seems to expect a boolean or string 'True'/'False')
+            # It seems is_active in filter below uses Capitalize(), so 'true' -> 'True'. 
+            # However, simpler to just filter by the mapped batch_id.
+            
             # get All party list
             filterdata = PartyMaster.objects.filter(organization=organization, batch=batch_id,
                                                     is_active=is_active.capitalize())
@@ -847,15 +925,61 @@ class AddExpenseCreateAPIView(CreateAPIView):
                 # Fetch organization, branch, and party master instances
                 try:
                     organization = Organization.objects.get(id=expense_header_data.get('org_id'), is_active=True)
-                    # Accept both branch_id and batch_id for compatibility
-                    batch_id = expense_header_data.get('batch_id') or expense_header_data.get('branch_id')
-                    branch = Batch.objects.get(id=batch_id, is_active=True)
+                    
+                    # Resolve Batch/Branch ID
+                    # The frontend sends 'batch_id' which might be an AcademicYear ID, Batch ID, or Branch ID.
+                    # It also sends 'branch_id'.
+                    # We need to find the correct active Batch to link this expense to.
+                    
+                    provided_batch_id = expense_header_data.get('batch_id')
+                    provided_branch_id = expense_header_data.get('branch_id')
+                    
+                    actual_batch = None
+                    
+                    # 1. Try to find if provided_batch_id is an AcademicYear
+                    if provided_batch_id:
+                        try:
+                            ay = AcademicYear.objects.filter(id=provided_batch_id).first()
+                            if ay:
+                                # If it's an AY, use its batch's branch to find an active batch, or just use the ay's batch if active
+                                # Ideally we want the active batch for the branch.
+                                # Let's try to get the active batch for the branch associated with this AY.
+                                branch_id_from_ay = ay.branch.id
+                                actual_batch = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).first()
+                        except Exception:
+                            pass
+                            
+                    # 2. If no batch found yet, try treating provided_batch_id as a Branch ID
+                    if not actual_batch and provided_batch_id:
+                        try:
+                             actual_batch = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                        except Exception:
+                            pass
+
+                    # 3. If still no batch, try treating provided_batch_id as a Batch ID
+                    if not actual_batch and provided_batch_id:
+                        try:
+                            actual_batch = Batch.objects.filter(id=provided_batch_id, is_active=True).first()
+                        except Exception:
+                            pass
+                            
+                    # 4. Fallback to using the provided 'branch_id' field if available
+                    if not actual_batch and provided_branch_id:
+                        try:
+                            actual_batch = Batch.objects.filter(branch_id=provided_branch_id, is_active=True).first()
+                        except Exception:
+                            pass
+
+                    if not actual_batch:
+                         return Response({'error': 'Batch not found for the provided IDs'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    branch = actual_batch # The model field is named 'batch' but variable was 'branch' in previous code, keeping 'branch' variable name for minimal diff though it holds a Batch instance
+                    
                     party_master = PartyMaster.objects.get(party_id=expense_header_data.get('partymasterId'),
                                                            is_active=True)
                 except Organization.DoesNotExist:
                     return Response({'error': 'Organization not found'}, status=status.HTTP_400_BAD_REQUEST)
-                except Batch.DoesNotExist:
-                    return Response({'error': 'Batch not found'}, status=status.HTTP_400_BAD_REQUEST)
+                # Batch.DoesNotExist is handled by manual checks above
                 except PartyMaster.DoesNotExist:
                     return Response({'error': 'Party Master not found'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1056,10 +1180,35 @@ class ExpenseIncomeListBasedOnCategory(ListAPIView):
             if not flag:
                 return Response({'message': 'Please provide flag'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Initial filter with organization_id and batch_id
+            # Collect possible batch IDs (treat input as Batch ID, Branch ID, or AcademicYear ID)
+            possible_batches = {batch_id} # Use a set to avoid duplicates
+
+            if batch_id:
+                try:
+                    # 1. Treat as AcademicYear ID
+                    # Check if it matches an AcademicYear first (since frontend sends academicSessionId)
+                    ay = AcademicYear.objects.filter(id=batch_id).first()
+                    if ay:
+                        # If it's an AcademicYear, getting all batches for its branch seems safest to ensure visibility
+                        # consistent with how we handled the Branch ID case.
+                        # Using the branch from the academic year's batch or direct relation if exists (model has branch FK)
+                        branch_id_from_ay = ay.branch.id 
+                        branch_batches = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).values_list('id', flat=True)
+                        possible_batches.update(branch_batches)
+                    
+                    # 2. Treat as Branch ID: get all active batches for this branch
+                    branch_batches = Batch.objects.filter(branch_id=batch_id, is_active=True).values_list('id', flat=True)
+                    possible_batches.update(branch_batches)
+                    
+                    # 3. Treat as Batch ID (already in possible_batches)
+                    # If it matches a Batch directly, it's there.
+                except Exception:
+                    pass
+
+            # Initial filter with organization_id and valid batch IDs
             categoryList = ExpenseCategoryMaster.objects.filter(
                 organization_id=organization_id,
-                batch_id=batch_id,
+                batch_id__in=possible_batches,
                 is_active=True
             )
 
@@ -1138,10 +1287,35 @@ class ExpenseSearchListAPIView(ListAPIView):
                 return Response({'message': 'Please provide organization_id and batch_id'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            try:
+            # Resolve Batch/Branch ID for filtering
+            possible_batches = {batch_id}
+            if batch_id:
+                try:
+                    # 1. Treat as AcademicYear ID
+                    ay = AcademicYear.objects.filter(id=batch_id).first()
+                    if ay:
+                         possible_batches.add(ay.batch.id)
+                         # Also active batch for the branch
+                         branch_id_from_ay = ay.branch.id
+                         branch_batches = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).values_list('id', flat=True)
+                         possible_batches.update(branch_batches)
+                    
+                    # 2. Treat as Branch ID
+                    branch_batches = Batch.objects.filter(branch_id=batch_id, is_active=True).values_list('id', flat=True)
+                    possible_batches.update(branch_batches)
+                    
+                    # 3. Treat as Batch ID (already added)
+                except Exception:
+                    pass
 
-                filterdata = ExpenseHeader.objects.filter(organization=organization_id, batch=batch_id, is_active=True)
-            except:
+            try:
+                # Filter by organization and the resolved set of batch IDs
+                filterdata = ExpenseHeader.objects.filter(
+                    organization=organization_id, 
+                    batch__in=possible_batches, 
+                    is_active=True
+                )
+            except Exception: # Handling potential errors broadly as in original code snippet logic, though specific exceptions preferred
                 filterdata = None
 
             if filterdata:
@@ -2050,24 +2224,85 @@ class AddIncomeCreateAPIView(CreateAPIView):
                     organizationInstance = Organization.objects.get(id=IncomeHeaderDetails_data.get('org_id'),
                                                                     is_active=True)
 
-                    # batch_id is required by model
-                    batch_id = IncomeHeaderDetails_data.get('batch_id')
-                    if not batch_id:
-                        return Response({'error': 'batch_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-                    batchInstance = Batch.objects.get(id=batch_id, is_active=True)
+                    # batch_id is required by model, but frontend might send AcademicYear ID or Branch ID as batch_id or separately
+                    provided_batch_id = IncomeHeaderDetails_data.get('batch_id')
+                    provided_ay_id = IncomeHeaderDetails_data.get('academic_year_id')
+                    
+                    batchInstance = None
+                    
+                    # 1. Try resolving using provided batch_id (check if it's an AcademicYear ID first as common in frontend)
+                    if provided_batch_id:
+                         try:
+                            # Check if it's an AcademicYear ID
+                            ay = AcademicYear.objects.filter(id=provided_batch_id).first()
+                            if ay:
+                                branch_id_from_ay = ay.branch.id
+                                batchInstance = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).first()
+                         except Exception:
+                             pass
+                    
+                    # 2. Try resolving provided batch_id as Branch ID
+                    if not batchInstance and provided_batch_id:
+                        try:
+                             batchInstance = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                        except Exception:
+                            pass
 
-                    academicYearInstance = AcademicYear.objects.get(
-                        id=IncomeHeaderDetails_data.get('academic_year_id'),
-                        is_active=True)
+                    # 3. Try resolving provided batch_id as Batch ID
+                    if not batchInstance and provided_batch_id:
+                        try:
+                            batchInstance = Batch.objects.filter(id=provided_batch_id, is_active=True).first()
+                        except Exception:
+                            pass
+                    
+                     # 4. If still no batch, try using academic_year_id to find batch
+                    if not batchInstance and provided_ay_id:
+                        try:
+                            ay = AcademicYear.objects.get(id=provided_ay_id)
+                            # Use AY's batch directly if available, or fetch active batch for its branch
+                            # Depending on model, AY has 'batch' FK.
+                            batchInstance = ay.batch
+                            if not batchInstance: # Fallback if for some reason AY -> Batch link is broken/odd
+                                 batchInstance = Batch.objects.filter(branch_id=ay.branch.id, is_active=True).first()
+                        except Exception:
+                            pass
+
+                    if not batchInstance:
+                        return Response({'error': 'Active Batch not found for provided IDs'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # Resolve Academic Year Instance
+                    # If we found AY earlier, use it. Otherwise try to get from provided_ay_id
+                    academicYearInstance = None
+                    if provided_ay_id:
+                         try:
+                            academicYearInstance = AcademicYear.objects.get(id=provided_ay_id, is_active=True)
+                         except AcademicYear.DoesNotExist:
+                             pass # Will handle missing AY below if needed
+                    
+                    # If still no AY and batchInstance is found, maybe we don't strictly *need* AY if model allows null, 
+                    # but model definition in previous turns showed it might be required.
+                    # The original code did: academicYearInstance = AcademicYear.objects.get(...)
+                    # So we should enforce it if we can find it.
+                    
+                    if not academicYearInstance:
+                         # If we identified provided_batch_id as an AY earlier
+                         try:
+                             possible_ay = AcademicYear.objects.filter(id=provided_batch_id).first()
+                             if possible_ay:
+                                 academicYearInstance = possible_ay
+                         except:
+                             pass
+
+                    if not academicYearInstance:
+                         return Response({'error': 'Academic year not found'}, status=status.HTTP_400_BAD_REQUEST)
+
 
                     party_masterInstance = PartyMaster.objects.get(party_id=IncomeHeaderDetails_data.get('party_id'),
                                                                    is_active=True)
                 except Organization.DoesNotExist:
                     return Response({'error': 'Organization not found'}, status=status.HTTP_400_BAD_REQUEST)
-                except Batch.DoesNotExist:
-                    return Response({'error': 'Batch not found'}, status=status.HTTP_400_BAD_REQUEST)
-                except AcademicYear.DoesNotExist:
-                    return Response({'error': 'Academic year not found'}, status=status.HTTP_400_BAD_REQUEST)
+                # Batch.DoesNotExist handled manually
+                # AcademicYear.DoesNotExist handled manually
                 except PartyMaster.DoesNotExist:
                     return Response({'error': 'PartyMaster not found'}, status=status.HTTP_400_BAD_REQUEST)
                 BankInstance = None
@@ -2092,7 +2327,7 @@ class AddIncomeCreateAPIView(CreateAPIView):
                 try:
                     Income_header = OtherIncome.objects.create(
                         organization=organizationInstance,
-                        batch_id=batch_id,
+                        batch=batchInstance, # Use resolved batchInstance
                         academic_year=academicYearInstance,
                         income_no=IncomeHeaderDetails_data.get('income_no'),
                         income_date=IncomeHeaderDetails_data.get('date'),
@@ -2254,9 +2489,48 @@ class IncomeSearchListAPIView(ListAPIView):
             if not academic_year_Id:
                 return Response({'message': 'Please Provide academic_year Id'}, status=status.HTTP_200_OK)
 
+            # Resolve Batch/Branch ID for filtering
+            possible_batches = {batch_id}
+            if batch_id:
+                try:
+                    # 1. Treat as AcademicYear ID
+                    ay = AcademicYear.objects.filter(id=batch_id).first()
+                    if ay:
+                         possible_batches.add(ay.batch.id)
+                         # Also active batch for the branch
+                         branch_id_from_ay = ay.branch.id
+                         branch_batches = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).values_list('id', flat=True)
+                         possible_batches.update(branch_batches)
+
+                    # 2. Treat as Branch ID
+                    branch_batches = Batch.objects.filter(branch_id=batch_id, is_active=True).values_list('id', flat=True)
+                    possible_batches.update(branch_batches)
+                    
+                    # 3. Treat as Batch ID (already added)
+                except Exception:
+                    pass
+
             try:
-                filterdata = OtherIncome.objects.filter(organization_id=organization, batch_id=batch_id,
-                                                        academic_year_id=academic_year_Id, is_active=True)
+                # Filter by organization and the resolved set of batch IDs
+                # We relax the strict academic_year_id filter here because records might be linked to the Batch
+                # effectively covering the academic year. If academic_year_id is provided and valid, we *can* use it,
+                # but strict filtering might cause "No Record Found" if there's a slight mismatch in how AY is tracked vs Batch.
+                # Given user context, primary scoping is Org + Batch.
+                
+                filterdata = OtherIncome.objects.filter(
+                    organization_id=organization, 
+                    batch_id__in=possible_batches,
+                    is_active=True
+                )
+                
+                # Optionally apply academic_year_id filter if it's explicitly strictly required, 
+                # but often 'batch_id' (resolved) is sufficient and more reliable. 
+                # If we want to support filtering by AY if passed:
+                if academic_year_Id:
+                     # Check if data exists with this AY, otherwise don't restrict too much if it returns nothing?
+                     # Standard behavior is AND filtering.
+                     filterdata = filterdata.filter(academic_year_id=academic_year_Id)
+                     
             except ObjectDoesNotExist:
                 filterdata = None
 

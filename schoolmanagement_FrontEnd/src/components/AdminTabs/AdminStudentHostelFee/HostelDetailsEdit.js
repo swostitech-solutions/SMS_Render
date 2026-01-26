@@ -264,54 +264,54 @@ const HostelEdit = ({
       setSelectedHostel(
         transportDetails.hostel_id
           ? {
-              value: transportDetails.hostel_id,
-              label: transportDetails.hostel_name,
-            }
+            value: transportDetails.hostel_id,
+            label: transportDetails.hostel_name,
+          }
           : null
       );
 
       setSelectedBlock(
         transportDetails.block_id
           ? {
-              value: transportDetails.block_id,
-              label: transportDetails.block_name,
-            }
+            value: transportDetails.block_id,
+            label: transportDetails.block_name,
+          }
           : null
       );
 
       setSelectedFloor(
         transportDetails.floor_id
           ? {
-              value: transportDetails.floor_id,
-              label: transportDetails.floor_number,
-            }
+            value: transportDetails.floor_id,
+            label: transportDetails.floor_number,
+          }
           : null
       );
 
       setSelectedRoomType(
         transportDetails.room_type_id
           ? {
-              value: transportDetails.room_type_id,
-              label: transportDetails.room_type,
-            }
+            value: transportDetails.room_type_id,
+            label: transportDetails.room_type,
+          }
           : null
       );
 
       setSelectedRoom(
         transportDetails.room_id
           ? {
-              value: transportDetails.room_id,
-              label: transportDetails.room_number,
-            }
+            value: transportDetails.room_id,
+            label: transportDetails.room_number,
+          }
           : null
       );
 
       setSelectedBed(
         transportDetails.bed_id
           ? {
-              value: transportDetails.bed_id,
-              label: transportDetails.bed_number,
-            }
+            value: transportDetails.bed_id,
+            label: transportDetails.bed_number,
+          }
           : null
       );
     } else {

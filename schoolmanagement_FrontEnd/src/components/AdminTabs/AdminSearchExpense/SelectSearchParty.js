@@ -323,8 +323,7 @@ const SelectStudentModal = ({ show, handleClose, onSelect }) => {
 
     try {
       const response = await fetch(
-        `${
-          ApiUrl.apiurl
+        `${ApiUrl.apiurl
         }EXPENSE/PARTY_MASTER/PartyMasterSearchList/?${queryParams.join("&")}`
       );
       const data = await response.json();
@@ -383,11 +382,8 @@ const SelectStudentModal = ({ show, handleClose, onSelect }) => {
                   <p className="text-center fs-5">PARTY SEARCH</p>
                   <div className="row mb-2">
                     <div
-                      className="col-12"
-                      d-flex
-                      flex-wrap
-                      gap-2
-                      // style={{ border: "1px solid #ccc" }}
+                      className="col-12 d-flex flex-wrap gap-2"
+                    // style={{ border: "1px solid #ccc" }}
                     >
                       <button
                         type="button"

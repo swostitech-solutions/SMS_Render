@@ -9,7 +9,7 @@ import base64
 import datetime
 from django.core.files.base import ContentFile
 
-from Acadix.models import StudentCourse, StudentRegistration
+from Acadix.models import StudentCourse, StudentRegistration, AcademicYear, Batch
 from .models import (
     StudentReportCard, StudentExamResult, SubjectResult,
     AttendanceRecord, CoScholasticResult, TeacherRemarks, ExamType
@@ -34,12 +34,54 @@ class ReportCardStudentListAPIView(ListAPIView):
 
             filters = Q()
 
+            print(f"DEBUG: Params - AY={academic_year_id}, Org={org_id}, Branch={branch_id}, Class={class_id}, Active={is_active}")
+
             if academic_year_id:
-                filters &= Q(academic_year_id=academic_year_id)
+                # Resolve Batch ID from Academic Year ID
+                # Because detailed records like StudentCourse might be linked to the Batch (15) 
+                # but the frontend sends an AY ID (25) which is just a timeframe marker.
+                # Shell check confirmed SC has batch_id=15 but ay_id!=25.
+                try:
+                    ay = AcademicYear.objects.filter(id=academic_year_id).first()
+                    print(f"DEBUG: AY Found: {ay}")
+                    if ay:
+                         # Get the active batch for this branch
+                         # If the AY belongs to a batch directly, we could use that, 
+                         # but consistent with other fixes, we usually look for the active batch in the branch.
+                         branch_id_from_ay = ay.branch.id
+                         print(f"DEBUG: Branch from AY: {branch_id_from_ay}")
+                         # Collect active batch IDs for this branch
+                         active_batches = list(Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).values_list('id', flat=True))
+                         print(f"DEBUG: Active Batches: {active_batches}")
+                         
+                         if active_batches:
+                             # Filter by the active batch(es) instead of just the AY ID.
+                             # If we strictly filter by AY=25 we get 0. 
+                             # We filter by Batch IN active_batches.
+                             filters &= Q(batch_id__in=active_batches)
+                             print("DEBUG: Applied Batch Filter")
+                         else:
+                             # Fallback to AY ID if no active batch found (unlikely)
+                             filters &= Q(academic_year_id=academic_year_id)
+                             print("DEBUG: Applied AY Filter (Fallback 1)")
+                    else:
+                        filters &= Q(academic_year_id=academic_year_id)
+                        print("DEBUG: Applied AY Filter (Fallback 2)")
+                except Exception as e:
+                    print(f"DEBUG: Exception in AY logic: {e}")
+                    filters &= Q(academic_year_id=academic_year_id)
+            
             if org_id:
                 filters &= Q(organization_id=org_id)
             if branch_id:
-                filters &= Q(branch_id=branch_id)
+                 # If we haven't already filtered by batch via AY resolution, check branch here
+                 # If AY logic ran, it implicitly covered branch via batch selection.
+                 # But we can keep it as a safeguard or for cases where AY wasn't sent.
+                 if not academic_year_id:
+                     filters &= Q(branch_id=branch_id)
+                 else:
+                     # Strict branch Match
+                      filters &= Q(branch_id=branch_id)
             if class_id:
                 filters &= Q(course_id=class_id)
             if is_active is not None:
@@ -113,7 +155,7 @@ class ReportCardStudentListAPIView(ListAPIView):
                     'profile_pic': student.profile_pic.url if student.profile_pic else None,
                 }
                 student_list.append(student_data)
-
+            
             return Response({
                 'status': 'success',
                 'count': len(student_list),

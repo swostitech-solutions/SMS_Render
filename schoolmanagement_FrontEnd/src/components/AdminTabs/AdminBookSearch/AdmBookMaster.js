@@ -5388,9 +5388,9 @@ const BookForm = () => {
           row.dateOfPurchase || new Date().toISOString().split("T")[0],
         purchase_from: row.purchasedFrom || "",
         bill_no: row.billNo || "",
-        bill_value: row.cost?.toString() || "0",
-        bill_concession: row.concession?.toString() || "0",
-        no_of_copies: row.noOfCopies?.toString() || "1",
+        bill_value: row.cost && !isNaN(parseFloat(row.cost)) ? row.cost.toString() : "0",
+        bill_concession: row.concession && !isNaN(parseFloat(row.concession)) ? row.concession.toString() : "0",
+        no_of_copies: row.noOfCopies && !isNaN(parseInt(row.noOfCopies)) ? row.noOfCopies.toString() : "1",
       }));
 
     if (!librarypurchesDetails.length) {
@@ -6007,7 +6007,7 @@ const BookForm = () => {
 
                           <td>
                             <Form.Control
-                              type="text"
+                              type="number"
                               className="form-control detail"
                               value={row.noOfCopies}
                               size="sm"
@@ -6023,7 +6023,7 @@ const BookForm = () => {
 
                           <td>
                             <Form.Control
-                              type="text"
+                              type="number"
                               className="form-control detail"
                               value={row.cost}
                               size="sm"
@@ -6038,7 +6038,7 @@ const BookForm = () => {
                           </td>
                           <td className="d-none d-lg-table-cell">
                             <Form.Control
-                              type="text"
+                              type="number"
                               className="form-control detail"
                               value={row.concession}
                               size="sm"
