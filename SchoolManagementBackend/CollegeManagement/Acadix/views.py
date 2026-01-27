@@ -7088,9 +7088,13 @@ class StudentCourseListAPIView(ListAPIView):
                 #         last_name__iexact=last
                 #     )
             else:
+                # First try to filter by academic year
                 student_list = StudentCourse.objects.filter(academic_year=academicyearId, is_active=True).order_by(
                     '-updated_at')
-                # student_list = StudentCourse.objects.filter(academic_year_id=academicyearId).filter(Q(is_active=True) | Q(is_promoted=True)).order_by('-updated_at')
+                # If no students found with this academic year, return all active students
+                # This handles cases where academicSessionId might be "Default" or an incorrect ID
+                if not student_list.exists():
+                    student_list = StudentCourse.objects.filter(is_active=True).order_by('-updated_at')
             # print(studentList.update_at)
             # if admission_no:
 

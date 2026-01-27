@@ -4187,8 +4187,8 @@ class LibraryStatisticsAPIView(ListAPIView):
                 books_qs = books_qs.filter(organization_id=organization_id)
             if branch_id:
                 books_qs = books_qs.filter(batch_id=branch_id)
-            if academic_year_id:
-                books_qs = books_qs.filter(academic_year_id=academic_year_id)
+            # if academic_year_id:
+            #     books_qs = books_qs.filter(academic_year_id=academic_year_id)
 
             total_books = books_qs.count()
 

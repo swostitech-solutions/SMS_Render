@@ -19,7 +19,14 @@ const IssuePage = () => {
   // Issue Book
   const handleIssueBook = async () => {
     const token = sessionStorage.getItem("accessToken");
-    const academicYearId = sessionStorage.getItem("academicSessionId") || "1";
+    // Get the academic year ID from:
+    // 1. Selected student's data (most accurate)
+    // 2. Selected academic year dropdown
+    // 3. Session storage as fallback
+    const academicYearId = selectedStudentData?.academic_year
+      || selectedAcademicYear?.value
+      || sessionStorage.getItem("academicSessionId")
+      || localStorage.getItem("academicSessionId");
     const createdBy = sessionStorage.getItem("userId");
     const issueDateValue = document.getElementById("issue-date")?.value || ""; // Get issue date from input
     const storedStudentId = sessionStorage.getItem("studentId");
@@ -284,7 +291,7 @@ const IssuePage = () => {
           console.log("bookBarcodeStatus:", matchedBook.bookBarcodeStatus);
           console.log("validStatuses:", validStatuses);
           console.log("includes check:", validStatuses.includes(matchedBook.bookBarcodeStatus));
-          
+
           if (!validStatuses.includes(matchedBook.bookBarcodeStatus)) {
             alert(`Book "${matchedBook.bookName}" (Barcode: ${matchedBook.barcode}) is not available for issue.`);
             // Clear the row
@@ -292,14 +299,14 @@ const IssuePage = () => {
               prevRows.map((row) =>
                 row.id === rowId
                   ? {
-                      ...row,
-                      bookBarcodeId: null,
-                      barcode: "",
-                      bookCode: "",
-                      bookName: "",
-                      categoryName: "",
-                      subcategoryName: "",
-                    }
+                    ...row,
+                    bookBarcodeId: null,
+                    barcode: "",
+                    bookCode: "",
+                    bookName: "",
+                    categoryName: "",
+                    subcategoryName: "",
+                  }
                   : row
               )
             );
@@ -314,14 +321,14 @@ const IssuePage = () => {
               prevRows.map((row) =>
                 row.id === rowId
                   ? {
-                      ...row,
-                      bookBarcodeId: null,
-                      barcode: "",
-                      bookCode: "",
-                      bookName: "",
-                      categoryName: "",
-                      subcategoryName: "",
-                    }
+                    ...row,
+                    bookBarcodeId: null,
+                    barcode: "",
+                    bookCode: "",
+                    bookName: "",
+                    categoryName: "",
+                    subcategoryName: "",
+                  }
                   : row
               )
             );
@@ -356,14 +363,14 @@ const IssuePage = () => {
           prevRows.map((row) =>
             row.id === rowId
               ? {
-                  ...row,
-                  bookBarcodeId: null,
-                  barcode: "",
-                  bookCode: "",
-                  bookName: "",
-                  categoryName: "",
-                  subcategoryName: "",
-                }
+                ...row,
+                bookBarcodeId: null,
+                barcode: "",
+                bookCode: "",
+                bookName: "",
+                categoryName: "",
+                subcategoryName: "",
+              }
               : row
           )
         );
