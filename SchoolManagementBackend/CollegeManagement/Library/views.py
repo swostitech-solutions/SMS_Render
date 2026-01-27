@@ -2502,8 +2502,18 @@ class BookIssuesSearchListAPIView(ListAPIView):
             if professor_id and student_id:
                 return Response({'message': 'you can not choose both professor and student'})
 
-            filterdata = LibraryBooksIssues.objects.filter(academic_year=academic_year_id, is_active=True)
-            # print(filterdata)
+            # Start with all active issues, then optionally filter by academic year
+            filterdata = LibraryBooksIssues.objects.filter(is_active=True)
+            
+            # If academic_year_id is provided and valid, filter by it
+            if academic_year_id:
+                # Check if academic year exists and has records
+                academic_year_exists = AcademicYear.objects.filter(id=academic_year_id).exists()
+                if academic_year_exists:
+                    filtered_by_year = filterdata.filter(academic_year=academic_year_id)
+                    # Only apply the filter if it returns results
+                    if filtered_by_year.exists():
+                        filterdata = filtered_by_year
 
             if professor_id:
                 filterdata = filterdata.filter(professor=professor_id)
@@ -4114,9 +4124,15 @@ class LibraryStatisticsAPIView(ListAPIView):
             branch_id = request.query_params.get('branch_id')
             academic_year_id = request.query_params.get('academic_year_id')
 
+            # Check if the academic_year_id is valid (exists in database)
+            valid_academic_year = False
+            if academic_year_id:
+                valid_academic_year = AcademicYear.objects.filter(id=academic_year_id).exists()
+
             # 1. Total No of Members (Students + Staff who can access library)
             # For students, filter through StudentCourse to get students enrolled in specific academic year
-            if academic_year_id:
+            total_students = 0
+            if valid_academic_year:
                 # Get students enrolled in the specified academic year
                 student_course_qs = StudentCourse.objects.filter(
                     is_active=True,
@@ -4132,8 +4148,9 @@ class LibraryStatisticsAPIView(ListAPIView):
                 # Get unique student IDs from course enrollments
                 student_ids = student_course_qs.values_list('student_id', flat=True).distinct()
                 total_students = len(student_ids)
-            else:
-                # If no academic year filter, count all active students for org/branch
+
+            # If no valid academic year or no students found, count all active students for org/branch
+            if total_students == 0:
                 students_qs = StudentRegistration.objects.filter(is_active=True)
                 if organization_id:
                     students_qs = students_qs.filter(organization_id=organization_id)
@@ -4143,7 +4160,8 @@ class LibraryStatisticsAPIView(ListAPIView):
 
             # For staff, use employee assignments to filter by academic year if available
             # If no assignments exist, fall back to counting all active staff
-            if academic_year_id:
+            total_staff = 0
+            if valid_academic_year:
                 # Get staff who have assignments for the specified academic year
                 staff_assignments_qs = EmployeeAssignment.objects.filter(
                     is_active=True,
@@ -4158,20 +4176,10 @@ class LibraryStatisticsAPIView(ListAPIView):
 
                 # Get unique employee IDs from assignments
                 staff_employee_ids = list(staff_assignments_qs.values_list('employee_master_id', flat=True).distinct())
+                total_staff = len(staff_employee_ids)
 
-                # If we have assignments, use them; otherwise count all active staff for org/branch
-                if staff_employee_ids:
-                    total_staff = len(staff_employee_ids)
-                else:
-                    # Fall back to counting all active staff for org/branch
-                    staff_qs = EmployeeMaster.objects.filter(is_active=True)
-                    if organization_id:
-                        staff_qs = staff_qs.filter(organization_id=organization_id)
-                    if branch_id:
-                        staff_qs = staff_qs.filter(branch_id=branch_id)
-                    total_staff = staff_qs.count()
-            else:
-                # If no academic year filter, count all active staff for org/branch
+            # If no valid academic year or no staff found, count all active staff for org/branch
+            if total_staff == 0:
                 staff_qs = EmployeeMaster.objects.filter(is_active=True)
                 if organization_id:
                     staff_qs = staff_qs.filter(organization_id=organization_id)
@@ -4187,8 +4195,7 @@ class LibraryStatisticsAPIView(ListAPIView):
                 books_qs = books_qs.filter(organization_id=organization_id)
             if branch_id:
                 books_qs = books_qs.filter(batch_id=branch_id)
-            # if academic_year_id:
-            #     books_qs = books_qs.filter(academic_year_id=academic_year_id)
+            # Books are not filtered by academic year (they are permanent assets)
 
             total_books = books_qs.count()
 
@@ -4197,8 +4204,13 @@ class LibraryStatisticsAPIView(ListAPIView):
 
             # 4. Total number of Book Issues
             issues_qs = LibraryBooksIssues.objects.filter(is_active=True)
-            if academic_year_id:
-                issues_qs = issues_qs.filter(academic_year_id=academic_year_id)
+            
+            # Only filter by academic year if it's valid and has data
+            if valid_academic_year:
+                filtered_issues = issues_qs.filter(academic_year_id=academic_year_id)
+                # Only apply the filter if it returns results
+                if filtered_issues.exists():
+                    issues_qs = filtered_issues
 
             # Filter by organization and branch through book details
             if organization_id or branch_id:

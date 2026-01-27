@@ -552,8 +552,7 @@ const AdmBookMovements = () => {
         setSearchResults(data.data); // Update the table with filtered results
         setPenaltyAmount(data.Penality_amount); // Update penalty amount
       } else {
-        console.error("Failed to fetch search results:", data.message);
-        alert("No records found for the given criteria.");
+        console.log("No records found for the given criteria.");
         setSearchResults([]); // Clear table if no data is found
       }
     } catch (error) {
