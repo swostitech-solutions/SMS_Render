@@ -27,7 +27,7 @@ const AdmAttendanceEntry = () => {
       // First, try to get student_course_id from student data
       // We need student_course_id for the listByStudent endpoint
       let studentCourseId = null;
-      
+
       try {
         const studentDataUrl = `${ApiUrl.apiurl}StudentCourse/GetStudentDataBasedId/?student_id=${studentId}&branch_id=${branchId}&organization_id=${organizationId}`;
         const studentDataResponse = await fetch(studentDataUrl, {
@@ -176,9 +176,9 @@ const AdmAttendanceEntry = () => {
                                 <td style={{ wordWrap: "break-word", whiteSpace: "normal" }}>{item.GrievancePriority || "N/A"}</td>
                                 <td style={{ wordWrap: "break-word", whiteSpace: "normal" }}>{item.GrievanceSeverity || "N/A"}</td>
                                 <td style={{ wordWrap: "break-word", whiteSpace: "normal" }}>{item.details || "N/A"}</td>
-                                <td style={{ wordWrap: "break-word", whiteSpace: "normal" }}>{item.ActionTaken || "N/A"}</td>
+                                <td style={{ wordWrap: "break-word", whiteSpace: "normal" }}>{item.ActionTaken || "Pending"}</td>
                                 <td style={{ wordWrap: "break-word", whiteSpace: "normal" }}>
-                                  {item.ActionTakenDateTime ? item.ActionTakenDateTime.split(' ')[0] : "N/A"}
+                                  {item.ActionTakenDateTime ? item.ActionTakenDateTime.split(' ')[0] : "Pending"}
                                 </td>
                               </tr>
                             ))

@@ -864,6 +864,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             batch: opt?.value || "",
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                         }}
                         options={
@@ -899,6 +901,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             course: opt?.value || "",
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                         }}
                         options={
@@ -934,6 +938,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             department: opt?.value || "",
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                         }}
                         options={
@@ -971,6 +977,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             academic_year: opt?.value || "",
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                         }}
                         options={
@@ -1006,6 +1014,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             semester: opt?.value || "",
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                         }}
                         options={
@@ -1041,6 +1051,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             addmitted_section: opt?.value || "",
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                         }}
                         options={
@@ -1323,6 +1335,8 @@ const AdmAttendanceEntry = ({
                           setFormData((prev) => ({
                             ...prev,
                             category: value,
+                            feegroup: "",
+                            feeappfrom: "",
                           }));
                           setSelectedCategory(value);
                           setFilters((prev) => ({

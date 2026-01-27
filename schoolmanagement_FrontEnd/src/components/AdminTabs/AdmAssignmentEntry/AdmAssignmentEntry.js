@@ -350,7 +350,7 @@ const AdmAttendanceEntry = () => {
         setAssignments(result.data);
       } else {
         setAssignments([]);
-        alert("No assignments found.");
+        // alert("No assignments found.");
       }
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -1047,8 +1047,7 @@ const AdmAttendanceEntry = () => {
         );
       } else {
         alert(
-          `❌ Failed to delete assignment: ${
-            result.message || "Unknown error."
+          `❌ Failed to delete assignment: ${result.message || "Unknown error."
           }`
         );
       }
@@ -1210,11 +1209,11 @@ const AdmAttendanceEntry = () => {
                               (b) => b.id === Number(formData.batch)
                             )
                               ? {
-                                  value: formData.batch,
-                                  label: BatchList.find(
-                                    (b) => b.id === Number(formData.batch)
-                                  )?.batch_description,
-                                }
+                                value: formData.batch,
+                                label: BatchList.find(
+                                  (b) => b.id === Number(formData.batch)
+                                )?.batch_description,
+                              }
                               : null
                           }
                           onChange={(opt) => {
@@ -1227,8 +1226,8 @@ const AdmAttendanceEntry = () => {
                             loadingBatch
                               ? "Loading Session..."
                               : errorBatch
-                              ? "Error loading Session"
-                              : "Select Session"
+                                ? "Error loading Session"
+                                : "Select Session"
                           }
                         />
                       </div>
@@ -1255,16 +1254,16 @@ const AdmAttendanceEntry = () => {
                               (c) => c.id === Number(formData.course)
                             )
                               ? {
-                                  value: formData.course,
-                                  label:
-                                    CourseList.find(
-                                      (c) => c.id === Number(formData.course)
-                                    )?.course_name ||
-                                    CourseList.find(
-                                      (c) => c.id === Number(formData.course)
-                                    )?.description ||
-                                    "Unnamed Course",
-                                }
+                                value: formData.course,
+                                label:
+                                  CourseList.find(
+                                    (c) => c.id === Number(formData.course)
+                                  )?.course_name ||
+                                  CourseList.find(
+                                    (c) => c.id === Number(formData.course)
+                                  )?.description ||
+                                  "Unnamed Course",
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -1278,8 +1277,8 @@ const AdmAttendanceEntry = () => {
                             loadingCourses
                               ? "Loading courses..."
                               : errorCourses
-                              ? "Error loading courses"
-                              : "Select Course"
+                                ? "Error loading courses"
+                                : "Select Course"
                           }
                         />
                       </div>
@@ -1308,16 +1307,16 @@ const AdmAttendanceEntry = () => {
                               (b) => b.id === Number(formData.branch)
                             )
                               ? {
-                                  value: formData.branch,
-                                  label:
-                                    BranchList.find(
-                                      (b) => b.id === Number(formData.branch)
-                                    )?.department_description ||
-                                    BranchList.find(
-                                      (b) => b.id === Number(formData.branch)
-                                    )?.department_code ||
-                                    "Unnamed Department",
-                                }
+                                value: formData.branch,
+                                label:
+                                  BranchList.find(
+                                    (b) => b.id === Number(formData.branch)
+                                  )?.department_description ||
+                                  BranchList.find(
+                                    (b) => b.id === Number(formData.branch)
+                                  )?.department_code ||
+                                  "Unnamed Department",
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -1330,8 +1329,8 @@ const AdmAttendanceEntry = () => {
                             loadingBranches
                               ? "Loading departments..."
                               : errorBranches
-                              ? "Error loading departments"
-                              : "Select Department"
+                                ? "Error loading departments"
+                                : "Select Department"
                           }
                         />
                       </div>
@@ -1360,14 +1359,14 @@ const AdmAttendanceEntry = () => {
                               (y) => y.id === Number(formData.academic_year)
                             )
                               ? {
-                                  value: formData.academic_year,
-                                  label:
-                                    AcademicYearList.find(
-                                      (y) =>
-                                        y.id === Number(formData.academic_year)
-                                    )?.academic_year_description ||
-                                    "Unnamed Academic Year",
-                                }
+                                value: formData.academic_year,
+                                label:
+                                  AcademicYearList.find(
+                                    (y) =>
+                                      y.id === Number(formData.academic_year)
+                                  )?.academic_year_description ||
+                                  "Unnamed Academic Year",
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -1380,8 +1379,8 @@ const AdmAttendanceEntry = () => {
                             loadingAcademicYears
                               ? "Loading Academic Years..."
                               : errorAcademicYears
-                              ? "Error loading academic years"
-                              : "Select Academic Year"
+                                ? "Error loading academic years"
+                                : "Select Academic Year"
                           }
                         />
                       </div>
@@ -1410,13 +1409,13 @@ const AdmAttendanceEntry = () => {
                               (s) => s.id === Number(formData.semester)
                             )
                               ? {
-                                  value: formData.semester,
-                                  label:
-                                    SemesterList.find(
-                                      (s) => s.id === Number(formData.semester)
-                                    )?.semester_description ||
-                                    "Unnamed Semester",
-                                }
+                                value: formData.semester,
+                                label:
+                                  SemesterList.find(
+                                    (s) => s.id === Number(formData.semester)
+                                  )?.semester_description ||
+                                  "Unnamed Semester",
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -1429,8 +1428,8 @@ const AdmAttendanceEntry = () => {
                             loadingSemesters
                               ? "Loading Semesters..."
                               : errorSemesters
-                              ? "Error loading semesters"
-                              : "Select Semester"
+                                ? "Error loading semesters"
+                                : "Select Semester"
                           }
                         />
                       </div>
@@ -1458,14 +1457,14 @@ const AdmAttendanceEntry = () => {
                               (s) => s.id === Number(formData.addmitted_section)
                             )
                               ? {
-                                  value: formData.addmitted_section,
-                                  label:
-                                    SectionList.find(
-                                      (s) =>
-                                        s.id ===
-                                        Number(formData.addmitted_section)
-                                    )?.section_name || "Unnamed Section",
-                                }
+                                value: formData.addmitted_section,
+                                label:
+                                  SectionList.find(
+                                    (s) =>
+                                      s.id ===
+                                      Number(formData.addmitted_section)
+                                  )?.section_name || "Unnamed Section",
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -1478,8 +1477,8 @@ const AdmAttendanceEntry = () => {
                             loadingSections
                               ? "Loading Sections..."
                               : errorSections
-                              ? "Error loading sections"
-                              : "Select Section"
+                                ? "Error loading sections"
+                                : "Select Section"
                           }
                         />
                       </div>
@@ -1502,12 +1501,12 @@ const AdmAttendanceEntry = () => {
                               (lec) => lec.id === Number(formData.lectureId)
                             )
                               ? {
-                                  value: formData.lectureId,
-                                  label: LectureList.find(
-                                    (lec) =>
-                                      lec.id === Number(formData.lectureId)
-                                  )?.lecture_period_name,
-                                }
+                                value: formData.lectureId,
+                                label: LectureList.find(
+                                  (lec) =>
+                                    lec.id === Number(formData.lectureId)
+                                )?.lecture_period_name,
+                              }
                               : null
                           }
                           onChange={(opt) => {
@@ -1522,8 +1521,8 @@ const AdmAttendanceEntry = () => {
                             loadingLectures
                               ? "Loading Periods..."
                               : errorLectures
-                              ? "Error loading Periods"
-                              : "Select Period"
+                                ? "Error loading Periods"
+                                : "Select Period"
                           }
                         />
                       </div>
@@ -1558,11 +1557,11 @@ const AdmAttendanceEntry = () => {
                             (s) => s.id === Number(formData.subjectId)
                           )
                             ? {
-                                value: formData.subjectId,
-                                label: SubjectList.find(
-                                  (s) => s.id === Number(formData.subjectId)
-                                )?.subjectdescription, // ✅ Only subject name
-                              }
+                              value: formData.subjectId,
+                              label: SubjectList.find(
+                                (s) => s.id === Number(formData.subjectId)
+                              )?.subjectdescription, // ✅ Only subject name
+                            }
                             : null
                         }
                         onChange={(opt) =>
@@ -1576,8 +1575,8 @@ const AdmAttendanceEntry = () => {
                           loadingSubjects
                             ? "Loading subjects..."
                             : errorSubjects
-                            ? "Error loading subjects"
-                            : "Select Subject"
+                              ? "Error loading subjects"
+                              : "Select Subject"
                         }
                       />
                     </div>
@@ -1601,13 +1600,13 @@ const AdmAttendanceEntry = () => {
                               p.professor_id === Number(formData.professorId)
                           )
                             ? {
-                                value: formData.professorId,
-                                label: ProfessorList.find(
-                                  (p) =>
-                                    p.professor_id ===
-                                    Number(formData.professorId)
-                                )?.professor_name,
-                              }
+                              value: formData.professorId,
+                              label: ProfessorList.find(
+                                (p) =>
+                                  p.professor_id ===
+                                  Number(formData.professorId)
+                              )?.professor_name,
+                            }
                             : null
                         }
                         onChange={(opt) =>
@@ -1620,8 +1619,8 @@ const AdmAttendanceEntry = () => {
                           loadingProfessors
                             ? "Loading professors..."
                             : errorProfessors
-                            ? "Error loading professors"
-                            : "Select Lecture"
+                              ? "Error loading professors"
+                              : "Select Lecture"
                         }
                       />
                     </div>
@@ -1843,9 +1842,9 @@ const AdmAttendanceEntry = () => {
                               <div className="hoverable-text">
                                 {item.assignment_details.length > 50
                                   ? `${item.assignment_details.substring(
-                                      0,
-                                      50
-                                    )}...`
+                                    0,
+                                    50
+                                  )}...`
                                   : item.assignment_details}
                                 <div className="hover-popup">
                                   {item.assignment_details}
