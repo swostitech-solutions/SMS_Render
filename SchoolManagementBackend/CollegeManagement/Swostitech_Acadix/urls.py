@@ -49,5 +49,5 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 # Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files (Enabled for production to fix 404 on Render)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
