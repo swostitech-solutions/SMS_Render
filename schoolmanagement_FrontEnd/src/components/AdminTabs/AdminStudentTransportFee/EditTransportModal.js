@@ -563,13 +563,13 @@ const EditTransportModal = ({
   const [lockedSemesters, setLockedSemesters] = useState([]);
   const [paidSemesters, setPaidSemesters] = useState([]);
 
-const handleSemesterToggle = (sem) => {
-  if (paidSemesters.includes(sem)) return;
+  const handleSemesterToggle = (sem) => {
+    if (paidSemesters.includes(sem)) return;
 
-  setSelectedSemesters((prev) =>
-    prev.includes(sem) ? prev.filter((s) => s !== sem) : [...prev, sem]
-  );
-};
+    setSelectedSemesters((prev) =>
+      prev.includes(sem) ? prev.filter((s) => s !== sem) : [...prev, sem]
+    );
+  };
 
 
 
@@ -773,130 +773,130 @@ const handleSemesterToggle = (sem) => {
   //     alert("Failed to update transport details. Please try again.");
   //   }
   // };
-useEffect(() => {
-  if (!transportDetails || Object.keys(transportDetails).length === 0) return;
+  useEffect(() => {
+    if (!transportDetails || Object.keys(transportDetails).length === 0) return;
 
-  setStudentData((prev) => ({
-    ...prev,
-    student_id: transportDetails.student_id,
-    barcode: transportDetails.barcode,
-    admission_no: transportDetails.admission_no,
-    student_name: transportDetails.student_name,
-  }));
+    setStudentData((prev) => ({
+      ...prev,
+      student_id: transportDetails.student_id,
+      barcode: transportDetails.barcode,
+      admission_no: transportDetails.admission_no,
+      student_name: transportDetails.student_name,
+    }));
 
-  setTransportAvailed(Boolean(transportDetails.transport_avail));
+    setTransportAvailed(Boolean(transportDetails.transport_avail));
 
-  // ✅ Availed semesters (checked but editable)
-  const availedSemesters = Array.isArray(transportDetails.choice_semester)
-    ? transportDetails.choice_semester
+    // ✅ Availed semesters (checked but editable)
+    const availedSemesters = Array.isArray(transportDetails.choice_semester)
+      ? transportDetails.choice_semester
         .filter((s) => String(s.flag).toLowerCase() === "yes")
         .map((s) => Number(s.semester_id))
-    : [];
+      : [];
 
-  // ✅ PAID semesters (LOCKED)
-  const paidSemestersFromApi = Array.isArray(
-    transportDetails.transport_paid_sems
-  )
-    ? transportDetails.transport_paid_sems.map((s) => Number(s.semester_id))
-    : [];
+    // ✅ PAID semesters (LOCKED)
+    const paidSemestersFromApi = Array.isArray(
+      transportDetails.transport_paid_sems
+    )
+      ? transportDetails.transport_paid_sems.map((s) => Number(s.semester_id))
+      : [];
 
-  // ✅ Paid semesters must always stay selected
-  const mergedSelected = [
-    ...new Set([...availedSemesters, ...paidSemestersFromApi]),
-  ];
+    // ✅ Paid semesters must always stay selected
+    const mergedSelected = [
+      ...new Set([...availedSemesters, ...paidSemestersFromApi]),
+    ];
 
-  setSelectedSemesters(mergedSelected);
-  setPaidSemesters(paidSemestersFromApi); // 🔒 ONLY PAID
-  setLockedSemesters(paidSemestersFromApi);
+    setSelectedSemesters(mergedSelected);
+    setPaidSemesters(paidSemestersFromApi); // 🔒 ONLY PAID
+    setLockedSemesters(paidSemestersFromApi);
 
-  // Route
-  const matchedRoute =
-    routeOptions.find(
-      (r) => Number(r.value) === Number(transportDetails.routeId)
-    ) || null;
-  setSelectedRoute(matchedRoute);
+    // Route
+    const matchedRoute =
+      routeOptions.find(
+        (r) => Number(r.value) === Number(transportDetails.routeId)
+      ) || null;
+    setSelectedRoute(matchedRoute);
 
-  // Pickup
-  if (transportDetails.pickup_point_id != null) {
-    setSelectedPickup({
-      value: Number(transportDetails.pickup_point_id),
-      label: transportDetails.pickup_point_name || "",
-      amount: transportDetails.amount,
-    });
-    setAmount(transportDetails.amount);
-  } else {
-    setSelectedPickup(null);
-    setAmount("");
-  }
-}, [transportDetails, routeOptions]);
+    // Pickup
+    if (transportDetails.pickup_point_id != null) {
+      setSelectedPickup({
+        value: Number(transportDetails.pickup_point_id),
+        label: transportDetails.pickup_point_name || "",
+        amount: transportDetails.amount,
+      });
+      setAmount(transportDetails.amount);
+    } else {
+      setSelectedPickup(null);
+      setAmount("");
+    }
+  }, [transportDetails, routeOptions]);
 
 
-const handleSaveChanges = async () => {
-  // 🔹 Basic validations
-  if (!studentData?.student_id) {
-    alert("Student ID is missing!");
-    return;
-  }
-
-  const userId = sessionStorage.getItem("userId");
-  if (!userId) {
-    alert("User ID is missing in session!");
-    return;
-  }
-
-  const token = localStorage.getItem("accessToken");
-  if (!token) {
-    alert("Access token missing!");
-    return;
-  }
-
-  // 🔹 Convert paid semesters to number list
-  const paidSet = new Set(paidSemesters.map(Number));
-
-  //  ONLY send NON-PAID selected semesters
-  const semestersToSend = selectedSemesters
-    .map(Number)
-    .filter((sem) => !paidSet.has(sem)); //  remove paid semesters
-
-  const payload = {
-    student_id: Number(studentData.student_id),
-    transport_avail: transportAvailed,
-    choice_semesters: semestersToSend, //  ONLY unpaid semesters
-    route_id: selectedRoute?.value ?? null,
-    pickup_point_id: selectedPickup?.value ?? null,
-    amount: amount ? Number(amount) : 0,
-    created_by: Number(userId),
-  };
-
-  console.log(" FINAL Transport Update Payload:", payload);
-
-  try {
-    const response = await fetch(
-      `${ApiUrl.apiurl}Transport/UpdateStudentTransport/`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("API Error:", result);
-      throw new Error(result?.message || "Failed to update transport details");
+  const handleSaveChanges = async () => {
+    // 🔹 Basic validations
+    if (!studentData?.student_id) {
+      alert("Student ID is missing!");
+      return;
     }
 
-    alert("Transport details updated successfully!");
-    handleClose();
-  } catch (error) {
-    console.error(" Error updating transport:", error);
-    alert("Failed to update transport details. Please try again.");
-  }
-};
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) {
+      alert("User ID is missing in session!");
+      return;
+    }
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("Access token missing!");
+      return;
+    }
+
+    // 🔹 Convert paid semesters to number list
+    const paidSet = new Set(paidSemesters.map(Number));
+
+    //  ONLY send NON-PAID selected semesters
+    const semestersToSend = selectedSemesters
+      .map(Number)
+      .filter((sem) => !paidSet.has(sem)); //  remove paid semesters
+
+    const payload = {
+      student_id: Number(studentData.student_id),
+      transport_avail: transportAvailed,
+      choice_semesters: semestersToSend, //  ONLY unpaid semesters
+      route_id: selectedRoute?.value ?? null,
+      pickup_point_id: selectedPickup?.value ?? null,
+      amount: amount ? Number(amount) : 0,
+      created_by: Number(userId),
+    };
+
+    console.log(" FINAL Transport Update Payload:", payload);
+
+    try {
+      const response = await fetch(
+        `${ApiUrl.apiurl}Transport/UpdateStudentTransport/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("API Error:", result);
+        throw new Error(result?.message || "Failed to update transport details");
+      }
+
+      alert("Transport details updated successfully!");
+      handleClose();
+    } catch (error) {
+      console.error(" Error updating transport:", error);
+      alert("Failed to update transport details. Please try again.");
+    }
+  };
 
 
   const handleTransportAvailedChange = () => {
@@ -1028,31 +1028,60 @@ const handleSaveChanges = async () => {
                   Transport Availed
                 </label>
               </div>
-              {/* Semester Selection */}
               <div className="row g-2 mt-3">
-                {Array.from(
-                  { length: transportDetails?.total_semesters || 0 },
-                  (_, index) => {
-                    const sem = index + 1;
+                {(() => {
+                  // Logic to determine current semester number
+                  const getNumber = (name) => {
+                    if (!name) return 0;
+                    const match = name.match(/\d+/);
+                    return match ? parseInt(match[0], 10) : 0;
+                  };
 
-                  const isLocked = paidSemesters.includes(sem);
+                  let currentSemNum = 0;
+                  const semName = transportDetails?.semester_name || "";
 
-                    return (
-                      <div key={sem} className="col-6 col-md-3">
-                        <label className="form-check-label">
-                          <input
-                            type="checkbox"
-                            className="form-check-input me-2"
-                            checked={selectedSemesters.includes(sem)}
-                            onChange={() => handleSemesterToggle(sem)}
-                            disabled={!transportAvailed || isLocked}
-                          />
-                          Semester {sem}
-                        </label>
-                      </div>
-                    );
+                  if (semName.toLowerCase().includes("default")) {
+                    const yearVal = getNumber(transportDetails?.academic_year);
+                    if (yearVal > 0) {
+                      currentSemNum = (yearVal - 1) * 2 + 1;
+                    } else {
+                      currentSemNum = 1;
+                    }
+                  } else {
+                    currentSemNum = getNumber(semName);
                   }
-                )}
+
+                  return Array.from(
+                    { length: transportDetails?.total_semesters || 0 },
+                    (_, index) => {
+                      const sem = index + 1;
+                      const isLocked = paidSemesters.includes(sem);
+                      const isPastSemester = sem < currentSemNum;
+                      const isDisabled = !transportAvailed || isLocked || isPastSemester;
+
+                      return (
+                        <div key={sem} className="col-6 col-md-3">
+                          <label
+                            className="form-check-label"
+                            style={{
+                              opacity: isDisabled ? 0.6 : 1,
+                              cursor: isDisabled ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              className="form-check-input me-2"
+                              checked={selectedSemesters.includes(sem)}
+                              onChange={() => handleSemesterToggle(sem)}
+                              disabled={isDisabled}
+                            />
+                            Semester {sem}
+                          </label>
+                        </div>
+                      );
+                    }
+                  );
+                })()}
               </div>
 
               {/* Transport Selection */}

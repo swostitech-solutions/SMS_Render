@@ -43,66 +43,66 @@ const AdmAttendanceEntry = () => {
   const barcodeRef = useRef(null);
   const smsToRef = useRef(null);
 
- const handleClear = () => {
-   // Filters
+  const handleClear = () => {
+    // Filters
     setSearchStudentId(""); // ✅ IMPORTANT
     setStudentId(""); // internal
     localStorage.removeItem("selectedClubStudentId");
-  //  setStudentId("");
-   setStudentName("");
-   setClassId("");
-   setSectionId("");
+    //  setStudentId("");
+    setStudentName("");
+    setClassId("");
+    setSectionId("");
 
-   setSelectedStudent({
-     name: "",
-     barcode: "",
-     admissionNo: "",
-     fatherName: "",
-     motherName: "",
-     schoolAdmissionNo: "",
-   });
+    setSelectedStudent({
+      name: "",
+      barcode: "",
+      admissionNo: "",
+      fatherName: "",
+      motherName: "",
+      schoolAdmissionNo: "",
+    });
 
-   // Dropdowns
-   setSelectedDepartment(null);
-   setSelectedCourse(null);
-   setSelectedSession(null);
-   setSelectedAcademicYear(null);
-   setSelectedSemester(null);
-   setSelectedSection(null);
+    // Dropdowns
+    setSelectedDepartment(null);
+    setSelectedCourse(null);
+    setSelectedSession(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
 
-   setDepartments([]);
-   setCourses([]);
-   setSemesters([]);
-   setSections([]);
-   setAcademicYears([]);
-   setSectionOptions([]);
-   setClassOptions([]);
+    setDepartments([]);
+    setCourses([]);
+    setSemesters([]);
+    setSections([]);
+    setAcademicYears([]);
+    setSectionOptions([]);
+    setClassOptions([]);
 
-   // Transport
-   setTransportData([]);
-   setSelectedStudentId(null);
-   setStudentTransportDetails(null);
-   setSelectedRoute(null);
-   setRoutes([]);
+    // Transport
+    setTransportData([]);
+    setSelectedStudentId(null);
+    setStudentTransportDetails(null);
+    setSelectedRoute(null);
+    setRoutes([]);
 
-   // Pagination
-   setCurrentPage(0);
+    // Pagination
+    setCurrentPage(0);
 
-   // Fee element
-   setFeeElement({
-     element_type_id: "",
-     name: "",
-     frequency: "",
-     amount: "",
-     periods: Array(6).fill(null),
-   });
+    // Fee element
+    setFeeElement({
+      element_type_id: "",
+      name: "",
+      frequency: "",
+      amount: "",
+      periods: Array(6).fill(null),
+    });
 
-   // Clear inputs
-   fromClassRef.current && (fromClassRef.current.value = "");
-   admissionNoRef.current && (admissionNoRef.current.value = "");
-   barcodeRef.current && (barcodeRef.current.value = "");
-   smsToRef.current && (smsToRef.current.value = "");
- };
+    // Clear inputs
+    fromClassRef.current && (fromClassRef.current.value = "");
+    admissionNoRef.current && (admissionNoRef.current.value = "");
+    barcodeRef.current && (barcodeRef.current.value = "");
+    smsToRef.current && (smsToRef.current.value = "");
+  };
 
   // Slice data for pagination
   const offset = currentPage * itemsPerPage;
@@ -130,7 +130,7 @@ const AdmAttendanceEntry = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
-const [searchStudentId, setSearchStudentId] = useState("");
+  const [searchStudentId, setSearchStudentId] = useState("");
 
   // Use refs for the fields that don't rely on state
 
@@ -642,38 +642,38 @@ const [searchStudentId, setSearchStudentId] = useState("");
       }
     }
   }, []);
-// const handleSelectStudent = async (selectedStudent) => {
-//   try {
-//     if (!selectedStudent || !selectedStudent.student_id) {
-//       console.error(
-//         "Student ID missing from selected student:",
-//         selectedStudent
-//       );
-//       return;
-//     }
+  // const handleSelectStudent = async (selectedStudent) => {
+  //   try {
+  //     if (!selectedStudent || !selectedStudent.student_id) {
+  //       console.error(
+  //         "Student ID missing from selected student:",
+  //         selectedStudent
+  //       );
+  //       return;
+  //     }
 
-//     const sid = selectedStudent.student_id;
+  //     const sid = selectedStudent.student_id;
 
-//     // Set student ID immediately
-//     setStudentId(sid);
+  //     // Set student ID immediately
+  //     setStudentId(sid);
 
-//     // Save name for display (temporary)
-//     setStudentName(selectedStudent.student_name || "");
+  //     // Save name for display (temporary)
+  //     setStudentName(selectedStudent.student_name || "");
 
-//     // Store ID in localStorage
-//     localStorage.setItem(
-//       "selectedClubStudentId",
-//       JSON.stringify({ student_id: sid })
-//     );
+  //     // Store ID in localStorage
+  //     localStorage.setItem(
+  //       "selectedClubStudentId",
+  //       JSON.stringify({ student_id: sid })
+  //     );
 
-//     // NOW fetch complete details from API
-//     await fetchStudentDetails(sid);
+  //     // NOW fetch complete details from API
+  //     await fetchStudentDetails(sid);
 
-//     handleCloseModal();
-//   } catch (error) {
-//     console.error("Error handling selected student:", error);
-//   }
-// };
+  //     handleCloseModal();
+  //   } catch (error) {
+  //     console.error("Error handling selected student:", error);
+  //   }
+  // };
 
 
   // const handleSelectStudent = async (selectedStudent) => {
@@ -783,87 +783,87 @@ const [searchStudentId, setSearchStudentId] = useState("");
   //   }
   // };
 
-const handleSelectStudent = async (selectedStudent) => {
-  try {
-    if (!selectedStudent || !selectedStudent.student_id) return;
+  const handleSelectStudent = async (selectedStudent) => {
+    try {
+      if (!selectedStudent || !selectedStudent.student_id) return;
 
-    const sid = String(selectedStudent.student_id);
+      const sid = String(selectedStudent.student_id);
 
-    // ✅ SET BOTH
-    setStudentId(sid);
-    setSearchStudentId(sid); // 🔥 IMPORTANT FIX
-    setStudentName(selectedStudent.student_name || "");
+      // ✅ SET BOTH
+      setStudentId(sid);
+      setSearchStudentId(sid); // 🔥 IMPORTANT FIX
+      setStudentName(selectedStudent.student_name || "");
 
-    localStorage.setItem(
-      "selectedClubStudentId",
-      JSON.stringify({ student_id: sid })
-    );
+      localStorage.setItem(
+        "selectedClubStudentId",
+        JSON.stringify({ student_id: sid })
+      );
 
-    await fetchStudentDetails(sid);
-    handleCloseModal();
-  } catch (error) {
-    console.error("Error handling selected student:", error);
-  }
-};
+      await fetchStudentDetails(sid);
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error handling selected student:", error);
+    }
+  };
 
- const fetchStudentDetails = async (sid) => {
-   try {
-     if (!sid) return;
+  const fetchStudentDetails = async (sid) => {
+    try {
+      if (!sid) return;
 
-     const token = localStorage.getItem("accessToken");
-     const organization_id = sessionStorage.getItem("organization_id");
-     const branch_id = sessionStorage.getItem("branch_id");
+      const token = localStorage.getItem("accessToken");
+      const organization_id = sessionStorage.getItem("organization_id");
+      const branch_id = sessionStorage.getItem("branch_id");
 
-     const url = `${ApiUrl.apiurl}StudentCourse/GetStudentDataBasedId/?student_id=${sid}&branch_id=${branch_id}&organization_id=${organization_id}`;
+      const url = `${ApiUrl.apiurl}StudentCourse/GetStudentDataBasedId/?student_id=${sid}&branch_id=${branch_id}&organization_id=${organization_id}`;
 
-     console.log("Fetching details from:", url);
+      console.log("Fetching details from:", url);
 
-     const response = await fetch(url, {
-       method: "GET",
-       headers: {
-         Authorization: `Bearer ${token}`,
-       },
-     });
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-     const result = await response.json();
-     console.log("Student Full Details:", result);
+      const result = await response.json();
+      console.log("Student Full Details:", result);
 
-     if (result.message === "Success" && result.data) {
-       const student = result.data;
+      if (result.message === "Success" && result.data) {
+        const student = result.data;
 
-       // Save everything
-       setStudentDetails(student);
-       setStudentName(student.student_name || "");
+        // Save everything
+        setStudentDetails(student);
+        setStudentName(student.student_name || "");
 
-       // ALSO fill dropdowns (optional)
-       setSelectedCourse({
-         value: student.course_id,
-         label: student.course_name,
-       });
-       setSelectedDepartment({
-         value: student.department_id,
-         label: student.department,
-       });
-       setSelectedSession({ value: student.batch_id, label: student.batch });
-       setSelectedAcademicYear({
-         value: student.academic_year_id,
-         label: student.academic_year,
-       });
-       setSelectedSemester({
-         value: student.semester_id,
-         label: student.semester_name,
-       });
-       setSelectedSection({
-         value: student.section_id,
-         label: student.section_name,
-       });
+        // ALSO fill dropdowns (optional)
+        setSelectedCourse({
+          value: student.course_id,
+          label: student.course_name,
+        });
+        setSelectedDepartment({
+          value: student.department_id,
+          label: student.department,
+        });
+        setSelectedSession({ value: student.batch_id, label: student.batch });
+        setSelectedAcademicYear({
+          value: student.academic_year_id,
+          label: student.academic_year,
+        });
+        setSelectedSemester({
+          value: student.semester_id,
+          label: student.semester_name,
+        });
+        setSelectedSection({
+          value: student.section_id,
+          label: student.section_name,
+        });
 
-       console.log("All Student Data Loaded");
-     }
-   } catch (error) {
-     console.error("❌ Error fetching details:", error);
-   }
- };
+        console.log("All Student Data Loaded");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching details:", error);
+    }
+  };
 
 
   useEffect(() => {
@@ -984,79 +984,79 @@ const handleSelectStudent = async (selectedStudent) => {
   //   }
   // };
 
-// const handleSearch = async () => {
-//   try {
-//     const token = localStorage.getItem("accessToken");
-//     const organization_id = sessionStorage.getItem("organization_id");
-//     const branch_id = sessionStorage.getItem("branch_id");
+  // const handleSearch = async () => {
+  //   try {
+  //     const token = localStorage.getItem("accessToken");
+  //     const organization_id = sessionStorage.getItem("organization_id");
+  //     const branch_id = sessionStorage.getItem("branch_id");
 
-//     if (!token || !organization_id || !branch_id) {
-//       alert("Missing required session data");
-//       return;
-//     }
+  //     if (!token || !organization_id || !branch_id) {
+  //       alert("Missing required session data");
+  //       return;
+  //     }
 
-//     // 🔄 Clear old results
-//     setTransportData([]);
-//     setCurrentPage(0);
+  //     // 🔄 Clear old results
+  //     setTransportData([]);
+  //     setCurrentPage(0);
 
-//     const queryParams = new URLSearchParams({
-//       organization_id,
-//       branch_id,
-//     });
+  //     const queryParams = new URLSearchParams({
+  //       organization_id,
+  //       branch_id,
+  //     });
 
-//     // ✅ ONLY use searchStudentId
-//     if (searchStudentId?.trim()) {
-//       queryParams.append("student_id", searchStudentId.trim());
-//     }
+  //     // ✅ ONLY use searchStudentId
+  //     if (searchStudentId?.trim()) {
+  //       queryParams.append("student_id", searchStudentId.trim());
+  //     }
 
-//     if (classId) {
-//       queryParams.append("class_id", classId);
-//     }
+  //     if (classId) {
+  //       queryParams.append("class_id", classId);
+  //     }
 
-//     if (sectionId) {
-//       queryParams.append("section_id", sectionId);
-//     }
+  //     if (sectionId) {
+  //       queryParams.append("section_id", sectionId);
+  //     }
 
-//     const response = await fetch(
-//       `${
-//         ApiUrl.apiurl
-//       }Transport/GetStudentTransportList/?${queryParams.toString()}`,
-//       {
-//         method: "GET",
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
+  //     const response = await fetch(
+  //       `${
+  //         ApiUrl.apiurl
+  //       }Transport/GetStudentTransportList/?${queryParams.toString()}`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
 
-//     const data = await response.json();
-//     console.log("Transport API Response:", data);
+  //     const data = await response.json();
+  //     console.log("Transport API Response:", data);
 
-//     if (response.ok && Array.isArray(data.data)) {
-//       const formattedData = data.data.map((item) => ({
-//         className: item.course_name,
-//         sectionName: item.section_name,
-//         rollNo: item.enrollment_no,
-//         studentId: item.student_id,
-//         studentName: item.student_name,
-//         schoolAdmissionNo: item.college_admission_no,
-//         barcode: item.barcode,
-//         fatherName: item.father_name,
-//         motherName: item.mother_name,
-//         houseName: item.house_name,
-//         transportAvailed: item.transport_availed,
-//       }));
+  //     if (response.ok && Array.isArray(data.data)) {
+  //       const formattedData = data.data.map((item) => ({
+  //         className: item.course_name,
+  //         sectionName: item.section_name,
+  //         rollNo: item.enrollment_no,
+  //         studentId: item.student_id,
+  //         studentName: item.student_name,
+  //         schoolAdmissionNo: item.college_admission_no,
+  //         barcode: item.barcode,
+  //         fatherName: item.father_name,
+  //         motherName: item.mother_name,
+  //         houseName: item.house_name,
+  //         transportAvailed: item.transport_availed,
+  //       }));
 
-//       setTransportData(formattedData);
-//     } else {
-//       setTransportData([]);
-//     }
-//   } catch (error) {
-//     console.error("Error fetching transport data:", error);
-//     setTransportData([]);
-//   }
-// };
+  //       setTransportData(formattedData);
+  //     } else {
+  //       setTransportData([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching transport data:", error);
+  //     setTransportData([]);
+  //   }
+  // };
 
 
 
@@ -1097,151 +1097,156 @@ const handleSelectStudent = async (selectedStudent) => {
   //   fetchSectionData();
   // }, [classId]);
 
-const handleSearch = async () => {
-  try {
-    const token = localStorage.getItem("accessToken");
-    const organization_id = sessionStorage.getItem("organization_id");
-    const branch_id = sessionStorage.getItem("branch_id");
+  const handleSearch = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const organization_id = sessionStorage.getItem("organization_id");
+      const branch_id = sessionStorage.getItem("branch_id");
 
-    if (!token || !organization_id || !branch_id) {
-      alert("Missing required session data");
-      return;
-    }
-
-    setTransportData([]);
-    setCurrentPage(0);
-
-    const queryParams = new URLSearchParams({
-      organization_id,
-      branch_id,
-    });
-
-    // ✅ Priority 1: Student selected
-    if (searchStudentId?.trim()) {
-      queryParams.append("student_id", searchStudentId.trim());
-    }
-    // ✅ Priority 2: Other filters
-    else {
-      if (selectedCourse?.value) {
-        queryParams.append("course_id", selectedCourse.value);
+      if (!token || !organization_id || !branch_id) {
+        alert("Missing required session data");
+        return;
       }
-      if (selectedSection?.value) {
-        queryParams.append("section_id", selectedSection.value);
-      }
-    }
 
-    const response = await fetch(
-      `${
-        ApiUrl.apiurl
-      }Transport/GetStudentTransportList/?${queryParams.toString()}`,
-      {
+      setTransportData([]);
+      setCurrentPage(0);
+
+      const queryParams = new URLSearchParams({
+        organization_id,
+        branch_id,
+      });
+
+      // ✅ Priority 1: Student selected
+      if (searchStudentId?.trim()) {
+        queryParams.append("student_id", searchStudentId.trim());
+      }
+      // ✅ Priority 2: Other filters
+      else {
+        if (selectedCourse?.value) {
+          queryParams.append("course_id", selectedCourse.value);
+        }
+        if (selectedSection?.value) {
+          queryParams.append("section_id", selectedSection.value);
+        }
+      }
+
+      const response = await fetch(
+        `${ApiUrl.apiurl
+        }Transport/GetStudentTransportList/?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && Array.isArray(data.data)) {
+        const formattedData = data.data.map((item) => ({
+          className: item.course_name,
+          sectionName: item.section_name,
+          rollNo: item.enrollment_no,
+          studentId: item.student_id,
+          studentName: item.student_name,
+          schoolAdmissionNo: item.college_admission_no,
+          barcode: item.barcode,
+          fatherName: item.father_name,
+          motherName: item.mother_name,
+          houseName: item.house_name,
+          transportAvailed: item.transport_availed,
+          // New fields
+          batchName: item.batch_name,
+          academicYear: item.academic_year,
+          semester: item.semester,
+        }));
+
+        setTransportData(formattedData);
+      } else {
+        setTransportData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching transport data:", error);
+      setTransportData([]);
+    }
+  };
+
+
+  const handleOpenModal = async (student) => {
+    setShowModal(true);
+    setSelectedStudent(student);
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      const organization_id = sessionStorage.getItem("organization_id");
+      const branch_id = sessionStorage.getItem("branch_id");
+
+      const url = `${ApiUrl.apiurl}Transport/TransportDetailsRetereiveByStudent/?organization_id=${organization_id}&branch_id=${branch_id}&student_id=${student.studentId}`;
+
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+      });
+
+      const data = await response.json();
+      console.log("Transport Details API Response:", data);
+
+      if (data.message?.toLowerCase() === "success" && data.data) {
+        const formattedDetails = {
+          student_id: student.studentId,
+
+          student_name: data.data.student_name || "",
+          admission_no: data.data.admission_no || "",
+          barcode: data.data.barcode || "",
+          father_name: data.data.father_name || "",
+          mother_name: data.data.mother_name || "",
+          college_admission_no: data.data.college_admission_no || "",
+          academic_year: student.academicYear, // Pass academic year for validation logic
+          semester_name: student.semester, // Pass semester name for validation logic
+
+          transport_avail: Boolean(data.data.transport_avail),
+
+          routeId: data.data.routeId,
+          route_name: data.data.route_name,
+
+          pickup_point_id: data.data.pickup_point_id,
+          pickup_point_name: data.data.pickup_point_name,
+          amount: data.data.amount,
+
+          // ✅ Availed semesters
+          choice_semester: Array.isArray(data.data.choice_semester)
+            ? data.data.choice_semester.map((sem) => ({
+              semester_id: Number(sem.semester_id),
+              semester_name: sem.semester_name,
+              flag: sem.flag,
+            }))
+            : [],
+
+          // 🔒 PAID semesters (IMPORTANT)
+          transport_paid_sems: Array.isArray(data.data.transport_paid_sems)
+            ? data.data.transport_paid_sems.map((s) => ({
+              semester_id: Number(s.semester_id),
+            }))
+            : [],
+
+          // 🔢 Total semesters
+          total_semesters: data.data.total_semesters || 0,
+        };
+
+        setStudentTransportDetails(formattedDetails);
+      } else {
+        setStudentTransportDetails(null);
       }
-    );
-
-    const data = await response.json();
-
-    if (response.ok && Array.isArray(data.data)) {
-      const formattedData = data.data.map((item) => ({
-        className: item.course_name,
-        sectionName: item.section_name,
-        rollNo: item.enrollment_no,
-        studentId: item.student_id,
-        studentName: item.student_name,
-        schoolAdmissionNo: item.college_admission_no,
-        barcode: item.barcode,
-        fatherName: item.father_name,
-        motherName: item.mother_name,
-        houseName: item.house_name,
-        transportAvailed: item.transport_availed,
-      }));
-
-      setTransportData(formattedData);
-    } else {
-      setTransportData([]);
+    } catch (error) {
+      console.error("Error fetching transport details:", error);
+      setStudentTransportDetails(null);
     }
-  } catch (error) {
-    console.error("Error fetching transport data:", error);
-    setTransportData([]);
-  }
-};
-
-
- const handleOpenModal = async (student) => {
-   setShowModal(true);
-   setSelectedStudent(student);
-
-   try {
-     const token = localStorage.getItem("accessToken");
-     const organization_id = sessionStorage.getItem("organization_id");
-     const branch_id = sessionStorage.getItem("branch_id");
-
-     const url = `${ApiUrl.apiurl}Transport/TransportDetailsRetereiveByStudent/?organization_id=${organization_id}&branch_id=${branch_id}&student_id=${student.studentId}`;
-
-     const response = await fetch(url, {
-       method: "GET",
-       headers: {
-         Authorization: `Bearer ${token}`,
-         "Content-Type": "application/json",
-       },
-     });
-
-     const data = await response.json();
-     console.log("Transport Details API Response:", data);
-
-     if (data.message?.toLowerCase() === "success" && data.data) {
-       const formattedDetails = {
-         student_id: student.studentId,
-
-         student_name: data.data.student_name || "",
-         admission_no: data.data.admission_no || "",
-         barcode: data.data.barcode || "",
-         father_name: data.data.father_name || "",
-         mother_name: data.data.mother_name || "",
-         college_admission_no: data.data.college_admission_no || "",
-
-         transport_avail: Boolean(data.data.transport_avail),
-
-         routeId: data.data.routeId,
-         route_name: data.data.route_name,
-
-         pickup_point_id: data.data.pickup_point_id,
-         pickup_point_name: data.data.pickup_point_name,
-         amount: data.data.amount,
-
-         // ✅ Availed semesters
-         choice_semester: Array.isArray(data.data.choice_semester)
-           ? data.data.choice_semester.map((sem) => ({
-               semester_id: Number(sem.semester_id),
-               semester_name: sem.semester_name,
-               flag: sem.flag,
-             }))
-           : [],
-
-         // 🔒 PAID semesters (IMPORTANT)
-         transport_paid_sems: Array.isArray(data.data.transport_paid_sems)
-           ? data.data.transport_paid_sems.map((s) => ({
-               semester_id: Number(s.semester_id),
-             }))
-           : [],
-
-         // 🔢 Total semesters
-         total_semesters: data.data.total_semesters || 0,
-       };
-
-       setStudentTransportDetails(formattedDetails);
-     } else {
-       setStudentTransportDetails(null);
-     }
-   } catch (error) {
-     console.error("Error fetching transport details:", error);
-     setStudentTransportDetails(null);
-   }
- };
+  };
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -1437,8 +1442,9 @@ const handleSearch = async () => {
                     <thead>
                       <tr>
                         <th>Sr.No</th>
-                        <th>Course</th>
-                        <th>Section</th>
+                        <th>Session</th>
+                        <th>Academic Year</th>
+                        <th>Semester</th>
                         <th>Student Name</th>
                         <th>Barcode</th>
                         <th>Father Name</th>
@@ -1453,8 +1459,9 @@ const handleSearch = async () => {
                         currentData.map((student, index) => (
                           <tr key={student.studentId}>
                             <td>{offset + index + 1}</td>
-                            <td>{student.className || "N/A"}</td>
-                            <td>{student.sectionName || "N/A"}</td>
+                            <td>{student.batchName || "N/A"}</td>
+                            <td>{student.academicYear || "N/A"}</td>
+                            <td>{student.semester || "N/A"}</td>
                             <td>{student.studentName || "N/A"}</td>
                             <td>{student.barcode || "N/A"}</td>
                             <td>{student.fatherName || "N/A"}</td>

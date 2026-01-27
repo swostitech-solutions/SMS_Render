@@ -63,15 +63,43 @@ const HostelEdit = ({
 
     setPaidHostelSemesterIds(paidIds);
 
+    // Helper to extract numeric value
+    const getNumber = (name) => {
+      if (!name) return 0;
+      const match = name.match(/\d+/);
+      return match ? parseInt(match[0], 10) : 0;
+    };
+
+    let currentSemNum = 0;
+    const semName = transportDetails.semester_name || "";
+
+    // If Semester is "Default", use Academic Year to calculate restrictions
+    if (semName.toLowerCase().includes("default")) {
+      const yearVal = getNumber(transportDetails.academic_year);
+      // If 1st Year (1) -> start at 1.
+      // If 2nd Year (2) -> start at 3 (disable 1,2).
+      // If 3rd Year (3) -> start at 5 (disable 1,2,3,4).
+      if (yearVal > 0) {
+        currentSemNum = (yearVal - 1) * 2 + 1;
+      } else {
+        currentSemNum = 1;
+      }
+    } else {
+      // Normal Case: Extract number from "1st Semester"
+      currentSemNum = getNumber(semName);
+    }
+
     const semestersArray = Array.from(
       { length: transportDetails.total_semesters || 0 },
       (_, index) => {
         const id = index + 1;
+        const isPastSemester = id < currentSemNum; // Disable previous semesters
+
         return {
           id,
           name: `${id} Semester`,
           checked: selectedSemesters.includes(id),
-          disabled: paidIds.includes(id), // 🔒 DISABLE PAID SEMESTERS
+          disabled: paidIds.includes(id) || isPastSemester, // 🔒 DISABLE PAID & PAST SEMESTERS
         };
       }
     );

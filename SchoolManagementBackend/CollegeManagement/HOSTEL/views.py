@@ -1096,11 +1096,34 @@ class AssignStudentHostelCreate_UpdateAPI(CreateAPIView):
                 #     except Exception as e:
                 #         return Response({'message': 'error occurs' + str(e)},
                 #                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                try:
-                    StudentHostelDetailRecord = StudentHostelDetail.objects.get(student=student_id,is_active=True)
-                except StudentHostelDetail.DoesNotExist:
-                    pass
+                # Update Student Course Instance logic
+                if studentCourseInstance.hostel_choice_semester:
+                    try:
+                        choice_semesters = ast.literal_eval(studentCourseInstance.hostel_choice_semester)
+                        if not isinstance(choice_semesters, list):
+                            choice_semesters = []
+                    except:
+                        choice_semesters = []
+                else:
+                    choice_semesters = []
 
+                if choice_semester_ids:
+                    for item in choice_semester_ids:
+                        if item not in choice_semesters:
+                            choice_semesters.append(item)
+                
+                studentCourseInstance.temp_hostel_choice_semester = str(choice_semester_ids)
+                studentCourseInstance.hostel_choice_semester = str(choice_semesters)
+                studentCourseInstance.hostel_availed = hostel_avail
+                studentCourseInstance.save()
+                
+                # Retrieve existing hostel detail logic
+                try:
+                    StudentHostelDetailRecord = StudentHostelDetail.objects.filter(student=student_id,is_active=True).first()
+                except Exception:
+                    StudentHostelDetailRecord = None
+
+                # Update or Create Hostel Detail
                 try:
                     StudentHostelRecord, created = StudentHostelDetail.objects.update_or_create(
                         student = student_id,
@@ -1121,12 +1144,15 @@ class AssignStudentHostelCreate_UpdateAPI(CreateAPIView):
                             "created_at" : datetime.now()
                         }
                     )
+                    
+                    # Manage bed availability
                     if created:
                         bed = StudentHostelRecord.bed
                         bed.is_available = False
                         bed.save()
-                    if not created:
-                        if StudentHostelDetailRecord.bed.id != bed_id:
+                    else:
+                        # If updated and bed changed
+                        if StudentHostelDetailRecord and StudentHostelDetailRecord.bed.id != bed_id:
                             prev_bed = StudentHostelDetailRecord.bed
                             prev_bed.is_available = True
                             prev_bed.save()
@@ -1137,37 +1163,47 @@ class AssignStudentHostelCreate_UpdateAPI(CreateAPIView):
                     return Response({'message': 'error occurs' + str(e)},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                if studentCourseInstance.temp_hostel_choice_semester:
-                    hostel_choice_semester_ids =  ast.literal_eval(studentCourseInstance.temp_hostel_choice_semester)
-                    for choice_semester in hostel_choice_semester_ids:
-                        choice_semester_instance = Semester.objects.get(id=choice_semester,is_active=True)
-                        fee_applied_from_instance = Semester.objects.get(id=ast.literal_eval(studentCourseInstance.hostel_choice_semester)[0],is_active=True)
-                        # Insert the record into student details database
-                        try:
-                            student_fee_details= StudentFeeDetail.objects.create(
-                                student=studentCourseInstance.student,
-                                student_course=studentCourseInstance,
-                                fee_group=None,
-                                fee_structure_details=None,
-                                element_name= "Hostel Fees" ,
-                                fee_applied_from=fee_applied_from_instance,
-                                semester=choice_semester_instance,
-                                paid='N',
-                                academic_year= studentCourseInstance.academic_year,
-                                organization= studentCourseInstance.student.organization,
-                                branch= studentCourseInstance.student.branch,
-                                department=studentCourseInstance.department,
-                                multiplying_factor= 1,
-                                element_amount= StudentHostelRecord.bed.bed_cost,
-                                total_element_period_amount= StudentHostelRecord.bed.bed_cost,
-                                paid_amount= 0.00,
-                                created_by= created_by,
-                                updated_by = created_by
-                            )
-                        except Exception as e:
-                            return Response({'message':'error occurs'+str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # Fee Details Creation
+                if choice_semester_ids:
+                    # Determine fee_applied_from
+                    fee_applied_from_instance = None
+                    try:
+                         all_choices = ast.literal_eval(studentCourseInstance.hostel_choice_semester)
+                         if all_choices:
+                             fee_applied_from_instance = Semester.objects.get(id=all_choices[0], is_active=True)
+                    except Exception:
+                         pass
 
-            # Update the student record
+                    for choice_semester in choice_semester_ids:
+                        try:
+                            choice_semester_instance = Semester.objects.get(id=choice_semester,is_active=True)
+                            
+                            if fee_applied_from_instance:
+                                StudentFeeDetail.objects.create(
+                                    student=studentCourseInstance.student,
+                                    student_course=studentCourseInstance,
+                                    fee_group=None,
+                                    fee_structure_details=None,
+                                    element_name= "Hostel Fees" ,
+                                    fee_applied_from=fee_applied_from_instance,
+                                    semester=choice_semester_instance,
+                                    paid='N',
+                                    academic_year= studentCourseInstance.academic_year,
+                                    organization= studentCourseInstance.student.organization,
+                                    branch= studentCourseInstance.student.branch,
+                                    department=studentCourseInstance.department,
+                                    multiplying_factor= 1,
+                                    element_amount= StudentHostelRecord.bed.bed_cost,
+                                    total_element_period_amount= StudentHostelRecord.bed.bed_cost,
+                                    paid_amount= 0.00,
+                                    created_by= created_by,
+                                    updated_by = created_by
+                                )
+                        except Exception as e:
+                            # Log or handle individual failure? For now assuming if one fails we might want to return error or continue
+                            return Response({'message':'error occurs creating fee details: '+str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            # Cleanup temp field
             studentCourseInstance.temp_hostel_choice_semester = None
             studentCourseInstance.hostel_availed = hostel_avail
             studentCourseInstance.save()

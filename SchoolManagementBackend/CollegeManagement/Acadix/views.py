@@ -25288,9 +25288,8 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
                     is_sms_sent = False
                 else:
                     is_sms_sent = True
-                try:
                     # Check if attendance record exists
-                    IsAttendanceRecordExist = Attendance.objects.get(
+                    IsAttendanceRecordExist = Attendance.objects.filter(
                         organization=organization_id,
                         branch=branch_id,
                         batch=batch_id,
@@ -25305,11 +25304,8 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
                         professor=professor_id,
                         attendance_date=date,
                         student=item['student_id'],
-                        is_sms_sent = is_sms_sent,
                         is_active=True
-                    )
-                except ObjectDoesNotExist:
-                    IsAttendanceRecordExist = None
+                    ).first()
 
                 if IsAttendanceRecordExist:
                     # Update the existing record
@@ -25392,6 +25388,34 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
                         is_sms_sent = False
                     else:
                         is_sms_sent = True
+
+                    # Ensure a Lecture exists to satisfy DB Not-Null constraint
+                    lecture_instance = Lecture.objects.filter(
+                        organization=organization_id, 
+                        branch=branch_id,
+                        batch=batch_id,
+                        course=course_id,
+                        department=department_id,
+                        academic_year=academic_year_id,
+                        semester=semester_id,
+                        section=section_id,
+                        lecture_name="Lecture"
+                    ).first()
+                    
+                    if not lecture_instance:
+                        lecture_instance = Lecture.objects.create(
+                            lecture_name="Lecture",
+                            organization=OrganizationInstance,
+                            branch=BranchInstance,
+                            batch=BatchInstance,
+                            course=CourseInstance,
+                            department=DepartmentInstance,
+                            academic_year=AcademicyearInstance,
+                            semester=SemesterInstance,
+                            section=SectionInstance,
+                            created_by=login_id
+                        )
+
                     Attendance.objects.create(
                         organization=OrganizationInstance,
                         branch=BranchInstance,
@@ -25403,6 +25427,7 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
                         section=SectionInstance,
                         # class_session_id=CourseBindInstance,
                         lecture_period=LecturePeriodInstance,
+                        lecture=lecture_instance,
                         subject=SubjectInstance,
                         professor=EmployeeInstance,
                         # organization=AcademicyearInstance.department.course.batch.organization.organization_description,
@@ -25429,8 +25454,14 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
             return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
 
         except DatabaseError as e:
-
             # Rollback the transaction on database error
+            try:
+                with open('error_log.txt', 'a') as f:
+                    import traceback
+                    f.write(f"DB Error: {str(e)}\n")
+                    traceback.print_exc(file=f)
+            except:
+                pass
 
             self.log_exception(request, str(e))
 
@@ -25441,6 +25472,13 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
         except Exception as e:
 
             # Rollback the transaction on any other exception
+            try:
+                with open('error_log.txt', 'a') as f:
+                    import traceback
+                    f.write(f"Generic Error: {str(e)}\n")
+                    traceback.print_exc(file=f)
+            except:
+                pass
 
             self.log_exception(request, str(e))
 

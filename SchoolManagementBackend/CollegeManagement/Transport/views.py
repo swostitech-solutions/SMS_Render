@@ -953,6 +953,9 @@ class GetStudentTransportListAPIView(ListAPIView):
                         student_name = " ".join(name_parts)
 
                         data={
+                            "batch_name": record.batch.batch_code,
+                            "academic_year": record.academic_year.academic_year_code,
+                            "semester": record.semester.semester_code,
                             "course_id":record.course.id,
                             "course_name": record.course.course_name,
                             "department_id":record.department.id,
@@ -966,8 +969,8 @@ class GetStudentTransportListAPIView(ListAPIView):
                             "barcode": record.student.barcode,
                             "father_name": record.student.father_name,
                             "mother_name": record.student.mother_name,
-                            "house_id": record.house.id,
-                            "house_name": record.house.house_name,
+                            "house_id": record.house.id if record.house else None,
+                            "house_name": record.house.house_name if record.house else None,
                             "transport_availed": record.transport_availed
 
                         }
@@ -1171,7 +1174,7 @@ class StudentTransportDetailsRetriveAPIView(RetrieveAPIView):
                 except json.JSONDecodeError:
                     return Response({'message': 'Invalid choice_semester format'}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                choice_semester_list = studentCourseInstance.choice_semester
+                choice_semester_list = studentCourseInstance.choice_semester if studentCourseInstance.choice_semester else []
 
 
 
