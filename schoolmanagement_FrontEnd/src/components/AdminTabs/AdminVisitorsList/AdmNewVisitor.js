@@ -4,10 +4,9 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { ApiUrl } from "../../../ApiUrl";
 import "./AdmNewVisitor.css";
-import useFetchBranch from "../../hooks/useFetchBranch";
+import useFetchDepartments from "../../hooks/useFetchDepartments";
 import useFetchSessionList from "../../hooks/fetchSessionList";
 import useFetchCourseByFilter from "../../hooks/useFetchCourses";
-
 
 const AdmAttendanceEntry = () => {
   // const placementData = location.state?.placementData || {}; // Retrieve passed data
@@ -39,8 +38,8 @@ const AdmAttendanceEntry = () => {
   const { CourseList } = useFetchCourseByFilter(orgId, branchId, batchId);
   const courseId = CourseList && CourseList.length > 0 ? CourseList[0].id : null;
 
-  // Now fetch departments with all required parameters
-  const { BranchList: DepartmentList } = useFetchBranch(orgId, branchId, batchId, courseId);
+  // Now fetch departments with all required parameters using the NEW relaxed hook
+  const { DepartmentList } = useFetchDepartments(orgId, branchId, null, null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
 
@@ -321,7 +320,7 @@ const AdmAttendanceEntry = () => {
                             options={
                               DepartmentList?.map((dept) => ({
                                 value: dept.id,
-                                label: dept.department_description,
+                                label: dept.department_code,
                               })) || []
                             }
                             value={selectedDepartment}
@@ -378,7 +377,7 @@ const AdmAttendanceEntry = () => {
                                 onChange={(e) =>
                                   field.isPhone
                                     ? /^\d{0,10}$/.test(e.target.value) &&
-                                      field.onChange(e.target.value)
+                                    field.onChange(e.target.value)
                                     : field.onChange(e.target.value)
                                 }
                               />

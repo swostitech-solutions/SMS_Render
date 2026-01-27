@@ -26445,10 +26445,11 @@ class GetDepartmentData(APIView):
         batch_id = request.query_params.get('batch_id')
         course_id = request.query_params.get('course_id')
 
-        if not (organization_id and branch_id and batch_id and course_id):
+        if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
-        departments = Department.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id,
-                                                course=course_id)
+        departments = Department.objects.filter(organization=organization_id, branch=branch_id, is_active=True)
+        if course_id:
+            departments = departments.filter(course=course_id)
         serializer = Department_Serializer(departments, many=True)
         return Response(serializer.data)
 

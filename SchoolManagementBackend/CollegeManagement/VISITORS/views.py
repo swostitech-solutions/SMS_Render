@@ -132,80 +132,60 @@ class VisitorSearchListAPIView(ListAPIView):
             serializer = self.get_serializer(data=request.query_params)
             serializer.is_valid(raise_exception=True)
 
-            try:
-                visitorlistrecord = Visitor.objects.filter(organization= serializer.validated_data.get('organization_id'),
-                                                                branch= serializer.validated_data.get('branch_id'),
-                                                                is_active=True)
+            visitorlistrecord = Visitor.objects.filter(
+                organization=serializer.validated_data.get('organization_id'),
+                branch=serializer.validated_data.get('branch_id'),
+                is_active=True
+            )
 
-            except:
-                visitorlistrecord= None
+            if serializer.validated_data.get('visitor_name'):
+                visitorlistrecord = visitorlistrecord.filter(visitor_name__icontains=serializer.validated_data.get('visitor_name'))
 
-            if visitorlistrecord:
-                if serializer.validated_data.get('visitor_name'):
-                    visitorlistrecord = visitorlistrecord.filter(visitor_name__icontains=serializer.validated_data.get('visitor_name'))
+            if serializer.validated_data.get('whom_to_visit'):
+                visitorlistrecord = visitorlistrecord.filter(whom_to_visit__icontains=serializer.validated_data.get('whom_to_visit'))
 
-                if serializer.validated_data.get('whom_to_visit'):
-                    visitorlistrecord= visitorlistrecord.filter(whom_to_visit__icontains = serializer.validated_data.get('whom_to_visit'))
+            if serializer.validated_data.get('phone'):
+                visitorlistrecord = visitorlistrecord.filter(phone__icontains=serializer.validated_data.get('phone'))
 
-                if serializer.validated_data.get('phone'):
-                    visitorlistrecord= visitorlistrecord.filter(phone__icontains = serializer.validated_data.get('phone'))
+            if serializer.validated_data.get('from_date'):
+                # Filter records starting from this date (inclusive)
+                visitorlistrecord = visitorlistrecord.filter(visit_date__gte=serializer.validated_data.get('from_date'))
 
-                if serializer.validated_data.get('from_date'):
-                    visitorlistrecord= visitorlistrecord.filter(visit_date__gte=serializer.validated_data.get('from_date'))
+            if serializer.validated_data.get('to_date'):
+                # For partial date matching in DateTimeField, ensure we include the stored date
+                # Using date() comparison if possible, or just standard lte
+                # Note: lte with date usually implies midnight. We rely on standard Django behavior here.
+                # If to_date is 2026-01-28, we likely want everything UP TO end of 2026-01-28?
+                # Usually standard filtering is precise.
+                visitorlistrecord = visitorlistrecord.filter(visit_date__lte=serializer.validated_data.get('to_date'))
+            
+            # Additional ordering for better UX
+            visitorlistrecord = visitorlistrecord.order_by('-visit_date')
 
-
-                if serializer.validated_data.get('to_date'):
-                    visitorlistrecord= visitorlistrecord.filter(visit_date__lte= serializer.validated_data.get('to_date'))
-
-                if visitorlistrecord:
-                    responseData= []
-
-                    for item in visitorlistrecord:
-
-                        # Get uploaded file
-                        # document type
-                        # file_type, _ = mimetypes.guess_type(item.PhotoPath)
-
-                        # upload_file_binary = None
-
-                        # if item.PhotoPath:
-                            # make binary file
-                            # profile_url = request.build_absolute_uri(settings.MEDIA_URL + item.PhotoPath) if item.PhotoPath else None
-                            # file_path = os.path.join(settings.MEDIA_URL, item.PhotoPath)
-                            # profile_url = request.build_absolute_uri(file_path)
-                            # try:
-                            #     with open(item.PhotoPath, 'rb') as f:
-                            #         binary_data = f.read()
-                            #
-                            #         upload_file_binary = base64.b64encode(binary_data).decode('utf-8')
-                            # except:
-                            #     upload_file_binary = ""
-
-
-                        data={
-                            'visitor_id': item.visitor_id,
-                            'visitor_name': item.visitor_name,
-                            'purpose_of_visit': item.purpose_of_visit,
-                            'whom_to_visit': item.whom_to_visit,
-                            'phone': item.phone,
-                            'email': item.email,
-                            'image':item.photo_path,
-                            'file_type':'',
-                            'address': item.address,
-                            'department': item.department.department_description if item.department else None,
-                            'vehicle_no': item.vehicle_no,
-                            'visit_date': item.visit_date.date() if item.visit_date else None,
-                            'InTime': item.visit_date.time() if item.visit_date else None,
-                            'outTime': item.visit_end_date.time() if item.visit_end_date else None
-
-                        }
-
-                        responseData.append(data)
-                    return Response({'message':'success','data':responseData},status=status.HTTP_200_OK)
-                else:
-                    return Response({'message':'No Record Found'},status=status.HTTP_204_NO_CONTENT)
+            if visitorlistrecord.exists():
+                responseData = []
+                for item in visitorlistrecord:
+                    data = {
+                        'visitor_id': item.visitor_id,
+                        'visitor_name': item.visitor_name,
+                        'purpose_of_visit': item.purpose_of_visit,
+                        'whom_to_visit': item.whom_to_visit,
+                        'phone': item.phone,
+                        'email': item.email,
+                        'image': item.photo_path,
+                        'file_type': '',
+                        'address': item.address,
+                        'department': item.department.department_description if item.department else None,
+                        'vehicle_no': item.vehicle_no,
+                        'visit_date': item.visit_date.date() if item.visit_date else None,
+                        'InTime': item.visit_date.time() if item.visit_date else None,
+                        'outTime': item.visit_end_date.time() if item.visit_end_date else None
+                    }
+                    responseData.append(data)
+                return Response({'message': 'success', 'data': responseData}, status=status.HTTP_200_OK)
             else:
-                return Response({'message': 'No Record Found'}, status=status.HTTP_204_NO_CONTENT)
+                # Return empty list with success instead of 204 error, safer for frontend tables
+                return Response({'message': 'No Record Found', 'data': []}, status=status.HTTP_200_OK)
         except ValidationError as e:
 
             return Response({'message': e.detail}, status=status.HTTP_400_BAD_REQUEST)
