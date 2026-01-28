@@ -1496,7 +1496,7 @@ class StudentFeeReceiptHeader(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     receipt_date = models.DateTimeField()
     student = models.ForeignKey(StudentRegistration, on_delete=models.CASCADE)
-    # receipt_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    receipt_amount = models.DecimalField(max_digits=18, decimal_places=2)
     receipt_status = models.CharField(max_length=50, null=True, blank=True)
     payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
     # payment_reference = models.CharField(max_length=250, null=True, blank=True)

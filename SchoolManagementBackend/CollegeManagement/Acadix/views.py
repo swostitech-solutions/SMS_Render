@@ -15599,7 +15599,7 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                     # period_month = periodInstance,
                     receipt_date=receipt_date,
                     student=studentcourseInstance.student,
-                    # receipt_amount=total_amount,
+                    receipt_amount=total_amount,
                     payment_method=paymentmethodInstance,
                     # payment_reference=remarks,
                     payment_detail=payment_detail,
