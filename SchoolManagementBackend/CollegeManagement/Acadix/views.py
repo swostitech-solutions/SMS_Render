@@ -19053,65 +19053,80 @@ class StudentCircularCreateAPIView(CreateAPIView):
                 #     StudentCircular.objects.bulk_create(objects)
                 if batch_ids and course_ids and department_ids and academic_year_ids and semester_ids and section_ids:
                     
-                    batch_instance = Batch.objects.filter(organization=organization_id, branch=branch_id,
+                    batch_instances = Batch.objects.filter(organization=organization_id, branch=branch_id,
                                                            id__in=batch_ids, is_active=True)
                     
-                    # course_instance = Course.objects.filter(organization=organization_id, branch=branch_id,
-                    #                                        batch=batch_id, id__in=course_ids, is_active=True)
-                    course_instance = Course.objects.filter(organization=organization_id, branch=branch_id,
-                                                            id__in=course_ids, is_active=True)
-                    # department_instance = Department.objects.filter(organization=organization_id, branch=branch_id,
-                    #                                              batch=batch_id, course__in=course_ids, is_active=True)
-                    department_instance = Department.objects.filter(organization=organization_id, branch=branch_id,
-                                                                    id__in=department_ids, is_active=True)
-                    # academic_year_instance = AcademicYear.objects.filter(organization=organization_id, branch=branch_id,
-                    #                                                      batch=batch_id, id__in=academic_year_ids,
-                    #                                                      is_active=True)
-                    academic_year_instance = AcademicYear.objects.filter(organization=organization_id, branch=branch_id,
-                                                                         id__in=academic_year_ids,
-                                                                         is_active=True)
-                    # semester_instance = Semester.objects.filter(organization=organization_id, branch=branch_id,
-                    #                                             batch=batch_id, academic_year=academic_year_id,id__in=semester_ids,
-                    #                                             is_active=True)
-                    semester_instance = Semester.objects.filter(organization=organization_id, branch=branch_id,
-                                                                id__in=semester_ids,
-                                                                is_active=True)
-                    # section_instance = Section.objects.filter(organization=organization_id, branch=branch_id,
-                    #                                           batch=batch_id, id__in=semester_ids,
-                    #                                           is_active=True)
-                    section_instance = Section.objects.filter(organization=organization_id, branch=branch_id,
-                                                              id__in=semester_ids,
-                                                              is_active=True)
-                    # courseInstanceList.append(courseInstance)
-                    # for course, department,academic_year, semester, section in zip(courseInstance, departmentFilter,academic_year_instance,
-                    #                                                  semester_instance, section_instance):
-                    objects = [
-                        StudentCircular(
-                            organization=organizationInstance,
-                            branch=branchInstance,
-                            batch=batch,
-                            academic_year=academic_year,
-                            course=course,
-                            department=department,
-                            semester=semester,
-                            section=section,
-                            circular_date=circular_date,
-                            circular_file=circular_file,
-                            circular_details=circular_detail,
-                            initiated_by=messageInitiatedByInstance,
-                            circular_status=circular_status,
-                            send_sms=send_sms,
-                            message_status=message_status,
-                            circular_sent_to=circular_sent_to,
-                            circular_time=circular_time,
-                            created_by=created_by,
-                            updated_by=created_by
+                    objects = []
+                    # Optimize: Instead of blind Cartesian product, respect the hierarchy
+                    for batch in batch_instances:
+                        # 1. Get courses that belong to this batch AND are in the selected list
+                        valid_courses = Course.objects.filter(
+                            organization=organization_id, branch=branch_id,
+                            batch=batch, id__in=course_ids, is_active=True
                         )
-                        for batch, course, department, academic_year, semester, section in
-                        product(batch_instance, course_instance, department_instance, academic_year_instance, semester_instance,
-                                section_instance)
-                    ]
-                    StudentCircular.objects.bulk_create(objects)
+
+                        for course in valid_courses:
+                            # 2. Get departments belonging to this course AND selected list
+                            valid_departments = Department.objects.filter(
+                                organization=organization_id, branch=branch_id,
+                                course=course, id__in=department_ids, is_active=True
+                            )
+                            
+                            for department in valid_departments:
+                                # 3. Get academic years for this department (or course/batch context if Dept not directly linked to AY)
+                                # Typically AY is linked to Course/Branch, but let's check your specific model structure.
+                                # Assuming standard hierarchy: Org -> Branch -> Batch -> Course -> Dept -> ...
+                                # The previous code gathered ALL selected AYs. We should ideally filter.
+                                # If AY is independent of Dept in your schema, we might iterate all selected AYs.
+                                # But usually, Semesters belong to an AY.
+                                
+                                valid_academic_years = AcademicYear.objects.filter(
+                                   organization=organization_id, branch=branch_id,
+                                   id__in=academic_year_ids, is_active=True
+                                )
+
+                                for academic_year in valid_academic_years:
+                                    # 4. Semesters for this AY AND selected list
+                                    valid_semesters = Semester.objects.filter(
+                                        organization=organization_id, branch=branch_id,
+                                        academic_year=academic_year, id__in=semester_ids, is_active=True
+                                    )
+
+                                    for semester in valid_semesters:
+                                        # 5. Sections for this Semester AND selected list
+                                        valid_sections = Section.objects.filter(
+                                            organization=organization_id, branch=branch_id,
+                                            semester=semester, id__in=section_ids, is_active=True
+                                        )
+
+                                        for section in valid_sections:
+                                            # Create the object for this valid single path
+                                            objects.append(
+                                                StudentCircular(
+                                                    organization=organizationInstance,
+                                                    branch=branchInstance,
+                                                    batch=batch,
+                                                    academic_year=academic_year,
+                                                    course=course,
+                                                    department=department,
+                                                    semester=semester,
+                                                    section=section,
+                                                    circular_date=circular_date,
+                                                    circular_file=circular_file,
+                                                    circular_details=circular_detail,
+                                                    initiated_by=messageInitiatedByInstance,
+                                                    circular_status=circular_status,
+                                                    send_sms=send_sms,
+                                                    message_status=message_status,
+                                                    circular_sent_to=circular_sent_to,
+                                                    circular_time=circular_time,
+                                                    created_by=created_by,
+                                                    updated_by=created_by
+                                                )
+                                            )
+                    
+                    if objects:
+                        StudentCircular.objects.bulk_create(objects)
 
                     # for course in courseInstance:
                     #     for department in departmentInstance:
