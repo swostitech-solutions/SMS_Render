@@ -29,7 +29,7 @@ import StudentAttendanceChart from "../../components/StudentTabs/StudentAttendan
 function Dashboard() {
   // Get student ID from sessionStorage (consistent with other student components)
   const studentId = sessionStorage.getItem("userId");
-  
+
   // Fetch student details using the hook
   const { studentDetails, loading: studentLoading, error: studentError } = useStudentDetails(studentId);
 
@@ -168,11 +168,32 @@ function Dashboard() {
     },
     {
       icon: <FaMoneyBillWave size={32} />,
-      title: "Fee Status",
-      value: feeDue?.grand_total_fees > 0 ? `₹${feeDue.grand_total_fees}` : "Paid",
-      color: feeDue?.grand_total_fees > 0 ? "#dc3545" : "#28a745",
-      bgColor: feeDue?.grand_total_fees > 0 ? "#f8d7da" : "#d4edda",
-      subtitle: feeDue?.grand_total_fees > 0 ? "Due" : "All Clear",
+      value: feeDueLoading
+        ? "..."
+        : (feeDue
+          ? ((feeDue.total_assigned_fees > 0 || feeDue.grand_total_fees > 0) // Check if any fees were ever assigned OR if there's a due balance (fallback)
+            ? (feeDue.grand_total_fees > 0
+              ? `₹${feeDue.grand_total_fees}`
+              : "Paid")
+            : "N/A") // If explicit total_assigned_fees is 0 (or missing/undefined and grand_total_fees is 0), assume no info
+          : "N/A"),
+      color: feeDue?.grand_total_fees > 0
+        ? "#dc3545"
+        : (feeDue && (feeDue.total_assigned_fees > 0)
+          ? "#28a745" // Paid (Green)
+          : "#6c757d"), // N/A (Grey)
+      bgColor: feeDue?.grand_total_fees > 0
+        ? "#f8d7da"
+        : (feeDue && (feeDue.total_assigned_fees > 0)
+          ? "#d4edda" // Paid (Light Green)
+          : "#e2e3e5"), // N/A (Light Grey)
+      subtitle: feeDueLoading
+        ? "Checking..."
+        : (feeDue?.grand_total_fees > 0
+          ? "Due"
+          : (feeDue && (feeDue.total_assigned_fees > 0)
+            ? "All Clear"
+            : "No Info")),
       link: "/student/payment",
     },
     {
@@ -377,9 +398,8 @@ function Dashboard() {
                         <div style={{ marginBottom: "12px", fontSize: "14px" }}>
                           <strong style={{ color: "#555", minWidth: "140px", display: "inline-block" }}>Name:</strong>{" "}
                           <span style={{ color: "#333" }}>
-                            {`${basicDetails.first_name || ""} ${
-                              basicDetails.middle_name || ""
-                            } ${basicDetails.last_name || ""}`.trim() || "-"}
+                            {`${basicDetails.first_name || ""} ${basicDetails.middle_name || ""
+                              } ${basicDetails.last_name || ""}`.trim() || "-"}
                           </span>
                         </div>
                         <div style={{ marginBottom: "12px", fontSize: "14px" }}>
@@ -404,7 +424,7 @@ function Dashboard() {
                         </div>
                       </Col>
                       <Col md={6}>
-                     
+
                         <div style={{ marginBottom: "12px", fontSize: "14px" }}>
                           <strong style={{ color: "#555", minWidth: "140px", display: "inline-block" }}>Course:</strong>{" "}
                           <span style={{ color: "#333" }}>{basicDetails.course_name || "-"}</span>

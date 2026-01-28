@@ -2050,6 +2050,15 @@ class ProfitLoseByDayListAPIView(ListAPIView):
                 return Response({"error": "organization, branch_id, from_date and date are required."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
+             # Correctly handle branch_id -> batch_id mapping
+            if batch_id:
+               try:
+                   actual_batch = Batch.objects.filter(branch_id=batch_id, is_active=True).first()
+                   if actual_batch:
+                       batch_id = actual_batch.id
+               except Exception:
+                   pass
+
             # Get Expense Record for particular date
 
             try:
@@ -2851,6 +2860,15 @@ class DayBookListAPIView(ListAPIView):
 
             filter_id = batch_id if batch_id else branch_id
 
+             # Correctly handle branch_id -> batch_id mapping
+            if filter_id:
+               try:
+                   actual_batch = Batch.objects.filter(branch_id=filter_id, is_active=True).first()
+                   if actual_batch:
+                       filter_id = actual_batch.id
+               except Exception:
+                   pass
+
             if not organization or not filter_id or not from_date or not to_date or not payment_method:
                 return Response(
                     {
@@ -3121,6 +3139,15 @@ class ExpenseLedgerListAPIView(ListAPIView):
             payment_method = request.query_params.get('payment_method')
             party_id = request.query_params.get('party_id')
             Expense_category_id = request.query_params.get('Expense_category_id')
+
+            # Correctly handle branch_id -> batch_id mapping
+            if batch_id:
+               try:
+                   actual_batch = Batch.objects.filter(branch_id=batch_id, is_active=True).first()
+                   if actual_batch:
+                       batch_id = actual_batch.id
+               except Exception:
+                   pass
 
             # Get Filter Record
             try:

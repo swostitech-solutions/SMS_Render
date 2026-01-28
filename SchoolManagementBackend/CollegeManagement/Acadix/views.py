@@ -22834,6 +22834,19 @@ class GetStudentFeeDueReceiptListAPIView(ListAPIView):
                             total_previous_fees += fees.element_amount
                             total_previous_paid += fees.paid_amount
 
+                # Fetch fees with NO semester (Global/Legacy dues)
+                global_fees = StudentFeeDetail.objects.filter(
+                    student_id=stdIds,
+                    fee_applied_from__isnull=True,
+                    is_active=True
+                )
+                for fees in global_fees:
+                    if fees.element_name == "DISCOUNT":
+                        total_previous_discount_amount += fees.element_amount
+                    else:
+                        total_previous_fees += fees.element_amount
+                        total_previous_paid += fees.paid_amount
+
                 # Organization & branch Instance
                 organizationInstance = studentcourseInstance.organization
                 branchInstance = studentcourseInstance.branch
@@ -22864,6 +22877,7 @@ class GetStudentFeeDueReceiptListAPIView(ListAPIView):
                     "current_month_discount": discount,
                     "grand_total_fees": current_semester_fees - paid_semester_fees - discount +
                                         total_previous_fees - total_previous_paid - total_previous_discount_amount,
+                    "total_assigned_fees": current_semester_fees + total_previous_fees
                 }
                 finalresponsedata.append(data)
 
