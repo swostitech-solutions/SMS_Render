@@ -1557,7 +1557,36 @@ class ExpenseUpdateAPIView(UpdateAPIView):
                 try:
                     OrganizationInstance = Organization.objects.get(id=ExpenseHeaderadd.get('organization_id'),
                                                                     is_active=True)
-                    BatchInstance = Batch.objects.get(id=ExpenseHeaderadd.get('batch_id'), is_active=True)
+                    # Resolve Batch ID (Logic copied from Create view to handle ambiguity)
+                    provided_batch_id = ExpenseHeaderadd.get('batch_id')
+                    BatchInstance = None
+                    
+                    if provided_batch_id:
+                        # 1. Try as AcademicYear
+                        try:
+                            ay = AcademicYear.objects.filter(id=provided_batch_id).first()
+                            if ay:
+                                branch_id_from_ay = ay.branch.id
+                                BatchInstance = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).first()
+                        except Exception:
+                            pass
+                            
+                        # 2. Try as Branch ID
+                        if not BatchInstance:
+                             try:
+                                  BatchInstance = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                             except Exception:
+                                pass
+                                
+                        # 3. Try as Batch ID
+                        if not BatchInstance:
+                            try:
+                                BatchInstance = Batch.objects.filter(id=provided_batch_id, is_active=True).first()
+                            except Exception:
+                                pass
+
+                    if not BatchInstance:
+                        raise Batch.DoesNotExist("Batch matching query does not exist.")
                     partyInstance = PartyMaster.objects.get(party_id=ExpenseHeaderadd.get('partymasterId'),
                                                             is_active=True)
                 except ObjectDoesNotExist as e:
@@ -2728,7 +2757,36 @@ class IncomeUpdateAPIView(UpdateAPIView):
                 try:
                     OrganizationInstance = Organization.objects.get(id=IncomeHeaderDetails.get('org_id'),
                                                                     is_active=True)
-                    BatchInstance = Batch.objects.get(id=IncomeHeaderDetails.get('batch_id'), is_active=True)
+                    # Resolve Batch ID (Logic replicated from Create view to handle ambiguity)
+                    provided_batch_id = IncomeHeaderDetails.get('batch_id')
+                    BatchInstance = None
+                    
+                    if provided_batch_id:
+                        # 1. Try as AcademicYear
+                        try:
+                            ay = AcademicYear.objects.filter(id=provided_batch_id).first()
+                            if ay:
+                                branch_id_from_ay = ay.branch.id
+                                BatchInstance = Batch.objects.filter(branch_id=branch_id_from_ay, is_active=True).first()
+                        except Exception:
+                            pass
+                            
+                        # 2. Try as Branch ID
+                        if not BatchInstance:
+                             try:
+                                  BatchInstance = Batch.objects.filter(branch_id=provided_batch_id, is_active=True).first()
+                             except Exception:
+                                pass
+                                
+                        # 3. Try as Batch ID
+                        if not BatchInstance:
+                            try:
+                                BatchInstance = Batch.objects.filter(id=provided_batch_id, is_active=True).first()
+                            except Exception:
+                                pass
+
+                    if not BatchInstance:
+                        raise Batch.DoesNotExist("Batch matching query does not exist.")
                     academicYearInstance = AcademicYear.objects.get(
                         id=IncomeHeaderDetails.get('academic_year_id'), is_active=True)
                     partyInstance = PartyMaster.objects.get(party_id=IncomeHeaderDetails.get('party_id'),

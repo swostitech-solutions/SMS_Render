@@ -157,6 +157,10 @@ const AdmAttendanceEntry = () => {
   };
 
   const handleInputChange = (index, field, value) => {
+    if (field === "remarks" && /\d/.test(value)) {
+      return; // Do not allow numbers
+    }
+
     const updatedRows = [...rows];
     updatedRows[index][field] = value;
 
@@ -173,7 +177,7 @@ const AdmAttendanceEntry = () => {
   };
   const handleCashChange = (e) => {
     const cashVal = e.target.value || "";
-    
+
     // Allow clearing
     if (cashVal === "" || parseFloat(cashVal) === 0) {
       setCashAmount("");
@@ -194,7 +198,7 @@ const AdmAttendanceEntry = () => {
 
   const handleBankAmountChange = (e) => {
     const bankVal = e.target.value || "";
-    
+
     // Allow clearing
     if (bankVal === "" || parseFloat(bankVal) === 0) {
       setBankAmount("");
@@ -338,7 +342,7 @@ const AdmAttendanceEntry = () => {
                   d-flex
                   flex-wrap
                   gap-2
-                  // style={{ border: "1px solid #ccc", borderRadius: "5px" }}
+                // style={{ border: "1px solid #ccc", borderRadius: "5px" }}
                 >
                   {!isReadOnly && (
                     <>
@@ -650,8 +654,8 @@ const AdmAttendanceEntry = () => {
                           {loadingAccounts
                             ? "Loading..."
                             : accountList.length === 0
-                            ? "No accounts available"
-                            : "Select Account"}
+                              ? "No accounts available"
+                              : "Select Account"}
                         </option>
                         {!loadingAccounts &&
                           accountList.map((account) => (
