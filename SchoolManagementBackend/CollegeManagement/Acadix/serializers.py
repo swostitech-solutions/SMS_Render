@@ -2635,7 +2635,8 @@ class StudentAssignmentUpdateSerializer(serializers.ModelSerializer):
 class StudentCircularSerializer(serializers.Serializer):
     organization_id = serializers.IntegerField(allow_null=False)
     branch_id = serializers.IntegerField(allow_null=False)
-    batch_id = serializers.IntegerField(allow_null=False)
+    batch_id = serializers.IntegerField(allow_null=True, required=False)
+    batch_ids = serializers.ListField(allow_null=True, required=False)
     course_ids = serializers.ListField(allow_null=False, allow_empty=False)
     department_ids = serializers.ListField(allow_null=False, allow_empty=False)
     academic_year_ids = serializers.ListField(allow_null=False)

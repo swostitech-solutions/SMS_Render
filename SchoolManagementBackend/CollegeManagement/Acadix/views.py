@@ -18939,7 +18939,12 @@ class StudentCircularCreateAPIView(CreateAPIView):
                     data = request.POST.dict()  # Convert QueryDict to a mutable dictionary
                     data['organization_id'] = data['organization_id']
                     data['branch_id'] = data['branch_id']
-                    data['batch_id'] = data['batch_id']
+                    if data.get('batch_ids'):
+                        try:
+                            data['batch_ids'] = json.loads(data.get('batch_ids'))
+                        except:
+                            pass
+                    data['batch_id'] = data.get('batch_id')
                     data['course_ids'] = json.loads(data.get('course_ids'))  # Convert string to list
                     data['department_ids'] = json.loads(data.get('department_ids'))
                     data['academic_year_ids'] = json.loads(data.get('academic_year_ids'))
@@ -18968,6 +18973,11 @@ class StudentCircularCreateAPIView(CreateAPIView):
                 organization_id = serializer.validated_data.get('organization_id')
                 branch_id = serializer.validated_data.get('branch_id')
                 batch_id = serializer.validated_data.get('batch_id')
+                batch_ids = serializer.validated_data.get('batch_ids')
+                
+                if not batch_ids and batch_id:
+                    batch_ids = [batch_id]
+                
                 course_ids = serializer.validated_data.get('course_ids')
                 department_ids = serializer.validated_data.get('department_ids')
                 academic_year_ids = serializer.validated_data.get('academic_year_ids')
@@ -18993,7 +19003,7 @@ class StudentCircularCreateAPIView(CreateAPIView):
                 #
                 organizationInstance = Organization.objects.get(id=organization_id, is_active=True)
                 branchInstance = Branch.objects.get(id=branch_id, is_active=True)
-                batchInstance = Batch.objects.get(id=batch_id, is_active=True)
+                # batchInstance = Batch.objects.get(id=batch_id, is_active=True)
                 # courseInstance = Course.objects.get(id__in=course_ids, is_active=True)
                 # departmentInstance = Department.objects.get(id__in=department_ids, is_active=True)
                 # academicyearInstance = AcademicYear.objects.get(id__in=academic_year_ids, is_active=True)
@@ -19041,7 +19051,11 @@ class StudentCircularCreateAPIView(CreateAPIView):
                 #         for course, department, semester, section in product(courseInstance, departmentInstance,semester_instance, section_instance)
                 #     ]
                 #     StudentCircular.objects.bulk_create(objects)
-                if course_ids and department_ids and academic_year_ids and semester_ids and section_ids:
+                if batch_ids and course_ids and department_ids and academic_year_ids and semester_ids and section_ids:
+                    
+                    batch_instance = Batch.objects.filter(organization=organization_id, branch=branch_id,
+                                                           id__in=batch_ids, is_active=True)
+                    
                     # course_instance = Course.objects.filter(organization=organization_id, branch=branch_id,
                     #                                        batch=batch_id, id__in=course_ids, is_active=True)
                     course_instance = Course.objects.filter(organization=organization_id, branch=branch_id,
@@ -19075,7 +19089,7 @@ class StudentCircularCreateAPIView(CreateAPIView):
                         StudentCircular(
                             organization=organizationInstance,
                             branch=branchInstance,
-                            batch=batchInstance,
+                            batch=batch,
                             academic_year=academic_year,
                             course=course,
                             department=department,
@@ -19093,8 +19107,8 @@ class StudentCircularCreateAPIView(CreateAPIView):
                             created_by=created_by,
                             updated_by=created_by
                         )
-                        for course, department, academic_year, semester, section in
-                        product(course_instance, department_instance, academic_year_instance, semester_instance,
+                        for batch, course, department, academic_year, semester, section in
+                        product(batch_instance, course_instance, department_instance, academic_year_instance, semester_instance,
                                 section_instance)
                     ]
                     StudentCircular.objects.bulk_create(objects)
@@ -19235,6 +19249,7 @@ class StudentCircularListAPIView(ListAPIView):
             organization_id = request.query_params.get('organization_id')
             branch_id = request.query_params.get('branch_id')
             batch_id = request.query_params.get('batch_id')
+            batch_ids = request.query_params.get('batch_ids')
             course_ids = request.query_params.get('course_ids')
             department_ids = request.query_params.get('department_ids')
             academic_year_ids = request.query_params.get('academic_year_ids')
@@ -19260,7 +19275,13 @@ class StudentCircularListAPIView(ListAPIView):
 
             # resdata = StudentCircular.objects.filter(organization=organization_id,branch=branch_id,is_active=True)
 
-            if batch_id:
+            if batch_ids:
+                try:
+                    batch_ids = json.loads(batch_ids)
+                    student_circular_instance = student_circular_instance.filter(batch__in=batch_ids)
+                except json.JSONDecodeError:
+                    pass
+            elif batch_id:
                 student_circular_instance = student_circular_instance.filter(batch=batch_id)
 
             if course_ids:
@@ -26473,9 +26494,22 @@ class GetCourseData(APIView):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
         batch_id = request.query_params.get('batch_id')
-        if not (organization_id and branch_id and batch_id):
+        batch_ids = request.query_params.get('batch_ids')
+
+        if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
-        courses = Course.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id)
+        
+        courses = Course.objects.filter(organization=organization_id, branch=branch_id)
+        
+        if batch_ids:
+            try:
+                batch_ids = json.loads(batch_ids)
+                courses = courses.filter(batch__in=batch_ids)
+            except:
+                pass
+        elif batch_id:
+            courses = courses.filter(batch=batch_id)
+            
         serializer = Course_Serializer(courses, many=True)
         return Response(serializer.data)
 
@@ -26485,13 +26519,32 @@ class GetDepartmentData(APIView):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
         batch_id = request.query_params.get('batch_id')
+        batch_ids = request.query_params.get('batch_ids')
         course_id = request.query_params.get('course_id')
+        course_ids = request.query_params.get('course_ids')
 
         if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
         departments = Department.objects.filter(organization=organization_id, branch=branch_id, is_active=True)
-        if course_id:
+        
+        if batch_ids:
+            try:
+                batch_ids = json.loads(batch_ids)
+                departments = departments.filter(batch__in=batch_ids)
+            except:
+                pass
+        elif batch_id:
+             departments = departments.filter(batch=batch_id)
+
+        if course_ids:
+            try:
+                course_ids = json.loads(course_ids)
+                departments = departments.filter(course__in=course_ids)
+            except:
+                pass
+        elif course_id:
             departments = departments.filter(course=course_id)
+            
         serializer = Department_Serializer(departments, many=True)
         return Response(serializer.data)
 
@@ -26501,13 +26554,44 @@ class GetAcademicYearData(APIView):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
         batch_id = request.query_params.get('batch_id')
+        batch_ids = request.query_params.get('batch_ids')
         course_id = request.query_params.get('course_id')
+        course_ids = request.query_params.get('course_ids')
         department_id = request.query_params.get('department_id')
+        department_ids = request.query_params.get('department_ids')
 
-        if not (organization_id and branch_id and batch_id and course_id and department_id):
+        if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
-        academic_years = AcademicYear.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id,
-                                                     course=course_id, department=department_id).order_by('display_order', 'id')
+        
+        academic_years = AcademicYear.objects.filter(organization=organization_id, branch=branch_id).order_by('display_order', 'id')
+
+        if batch_ids:
+            try:
+                batch_ids = json.loads(batch_ids)
+                academic_years = academic_years.filter(batch__in=batch_ids)
+            except:
+                pass
+        elif batch_id:
+             academic_years = academic_years.filter(batch=batch_id)
+
+        if course_ids:
+            try:
+                course_ids = json.loads(course_ids)
+                academic_years = academic_years.filter(course__in=course_ids)
+            except:
+                pass
+        elif course_id:
+            academic_years = academic_years.filter(course=course_id)
+
+        if department_ids:
+            try:
+                department_ids = json.loads(department_ids)
+                academic_years = academic_years.filter(department__in=department_ids)
+            except:
+                 pass
+        elif department_id:
+            academic_years = academic_years.filter(department=department_id)
+
         serializer = AcademicYear_Serializer(academic_years, many=True)
         return Response(serializer.data)
 
@@ -26598,14 +26682,55 @@ class GetSemesterData(APIView):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
         batch_id = request.query_params.get('batch_id')
+        batch_ids = request.query_params.get('batch_ids')
         course_id = request.query_params.get('course_id')
+        course_ids = request.query_params.get('course_ids')
         department_id = request.query_params.get('department_id')
+        department_ids = request.query_params.get('department_ids')
         academic_year_id = request.query_params.get('academic_year_id')
+        academic_year_ids = request.query_params.get('academic_year_ids')
 
-        if not (organization_id and branch_id and batch_id and course_id and department_id and academic_year_id):
+        if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
-        semesters = Semester.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id,
-                                            course=course_id, department=department_id, academic_year=academic_year_id)
+        
+        semesters = Semester.objects.filter(organization=organization_id, branch=branch_id)
+
+        if batch_ids:
+            try:
+                batch_ids = json.loads(batch_ids)
+                semesters = semesters.filter(batch__in=batch_ids)
+            except:
+                pass
+        elif batch_id:
+             semesters = semesters.filter(batch=batch_id)
+
+        if course_ids:
+            try:
+                course_ids = json.loads(course_ids)
+                semesters = semesters.filter(course__in=course_ids)
+            except:
+                pass
+        elif course_id:
+            semesters = semesters.filter(course=course_id)
+
+        if department_ids:
+            try:
+                department_ids = json.loads(department_ids)
+                semesters = semesters.filter(department__in=department_ids)
+            except:
+                 pass
+        elif department_id:
+            semesters = semesters.filter(department=department_id)
+
+        if academic_year_ids:
+            try:
+                academic_year_ids = json.loads(academic_year_ids)
+                semesters = semesters.filter(academic_year__in=academic_year_ids)
+            except:
+                pass
+        elif academic_year_id:
+            semesters = semesters.filter(academic_year=academic_year_id)
+
         serializer = Semester_Serializer(semesters, many=True)
         return Response(serializer.data)
 
@@ -26632,17 +26757,66 @@ class GetSectionData(APIView):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
         batch_id = request.query_params.get('batch_id')
+        batch_ids = request.query_params.get('batch_ids')
         course_id = request.query_params.get('course_id')
+        course_ids = request.query_params.get('course_ids')
         department_id = request.query_params.get('department_id')
+        department_ids = request.query_params.get('department_ids')
         academic_year_id = request.query_params.get('academic_year_id')
+        academic_year_ids = request.query_params.get('academic_year_ids')
         semester_id = request.query_params.get('semester_id')
+        semester_ids = request.query_params.get('semester_ids')
 
-        if not (
-                organization_id and branch_id and batch_id and course_id and department_id and academic_year_id and semester_id):
+        if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
-        sections = Section.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id,
-                                          course=course_id, department=department_id, academic_year=academic_year_id,
-                                          semester=semester_id)
+        
+        sections = Section.objects.filter(organization=organization_id, branch=branch_id)
+
+        if batch_ids:
+            try:
+                batch_ids = json.loads(batch_ids)
+                sections = sections.filter(batch__in=batch_ids)
+            except:
+                pass
+        elif batch_id:
+             sections = sections.filter(batch=batch_id)
+
+        if course_ids:
+            try:
+                course_ids = json.loads(course_ids)
+                sections = sections.filter(course__in=course_ids)
+            except:
+                pass
+        elif course_id:
+            sections = sections.filter(course=course_id)
+
+        if department_ids:
+            try:
+                department_ids = json.loads(department_ids)
+                sections = sections.filter(department__in=department_ids)
+            except:
+                 pass
+        elif department_id:
+            sections = sections.filter(department=department_id)
+
+        if academic_year_ids:
+            try:
+                academic_year_ids = json.loads(academic_year_ids)
+                sections = sections.filter(academic_year__in=academic_year_ids)
+            except:
+                pass
+        elif academic_year_id:
+            sections = sections.filter(academic_year=academic_year_id)
+
+        if semester_ids:
+            try:
+                semester_ids = json.loads(semester_ids)
+                sections = sections.filter(semester__in=semester_ids)
+            except:
+                pass
+        elif semester_id:
+            sections = sections.filter(semester=semester_id)
+
         serializer = Section_Serializer(sections, many=True)
         return Response(serializer.data)
 

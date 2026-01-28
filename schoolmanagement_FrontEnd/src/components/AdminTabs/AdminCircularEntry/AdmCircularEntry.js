@@ -5,11 +5,11 @@ import { ApiUrl } from "../../../ApiUrl";
 import { useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import useFetchSessionList from "../../hooks/fetchSessionList";
-import useFetchCourseByFilter from "../../hooks/useFetchCourses";
-import useFetchBranch from "../../hooks/useFetchBranch";
-import useFetchAcademicYearByFilter from "../../hooks/useFetchAcademicYearByFilter";
-import useFetchSemesterByFilter from "../../hooks/useFetchSemesterByFilter";
-import useFetchSectionByFilter from "../../hooks/useFetchSectionByFilter";
+import useFetchCourseList from "../../hooks/useFetchCourseList";
+import useFetchBranchList from "../../hooks/useFetchBranchList";
+import useFetchAcademicYearList from "../../hooks/useFetchAcademicYearList";
+import useFetchSemesterList from "../../hooks/useFetchSemesterList";
+import useFetchSectionList from "../../hooks/useFetchSectionList";
 import ReactSelect, { components } from "react-select";
 
 const CircularEntry = () => {
@@ -30,46 +30,6 @@ const CircularEntry = () => {
   const circularDetailRef = useRef(null);
   const circularFileRef = useRef(null);
 
-  // Fetch dropdown data dynamically based on selections
-  const { BatchList, loading: loadingBatch } = useFetchSessionList(
-    organizationId,
-    branchId
-  );
-  const { CourseList, loading: loadingCourse } = useFetchCourseByFilter(
-    organizationId,
-    selectedBatch
-  );
-  const { BranchList, loading: loadingDept } = useFetchBranch(
-    organizationId,
-    branchId,
-    selectedBatch,
-    selectedCourse
-  );
-  const { AcademicYearList, loading: loadingAY } = useFetchAcademicYearByFilter(
-    organizationId,
-    branchId,
-    selectedBatch,
-    selectedCourse,
-    selectedDepartment
-  );
-  const { SemesterList, loading: loadingSem } = useFetchSemesterByFilter(
-    organizationId,
-    branchId,
-    selectedBatch,
-    selectedCourse,
-    selectedDepartment,
-    selectedAcademicYear
-  );
-  const { SectionList, loading: loadingSec } = useFetchSectionByFilter(
-    organizationId,
-    branchId,
-    selectedBatch,
-    selectedCourse,
-    selectedDepartment,
-    selectedAcademicYear,
-    selectedSemester
-  );
-
   // Multi-select states
   const [sessionSelections, setSessionSelections] = useState({});
   const [courseSelections, setCourseSelections] = useState({});
@@ -85,6 +45,55 @@ const CircularEntry = () => {
   const [selectAllAcademicYear, setSelectAllAcademicYear] = useState(false);
   const [selectAllSemester, setSelectAllSemester] = useState(false);
   const [selectAllSection, setSelectAllSection] = useState(false);
+
+  const selectedBatchIds = Object.keys(sessionSelections).filter((id) => sessionSelections[id]);
+  const selectedCourseIds = Object.keys(courseSelections).filter((id) => courseSelections[id]);
+  const selectedDeptIds = Object.keys(branchSelections).filter((id) => branchSelections[id]);
+  const selectedYearIds = Object.keys(academicYearSelections).filter((id) => academicYearSelections[id]);
+  const selectedSemIds = Object.keys(semesterSelections).filter((id) => semesterSelections[id]);
+  const selectedSecIds = Object.keys(sectionSelections).filter((id) => sectionSelections[id]);
+
+  // Fetch dropdown data dynamically based on selections
+  const { BatchList, loading: loadingBatch } = useFetchSessionList(
+    organizationId,
+    branchId
+  );
+  const { CourseList, loading: loadingCourse } = useFetchCourseList(
+    organizationId,
+    selectedBatchIds
+  );
+  const { BranchList, loading: loadingDept } = useFetchBranchList(
+    organizationId,
+    branchId,
+    selectedBatchIds,
+    selectedCourseIds
+  );
+  const { AcademicYearList, loading: loadingAY } = useFetchAcademicYearList(
+    organizationId,
+    branchId,
+    selectedBatchIds,
+    selectedCourseIds,
+    selectedDeptIds
+  );
+  const { SemesterList, loading: loadingSem } = useFetchSemesterList(
+    organizationId,
+    branchId,
+    selectedBatchIds,
+    selectedCourseIds,
+    selectedDeptIds,
+    selectedYearIds
+  );
+  const { SectionList, loading: loadingSec } = useFetchSectionList(
+    organizationId,
+    branchId,
+    selectedBatchIds,
+    selectedCourseIds,
+    selectedDeptIds,
+    selectedYearIds,
+    selectedSemIds
+  );
+
+
   const [updateCircularId, setUpdateCircularId] = useState(null);
   const [circularFileUrl, setCircularFileUrl] = useState(null);
   const [circularList, setCircularList] = useState([]);
@@ -158,12 +167,12 @@ const CircularEntry = () => {
     const apiUrl =
       `${ApiUrl.apiurl}CircularMessage/GetAllCircularMessageList/?` +
       `organization_id=${organizationId}&branch_id=${branchId}` +
-      `&batch_id=${batchIds[0] || ""}` +
-      `&course_id=${courseIds[0] || ""}` +
-      `&department_id=${deptIds[0] || ""}` +
-      `&academic_year_id=${yearIds[0] || ""}` +
-      `&semester_id=${semIds[0] || ""}` +
-      `&section_id=${secIds[0] || ""}` +
+      `&batch_ids=[${batchIds.join(",")}]` +
+      `&course_ids=[${courseIds.join(",")}]` +
+      `&department_ids=[${deptIds.join(",")}]` +
+      `&academic_year_ids=[${yearIds.join(",")}]` +
+      `&semester_ids=[${semIds.join(",")}]` +
+      `&section_ids=[${secIds.join(",")}]` +
       `&circular_date=${circularDate}`;
 
     console.log("Final API URL:", apiUrl);
@@ -477,6 +486,7 @@ const CircularEntry = () => {
     formData.append("section_ids", `[${secIds.join(",")}]`);
 
     formData.append("batch_id", batchId);
+    formData.append("batch_ids", `[${batchIds.join(",")}]`);
     formData.append("organization_id", organizationId);
     formData.append("branch_id", branchId);
     formData.append("initiated_by", selectedInitiatedBy);
@@ -1537,8 +1547,8 @@ const CircularEntry = () => {
                               {item.circular_status === "A"
                                 ? "Approved"
                                 : item.circular_status === "P"
-                                ? "Pending"
-                                : "Rejected"}
+                                  ? "Pending"
+                                  : "Rejected"}
                             </td>
                             <td>
                               <button
