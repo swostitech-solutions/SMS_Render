@@ -25149,7 +25149,7 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
                             "attendance_date": item.attendance_date,
                             "student_id": item.student.id,
                             "registration_no": item.student.registration_no,
-                            "student_name": f"{item.student.first_name} {item.student.last_name}",
+                            "student_name": " ".join(filter(None, [item.student.first_name, item.student.last_name])),
                             "college_admission_no": item.student.college_admission_no,
                             "barcode": item.student.barcode,
                             "primary_guardian": item.student.primary_guardian,
@@ -25198,7 +25198,7 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
                                 "section_id": record.section.id,
                                 "section_name": record.section.section_name,
                                 "student_id": record.student.id,
-                                "student_name": f"{record.student.first_name} {record.student.last_name}",
+                                "student_name": " ".join(filter(None, [record.student.first_name, record.student.last_name])),
                                 "college_admission_no": record.student.college_admission_no,
                                 "barcode": record.student.barcode,
                                 "primary_guardian": record.student.primary_guardian,
@@ -25246,7 +25246,7 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
                                 "section_id": record.section.id,
                                 "section_name": record.section.section_name,
                                 "student_id": record.student.id,
-                                "student_name": f"{record.student.first_name} {record.student.last_name}",
+                                "student_name": " ".join(filter(None, [record.student.first_name, record.student.last_name])),
                                 "college_admission_no": record.student.college_admission_no,
                                 "barcode": record.student.barcode,
                                 "primary_guardian": record.student.primary_guardian,
@@ -25338,28 +25338,31 @@ class StudentAttendanceCreate_UpdateAPI(CreateAPIView):
 
             # Iterate through updateDetails to update or create records
             for item in updateDetails:
+                IsAttendanceRecordExist = None # helper var init
+                
                 if lecture_period_id > 1:
                     is_sms_sent = False
                 else:
                     is_sms_sent = True
-                    # Check if attendance record exists
-                    IsAttendanceRecordExist = Attendance.objects.filter(
-                        organization=organization_id,
-                        branch=branch_id,
-                        batch=batch_id,
-                        course=course_id,
-                        department=department_id,
-                        academic_year=academic_year_id,
-                        semester=semester_id,
-                        section=section_id,
-                        lecture_period=lecture_period_id,
-                        # lecture=lecture_id,
-                        subject=subject_id,
-                        professor=professor_id,
-                        attendance_date=date,
-                        student=item['student_id'],
-                        is_active=True
-                    ).first()
+
+                # Check if attendance record exists (MOVED OUTSIDE ELSE BLOCK)
+                IsAttendanceRecordExist = Attendance.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    batch=batch_id,
+                    course=course_id,
+                    department=department_id,
+                    academic_year=academic_year_id,
+                    semester=semester_id,
+                    section=section_id,
+                    lecture_period=lecture_period_id,
+                    # lecture=lecture_id,
+                    subject=subject_id,
+                    professor=professor_id,
+                    attendance_date=date,
+                    student=item['student_id'],
+                    is_active=True
+                ).first()
 
                 if IsAttendanceRecordExist:
                     # Update the existing record

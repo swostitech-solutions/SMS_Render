@@ -368,13 +368,13 @@ export default function BasicTabs() {
               // mother_aadharno: student.mother_aadhaar_no || "",
               father_aadharno:
                 student.father_aadhaar_no !== null &&
-                student.father_aadhaar_no !== undefined
+                  student.father_aadhaar_no !== undefined
                   ? String(student.father_aadhaar_no)
                   : "",
 
               mother_aadharno:
                 student.mother_aadhaar_no !== null &&
-                student.mother_aadhaar_no !== undefined
+                  student.mother_aadhaar_no !== undefined
                   ? String(student.mother_aadhaar_no)
                   : "",
 
@@ -400,12 +400,12 @@ export default function BasicTabs() {
 
               present_phone_number:
                 address.present_phone_number !== null &&
-                address.present_phone_number !== undefined
+                  address.present_phone_number !== undefined
                   ? address.present_phone_number
                   : "",
               permanent_phone_number:
                 address.permanent_phone_number !== null &&
-                address.permanent_phone_number !== undefined
+                  address.permanent_phone_number !== undefined
                   ? address.permanent_phone_number
                   : "",
 
@@ -463,11 +463,11 @@ export default function BasicTabs() {
                 language_of_instruction: e.language_of_instruction || "",
                 transfer_certificate:
                   e.transfer_certificate === true ||
-                  e.transfer_certificate === "Y"
+                    e.transfer_certificate === "Y"
                     ? "Y"
                     : e.transfer_certificate === "N"
-                    ? "N"
-                    : "",
+                      ? "N"
+                      : "",
                 result: e.result || "",
                 isNew: false,
               })),
@@ -487,9 +487,8 @@ export default function BasicTabs() {
                 (s) => ({
                   sibling_id: s.id || null,
                   admissionNo: s.admission_no || "",
-                  studentName: `${s.first_name || ""} ${s.middle_name || ""} ${
-                    s.last_name || ""
-                  }`.trim(),
+                  studentName: `${s.first_name || ""} ${s.middle_name || ""} ${s.last_name || ""
+                    }`.trim(),
                   class: s.course_name || "",
                   section: s.section || "",
                 })
@@ -603,23 +602,23 @@ export default function BasicTabs() {
 
       const sibling_detail =
         Array.isArray(formData.sibilingsDetails) &&
-        formData.sibilingsDetails.length > 0
+          formData.sibilingsDetails.length > 0
           ? formData.sibilingsDetails
-              // ✅ Filter out rows with no sibling_id or sibling value
-              .filter(
-                (s) =>
-                  s &&
-                  (s.sibling_id || s.sibling) && // must have a valid sibling reference
-                  String(s.sibling_id || s.sibling).trim() !== ""
-              )
-              .map((s) => ({
-                sibling: s.sibling_id || s.sibling,
-                student: null,
-                is_active: true,
-                created_by: userId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              }))
+            // ✅ Filter out rows with no sibling_id or sibling value
+            .filter(
+              (s) =>
+                s &&
+                (s.sibling_id || s.sibling) && // must have a valid sibling reference
+                String(s.sibling_id || s.sibling).trim() !== ""
+            )
+            .map((s) => ({
+              sibling: s.sibling_id || s.sibling,
+              student: null,
+              is_active: true,
+              created_by: userId,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }))
           : [];
 
       const emergency_contact = (formData.emegencyContact || []).map((c) => ({
@@ -820,37 +819,37 @@ export default function BasicTabs() {
 
       const sibling_detail = Array.isArray(formData.sibilingsDetails)
         ? formData.sibilingsDetails
-            .filter((s) => s && (s.sibling_id || s.sibling)) // remove empty items
-            .map((s) => ({
-              sibling: s.sibling_id || s.sibling,
-              created_by: userId || "1",
-            }))
+          .filter((s) => s && (s.sibling_id || s.sibling)) // remove empty items
+          .map((s) => ({
+            sibling: s.sibling_id || s.sibling,
+            created_by: userId || "1",
+          }))
         : [];
 
       // ✅ Proper document and education mapping
       const document_detail = JSON.stringify(
         formData.documentsDetails?.length
           ? formData.documentsDetails.map((d) => ({
-              document_no: d.document_no || "",
-              document_type: d.document_type || "",
-              start_from: d.start_from || null,
-              end_to: d.end_to || null,
-            }))
+            document_no: d.document_no || "",
+            document_type: d.document_type || "",
+            start_from: d.start_from || null,
+            end_to: d.end_to || null,
+          }))
           : []
       );
 
       const previous_education_detail = JSON.stringify(
         formData.previousEducationDetails?.length
           ? formData.previousEducationDetails.map((e) => ({
-              name_of_institution: e.nameofschool || "",
-              location: e.location || "",
-              course_completed: e.class_completed || "",
-              year_from: e.year_from || "",
-              year_to: e.year_to || "",
-              language_of_instruction: e.language_of_instruction || "",
-              transfer_certificate: e.transfer_certificate || "",
-              result: e.result || "",
-            }))
+            name_of_institution: e.nameofschool || "",
+            location: e.location || "",
+            course_completed: e.class_completed || "",
+            year_from: e.year_from || "",
+            year_to: e.year_to || "",
+            language_of_instruction: e.language_of_instruction || "",
+            transfer_certificate: e.transfer_certificate || "",
+            result: e.result || "",
+          }))
           : []
       );
 
@@ -970,7 +969,7 @@ export default function BasicTabs() {
       } else {
         alert(
           "❌ Failed to update student record: " +
-            (result.message || "Unknown error")
+          (result.message || "Unknown error")
         );
       }
     } catch (error) {
