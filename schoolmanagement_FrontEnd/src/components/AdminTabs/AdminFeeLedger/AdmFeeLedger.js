@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SelectStudentModal from "../AdminAttendanceEntry/SelectStudentModal";
 import SelectStudentFeeModal from "../FeeStudentModal/SelectStudentFeeModal";
-import  useCourses from "../../hooks/useFetchClasses";
+import useCourses from "../../hooks/useFetchClasses";
 import Select from "react-select";
 import * as XLSX from "xlsx";
 import "jspdf-autotable";
@@ -73,18 +73,18 @@ const AdmAttendanceEntry = () => {
     motherName: "",
     schoolAdmissionNo: "",
   });
-  
-const itemsPerPage = 10;
 
-const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+
+  const [currentPage, setCurrentPage] = useState(0);
   // Store fetched periods
-const pageCount = Math.ceil(tableData.length / itemsPerPage);
+  const pageCount = Math.ceil(tableData.length / itemsPerPage);
 
-const offset = currentPage * itemsPerPage;
-const currentItems = tableData.slice(offset, offset + itemsPerPage);
-const handlePageClick = (event) => {
-  setCurrentPage(event.selected);
-};
+  const offset = currentPage * itemsPerPage;
+  const currentItems = tableData.slice(offset, offset + itemsPerPage);
+  const handlePageClick = (event) => {
+    setCurrentPage(event.selected);
+  };
 
   const handleClear = () => {
     // Student identity fields
@@ -792,30 +792,48 @@ const handlePageClick = (event) => {
 
   useEffect(() => {
     const fetchPeriods = async () => {
+      console.log("fetchPeriods Effect Triggered");
+
+      const organization_id = sessionStorage.getItem("organization_id") || 1;
+      const branch_id = sessionStorage.getItem("branch_id") || 1;
+
+      // Use selected values or default to known valid IDs found in DB
+      const batch_id = selectedSession?.value || 24;
+      const course_id = selectedCourse?.value || 13;
+      const department_id = selectedDepartment?.value || 11;
+
+      console.log(`Fetching Periods with: Org=${organization_id}, Branch=${branch_id}, Batch=${batch_id}, Course=${course_id}, Dept=${department_id}`);
+
       try {
         const response = await fetch(
-          `${ApiUrl.apiurl}Semester/GetSemesterByDepartment/?organization_id=1&branch_id=1&batch_id=1&course_id=1&department_id=1`
+          `${ApiUrl.apiurl}Semester/GetSemesterByDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`
         );
 
         const result = await response.json();
 
         if (Array.isArray(result)) {
+          console.log("Periods fetched:", result);
           const options = result.map((item) => ({
             value: item.id,
             label: item.semester_code, // Use semester_code as the label
           }));
 
+          // Sort by ID ascending
+          options.sort((a, b) => a.value - b.value);
+
           setPeriodOptions(options);
         } else {
           console.error("Unexpected response format:", result);
+          setPeriodOptions([]);
         }
       } catch (error) {
         console.error("Error fetching semesters:", error);
+        setPeriodOptions([]);
       }
     };
 
     fetchPeriods();
-  }, []);
+  }, [selectedSession, selectedCourse, selectedDepartment]);
 
   const handleSearch = async () => {
     const token = localStorage.getItem("accessToken");
@@ -852,9 +870,8 @@ const handlePageClick = (event) => {
     params.append("show_fees", showFees || "");
     if (showBalanceFees) params.append("show_balance_fees", true);
 
-    const apiUrl = `${
-      ApiUrl.apiurl
-    }FeeLedger/GetFeeLedgerBasedOnCondition/?${params.toString()}`;
+    const apiUrl = `${ApiUrl.apiurl
+      }FeeLedger/GetFeeLedgerBasedOnCondition/?${params.toString()}`;
 
     try {
       const response = await fetch(apiUrl, {
@@ -949,13 +966,11 @@ const handlePageClick = (event) => {
           break;
 
         case "C":
-          url = `${ApiUrl.apiurl}FeeLedger/GetStudentFeeBalanceReceiptStudentId/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${
-            selectedSession?.value || ""
-          }&course_id=${selectedCourse?.value || ""}&department_id=${
-            selectedDepartment?.value || ""
-          }&studentIds=${encodeURIComponent(
-            studentIdsParam
-          )}&fee_due_from=${fee_due_from}&fee_due_to=${fee_due_to}`;
+          url = `${ApiUrl.apiurl}FeeLedger/GetStudentFeeBalanceReceiptStudentId/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${selectedSession?.value || ""
+            }&course_id=${selectedCourse?.value || ""}&department_id=${selectedDepartment?.value || ""
+            }&studentIds=${encodeURIComponent(
+              studentIdsParam
+            )}&fee_due_from=${fee_due_from}&fee_due_to=${fee_due_to}`;
           break;
 
         case "E":

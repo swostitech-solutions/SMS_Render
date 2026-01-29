@@ -3709,7 +3709,7 @@ const FeeCollection = () => {
                             <React.Fragment key={index}>
                               {aggregatedFeeDetails
                                 .filter(
-                                  (detail) => detail.period === row.period
+                                  (detail) => detail.period === row.period && detail.paid_amount > 0
                                 )
                                 .map((item, subIndex) => (
                                   <tr key={subIndex}>
@@ -3932,7 +3932,7 @@ const FeeCollection = () => {
                             selectedOption ? selectedOption.value : null
                           )
                         }
-                        isDisabled={selectedPaymentMethodId === 2}
+                        isDisabled={selectedPaymentMethodLabel === "cash"}
                       />
                     </div>
 
@@ -3948,7 +3948,7 @@ const FeeCollection = () => {
                         classNamePrefix="react-select"
                         placeholder="Select Account"
                         isClearable={false}
-                        isDisabled={selectedPaymentMethodId === 2}
+                        isDisabled={selectedPaymentMethodLabel === "cash"}
                         value={
                           selectedAccountId
                             ? accountNumberOptions.find(

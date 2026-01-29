@@ -42,13 +42,13 @@ const FeeSearchPage = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [bank, setBank] = useState(null);
-   const [studentDetails, setStudentDetails] = useState( );
- const [selectedSection, setSelectedSection] = useState( );
-   const [selectedSemester, setSelectedSemester] = useState( );
-   const [selectedAcademicYear, setSelectedAcademicYear] = useState( );
-     const [selectedDepartment, setSelectedDepartment] = useState( );
-      const [selectedCourse, setSelectedCourse] = useState();
-//  const [selectedSession, setSelectedSession] = useState( );
+  const [studentDetails, setStudentDetails] = useState();
+  const [selectedSection, setSelectedSection] = useState();
+  const [selectedSemester, setSelectedSemester] = useState();
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState();
+  const [selectedDepartment, setSelectedDepartment] = useState();
+  const [selectedCourse, setSelectedCourse] = useState();
+  //  const [selectedSession, setSelectedSession] = useState( );
   const [period, setPeriod] = useState(null); // Stores selected period
   const [periodOptions, setPeriodOptions] = useState([]);
 
@@ -61,7 +61,7 @@ const FeeSearchPage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [cancelRemark, setCancelRemark] = useState("");
-const [semesterOptions, setSemesterOptions] = useState([]);
+  const [semesterOptions, setSemesterOptions] = useState([]);
 
   //  const [bankOptions, setBankOptions] = useState([]);
   const [accountOptions, setAccountOptions] = useState([]);
@@ -70,7 +70,7 @@ const [semesterOptions, setSemesterOptions] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const receiptsPerPage = 10;
   const [bankOptions, setBankOptions] = useState([]);
-  const [accountDetails, setAccountDetails] = useState([]); 
+  const [accountDetails, setAccountDetails] = useState([]);
   const [formData, setFormData] = useState({
     dateFrom: "",
     dateTo: "",
@@ -85,113 +85,113 @@ const [semesterOptions, setSemesterOptions] = useState([]);
     bankId: "",
     bankName: "",
   });
- const handleSelectStudent = async (selectedStudent) => {
-   try {
-     const studentId =
-       selectedStudent?.fullData?.student ||
-       selectedStudent?.studentBasicDetails?.student_id ||
-       selectedStudent?.student_id ||
-       null;
+  const handleSelectStudent = async (selectedStudent) => {
+    try {
+      const studentId =
+        selectedStudent?.fullData?.student ||
+        selectedStudent?.studentBasicDetails?.student_id ||
+        selectedStudent?.student_id ||
+        null;
 
-     if (!studentId) {
-       console.error("No valid student ID found in selected student");
-       return;
-     }
+      if (!studentId) {
+        console.error("No valid student ID found in selected student");
+        return;
+      }
 
-     // Store also in state
-     setStudentId(studentId);
+      // Store also in state
+      setStudentId(studentId);
 
-     // Also store in localStorage (optional)
-     localStorage.setItem(
-       "selectedClubStudentId",
-       JSON.stringify({ student_id: studentId })
-     );
+      // Also store in localStorage (optional)
+      localStorage.setItem(
+        "selectedClubStudentId",
+        JSON.stringify({ student_id: studentId })
+      );
 
-     // Fetch full details
-     await fetchStudentDetails(studentId);
+      // Fetch full details
+      await fetchStudentDetails(studentId);
 
-     // Close modal
-     handleCloseModal();
-   } catch (error) {
-     console.error("Error handling selected student:", error);
-   }
- };
+      // Close modal
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error handling selected student:", error);
+    }
+  };
 
   const fetchStudentDetails = async (student_id) => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const organization_id = sessionStorage.getItem("organization_id");
-        const branch_id = sessionStorage.getItem("branch_id");
-  
-        if (!student_id || !organization_id || !branch_id || !token) {
-          console.error(" Missing identifiers for fetching student data");
-          return;
-        }
-  
-        const url = `${ApiUrl.apiurl}StudentCourse/GetStudentDataBasedId/?student_id=${student_id}&branch_id=${branch_id}&organization_id=${organization_id}`;
-        console.log(" Fetching from:", url);
-  
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-  
-        if (!response.ok) throw new Error("Failed to fetch student details");
-  
-        const result = await response.json();
-        console.log("🔹 API Response:", result);
-  
-        if (result.message === "Success" && result.data) {
-          const student = result.data;
-  
-          setStudentDetails(student);
-          setStudentName(student.student_name || "");
-  
-          setSelectedStudent({
-            name: student.student_name || "",
-            barcode: student.barcode || "",
-            admissionNo: student.college_admission_no || "",
-          });
-  
-          setSelectedSession({
-            value: student.batch_id,
-            label: student.batch,
-          });
-  
-          setSelectedCourse({
-            value: student.course_id,
-            label: student.course_name,
-          });
-  
-          setSelectedDepartment({
-            value: student.department_id,
-            label: student.department,
-          });
-  
-          setSelectedAcademicYear({
-            value: student.academic_year_id,
-            label: student.academic_year,
-          });
-  
-          setSelectedSemester({
-            value: student.semester_id,
-            label: student.semester_name,
-          });
-  
-          setSelectedSection({
-            value: student.section_id,
-            label: student.section_name,
-          });
-        } else {
-          console.warn(" No data found for student_id:", student_id);
-        }
-      } catch (error) {
-        console.error("Error fetching student details:", error);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const organization_id = sessionStorage.getItem("organization_id");
+      const branch_id = sessionStorage.getItem("branch_id");
+
+      if (!student_id || !organization_id || !branch_id || !token) {
+        console.error(" Missing identifiers for fetching student data");
+        return;
       }
-    };
+
+      const url = `${ApiUrl.apiurl}StudentCourse/GetStudentDataBasedId/?student_id=${student_id}&branch_id=${branch_id}&organization_id=${organization_id}`;
+      console.log(" Fetching from:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch student details");
+
+      const result = await response.json();
+      console.log("🔹 API Response:", result);
+
+      if (result.message === "Success" && result.data) {
+        const student = result.data;
+
+        setStudentDetails(student);
+        setStudentName(student.student_name || "");
+
+        setSelectedStudent({
+          name: student.student_name || "",
+          barcode: student.barcode || "",
+          admissionNo: student.college_admission_no || "",
+        });
+
+        setSelectedSession({
+          value: student.batch_id,
+          label: student.batch,
+        });
+
+        setSelectedCourse({
+          value: student.course_id,
+          label: student.course_name,
+        });
+
+        setSelectedDepartment({
+          value: student.department_id,
+          label: student.department,
+        });
+
+        setSelectedAcademicYear({
+          value: student.academic_year_id,
+          label: student.academic_year,
+        });
+
+        setSelectedSemester({
+          value: student.semester_id,
+          label: student.semester_name,
+        });
+
+        setSelectedSection({
+          value: student.section_id,
+          label: student.section_name,
+        });
+      } else {
+        console.warn(" No data found for student_id:", student_id);
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+    }
+  };
   // You can adjust this to show more or fewer items per page
   const handlePageClick = (data) => {
     setCurrentPage(data.selected);
@@ -202,127 +202,128 @@ const [semesterOptions, setSemesterOptions] = useState([]);
   const currentReceipts = receiptsData.slice(offset, offset + receiptsPerPage);
   const pageCount = Math.ceil(receiptsData.length / receiptsPerPage);
 
-const formatDateToLocal = (date) => {
-  if (!date) return "";
+  const formatDateToLocal = (date) => {
+    if (!date) return "";
 
-  const d = typeof date === "string" ? new Date(date) : date;
+    const d = typeof date === "string" ? new Date(date) : date;
 
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
-};
+    return `${year}-${month}-${day}`;
+  };
 
-const handleClear = () => {
-  //  Student related
-  setSelectedStudent(null);
-  setStudentId("");
-  setStudentName("");
-  setSelectedStudentIds([]);
+  const handleClear = () => {
+    //  Student related
+    setSelectedStudent(null);
+    setStudentId("");
+    setStudentName("");
+    setSelectedStudentIds([]);
 
-  // 🔹 Dropdown filters
-  setSelectedSession(null);
-  setSelectedCourse(null);
-  setSelectedDepartment(null);
-  setSelectedAcademicYear(null);
-  setSelectedSemester(null);
-  setSelectedSection(null);
+    // 🔹 Dropdown filters
+    setSelectedSession(null);
+    setSelectedCourse(null);
+    setSelectedDepartment(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
 
-  // 🔹 Class / Section IDs
-  setClassId(null);
-  setSectionId(null);
+    // 🔹 Class / Section IDs
+    setClassId(null);
+    setSectionId(null);
 
-  //  Date filters (IMPORTANT FIX)
-  setFormData({
-    dateFrom: "",
-    dateTo: "",
-  });
-  setStartDate(null);
-  setEndDate(null);
+    //  Date filters (IMPORTANT FIX)
+    setFormData({
+      dateFrom: "",
+      dateTo: "",
+    });
+    setStartDate(null);
+    setEndDate(null);
 
-  //  Other filters
-  setReceiptNo("");
-  setBank(null);
-  setPeriod(null);
-  setSelectedBank(null);
-  setSelectedAccount(null);
+    //  Other filters
+    setReceiptNo("");
+    setBank(null);
+    setPeriod(null);
+    setSelectedBank(null);
+    setSelectedAccount(null);
 
-  //  Table & pagination
-  setShowTable(false);
-  setReceiptsData([]);
-  setReceipts([]);
-  setSelectedReceipt(null);
-  setCurrentPage(0);
+    //  Table & pagination
+    setShowTable(false);
+    setReceiptsData([]);
+    setReceipts([]);
+    setSelectedReceipt(null);
+    setCurrentPage(0);
 
-  //  Radio button reset (optional)
-  setViewOption("viewReceipts");
+    //  Radio button reset (optional)
+    setViewOption("viewReceipts");
 
-  //  Modals
-  setShowModal(false);
-  setShowUpdateModal(false);
-  setShowCancelModal(false);
-  setCancelRemark("");
-};
+    //  Modals
+    setShowModal(false);
+    setShowUpdateModal(false);
+    setShowCancelModal(false);
+    setCancelRemark("");
+  };
 
 
- const handleUpdateClick = async (receipt) => {
-   const receiptId = receipt.receiptId;
+  const handleUpdateClick = async (receipt) => {
+    const receiptId = receipt.receiptId;
 
-   // Get student_id same way as handleSearch
-   const storedStudent = localStorage.getItem("selectedClubStudentId");
-   const studentIdValue = storedStudent
-     ? JSON.parse(storedStudent).student_id
-     : studentId;
+    // Get student_id same way as handleSearch
+    const storedStudent = localStorage.getItem("selectedClubStudentId");
+    const studentIdValue = storedStudent
+      ? JSON.parse(storedStudent).student_id
+      : studentId;
 
-   const organization_id = sessionStorage.getItem("organization_id");
-   const branch_id = sessionStorage.getItem("branch_id");
+    const organization_id = sessionStorage.getItem("organization_id");
+    const branch_id = sessionStorage.getItem("branch_id");
 
-   if (!receiptId) {
-     alert("Receipt ID missing!");
-     return;
-   }
+    if (!receiptId) {
+      alert("Receipt ID missing!");
+      return;
+    }
 
-   try {
-     const apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFeeReceiptBasedOnReceiptId/?organization_id=${organization_id}&branch_id=${branch_id}&receipt_id=${receiptId}`;
+    try {
+      const apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFeeReceiptBasedOnReceiptId/?organization_id=${organization_id}&branch_id=${branch_id}&receipt_id=${receiptId}`;
 
-     const response = await fetch(apiUrl, {
-       method: "GET",
-       headers: {
-         "Content-Type": "application/json",
-         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-       },
-     });
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
 
-     const result = await response.json();
+      const result = await response.json();
 
-     if (response.ok && result.data) {
-       const receiptData = result.data;
+      if (response.ok && result.data) {
+        const receiptData = result.data;
 
-       setSelectedReceipt({
-         receiptId: receiptData.receiptId, // keep ID for update
-         receiptDate: receiptData.receipt_date
-           ? new Date(receiptData.receipt_date).toISOString().split("T")[0]
-           : "",
-         amount: receiptData.amount || "",
-         referenceDate: receiptData.reference_date
-           ? new Date(receiptData.reference_date).toISOString().split("T")[0]
-           : "",
-         paymentMethodId: receiptData.payment_methodId || null,
-         bankId: receiptData.bankId || "",
-         accountNumber: receiptData.bank_account || "",
-         paymentReference: receiptData.payment_reference || "",
-         studentId: studentIdValue, // Pass student id for update saving if needed
-       });
+        setSelectedReceipt({
+          receiptId: receiptData.receiptId, // keep ID for update
+          receiptDate: receiptData.receipt_date
+            ? new Date(receiptData.receipt_date).toISOString().split("T")[0]
+            : "",
+          amount: receiptData.amount || "",
+          referenceDate: receiptData.reference_date
+            ? new Date(receiptData.reference_date).toISOString().split("T")[0]
+            : "",
+          paymentMethodId: receiptData.payment_methodId || null,
+          bankId: receiptData.bankId || "",
+          bankdetailsId: receiptData.bankdetailsId || "", // Store the account ID
+          accountNumber: receiptData.bank_account || "", // Display value
+          paymentReference: receiptData.payment_reference || "",
+          studentId: studentIdValue, // Pass student id for update saving if needed
+        });
 
-       setShowUpdateModal(true);
-     } else {
-       alert("Unable to fetch receipt data.");
-     }
-   } catch (error) {
-     console.error("Error fetching receipt data:", error);
-   }
- };
+        setShowUpdateModal(true);
+      } else {
+        alert("Unable to fetch receipt data.");
+      }
+    } catch (error) {
+      console.error("Error fetching receipt data:", error);
+    }
+  };
 
 
   // Handle input changes in the form
@@ -334,7 +335,7 @@ const handleClear = () => {
     }));
   };
 
- useEffect(() => {
+  useEffect(() => {
     const fetchBanks = async () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -386,220 +387,231 @@ const handleClear = () => {
     fetchBanks();
   }, []);
 
- useEffect(() => {
-   if (selectedReceipt && selectedReceipt.bankId) {
-     const fetchAccountDetails = async () => {
-       try {
-         const token = localStorage.getItem("accessToken");
-         const organization_id = sessionStorage.getItem("organization_id");
-         const branch_id = sessionStorage.getItem("branch_id");
-         const selectedBankId = selectedReceipt.bankId;
+  useEffect(() => {
+    if (selectedReceipt && selectedReceipt.bankId) {
+      const fetchAccountDetails = async () => {
+        try {
+          const token = localStorage.getItem("accessToken");
+          const organization_id = sessionStorage.getItem("organization_id");
+          const branch_id = sessionStorage.getItem("branch_id");
+          const selectedBankId = selectedReceipt.bankId;
 
-         if (!token) {
-           console.error("Access token missing.");
-           return;
-         }
+          if (!token) {
+            console.error("Access token missing.");
+            return;
+          }
 
-         const apiUrl = `${ApiUrl.apiurl}AccountDetails/GetAccountDetailsBasedOnBankId/?organization_id=${organization_id}&branch_id=${branch_id}&bank_id=${selectedBankId}`;
+          const apiUrl = `${ApiUrl.apiurl}AccountDetails/GetAccountDetailsBasedOnBankId/?organization_id=${organization_id}&branch_id=${branch_id}&bank_id=${selectedBankId}`;
 
-         const response = await fetch(apiUrl, {
-           method: "GET",
-           headers: {
-             "Content-Type": "application/json",
-             Authorization: `Bearer ${token}`,
-           },
-         });
+          const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
-         const result = await response.json();
+          const result = await response.json();
 
-         if (
-           response.ok &&
-           result.message === "success!!" &&
-           Array.isArray(result.data)
-         ) {
-           const accountOptions = result.data.map((account) => ({
-             value: account.bank_account,
-             label: account.bank_account.toString(),
-           }));
-           setAccountDetails(accountOptions);
-         } else {
-           console.warn("Unexpected API response:", result);
-           setAccountDetails([]);
-         }
-       } catch (error) {
-         console.error("Error fetching account details:", error);
-       }
-     };
+          if (
+            response.ok &&
+            result.message === "success!!" &&
+            Array.isArray(result.data)
+          ) {
+            const accountOptions = result.data.map((account) => ({
+              value: account.id, // Use account ID as value
+              label: account.bank_account.toString(),
+              accountNumber: account.bank_account, // Store account number for display
+            }));
+            setAccountDetails(accountOptions);
+          } else {
+            console.warn("Unexpected API response:", result);
+            setAccountDetails([]);
+          }
+        } catch (error) {
+          console.error("Error fetching account details:", error);
+        }
+      };
 
-     fetchAccountDetails();
-   }
- }, [selectedReceipt]);
+      fetchAccountDetails();
+    }
+  }, [selectedReceipt]);
 
 
   // Handle bank selection
-const handleBankSelect = (selectedOption) => {
-  setSelectedReceipt((prevState) => ({
-    ...prevState,
-    bankId: selectedOption ? selectedOption.value : "",
-  }));
-};
+  const handleBankSelect = (selectedOption) => {
+    setSelectedReceipt((prevState) => ({
+      ...prevState,
+      bankId: selectedOption ? selectedOption.value : "",
+      bankdetailsId: "", // Reset account when bank changes
+      accountNumber: "",
+    }));
+  };
+
+  // Handle account selection
+  const handleAccountSelect = (selectedOption) => {
+    setSelectedReceipt((prevState) => ({
+      ...prevState,
+      bankdetailsId: selectedOption ? selectedOption.value : "", // Store account ID
+      accountNumber: selectedOption ? selectedOption.accountNumber : "", // Store account number for display
+    }));
+  };
 
 
-// const handleSearch = async () => {
-//   const storedStudent = localStorage.getItem("selectedClubStudentId");
-//   const studentIdValue = storedStudent
-//     ? JSON.parse(storedStudent).student_id
-//     : studentId;
+  // const handleSearch = async () => {
+  //   const storedStudent = localStorage.getItem("selectedClubStudentId");
+  //   const studentIdValue = storedStudent
+  //     ? JSON.parse(storedStudent).student_id
+  //     : studentId;
 
-//   const organization_id = sessionStorage.getItem("organization_id");
-//   const branch_id = sessionStorage.getItem("branch_id");
+  //   const organization_id = sessionStorage.getItem("organization_id");
+  //   const branch_id = sessionStorage.getItem("branch_id");
 
-//   if (!studentIdValue) {
-//     alert("Please enter Student ID");
-//     return;
-//   }
+  //   if (!studentIdValue) {
+  //     alert("Please enter Student ID");
+  //     return;
+  //   }
 
-//   const formattedStartDate = formatDateToLocal(startDate);
-//   const formattedEndDate = formatDateToLocal(endDate);
+  //   const formattedStartDate = formatDateToLocal(startDate);
+  //   const formattedEndDate = formatDateToLocal(endDate);
 
-//   const apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFilterFeeReceipts/?organization_id=${organization_id}&branch_id=${branch_id}&student_id=${studentIdValue}${
-//     formattedStartDate ? `&date_from=${formattedStartDate}` : ""
-//   }${formattedEndDate ? `&date_to=${formattedEndDate}` : ""}&view_receipt=true`;
+  //   const apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFilterFeeReceipts/?organization_id=${organization_id}&branch_id=${branch_id}&student_id=${studentIdValue}${
+  //     formattedStartDate ? `&date_from=${formattedStartDate}` : ""
+  //   }${formattedEndDate ? `&date_to=${formattedEndDate}` : ""}&view_receipt=true`;
 
-//   try {
-//     const response = await fetch(apiUrl, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-//       },
-//     });
+  //   try {
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  //       },
+  //     });
 
-//     const result = await response.json();
+  //     const result = await response.json();
 
-//     // ⬇️ FIX: Data comes from result.data
-//     if (response.ok && Array.isArray(result.data)) {
-//       setReceiptsData(result.data);
-//       setShowTable(true);
-//       setSelectedReceipt(result.data.length > 0 ? result.data[0] : null);
-//     } else {
-//       setReceiptsData([]);
-//       setShowTable(false);
-//     }
-//   } catch (error) {
-//     console.error("Error fetching data:", error);
-//     setReceiptsData([]);
-//     setShowTable(false);
-//   }
-// };
+  //     // ⬇️ FIX: Data comes from result.data
+  //     if (response.ok && Array.isArray(result.data)) {
+  //       setReceiptsData(result.data);
+  //       setShowTable(true);
+  //       setSelectedReceipt(result.data.length > 0 ? result.data[0] : null);
+  //     } else {
+  //       setReceiptsData([]);
+  //       setShowTable(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //     setReceiptsData([]);
+  //     setShowTable(false);
+  //   }
+  // };
 
-// const handleSearch = async () => {
-//   const organization_id = sessionStorage.getItem("organization_id");
-//   const branch_id = sessionStorage.getItem("branch_id");
+  // const handleSearch = async () => {
+  //   const organization_id = sessionStorage.getItem("organization_id");
+  //   const branch_id = sessionStorage.getItem("branch_id");
 
-//   const formattedStartDate = formatDateToLocal(startDate);
-//   const formattedEndDate = formatDateToLocal(endDate);
+  //   const formattedStartDate = formatDateToLocal(startDate);
+  //   const formattedEndDate = formatDateToLocal(endDate);
 
-//   let apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFilterFeeReceipts/?organization_id=${organization_id}&branch_id=${branch_id}`;
+  //   let apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFilterFeeReceipts/?organization_id=${organization_id}&branch_id=${branch_id}`;
 
-//   // Add student_id only if selected
-//   if (studentId) apiUrl += `&student_id=${studentId}`;
+  //   // Add student_id only if selected
+  //   if (studentId) apiUrl += `&student_id=${studentId}`;
 
-//   // Add date filters
-//   if (formattedStartDate) apiUrl += `&date_from=${formattedStartDate}`;
-//   if (formattedEndDate) apiUrl += `&date_to=${formattedEndDate}`;
+  //   // Add date filters
+  //   if (formattedStartDate) apiUrl += `&date_from=${formattedStartDate}`;
+  //   if (formattedEndDate) apiUrl += `&date_to=${formattedEndDate}`;
 
-//   // -----------------------------
-//   // View Options Logic
-//   // Default: viewOption = "viewReceipts"
-//   // -----------------------------
-//   const isViewReceipts = viewOption === "viewReceipts";
-//   const isViewCancel = viewOption === "viewCancelReceipts";
+  //   // -----------------------------
+  //   // View Options Logic
+  //   // Default: viewOption = "viewReceipts"
+  //   // -----------------------------
+  //   const isViewReceipts = viewOption === "viewReceipts";
+  //   const isViewCancel = viewOption === "viewCancelReceipts";
 
-//   apiUrl += `&view_receipt=${isViewReceipts}`;
-//   apiUrl += `&view_cancel_receipt=${isViewCancel}`;
+  //   apiUrl += `&view_receipt=${isViewReceipts}`;
+  //   apiUrl += `&view_cancel_receipt=${isViewCancel}`;
 
-//   try {
-//     const response = await fetch(apiUrl, {
-//       method: "GET",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-//       },
-//     });
+  //   try {
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  //       },
+  //     });
 
-//     const result = await response.json();
+  //     const result = await response.json();
 
-//     if (response.ok && Array.isArray(result.data)) {
-//       setReceiptsData(result.data);
-//       setShowTable(true);
-//       setSelectedReceipt(result.data.length > 0 ? result.data[0] : null);
-//     } else {
-//       setReceiptsData([]);
-//       setShowTable(false);
-//     }
-//   } catch (error) {
-//     console.error("Error fetching data:", error);
-//     setReceiptsData([]);
-//     setShowTable(false);
-//   }
-// };
-const handleSearch = async () => {
-  const organization_id = sessionStorage.getItem("organization_id");
-  const branch_id = sessionStorage.getItem("branch_id");
+  //     if (response.ok && Array.isArray(result.data)) {
+  //       setReceiptsData(result.data);
+  //       setShowTable(true);
+  //       setSelectedReceipt(result.data.length > 0 ? result.data[0] : null);
+  //     } else {
+  //       setReceiptsData([]);
+  //       setShowTable(false);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //     setReceiptsData([]);
+  //     setShowTable(false);
+  //   }
+  // };
+  const handleSearch = async () => {
+    const organization_id = sessionStorage.getItem("organization_id");
+    const branch_id = sessionStorage.getItem("branch_id");
 
-  // ✅ take dates from formData
-  const formattedStartDate = formData.dateFrom
-    ? formatDateToLocal(formData.dateFrom)
-    : "";
+    // ✅ take dates from formData
+    const formattedStartDate = formData.dateFrom
+      ? formatDateToLocal(formData.dateFrom)
+      : "";
 
-  const formattedEndDate = formData.dateTo
-    ? formatDateToLocal(formData.dateTo)
-    : "";
+    const formattedEndDate = formData.dateTo
+      ? formatDateToLocal(formData.dateTo)
+      : "";
 
-  const params = new URLSearchParams({
-    organization_id,
-    branch_id,
-  });
-
-  // Optional filters
-  if (studentId) params.append("student_id", studentId);
-  if (formattedStartDate) params.append("date_from", formattedStartDate);
-  if (formattedEndDate) params.append("date_to", formattedEndDate);
-
-  // View options
-  params.append("view_receipt", viewOption === "viewReceipts");
-  params.append("view_cancel_receipt", viewOption === "viewCancelReceipts");
-
-  const apiUrl = `${
-    ApiUrl.apiurl
-  }FeeReceipt/GetFilterFeeReceipts/?${params.toString()}`;
-
-  try {
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
+    const params = new URLSearchParams({
+      organization_id,
+      branch_id,
     });
 
-    const result = await response.json();
+    // Optional filters
+    if (studentId) params.append("student_id", studentId);
+    if (formattedStartDate) params.append("date_from", formattedStartDate);
+    if (formattedEndDate) params.append("date_to", formattedEndDate);
 
-    if (response.ok && Array.isArray(result.data)) {
-      setReceiptsData(result.data);
-      setShowTable(true);
-      setSelectedReceipt(result.data.length > 0 ? result.data[0] : null);
-    } else {
+    // View options
+    params.append("view_receipt", viewOption === "viewReceipts");
+    params.append("view_cancel_receipt", viewOption === "viewCancelReceipts");
+
+    const apiUrl = `${ApiUrl.apiurl
+      }FeeReceipt/GetFilterFeeReceipts/?${params.toString()}`;
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && Array.isArray(result.data)) {
+        setReceiptsData(result.data);
+        setShowTable(true);
+        setSelectedReceipt(result.data.length > 0 ? result.data[0] : null);
+      } else {
+        setReceiptsData([]);
+        setShowTable(false);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
       setReceiptsData([]);
       setShowTable(false);
     }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    setReceiptsData([]);
-    setShowTable(false);
-  }
-};
+  };
 
 
 
@@ -620,56 +632,56 @@ const handleSearch = async () => {
   };
 
   useEffect(() => {
-     const fetchPaymentMethods = async () => {
-       try {
-         const token = localStorage.getItem("accessToken");
-         const organization_id = sessionStorage.getItem("organization_id");
-         const branch_id = sessionStorage.getItem("branch_id");
- 
-         if (!token) {
-           console.error("Access token not found in localStorage.");
-           return;
-         }
- 
-         if (!organization_id || !branch_id) {
-           console.error("Missing organization_id or branch_id");
-           return;
-         }
- 
-         const apiUrl = `${ApiUrl.apiurl}PaymentMethod/GetAllPaymentMethodList/?organization_id=${organization_id}&branch_id=${branch_id}`;
- 
-         const response = await fetch(apiUrl, {
-           method: "GET",
-           headers: {
-             "Content-Type": "application/json",
-             Authorization: `Bearer ${token}`,
-           },
-         });
- 
-         if (!response.ok) {
-           throw new Error(`HTTP error! Status: ${response.status}`);
-         }
- 
-         const result = await response.json();
-         console.log("Payment Method API Response:", result);
- 
-         if (result.message === "Success" && Array.isArray(result.data)) {
-           const options = result.data.map((method) => ({
-             value: method.id,
-             label: method.payment_method,
-           }));
-           setPaymentMethodOptions(options);
-         } else {
-           setPaymentMethodOptions([]);
-           console.warn("Unexpected API response:", result);
-         }
-       } catch (error) {
-         console.error("Error fetching payment methods:", error);
-       }
-     };
- 
-     fetchPaymentMethods();
-   }, []);
+    const fetchPaymentMethods = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const organization_id = sessionStorage.getItem("organization_id");
+        const branch_id = sessionStorage.getItem("branch_id");
+
+        if (!token) {
+          console.error("Access token not found in localStorage.");
+          return;
+        }
+
+        if (!organization_id || !branch_id) {
+          console.error("Missing organization_id or branch_id");
+          return;
+        }
+
+        const apiUrl = `${ApiUrl.apiurl}PaymentMethod/GetAllPaymentMethodList/?organization_id=${organization_id}&branch_id=${branch_id}`;
+
+        const response = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Payment Method API Response:", result);
+
+        if (result.message === "Success" && Array.isArray(result.data)) {
+          const options = result.data.map((method) => ({
+            value: method.id,
+            label: method.payment_method,
+          }));
+          setPaymentMethodOptions(options);
+        } else {
+          setPaymentMethodOptions([]);
+          console.warn("Unexpected API response:", result);
+        }
+      } catch (error) {
+        console.error("Error fetching payment methods:", error);
+      }
+    };
+
+    fetchPaymentMethods();
+  }, []);
 
   // Modal handling functions
   const handleOpenModal = () => setShowModal(true);
@@ -776,141 +788,141 @@ const handleSearch = async () => {
   };
 
   // Function to handle the Cancel link click
- const handleCancelClick = (e, receipt) => {
-   e.preventDefault();
-   setSelectedReceipt(receipt);
-   setShowCancelModal(true);
- };
-
-const handleSaveUpdate = async () => {
-  if (!selectedReceipt || !selectedReceipt.receiptId) {
-    console.error("Receipt ID is missing.");
-    alert("Receipt ID is missing.");
-    return;
-  }
-
-  const receiptId = selectedReceipt.receiptId;
-  const organization_id = sessionStorage.getItem("organization_id");
-  const branch_id = sessionStorage.getItem("branch_id");
-
-  // Ensure we have the payment method value (number)
-  const paymentMethod = selectedReceipt.paymentMethodId ?? null;
-
-  // Validate required fields before sending
-  if (!selectedReceipt.receiptDate || !paymentMethod) {
-    console.error("Missing required receipt_date or payment_method", {
-      receiptDate: selectedReceipt.receiptDate,
-      paymentMethod,
-    });
-    alert("Please fill receipt date and payment method before saving.");
-    return;
-  }
-
-  // If payment method indicates cash (example: 2), do not send bank info
-  const isCash = Number(paymentMethod) === 2;
-
-  const requestBody = {
-    receipt_date: selectedReceipt.receiptDate, // yyyy-mm-dd string expected
-    payment_method: Number(paymentMethod),
-    payment_reference: selectedReceipt.paymentReference || "",
-    reference_date: selectedReceipt.referenceDate || null,
-    bank_id: isCash
-      ? null
-      : selectedReceipt.bankId
-      ? Number(selectedReceipt.bankId)
-      : null,
-    account_number: isCash
-      ? null
-      : selectedReceipt.accountNumber
-      ? Number(selectedReceipt.accountNumber)
-      : null,
+  const handleCancelClick = (e, receipt) => {
+    e.preventDefault();
+    setSelectedReceipt(receipt);
+    setShowCancelModal(true);
   };
 
-  // Final check: API wants integers for bank_id/account_number if provided
-  // If API requires 0 instead of null for missing values, change null -> 0
-
-  try {
-    const apiUrl = `${ApiUrl.apiurl}FeeReceipt/UpdatePaymentDetailBasedOnReceipt/?organization_id=${organization_id}&branch_id=${branch_id}&receipt_id=${receiptId}`;
-
-    const response = await fetch(apiUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const data = await response.json();
-
-    if (
-      response.ok &&
-      (data.message?.toLowerCase().includes("success") ||
-        data.message === "payment receipt Update successfully!!")
-    ) {
-      alert("Receipt updated successfully!");
-      setShowUpdateModal(false);
-    } else {
-      console.error("Update failed:", data);
-      alert(data.message || "Failed to update receipt.");
+  const handleSaveUpdate = async () => {
+    if (!selectedReceipt || !selectedReceipt.receiptId) {
+      console.error("Receipt ID is missing.");
+      alert("Receipt ID is missing.");
+      return;
     }
-  } catch (error) {
-    console.error("Error updating receipt:", error);
-    alert("There was an error updating the receipt.");
-  }
-};
 
+    const receiptId = selectedReceipt.receiptId;
+    const organization_id = sessionStorage.getItem("organization_id");
+    const branch_id = sessionStorage.getItem("branch_id");
 
+    // Ensure we have the payment method value (number)
+    const paymentMethod = selectedReceipt.paymentMethodId ?? null;
 
-const handleCancelSave = async () => {
-  if (!cancelRemark) {
-    alert("Please provide a cancel remark.");
-    return;
-  }
+    // Validate required fields before sending
+    if (!selectedReceipt.receiptDate || !paymentMethod) {
+      console.error("Missing required receipt_date or payment_method", {
+        receiptDate: selectedReceipt.receiptDate,
+        paymentMethod,
+      });
+      alert("Please fill receipt date and payment method before saving.");
+      return;
+    }
 
-  const data = {
-    organization_id: sessionStorage.getItem("organization_id"),
-    branch_id: sessionStorage.getItem("branch_id"),
-    receipt_id: selectedReceipt.receiptId, // API expects 'receipt_id'
-    cancel_remark: cancelRemark, // API expects 'cancel_remark'
-  };
+    // If payment method indicates cash (example: 2), do not send bank info
+    const isCash = Number(paymentMethod) === 2;
 
-  try {
-    const response = await fetch(
-      `${ApiUrl.apiurl}FeeReceipt/FeeReceiptsCancelCreate/`,
-      {
-        method: "POST",
+    const requestBody = {
+      receipt_date: selectedReceipt.receiptDate, // yyyy-mm-dd string expected
+      payment_method: Number(paymentMethod),
+      payment_reference: selectedReceipt.paymentReference || "",
+      reference_date: selectedReceipt.referenceDate || null,
+      bank_id: isCash
+        ? null
+        : selectedReceipt.bankId
+          ? Number(selectedReceipt.bankId)
+          : null,
+      account_number: isCash
+        ? null
+        : selectedReceipt.bankdetailsId
+          ? Number(selectedReceipt.bankdetailsId)
+          : null,
+    };
+
+    // Final check: API wants integers for bank_id/account_number if provided
+    // If API requires 0 instead of null for missing values, change null -> 0
+
+    try {
+      const apiUrl = `${ApiUrl.apiurl}FeeReceipt/UpdatePaymentDetailBasedOnReceipt/?organization_id=${organization_id}&branch_id=${branch_id}&receipt_id=${receiptId}`;
+
+      const response = await fetch(apiUrl, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        body: JSON.stringify(data),
-      }
-    );
+        body: JSON.stringify(requestBody),
+      });
 
-    const result = await response.json();
-    if (response.ok) {
-      alert("Receipt cancelled successfully!");
-      setReceiptsData((prev) =>
-        prev.filter((item) => item.receiptId !== selectedReceipt.receiptId)
-      );
-      setShowCancelModal(false);
-      setSelectedReceipt(null);
-      setCancelRemark("");
-    } else {
-      alert(result.message || "Failed to cancel receipt.");
+      const data = await response.json();
+
+      if (
+        response.ok &&
+        (data.message?.toLowerCase().includes("success") ||
+          data.message === "payment receipt Update successfully!!")
+      ) {
+        alert("Receipt updated successfully!");
+        setShowUpdateModal(false);
+      } else {
+        console.error("Update failed:", data);
+        alert(data.message || "Failed to update receipt.");
+      }
+    } catch (error) {
+      console.error("Error updating receipt:", error);
+      alert("There was an error updating the receipt.");
     }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Something went wrong. Try again.");
-  }
-};
+  };
+
+
+
+  const handleCancelSave = async () => {
+    if (!cancelRemark) {
+      alert("Please provide a cancel remark.");
+      return;
+    }
+
+    const data = {
+      organization_id: sessionStorage.getItem("organization_id"),
+      branch_id: sessionStorage.getItem("branch_id"),
+      receipt_id: selectedReceipt.receiptId, // API expects 'receipt_id'
+      cancel_remark: cancelRemark, // API expects 'cancel_remark'
+    };
+
+    try {
+      const response = await fetch(
+        `${ApiUrl.apiurl}FeeReceipt/FeeReceiptsCancelCreate/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        alert("Receipt cancelled successfully!");
+        setReceiptsData((prev) =>
+          prev.filter((item) => item.receiptId !== selectedReceipt.receiptId)
+        );
+        setShowCancelModal(false);
+        setSelectedReceipt(null);
+        setCancelRemark("");
+      } else {
+        alert(result.message || "Failed to cancel receipt.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong. Try again.");
+    }
+  };
 
 
   // Function to handle clearing fields (optional)
-const handleCancelClear = () => {
-  setCancelRemark("");
-};
+  const handleCancelClear = () => {
+    setCancelRemark("");
+  };
 
   // Function to close the modal without saving
   const handleCancelCloseButton = () => {
@@ -919,162 +931,162 @@ const handleCancelClear = () => {
     setCancelRemark("");
   };
 
-const handleReceiptLinkClick = async (receiptNo) => {
-  const organization_id = sessionStorage.getItem("organization_id");
-  const branch_id = sessionStorage.getItem("branch_id");
+  const handleReceiptLinkClick = async (receiptNo) => {
+    const organization_id = sessionStorage.getItem("organization_id");
+    const branch_id = sessionStorage.getItem("branch_id");
 
-  if (!organization_id || !branch_id) {
-    alert("Organization or Branch ID missing.");
-    return;
-  }
+    if (!organization_id || !branch_id) {
+      alert("Organization or Branch ID missing.");
+      return;
+    }
 
-  try {
-    const response = await fetch(
-      `${ApiUrl.apiurl}FeeReceipt/GetFeeReceiptsBasedOnReceiptNo/?organization_id=${organization_id}&branch_id=${branch_id}&receipt_no=${receiptNo}`
-    );
-    const result = await response.json();
+    try {
+      const response = await fetch(
+        `${ApiUrl.apiurl}FeeReceipt/GetFeeReceiptsBasedOnReceiptNo/?organization_id=${organization_id}&branch_id=${branch_id}&receipt_no=${receiptNo}`
+      );
+      const result = await response.json();
 
-    if (response.ok && result.receipt_data) {
-      const data = result.receipt_data;
-      const doc = new jsPDF("portrait", "mm", "a4");
+      if (response.ok && result.receipt_data) {
+        const data = result.receipt_data;
+        const doc = new jsPDF("portrait", "mm", "a4");
 
-      // LOGO LOAD
-      const toBase64 = (url) =>
-        new Promise((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = "Anonymous";
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            canvas.getContext("2d").drawImage(img, 0, 0);
-            resolve(canvas.toDataURL("image/jpeg"));
-          };
-          img.onerror = reject;
-          img.src = url;
+        // LOGO LOAD
+        const toBase64 = (url) =>
+          new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              canvas.getContext("2d").drawImage(img, 0, 0);
+              resolve(canvas.toDataURL("image/jpeg"));
+            };
+            img.onerror = reject;
+            img.src = url;
+          });
+
+        try {
+          const sparshLogo = await toBase64("/Assets/sparsh.jpeg");
+          doc.addImage(sparshLogo, "JPEG", 10, 10, 20, 20);
+        } catch { }
+
+        // HEADER
+        const pageWidth = doc.internal.pageSize.getWidth();
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(16);
+        const headerText = "Sparsh College of Nursing and Allied Sciences";
+        const textWidth =
+          (doc.getStringUnitWidth(headerText) * doc.internal.getFontSize()) /
+          doc.internal.scaleFactor;
+        doc.text(headerText, (pageWidth - textWidth) / 2, 22);
+        doc.setFontSize(12);
+        doc.text("Fee Receipt", pageWidth / 2, 30, { align: "center" });
+
+        // RECEIPT DETAILS
+        const receiptDetails = [
+          ["Receipt No", data.receipt_no, "Section", data.section_name],
+          [
+            "Receipt Date",
+            data.receipt_date?.split("T")[0],
+            "Father's Name",
+            data.father_name,
+          ],
+          [
+            "Student Name",
+            Array.isArray(data.student_name)
+              ? data.student_name.join(" ")
+              : typeof data.student_name === "object" &&
+                data.student_name !== null
+                ? Object.values(data.student_name).join(" ")
+                : data.student_name || "",
+            "Fee Period",
+            Array.isArray(data.fee_semesters)
+              ? data.fee_semesters.join(", ")
+              : typeof data.fee_semesters === "object" &&
+                data.fee_semesters !== null
+                ? Object.values(data.fee_semesters).join(", ")
+                : data.fee_semesters || "",
+          ],
+
+          ["Admission No", data.admission_no, "Amount", data.amount.toFixed(2)],
+          ["Class", `${data.course_name} - ${data.semester_name}`, "", ""],
+        ];
+
+        doc.autoTable({
+          startY: 35,
+          body: receiptDetails,
+          theme: "grid",
+          styles: { fontSize: 11, fontStyle: "bold" },
+          margin: { left: 15 },
+          tableWidth: 180,
         });
 
-      try {
-        const sparshLogo = await toBase64("/Assets/sparsh.jpeg");
-        doc.addImage(sparshLogo, "JPEG", 10, 10, 20, 20);
-      } catch {}
+        // FEE ELEMENT TABLE
+        const feeElements = Object.values(data.payment_element_list).map(
+          (el, index) => [index + 1, el.element_name, el.amount.toFixed(2)]
+        );
+        feeElements.push(["", "Total", data.amount.toFixed(2)]);
 
-      // HEADER
-      const pageWidth = doc.internal.pageSize.getWidth();
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(16);
-      const headerText = "Sparsh College of Nursing and Allied Sciences";
-      const textWidth =
-        (doc.getStringUnitWidth(headerText) * doc.internal.getFontSize()) /
-        doc.internal.scaleFactor;
-      doc.text(headerText, (pageWidth - textWidth) / 2, 22);
-      doc.setFontSize(12);
-      doc.text("Fee Receipt", pageWidth / 2, 30, { align: "center" });
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 8,
+          head: [["Sr. No.", "Element", "Amount"]],
+          body: feeElements,
+          theme: "grid",
+          styles: { fontSize: 11, fontStyle: "bold" },
+          columnStyles: { 2: { halign: "right" } },
+          margin: { left: 15 },
+          tableWidth: 180,
+        });
 
-      // RECEIPT DETAILS
-      const receiptDetails = [
-        ["Receipt No", data.receipt_no, "Section", data.section_name],
-        [
-          "Receipt Date",
-          data.receipt_date?.split("T")[0],
-          "Father's Name",
-          data.father_name,
-        ],
-        [
-          "Student Name",
-          Array.isArray(data.student_name)
-            ? data.student_name.join(" ")
-            : typeof data.student_name === "object" &&
-              data.student_name !== null
-            ? Object.values(data.student_name).join(" ")
-            : data.student_name || "",
-          "Fee Period",
-          Array.isArray(data.fee_semesters)
-            ? data.fee_semesters.join(", ")
-            : typeof data.fee_semesters === "object" &&
-              data.fee_semesters !== null
-            ? Object.values(data.fee_semesters).join(", ")
-            : data.fee_semesters || "",
-        ],
+        // PAYMENT METHOD TABLE
+        const paymentData = [
+          [
+            data.payment_method,
+            data.payment_reference || "-",
+            data.amount.toFixed(2),
+          ],
+        ];
 
-        ["Admission No", data.admission_no, "Amount", data.amount.toFixed(2)],
-        ["Class", `${data.course_name} - ${data.semester_name}`, "", ""],
-      ];
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 8,
+          head: [["Payment Method", "Payment Reference", "Amount"]],
+          body: paymentData,
+          theme: "grid",
+          styles: { fontSize: 11, fontStyle: "bold" },
+          columnStyles: { 2: { halign: "right" } },
+          margin: { left: 15 },
+          tableWidth: 180,
+        });
 
-      doc.autoTable({
-        startY: 35,
-        body: receiptDetails,
-        theme: "grid",
-        styles: { fontSize: 11, fontStyle: "bold" },
-        margin: { left: 15 },
-        tableWidth: 180,
-      });
+        // SUMMARY TABLE
+        const summary = [
+          ["Total Session Fee", data.total_academic_year_fees.toFixed(2)],
+          ["Total Paid", data.total_paid.toFixed(2)],
+          ["Total Balance", data.remaining_amount.toFixed(2)],
+        ];
 
-      // FEE ELEMENT TABLE
-      const feeElements = Object.values(data.payment_element_list).map(
-        (el, index) => [index + 1, el.element_name, el.amount.toFixed(2)]
-      );
-      feeElements.push(["", "Total", data.amount.toFixed(2)]);
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 8,
+          body: summary,
+          theme: "grid",
+          styles: { fontSize: 11, fontStyle: "bold" },
+          columnStyles: { 1: { halign: "right" } },
+          margin: { left: 15 },
+          tableWidth: 180,
+        });
 
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 8,
-        head: [["Sr. No.", "Element", "Amount"]],
-        body: feeElements,
-        theme: "grid",
-        styles: { fontSize: 11, fontStyle: "bold" },
-        columnStyles: { 2: { halign: "right" } },
-        margin: { left: 15 },
-        tableWidth: 180,
-      });
-
-      // PAYMENT METHOD TABLE
-      const paymentData = [
-        [
-          data.payment_method,
-          data.payment_reference || "-",
-          data.amount.toFixed(2),
-        ],
-      ];
-
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 8,
-        head: [["Payment Method", "Payment Reference", "Amount"]],
-        body: paymentData,
-        theme: "grid",
-        styles: { fontSize: 11, fontStyle: "bold" },
-        columnStyles: { 2: { halign: "right" } },
-        margin: { left: 15 },
-        tableWidth: 180,
-      });
-
-      // SUMMARY TABLE
-      const summary = [
-        ["Total Session Fee", data.total_academic_year_fees.toFixed(2)],
-        ["Total Paid", data.total_paid.toFixed(2)],
-        ["Total Balance", data.remaining_amount.toFixed(2)],
-      ];
-
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 8,
-        body: summary,
-        theme: "grid",
-        styles: { fontSize: 11, fontStyle: "bold" },
-        columnStyles: { 1: { halign: "right" } },
-        margin: { left: 15 },
-        tableWidth: 180,
-      });
-
-      // OPEN PDF
-      const pdfBlob = doc.output("blob");
-      window.open(URL.createObjectURL(pdfBlob), "_blank");
-    } else {
-      alert(result.message || "Unable to load receipt.");
+        // OPEN PDF
+        const pdfBlob = doc.output("blob");
+        window.open(URL.createObjectURL(pdfBlob), "_blank");
+      } else {
+        alert(result.message || "Unable to load receipt.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong. Try again.");
     }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Something went wrong. Try again.");
-  }
-};
+  };
 
 
   return (
@@ -1135,7 +1147,7 @@ const handleReceiptLinkClick = async (receiptNo) => {
                     }}
                     onClick={() => navigate("/admin/dashboard")}
 
-                    // onClick={handleCloseButton}
+                  // onClick={handleCloseButton}
                   >
                     Close
                   </button>
@@ -1168,8 +1180,8 @@ const handleReceiptLinkClick = async (receiptNo) => {
                           value={
                             period
                               ? semesterOptions.find(
-                                  (option) => option.value === period
-                                )
+                                (option) => option.value === period
+                              )
                               : null
                           }
                           onChange={(selectedOption) =>
@@ -1692,7 +1704,11 @@ const handleReceiptLinkClick = async (receiptNo) => {
                               }
                               onChange={handleBankSelect}
                               options={bankOptions}
-                              isDisabled={selectedReceipt.paymentMethodId === 2} // CASH → disable
+                              isDisabled={
+                                paymentMethodOptions.find(
+                                  (option) => option.value === selectedReceipt.paymentMethodId
+                                )?.label?.toLowerCase() === "cash"
+                              }
                             />
                           </div>
 
@@ -1704,21 +1720,17 @@ const handleReceiptLinkClick = async (receiptNo) => {
                               classNamePrefix="react-select"
                               name="accountNumber"
                               value={
-                                selectedReceipt.accountNumber
-                                  ? {
-                                      label: selectedReceipt.accountNumber,
-                                      value: selectedReceipt.accountNumber,
-                                    }
-                                  : null
+                                accountDetails.find(
+                                  (account) => account.value === selectedReceipt.bankdetailsId
+                                ) || null
                               }
-                              onChange={(selectedOption) =>
-                                handleSelectChange(
-                                  selectedOption,
-                                  "accountNumber"
-                                )
-                              }
+                              onChange={handleAccountSelect}
                               options={accountDetails}
-                              isDisabled={selectedReceipt.paymentMethodId === 2} // CASH → disable
+                              isDisabled={
+                                paymentMethodOptions.find(
+                                  (option) => option.value === selectedReceipt.paymentMethodId
+                                )?.label?.toLowerCase() === "cash"
+                              }
                             />
                           </div>
                         </form>

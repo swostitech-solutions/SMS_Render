@@ -35,29 +35,34 @@ function Dashboard() {
 
 
 
+  // Extract student basic details
+  const basicDetails = studentDetails?.student_basic_details;
+
   const [upcomingSemesters, setUpcomingSemesters] = useState([]);
 
   useEffect(() => {
-    const semesters = [
-      {
-        semester: "Semester 1",
-        description: "First semester examination results and academic performance",
-      },
-      {
-        semester: "Semester 2",
-        description: "Second semester examination results and academic performance",
-      },
-      {
-        semester: "Semester 3",
-        description: "Third semester examination results and academic performance",
-      },
-      {
-        semester: "Semester 4",
-        description: "Fourth semester examination results and academic performance",
-      },
-    ];
-    setUpcomingSemesters(semesters);
-  }, []);
+    if (basicDetails) {
+      let displayTitle = "";
+      let description = "Examination results and academic performance";
+
+      // Check if semester is default (case insensitive check for 'default' string)
+      const semesterName = basicDetails.semester_description || "";
+      const isDefault = semesterName.toLowerCase().includes("default");
+
+      if (isDefault) {
+        displayTitle = basicDetails.academic_year || "Academic Year";
+      } else {
+        displayTitle = semesterName;
+      }
+
+      setUpcomingSemesters([
+        {
+          semester: displayTitle,
+          description: description,
+        }
+      ]);
+    }
+  }, [basicDetails]);
 
   const getRandomDate = () => {
     const startDate = new Date();
@@ -109,8 +114,7 @@ function Dashboard() {
     };
   }, [apiAttendanceData]);
 
-  // Extract student basic details
-  const basicDetails = studentDetails?.student_basic_details;
+
 
   // Fetch circulars using student's class information
   const {

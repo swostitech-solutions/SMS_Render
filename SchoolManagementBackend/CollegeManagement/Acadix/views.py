@@ -17141,13 +17141,15 @@ class GetFeeReceiptBasedOnReceiptNo(ListAPIView):
 
             # print(receiptNo,academicyearId)
 
-            # Get StdFeeReceipt Header Instance
-            try:
-                StudentFeeReceiptHeaderInstance = StudentFeeReceiptHeader.objects.get(organization=organization_id,
-                                                                                      branch=branch_id,
-                                                                                      receipt_no=receipt_no,
-                                                                                      is_active=True)
-            except ObjectDoesNotExist:
+            # Get StdFeeReceipt Header Instance (get the latest if duplicates exist)
+            StudentFeeReceiptHeaderInstance = StudentFeeReceiptHeader.objects.filter(
+                organization=organization_id,
+                branch=branch_id,
+                receipt_no=receipt_no,
+                is_active=True
+            ).order_by('-created_at').first()
+
+            if not StudentFeeReceiptHeaderInstance:
                 return Response({'message': 'Receipt No  Not Found'}, status=status.HTTP_404_NOT_FOUND)
             # print(StdFeeReceiptHeaderInstance)
             studentId = StudentFeeReceiptHeaderInstance.student.id
@@ -21543,7 +21545,6 @@ class GetReceiptDetailsListAPIView(ListAPIView):
             responsedata = {
                 'receiptId': StudentFeeReceiptHeaderInstance.id,
                 'receipt_date': StudentFeeReceiptHeaderInstance.receipt_date,
-                'payment_reference': StudentFeeReceiptHeaderInstance.payment_reference,
                 'payment_methodId': StudentFeeReceiptHeaderInstance.payment_method.id,
                 'payment_method': StudentFeeReceiptHeaderInstance.payment_method.payment_method,
                 'bankId': BANKInstance.id if BANKInstance else None,
@@ -21587,7 +21588,7 @@ class UpdateStudentFeeRecordBasedOnReceiptId(UpdateAPIView):
             return Response({'message': f"Receipt with ID {receipt_id} not found or is inactive."},
                             status=status.HTTP_404_NOT_FOUND)
         try:
-            StudentPaymentInstance = StudentPayment.objects.get(id=receipt_id, is_active=True)
+            StudentPaymentInstance = StudentPayment.objects.get(receipt=ReceiptheaderInstance, is_active=True)
         except StudentPayment.DoesNotExist:
             return Response(
                 {'message': f"Receipt with ID {receipt_id} not found in StudentPayment table or is inactive."},
@@ -21616,14 +21617,30 @@ class UpdateStudentFeeRecordBasedOnReceiptId(UpdateAPIView):
             except PaymentMethod.DoesNotExist:
                 return Response({"PaymentMethod record not found !!!"}, status=status.HTTP_404_NOT_FOUND)
 
+            # Get Bank instance if bank_id is provided
+            bankInstance = None
+            if bank_id:
+                try:
+                    bankInstance = Bank.objects.get(id=bank_id, is_active=True)
+                except Bank.DoesNotExist:
+                    return Response({"message": "Bank not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Get BankAccountDetail instance if account_number is provided
+            accountInstance = None
+            if account_number:
+                try:
+                    accountInstance = BankAccountDetail.objects.get(id=account_number, is_active=True)
+                except BankAccountDetail.DoesNotExist:
+                    return Response({"message": "Bank Account not found"}, status=status.HTTP_404_NOT_FOUND)
+
             # Update the record
             ReceiptheaderInstance.receipt_date = receipt_date
             ReceiptheaderInstance.payment_method = paymentmethodInstance
-            ReceiptheaderInstance.payment_reference = payment_reference
+            # Note: payment_reference field is commented out in StudentFeeReceiptHeader model
 
             StudentPaymentInstance.payment_method = paymentmethodInstance
-            StudentPaymentInstance.bank_id = bank_id
-            StudentPaymentInstance.bank_account_id = account_number
+            StudentPaymentInstance.bank = bankInstance
+            StudentPaymentInstance.bank_account = accountInstance
             StudentPaymentInstance.payment_date = receipt_date
             StudentPaymentInstance.payment_reference = payment_reference
             StudentPaymentInstance.reference_date = reference_date
@@ -22672,11 +22689,35 @@ class GetStudentFeesDetailsPDFBasedOnStudentId(ListAPIView):
             # If student fees record exist
             if studentfeedetailsrecord:
                 for stdfees in studentfeedetailsrecord:
-                    semesterInstance = Semester.objects.get(id=stdfees.fee_applied_from.id, is_active=True)
+                    semester_id = None
+                    semester_name = None
+                    
+                    # PRIORITY 1: use semester field (Most reliable)
+                    if stdfees.semester:
+                        try:
+                            semesterInstance = stdfees.semester
+                            semester_id = semesterInstance.id
+                            semester_name = semesterInstance.semester_description
+                        except Exception:
+                            pass
+
+                    # PRIORITY 2: Fallback to fee_applied_from if semester is missing
+                    if not semester_name and stdfees.fee_applied_from:
+                        try:
+                            semesterInstance = stdfees.fee_applied_from
+                            semester_id = semesterInstance.id
+                            semester_name = semesterInstance.semester_description
+                        except Exception:
+                            pass
+                    
+                    # Fallback string if still nothing
+                    if not semester_name:
+                         semester_name = "-"
+
                     data = {
                         'element_name': stdfees.element_name,
-                        'fee_applied_from': semesterInstance.id,
-                        'semester_name': semesterInstance.semester_description,
+                        'fee_applied_from': semester_id,
+                        'semester_name': semester_name,
                         'total_amount': stdfees.element_amount,
                         'paid_amount': stdfees.paid_amount,
                         'remaining_amount': f'{stdfees.element_amount - stdfees.paid_amount}'
@@ -22969,12 +23010,6 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
             if not studentIds:
                 return Response({'message': 'Choose at least one student'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if not fee_due_from:
-                return Response({'message': 'Choose fee_due_from semester'}, status=status.HTTP_400_BAD_REQUEST)
-
-            if not fee_due_to:
-                return Response({'message': 'Choose fee_due_to semester'}, status=status.HTTP_400_BAD_REQUEST)
-
             # Parse studentIds to a list
             try:
                 import json
@@ -22988,60 +23023,25 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
                 )
             # print(studentIds,type(studentIds))
 
-            # Fetch Period based on the academic year
-            # semester_records = Semester.objects.filter(id=fee_due_from, is_active=True)
-            # period_records = Semester.objects.filter(academic_id=academicyearId, is_active=True)
-            # print(period_records)
-
-            # try:
-            #     fee_applied_from_semester = semester_records.get(id=fee_due_from)
-            #     # fee_applied_from_sort_order = fee_applied_from_period.sorting_order
-            # except Semester.DoesNotExist:
-            #     return Response({'message': f'Invalid fee_applied_from ID: {fee_due_from}'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Filter periods starting from feeappfrom sorting_order
-
-            # if fee_due_to:
-            #     # If feeappto is not provided, set it to the highest sorting_order
-            #     # student_instance = StudentRegistration.objects.get(student=student_id)
-            #     feeappto_semester = semester_records.order_by('-sorting_order').first()
-            #     if not feeappto_semester:
-            #         return Response({'message': 'No semester found !!!'},
-            #                         status=status.HTTP_404_NOT_FOUND)
-            #     feeappto_sort_order = feeappto_semester
-            #     feeappto = feeappto_semester
-            #     # print(feeappto)
-            # else:
-            #     try:
-            #         feeappto_period = period_records.get(id=feeappto)
-            #         feeappto_sort_order = feeappto_period.sorting_order
-            #     except Period.DoesNotExist:
-            #         return Response({'message': f'Invalid feeappto ID: {feeappto}'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Validate sorting orders
-            # if fee_applied_from_sort_order > feeappto_sort_order:
-            if fee_due_from > fee_due_to:
-                return Response(
-                    {
-                        'message': 'fee_due_from cannot be greater than fee_due_to'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
+            semester_list = Semester.objects.filter(organization=organization_id, branch=branch_id,
+                                                    course=course_id, department=department_id).order_by('id')
+            
             if fee_due_from and fee_due_to:
-                semester_list = Semester.objects.filter(organization=organization_id, branch=branch_id,
-                                                        course=course_id, department=department_id).order_by('id')
+                # Validate sorting orders
+                if fee_due_from > fee_due_to:
+                    return Response(
+                        {
+                            'message': 'fee_due_from cannot be greater than fee_due_to'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 semester_list_filtered = semester_list.filter(id__range=(fee_due_from, fee_due_to))
-
-            # Filter periods between feeappfrom and feeappto sorting orders
-            # filtered_periods = period_records.filter(
-            #     sorting_order__gte=fee_applied_from_sort_order,
-            #     sorting_order__lte=feeappto_sort_order
-            # )
-            # print(filtered_periods)
+            else:
+                 # If params missing, use all semesters
+                 semester_list_filtered = semester_list
 
             if not semester_list_filtered.exists():
                 return Response(
-                    {'message': 'No semester found within the given range'},
+                    {'message': 'No semester found'},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
