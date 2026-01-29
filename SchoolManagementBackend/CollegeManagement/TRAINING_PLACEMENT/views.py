@@ -218,9 +218,12 @@ class TrainingPlacementListAPIView(ListAPIView):
                         return Response({'message':'error occurs while response making for branch'},status=status.HTTP_404_NOT_FOUND)
 
                     try:
-                        batchInstance = Batch.objects.get(id=item.batch.id,is_active=True)
+                        if item.batch:
+                            batchInstance = Batch.objects.get(id=item.batch.id,is_active=True)
+                        else:
+                            batchInstance = None
                     except:
-                        return Response({'message':'error occurs while response making for batch'},status=status.HTTP_404_NOT_FOUND)
+                        batchInstance = None
                     
                     # Get names from the direct foreign key fields
                     course_name = item.course.course_name if item.course else None
@@ -242,8 +245,8 @@ class TrainingPlacementListAPIView(ListAPIView):
                         "organization_name": organizationInstance.organization_code,
                         "branch_id": branchInstance.id,
                         "branch_name": branchInstance.branch_name,
-                        "batch_id": batchInstance.id,
-                        "batch_name": batchInstance.batch_code,
+                        "batch_id": batchInstance.id if batchInstance else None,
+                        "batch_name": batchInstance.batch_code if batchInstance else None,
                         
                         # Add the new fields
                         "course_id": item.course.id if item.course else None,
@@ -277,16 +280,14 @@ class TrainingPlacementListAPIView(ListAPIView):
             return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def log_exception(self, request, error_message):
-
-        ExceptionTrack.objects.create(
-
-            request=str(request),
-
-            process_name='Training_PlacementList',
-
-            message=error_message,
-
-        )
+        try:
+            ExceptionTrack.objects.create(
+                request=str(request)[:499],
+                process_name='Training_PlacementList',
+                message=error_message,
+            )
+        except:
+            pass
 
 
 class TrainingPlacementRetrieveAPIView(RetrieveAPIView):

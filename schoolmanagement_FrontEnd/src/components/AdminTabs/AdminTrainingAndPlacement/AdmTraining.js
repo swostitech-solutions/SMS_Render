@@ -488,8 +488,6 @@ const AdmAttendanceEntry = () => {
         ...queryParams,
       });
 
-
-
       const token = localStorage.getItem("accessToken");
       const headers = {};
       if (token) {
@@ -501,7 +499,6 @@ const AdmAttendanceEntry = () => {
         { headers }
       );
 
-
       if (response.ok) {
         const data = await response.json();
         console.log("Response data:", data);
@@ -511,12 +508,16 @@ const AdmAttendanceEntry = () => {
           if (resetPage) setCurrentPage(0);
         } else {
           setTableData([]);
-          alert("No data found!");
+          // alert("No data found!"); // Removed alert as per user request
         }
       } else {
-        const errorData = await response.json();
-        console.error("Error response:", errorData);
-        alert("Error fetching data.");
+        if (response.status === 404) {
+          setTableData([]);
+        } else {
+          // const errorData = await response.json();
+          console.error("Error response status:", response.status);
+          alert("Please check your internet connection.");
+        }
       }
     } catch (error) {
       console.error("Error:", error);
@@ -757,11 +758,11 @@ const AdmAttendanceEntry = () => {
                               (b) => b.id === Number(filters.batchId)
                             )
                               ? {
-                                  value: filters.batchId,
-                                  label: BatchList.find(
-                                    (b) => b.id === Number(filters.batchId)
-                                  )?.batch_description,
-                                }
+                                value: filters.batchId,
+                                label: BatchList.find(
+                                  (b) => b.id === Number(filters.batchId)
+                                )?.batch_description,
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -794,11 +795,11 @@ const AdmAttendanceEntry = () => {
                               (c) => c.id === Number(filters.courseId)
                             )
                               ? {
-                                  value: filters.courseId,
-                                  label: CourseList.find(
-                                    (c) => c.id === Number(filters.courseId)
-                                  )?.course_name,
-                                }
+                                value: filters.courseId,
+                                label: CourseList.find(
+                                  (c) => c.id === Number(filters.courseId)
+                                )?.course_name,
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -831,11 +832,11 @@ const AdmAttendanceEntry = () => {
                               (d) => d.id === Number(filters.departmentId)
                             )
                               ? {
-                                  value: filters.departmentId,
-                                  label: DepartmentList.find(
-                                    (d) => d.id === Number(filters.departmentId)
-                                  )?.department_description,
-                                }
+                                value: filters.departmentId,
+                                label: DepartmentList.find(
+                                  (d) => d.id === Number(filters.departmentId)
+                                )?.department_description,
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -869,12 +870,12 @@ const AdmAttendanceEntry = () => {
                               (y) => y.id === Number(filters.academicYearId)
                             )
                               ? {
-                                  value: filters.academicYearId,
-                                  label: AcademicYearList.find(
-                                    (y) =>
-                                      y.id === Number(filters.academicYearId)
-                                  )?.academic_year_description,
-                                }
+                                value: filters.academicYearId,
+                                label: AcademicYearList.find(
+                                  (y) =>
+                                    y.id === Number(filters.academicYearId)
+                                )?.academic_year_description,
+                              }
                               : null
                           }
                           onChange={(opt) =>
@@ -905,11 +906,11 @@ const AdmAttendanceEntry = () => {
                               (s) => s.id === Number(filters.semesterId)
                             )
                               ? {
-                                  value: filters.semesterId,
-                                  label: SemesterList.find(
-                                    (s) => s.id === Number(filters.semesterId)
-                                  )?.semester_description,
-                                }
+                                value: filters.semesterId,
+                                label: SemesterList.find(
+                                  (s) => s.id === Number(filters.semesterId)
+                                )?.semester_description,
+                              }
                               : null
                           }
                           onChange={(opt) =>

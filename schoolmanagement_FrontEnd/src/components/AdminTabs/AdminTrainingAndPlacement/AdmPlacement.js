@@ -5,8 +5,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./AdmPlacement.css";
 import Select from "react-select";
 import { ApiUrl } from "../../../ApiUrl";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { Container, Row, Col, Form } from "react-bootstrap";
 import useFetchSessionList from "../../hooks/fetchSessionList";
 import useFetchCourseByFilter from "../../hooks/useFetchCourses";
@@ -26,8 +24,8 @@ const AdmAttendanceEntry = () => {
 
   const placementData = location.state?.placementData || null;
 
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [formData, setFormData] = useState({
     organizationName: "",
@@ -97,10 +95,8 @@ const AdmAttendanceEntry = () => {
         hrName: placementData.hr_name || "",
       });
 
-      setFromDate(
-        placementData.from_date ? new Date(placementData.from_date) : null
-      );
-      setToDate(placementData.to_date ? new Date(placementData.to_date) : null);
+      setFromDate(placementData.from_date || "");
+      setToDate(placementData.to_date || "");
 
       // Prefill batch if available
       if (placementData.batch_id && BatchList.length > 0) {
@@ -150,8 +146,8 @@ const AdmAttendanceEntry = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Validation for Duration: specific handling to only allow numbers
-    if (name === "duration") {
+    // Validation for Duration and Number of Participants: only allow numbers
+    if (name === "duration" || name === "numParticipants") {
       // Allow empty string or numbers only
       if (value === "" || /^\d+$/.test(value)) {
         setFormData((prev) => ({
@@ -541,12 +537,11 @@ const AdmAttendanceEntry = () => {
                         </Form.Label>
                       </Col>
                       <Col md={6}>
-                        <DatePicker
-                          selected={fromDate}
-                          onChange={setFromDate}
+                        <Form.Control
+                          type="date"
                           className="form-control detail"
-                          dateFormat="yyyy-MM-dd"
-                          placeholderText="Select From Date"
+                          value={fromDate || ""}
+                          onChange={(e) => setFromDate(e.target.value)}
                         />
                       </Col>
                     </Row>
@@ -558,12 +553,11 @@ const AdmAttendanceEntry = () => {
                         </Form.Label>
                       </Col>
                       <Col md={6}>
-                        <DatePicker
-                          selected={toDate}
-                          onChange={setToDate}
+                        <Form.Control
+                          type="date"
                           className="form-control detail"
-                          dateFormat="yyyy-MM-dd"
-                          placeholderText="Select To Date"
+                          value={toDate || ""}
+                          onChange={(e) => setToDate(e.target.value)}
                         />
                       </Col>
                     </Row>
