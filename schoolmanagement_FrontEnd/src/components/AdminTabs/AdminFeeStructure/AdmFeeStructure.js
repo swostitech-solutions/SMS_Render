@@ -556,17 +556,37 @@ useEffect(() => {
 
   useEffect(() => {
     const fetchFrequencyOptions = async () => {
+      // Guard clauses - need at least Batch and Course to filter Frequency properly
+      if (isResetting) return;
+      
+      const batch_id = selectedSession?.value;
+      const course_id = selectedCourse?.value;
+      
+      // If we don't have batch/course, we can't filter relevant frequencies
+      if (!batch_id || !course_id) {
+          setFrequencyOptions([]);
+          return;
+      }
+      
       try {
         const token = localStorage.getItem("accessToken");
+        const organization_id = sessionStorage.getItem("organization_id");
+        const branch_id = sessionStorage.getItem("branch_id");
+        const department_id = selectedDepartment?.value || "";
 
         if (!token) {
           console.error("Access token not found");
           return;
         }
 
-        const response = await fetch(
-          `${ApiUrl.apiurl}FeeFrequency/GetAllFrequencyPeriodList/`,
-          {
+        // Construct URL with filters
+        let url = `${ApiUrl.apiurl}FeeFrequency/GetAllFrequencyPeriodList/?organization=${organization_id}&branch=${branch_id}&batch=${batch_id}&course=${course_id}`;
+        
+        if (department_id) {
+            url += `&department=${department_id}`;
+        }
+
+        const response = await fetch(url, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
@@ -590,14 +610,17 @@ useEffect(() => {
           }));
 
           setFrequencyOptions(options);
+        } else {
+             setFrequencyOptions([]);
         }
       } catch (error) {
         console.error("Error fetching frequency options:", error);
+        setFrequencyOptions([]);
       }
     };
 
     fetchFrequencyOptions();
-  }, []);
+  }, [selectedSession, selectedCourse, selectedDepartment, isResetting]);
 
   useEffect(() => {
     const fetchCategories = async () => {

@@ -10311,14 +10311,8 @@ class UtilityGroupMixin:
                     # print(element_frequency_id)
 
                     # Get frequency Instance
-                    frequency_instance = FeeFrequency.objects.get(
-                        id=element_frequency_id,
-                        organization=student_instance.organization,
-                        branch=student_instance.branch,
-                        batch=student_instance.batch,
-                        course=student_instance.course,
-                        department=student_instance.department
-                    )
+                    # Only filter by ID - the extra filters cause failures when there are FK mismatches
+                    frequency_instance = FeeFrequency.objects.get(id=element_frequency_id)
                     # print(frequency_instance)
 
                     # Get frequency period
@@ -10425,11 +10419,20 @@ class UtilityGroupMixin:
                 return {'success': "Fee details processed successfully."}
 
         except Exception as e:
-            # error_message = f"Error processing fee group: {str(e)}"
-            # Raise an exception to be caught in the create method
-            # raise ValueError(error_message)
-            print(f"Ignored error processing fee group (UtilityGroupMixin): {e}")
-            return {'success': "Fee processing completed with ignored errors."}
+            # Log the error with details for debugging
+            import traceback
+            error_details = {
+                'student_id': student_instance.id,
+                'admission_no': student_instance.admission_no,
+                'fee_group': fee_group,
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            }
+            print(f"⚠️ ERROR in process_fee_group for student {student_instance.admission_no}: {e}")
+            print(f"Full traceback: {traceback.format_exc()}")
+            
+            # Still return success but with a warning flag
+            return {'success': False, 'error': str(e), 'details': error_details}
 
     def ProcessFeeTransport_month(self, routedetailsId, amount, sorted_semester_ids, student_instance):
         try:
@@ -13135,6 +13138,29 @@ class GetPreviousAcademicYearBasedOnCurrentAcademicYearListAPIView(ListAPIView):
 class FrequencyPeriodListAPIView(ListAPIView):
     queryset = FeeFrequency.objects.all()
     serializer_class = FeeFrequencySerializer
+
+    def get_queryset(self):
+        queryset = FeeFrequency.objects.filter(is_active=True)
+        
+        # Apply filters if provided in query params
+        organization = self.request.query_params.get('organization')
+        branch = self.request.query_params.get('branch')
+        batch = self.request.query_params.get('batch')
+        course = self.request.query_params.get('course')
+        department = self.request.query_params.get('department')
+        
+        if organization:
+            queryset = queryset.filter(organization=organization)
+        if branch:
+            queryset = queryset.filter(branch=branch)
+        if batch:
+            queryset = queryset.filter(batch=batch)
+        if course:
+            queryset = queryset.filter(course=course)
+        if department:
+            queryset = queryset.filter(department=department)
+            
+        return queryset
 
     def list(self, request, *args, **kwargs):
         try:
