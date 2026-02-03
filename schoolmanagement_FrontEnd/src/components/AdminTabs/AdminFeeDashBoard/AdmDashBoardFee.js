@@ -1074,7 +1074,7 @@ const FeeDashboard = () => {
   // Separate state for month and year dropdowns
   const [selectedMonthValue, setSelectedMonthValue] = useState(new Date().getMonth()); // 0-11
   const [selectedYearValue, setSelectedYearValue] = useState(new Date().getFullYear());
-  
+
   // State for Session Fee Details year dropdown
   const [sessionFeeYear, setSessionFeeYear] = useState(new Date().getFullYear());
 
@@ -1093,7 +1093,7 @@ const FeeDashboard = () => {
     { value: 10, label: "November" },
     { value: 11, label: "December" }
   ];
-  
+
   // Generate dynamic year options (past 5 years and future 5 years from current year)
   // This automatically adapts to any future year
   const generateYearOptions = () => {
@@ -1104,7 +1104,7 @@ const FeeDashboard = () => {
     }
     return years;
   };
-  
+
   // Year options for both Fee Dashboard and Session Fee Details
   const yearOptions = useMemo(() => generateYearOptions(), []);
 
@@ -1605,8 +1605,8 @@ const FeeDashboard = () => {
                     isSearchable={false}
                     menuPlacement="auto"
                     styles={{
-                      container: (provided) => ({ 
-                        ...provided, 
+                      container: (provided) => ({
+                        ...provided,
                         width: "110px",
                       }),
                       control: (provided) => ({
@@ -1637,41 +1637,7 @@ const FeeDashboard = () => {
                   style={{ backgroundColor: "white", padding: "16px", borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
                 >
 
-                  <h3>Session Fee Details</h3>
-                  <p className="paragraph-dashboard">
-                    Session: <span>{sessionFeeDetails.batch || "N/A"}</span>
-                  </p>
-                  <p className="paragraph-dashboard">
-                    Total Dues:{" "}
-                    <span>
-                      {sessionFeeDetails.totalDues?.toFixed(2) || "0.00"}
-                    </span>
-                  </p>
-                  <p className="paragraph-dashboard">
-                    Total Discount:{" "}
-                    <span>
-                      {sessionFeeDetails.totalDiscount?.toFixed(2) || "0.00"}
-                    </span>
-                  </p>
-                  <p className="paragraph-dashboard">
-                    Total Collectable:{" "}
-                    <span>
-                      {sessionFeeDetails.totalCollectable?.toFixed(2) || "0.00"}
-                    </span>
-                  </p>
-                  <p className="paragraph-dashboard">
-                    Total Collected:{" "}
-                    <span>
-                      {sessionFeeDetails.totalCollected?.toFixed(2) || "0.00"}
-                    </span>
-                  </p>
-                  <p className="paragraph-dashboard">
-                    Total Balance:{" "}
-                    <span>
-                      {sessionFeeDetails.totalBalance?.toFixed(2) || "0.00"}
-                    </span>
-                  </p>
-=======
+
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
                     <h3 style={{ margin: 0, fontWeight: "bold", fontSize: "16px" }}>Session Fee Details</h3>
                   </div>
