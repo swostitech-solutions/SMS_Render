@@ -797,12 +797,24 @@ const AdmAttendanceEntry = () => {
       const organization_id = sessionStorage.getItem("organization_id") || 1;
       const branch_id = sessionStorage.getItem("branch_id") || 1;
 
-      // Use selected values or default to known valid IDs found in DB
-      const batch_id = selectedSession?.value || 24;
-      const course_id = selectedCourse?.value || 13;
-      const department_id = selectedDepartment?.value || 11;
+      //  Use proper logic: Only fetch if session/course/dept are selected.
+      //  Do NOT default to hardcoded IDs like 24, 13, 11 etc.
+      if (
+        !selectedSession?.value ||
+        !selectedCourse?.value ||
+        !selectedDepartment?.value
+      ) {
+        setPeriodOptions([]); // clear if missing selections
+        return;
+      }
 
-      console.log(`Fetching Periods with: Org=${organization_id}, Branch=${branch_id}, Batch=${batch_id}, Course=${course_id}, Dept=${department_id}`);
+      const batch_id = selectedSession.value;
+      const course_id = selectedCourse.value;
+      const department_id = selectedDepartment.value;
+
+      console.log(
+        `Fetching Periods with: Org=${organization_id}, Branch=${branch_id}, Batch=${batch_id}, Course=${course_id}, Dept=${department_id}`
+      );
 
       try {
         const response = await fetch(
@@ -937,6 +949,16 @@ const AdmAttendanceEntry = () => {
 
     const fee_due_from = fromPeriod || "";
     const fee_due_to = toPeriod || "";
+
+    // Validation: Ensure valid periods are selected for reports that require them
+    if (["A", "B", "C", "G"].includes(report.value)) {
+      if (!fee_due_from || !fee_due_to) {
+        alert(
+          "Please select both 'Fee Due Period From' and 'Fee Due Period To' to generate this report."
+        );
+        return;
+      }
+    }
 
     try {
       let url = "";

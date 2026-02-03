@@ -23113,19 +23113,20 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
                             # Receipt Details Retrieval
                             try:
                                 StudentFeeReceiptDetailRecords = StudentFeeReceiptDetail.objects.filter(
-                                    fee_detail_id=fee_record.id, is_active=True)
+                                    fee_detail_id=fee_record.id, is_active=True
+                                ).select_related('receipt')  # Fetch the full receipt object
                             except StudentFeeReceiptDetail.DoesNotExist:
                                 StudentFeeReceiptDetailRecords = []
 
                             if StudentFeeReceiptDetailRecords.exists():
                                 for receiptdetails in StudentFeeReceiptDetailRecords:
-                                    if receiptdetails.receipt_id:
+                                    if receiptdetails.receipt:
                                         # Append to receiptNoList if receipt_no is not already in the list
-                                        if receiptdetails.receipt_id.receipt_no not in receiptNoList:
-                                            receiptNoList.append(receiptdetails.receipt_id.receipt_no)
+                                        if receiptdetails.receipt.receipt_no not in receiptNoList:
+                                            receiptNoList.append(receiptdetails.receipt.receipt_no)
                                         # Append to receiptDateList if receipt_date is not already in the list
-                                        if receiptdetails.receipt_id.receipt_date not in receiptDateList:
-                                            receiptDateList.append(receiptdetails.receipt_id.receipt_date)
+                                        if receiptdetails.receipt.receipt_date not in receiptDateList:
+                                            receiptDateList.append(receiptdetails.receipt.receipt_date)
 
 
 
@@ -23159,6 +23160,7 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
                 student_name = " ".join(student_name_parts)
 
                 # Get student address details
+                address_instance = None  # Initialize to prevent UnboundLocalError
                 try:
                     address_instance = Address.objects.get(
                         reference_id=stdId, usertype="STUDENT", is_active=True
@@ -23187,7 +23189,7 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
                     "fatherName": student_course_instance.student.father_name,
                     "addressDetails": full_address,
                     "phoneNumber": address_instance.permanent_phone_number if address_instance else "N/A",
-                    "category": student_course_instance.student.category.category_name,
+                    "category": student_course_instance.student.category.category_name if student_course_instance.student.category else "N/A",
                     "receiptNo": receiptNoList,
                     "receiptDate": receiptDateList,
                     "Fees_Period": semester_names_string,

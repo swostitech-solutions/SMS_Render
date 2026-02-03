@@ -21,20 +21,20 @@ const StudentFee = () => {
 
   const [selectedFeeApplied, setSelectedFeeApplied] = useState(null);
   const [elementNameOptions, setElementNameOptions] = useState([]);
- const [feeElement, setFeeElement] = useState({
-   name: "",
-   element_type_id: null,
-   frequency: "",
-   amount: "",
-   semesters: [], // <- empty array (not Array(8).fill(""))
-   adjustment_flag: "N",
-   period_month: "",
- });
+  const [feeElement, setFeeElement] = useState({
+    name: "",
+    element_type_id: null,
+    frequency: "",
+    amount: "",
+    semesters: [], // <- empty array (not Array(8).fill(""))
+    adjustment_flag: "N",
+    period_month: "",
+  });
   const [addedFeeElements, setAddedFeeElements] = useState([]);
   const [frequencyOptions, setFrequencyOptions] = useState([]);
   // const [selectedFrequency, setSelectedFrequency] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
- const [disabledPeriods, setDisabledPeriods] = useState(Array(8).fill(true));
+  const [disabledPeriods, setDisabledPeriods] = useState(Array(8).fill(true));
   const [selectedOption, setSelectedOption] = useState(null);
   const [periodMonthDisabled, setPeriodMonthDisabled] = React.useState(false);
   // Student basic information
@@ -48,65 +48,65 @@ const StudentFee = () => {
   });
 
   // Store entire student API response
-  const [studentDetails, setStudentDetails] = useState( );
+  const [studentDetails, setStudentDetails] = useState();
 
   // Course / Department / Session etc.
   const [selectedCourse, setSelectedCourse] = useState();
-  const [selectedDepartment, setSelectedDepartment] = useState( );
-  const [selectedSession, setSelectedSession] = useState( );
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState( );
-  const [selectedSemester, setSelectedSemester] = useState( );
-  const [selectedSection, setSelectedSection] = useState( );
+  const [selectedDepartment, setSelectedDepartment] = useState();
+  const [selectedSession, setSelectedSession] = useState();
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState();
+  const [selectedSemester, setSelectedSemester] = useState();
+  const [selectedSection, setSelectedSection] = useState();
   const [studentName, setStudentName] = useState("");
   const [visibleSemesters, setVisibleSemesters] = useState(0);
   const [semesterOptions, setSemesterOptions] = useState([]);
 
 
-const handleClear = () => {
-  setSelectedStudent({
-    name: "",
-    barcode: "",
-    admissionNo: "",
-    fatherName: "",
-    motherName: "",
-    schoolAdmissionNo: "",
-  });
+  const handleClear = () => {
+    setSelectedStudent({
+      name: "",
+      barcode: "",
+      admissionNo: "",
+      fatherName: "",
+      motherName: "",
+      schoolAdmissionNo: "",
+    });
 
-  setStudentId(null);
-  setFeeStructure([]);
-  setUnpaidElements([]);
-  setAddedFeeElements([]);
+    setStudentId(null);
+    setFeeStructure([]);
+    setUnpaidElements([]);
+    setAddedFeeElements([]);
 
-  // RESET SEMESTERS COUNT & DROPDOWNS
-  setVisibleSemesters(0);
+    // RESET SEMESTERS COUNT & DROPDOWNS
+    setVisibleSemesters(0);
 
-  // RESET ADD FEE ELEMENT FORM
-  setFeeElement({
-    name: "",
-    element_type_id: null,
-    frequency: "",
-    amount: "",
-    semesters: Array(8).fill(""), // FIX → semester values always exist
-    adjustment_flag: "N",
-    period_month: "",
-  });
+    // RESET ADD FEE ELEMENT FORM
+    setFeeElement({
+      name: "",
+      element_type_id: null,
+      frequency: "",
+      amount: "",
+      semesters: Array(8).fill(""), // FIX → semester values always exist
+      adjustment_flag: "N",
+      period_month: "",
+    });
 
-  // RESET ALL SELECT DROPDOWNS
-  setSelectedCourse(null);
-  setSelectedDepartment(null);
-  setSelectedSession(null);
-  setSelectedAcademicYear(null);
-  setSelectedSemester(null);
-  setSelectedSection(null);
-  setSelectedFeeApplied(null);
+    // RESET ALL SELECT DROPDOWNS
+    setSelectedCourse(null);
+    setSelectedDepartment(null);
+    setSelectedSession(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+    setSelectedFeeApplied(null);
 
-  // OPTIONAL: disable month/periods
-  setDisabledPeriods(Array(8).fill(true));
-  setPeriodMonthDisabled(false);
+    // OPTIONAL: disable month/periods
+    setDisabledPeriods(Array(8).fill(true));
+    setPeriodMonthDisabled(false);
 
-  // PAGE RESET
-  setCurrentPage(1);
-};
+    // PAGE RESET
+    setCurrentPage(1);
+  };
 
   const handleUpdateCheckboxChange = (
     itemId,
@@ -298,169 +298,188 @@ const handleClear = () => {
   const barcodeRef = useRef(null);
 
 
-const handleAddFeeElement = () => {
-  // Validation (silent)
-  if (
-    !feeElement.element_type_id ||
-    !feeElement.frequency ||
-    !feeElement.amount
-  ) {
-    return;
-  }
+  const handleAddFeeElement = () => {
+    // Validation (silent)
+    if (
+      !feeElement.element_type_id ||
+      !feeElement.frequency ||
+      !feeElement.amount
+    ) {
+      return;
+    }
 
-  // Build safe periods array matching visibleSemesters
-  const periods = Array.from({ length: visibleSemesters }).map(
-    (_, i) => feeElement.semesters?.[i] ?? ""
-  );
-
-  const newElement = {
-    id: Date.now(),
-    name: feeElement.name || "",
-    frequency: feeElement.frequency,
-    frequencyName:
-      frequencyOptions.find((o) => o.value === feeElement.frequency)?.label ||
-      "",
-    amount: feeElement.amount,
-    periods, // always an array of length visibleSemesters
-  };
-
-  setAddedFeeElements((prev) => [...prev, newElement]);
-
-  // Reset form, keep semesters length in sync with visibleSemesters
-  setFeeElement({
-    element_type_id: null,
-    name: "",
-    frequency: "",
-    amount: "",
-    semesters: Array(visibleSemesters).fill(""),
-    adjustment_flag: "N",
-    period_month: "",
-  });
-};
-
-
-
-
- useEffect(() => {
-   const fetchSemesterbydepartment = async () => {
-     try {
-       const token = localStorage.getItem("accessToken");
-       const organization_id = sessionStorage.getItem("organization_id");
-       const branch_id = sessionStorage.getItem("branch_id");
-
-       const batch_id = selectedSession?.value || "";
-       const course_id = selectedCourse?.value || "";
-       const department_id = selectedDepartment?.value || "";
-
-       if (!batch_id || !course_id || !department_id) {
-         setSemesterOptions([]);
-         return;
-       }
-
-       const response = await fetch(
-         `${ApiUrl.apiurl}Semester/GetSemesterByDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`,
-         {
-           method: "GET",
-           headers: {
-             "Content-Type": "application/json",
-             Authorization: `Bearer ${token}`,
-           },
-         }
-       );
-
-       const data = await response.json();
-
-       if (Array.isArray(data)) {
-         const options = data.map((item) => ({
-           value: item.id,
-           label: item.semester_description || item.semester_code,
-         }));
-
-         setSemesterOptions(options);
-       } else {
-         console.error("Unexpected semester API format:", data);
-       }
-     } catch (error) {
-       console.error("Error fetching semesters:", error);
-     }
-   };
-
-   fetchSemesterbydepartment(); // FIXED
- }, [selectedSession, selectedCourse, selectedDepartment]);
-
-const handleFrequencyChange = async (selectedOption) => {
-  setFeeElement((prev) => ({
-    ...prev,
-    frequency: selectedOption?.value || "",
-  }));
-
-  if (!selectedOption) return;
-
-  const organization_id = sessionStorage.getItem("organization_id");
-  const branch_id = sessionStorage.getItem("branch_id");
-
-  try {
-    const res = await fetch(
-      `${ApiUrl.apiurl}FeeFrequency/GetFeeFrequencyById/?organization_id=${organization_id}&branch_id=${branch_id}&fee_frequency_id=${selectedOption.value}`
+    // Build safe periods array matching visibleSemesters
+    const periods = Array.from({ length: visibleSemesters }).map(
+      (_, i) => feeElement.semesters?.[i] ?? ""
     );
 
-    const data = await res.json();
-    const count = data.frequency_period;
+    const newElement = {
+      id: Date.now(),
+      name: feeElement.name || "",
+      frequency: feeElement.frequency,
+      frequencyName:
+        frequencyOptions.find((o) => o.value === feeElement.frequency)?.label ||
+        "",
+      amount: feeElement.amount,
+      periods, // always an array of length visibleSemesters
+    };
 
-    setVisibleSemesters(count);
+    setAddedFeeElements((prev) => [...prev, newElement]);
+
+    // Reset form, keep semesters length in sync with visibleSemesters
+    setFeeElement({
+      element_type_id: null,
+      name: "",
+      frequency: "",
+      amount: "",
+      semesters: Array(visibleSemesters).fill(""),
+      adjustment_flag: "N",
+      period_month: "",
+    });
+  };
+
+
+
+
+  useEffect(() => {
+    const fetchSemesterbydepartment = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const organization_id = sessionStorage.getItem("organization_id");
+        const branch_id = sessionStorage.getItem("branch_id");
+
+        const batch_id = selectedSession?.value || "";
+        const course_id = selectedCourse?.value || "";
+        const department_id = selectedDepartment?.value || "";
+
+        if (!batch_id || !course_id || !department_id) {
+          setSemesterOptions([]);
+          return;
+        }
+
+        const response = await fetch(
+          `${ApiUrl.apiurl}Semester/GetSemesterByDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          const options = data.map((item) => ({
+            value: item.id,
+            label: item.semester_description || item.semester_code,
+          }));
+
+          setSemesterOptions(options);
+        } else {
+          console.error("Unexpected semester API format:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching semesters:", error);
+      }
+    };
+
+    fetchSemesterbydepartment(); // FIXED
+  }, [selectedSession, selectedCourse, selectedDepartment]);
+
+  const handleFrequencyChange = async (selectedOption) => {
     setFeeElement((prev) => ({
       ...prev,
-      semesters: Array(count).fill(""),
+      frequency: selectedOption?.value || "",
     }));
-  } catch (error) {
-    console.error("Frequency API Error:", error);
-  }
-};
 
- useEffect(() => {
-     const fetchFrequencyOptions = async () => {
-       try {
-         const token = localStorage.getItem("accessToken");
+    if (!selectedOption) return;
 
-         if (!token) {
-           console.error("Access token not found");
-           return;
-         }
+    const organization_id = sessionStorage.getItem("organization_id");
+    const branch_id = sessionStorage.getItem("branch_id");
 
-         const response = await fetch(
-           `${ApiUrl.apiurl}FeeFrequency/GetAllFrequencyPeriodList/`,
-           {
-             method: "GET",
-             headers: {
-               Authorization: `Bearer ${token}`,
-               "Content-Type": "application/json",
-             },
-           }
-         );
+    try {
+      const res = await fetch(
+        `${ApiUrl.apiurl}FeeFrequency/GetFeeFrequencyById/?organization_id=${organization_id}&branch_id=${branch_id}&fee_frequency_id=${selectedOption.value}`
+      );
 
-         if (!response.ok) {
-           throw new Error(`HTTP Error: ${response.status}`);
-         }
+      const data = await res.json();
+      const count = data.frequency_period;
 
-         const result = await response.json();
+      setVisibleSemesters(count);
+      setFeeElement((prev) => ({
+        ...prev,
+        semesters: Array(count).fill(""),
+      }));
+    } catch (error) {
+      console.error("Frequency API Error:", error);
+    }
+  };
 
-         if (result?.data && Array.isArray(result.data)) {
-           const options = result.data.map((option) => ({
-             value: option.id,
-             label: option.fee_frequency_name,
-             fee_frequency_name: option.fee_frequency_name,
-             frequency_period: option.frequency_period,
-           }));
+  useEffect(() => {
+    const fetchFrequencyOptions = async () => {
+      // Guard: Need at least Batch (Session) and Course to filter Frequency
+      const batch_id = selectedSession?.value;
+      const course_id = selectedCourse?.value;
+      const department_id = selectedDepartment?.value || "";
 
-           setFrequencyOptions(options);
-         }
-       } catch (error) {
-         console.error("Error fetching frequency options:", error);
-       }
-     };
+      if (!batch_id || !course_id) {
+        setFrequencyOptions([]);
+        return;
+      }
 
-     fetchFrequencyOptions();
-   }, []);
+      try {
+        const token = localStorage.getItem("accessToken");
+        const organization_id = sessionStorage.getItem("organization_id");
+        const branch_id = sessionStorage.getItem("branch_id");
+
+        if (!token) {
+          console.error("Access token not found");
+          return;
+        }
+
+        // Construct URL with filters (matching AdmFeeStructure implementation)
+        let url = `${ApiUrl.apiurl}FeeFrequency/GetAllFrequencyPeriodList/?organization=${organization_id}&branch=${branch_id}&batch=${batch_id}&course=${course_id}`;
+
+        if (department_id) {
+          url += `&department=${department_id}`;
+        }
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result?.data && Array.isArray(result.data)) {
+          const options = result.data.map((option) => ({
+            value: option.id,
+            label: option.fee_frequency_name,
+            fee_frequency_name: option.fee_frequency_name, // keep original fields for reference
+            frequency_period: option.frequency_period,
+          }));
+
+          setFrequencyOptions(options);
+        } else {
+          setFrequencyOptions([]);
+        }
+      } catch (error) {
+        console.error("Error fetching frequency options:", error);
+        setFrequencyOptions([]);
+      }
+    };
+
+    fetchFrequencyOptions();
+  }, [selectedSession, selectedCourse, selectedDepartment]);
 
   const handlePeriodMonthChange = (selectedOption) => {
     setFeeElement((prev) => ({
@@ -486,279 +505,279 @@ const handleFrequencyChange = async (selectedOption) => {
 
   // Sample data for the table
 
-    useEffect(() => {
-      const fetchFeeElements = async () => {
-        try {
-          //  Get access token from localStorage
-          const token = localStorage.getItem("accessToken");
-  
-          if (!token) {
-            console.error("Access token not found in localStorage");
-            return;
-          }
-  
-          const response = await fetch(
-            `${ApiUrl.apiurl}FeeElementType/GetAllFeeElements/S`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`, //  pass token properly
-                "Content-Type": "application/json",
-              },
-            }
-          );
-  
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-  
-          const result = await response.json();
-  
-          //  Adjust mapping based on your backend response structure
-          if (result && result.data && Array.isArray(result.data)) {
-            const options = result.data.map((element) => ({
-              value: element.id,
-              label:
-                element.elementDescription ||
-                element.element_description ||
-                "N/A",
-            }));
-            setElementNameOptions(options);
-          } else {
-            console.error("Invalid data format:", result);
-          }
-        } catch (error) {
-          console.error("Error fetching fee elements:", error);
+  useEffect(() => {
+    const fetchFeeElements = async () => {
+      try {
+        //  Get access token from localStorage
+        const token = localStorage.getItem("accessToken");
+
+        if (!token) {
+          console.error("Access token not found in localStorage");
+          return;
         }
-      };
-  
-      fetchFeeElements();
-    }, []);
- 
-const handleSearch = async () => {
-  try {
-    const id = selectedStudent?.id || "";
-    const barcode = selectedStudent?.barcode
-      ? String(selectedStudent.barcode).trim()
-      : "";
-    const admissionNo = selectedStudent?.admissionNo
-      ? String(selectedStudent.admissionNo).trim()
-      : "";
 
-    if (!id && !barcode && !admissionNo) {
-      console.error("Please enter Student ID, Barcode, or Admission No.");
-      return;
-    }
-
-    // Build correct query params
-    const queryParams = new URLSearchParams();
-    queryParams.append("flag", "y"); // MUST be lowercase
-    queryParams.append("student_course_id", id || "");
-    queryParams.append("barcode", barcode || "");
-    queryParams.append("college_admission_no", admissionNo || "");
-
-    const url = `${ApiUrl.apiurl}Filter/GetFilterStudentFilterdataBasedOnCondition/?${queryParams.toString()}`;
-
-    console.log("🔍 Fetching student:", url);
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const result = await response.json();
-    console.log(" Student Filter API Response:", result);
-
-    if (response.ok && result.message === "success!!" && result.data) {
-      const studentData = result.data;
-
-      // Store student id
-      setStudentId(studentData.studentId);
-
-      // Map all student data through your existing function
-      await fetchStudentDetails(studentData.studentId);
-
-      // Extract fee details from same response
-      const feeData = studentData.feedetails || [];
-      setFeeStructure(feeData);
-
-      // Unique unpaid elements
-      const unpaid = feeData
-        .filter((item) => parseFloat(item.paid_amount) === 0)
-        .reduce((unique, item) => {
-          const isDuplicate = unique.some(
-            (el) =>
-              el.element_name === item.element_name &&
-              parseFloat(el.total_element_period_amount) ===
-                parseFloat(item.total_element_period_amount)
-          );
-
-          if (!isDuplicate) {
-            unique.push({
-              ...item,
-              updateflag: false,
-              removeflag: false,
-              updateamount: "",
-            });
+        const response = await fetch(
+          `${ApiUrl.apiurl}FeeElementType/GetAllFeeElements/S`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`, //  pass token properly
+              "Content-Type": "application/json",
+            },
           }
+        );
 
-          return unique;
-        }, []);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-      setUnpaidElements(unpaid);
-    } else {
-      console.error("No student found.");
-      setFeeStructure([]);
-      setUnpaidElements([]);
+        const result = await response.json();
+
+        //  Adjust mapping based on your backend response structure
+        if (result && result.data && Array.isArray(result.data)) {
+          const options = result.data.map((element) => ({
+            value: element.id,
+            label:
+              element.elementDescription ||
+              element.element_description ||
+              "N/A",
+          }));
+          setElementNameOptions(options);
+        } else {
+          console.error("Invalid data format:", result);
+        }
+      } catch (error) {
+        console.error("Error fetching fee elements:", error);
+      }
+    };
+
+    fetchFeeElements();
+  }, []);
+
+  const handleSearch = async () => {
+    try {
+      const id = selectedStudent?.id || "";
+      const barcode = selectedStudent?.barcode
+        ? String(selectedStudent.barcode).trim()
+        : "";
+      const admissionNo = selectedStudent?.admissionNo
+        ? String(selectedStudent.admissionNo).trim()
+        : "";
+
+      if (!id && !barcode && !admissionNo) {
+        console.error("Please enter Student ID, Barcode, or Admission No.");
+        return;
+      }
+
+      // Build correct query params
+      const queryParams = new URLSearchParams();
+      queryParams.append("flag", "y"); // MUST be lowercase
+      queryParams.append("student_course_id", id || "");
+      queryParams.append("barcode", barcode || "");
+      queryParams.append("college_admission_no", admissionNo || "");
+
+      const url = `${ApiUrl.apiurl}Filter/GetFilterStudentFilterdataBasedOnCondition/?${queryParams.toString()}`;
+
+      console.log("🔍 Fetching student:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const result = await response.json();
+      console.log(" Student Filter API Response:", result);
+
+      if (response.ok && result.message === "success!!" && result.data) {
+        const studentData = result.data;
+
+        // Store student id
+        setStudentId(studentData.studentId);
+
+        // Map all student data through your existing function
+        await fetchStudentDetails(studentData.studentId);
+
+        // Extract fee details from same response
+        const feeData = studentData.feedetails || [];
+        setFeeStructure(feeData);
+
+        // Unique unpaid elements
+        const unpaid = feeData
+          .filter((item) => parseFloat(item.paid_amount) === 0)
+          .reduce((unique, item) => {
+            const isDuplicate = unique.some(
+              (el) =>
+                el.element_name === item.element_name &&
+                parseFloat(el.total_element_period_amount) ===
+                parseFloat(item.total_element_period_amount)
+            );
+
+            if (!isDuplicate) {
+              unique.push({
+                ...item,
+                updateflag: false,
+                removeflag: false,
+                updateamount: "",
+              });
+            }
+
+            return unique;
+          }, []);
+
+        setUnpaidElements(unpaid);
+      } else {
+        console.error("No student found.");
+        setFeeStructure([]);
+        setUnpaidElements([]);
+      }
+    } catch (error) {
+      console.error(" Error searching student:", error);
     }
-  } catch (error) {
-    console.error(" Error searching student:", error);
-  }
-};
+  };
 
 
-const handleSave = async () => {
-  try {
-    const token = localStorage.getItem("accessToken");
-    const organization_id = sessionStorage.getItem("organization_id");
-    const branch_id = sessionStorage.getItem("branch_id");
-    const userId = sessionStorage.getItem("userId");
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const organization_id = sessionStorage.getItem("organization_id");
+      const branch_id = sessionStorage.getItem("branch_id");
+      const userId = sessionStorage.getItem("userId");
 
-    if (!token || !organization_id || !branch_id || !userId) {
-      alert("Required values are missing.");
-      return;
-    }
+      if (!token || !organization_id || !branch_id || !userId) {
+        alert("Required values are missing.");
+        return;
+      }
 
-    if (!studentId) {
-      alert("Select student first");
-      return;
-    }
+      if (!studentId) {
+        alert("Select student first");
+        return;
+      }
 
-    // ------------------------------------
-    // 1️ FIXED studentIndividualFeeDetails
-    // ------------------------------------
-    // 1️ FIXED studentIndividualFeeDetails — remove invalid rows
-    const studentIndividualFeeDetails = feeStructure
-      .filter((item) => item.id && item.total_element_period_amount !== null)
-      .map((item) => ({
-        student_fee_details_id: Number(item.id),
-        update_amount: Number(item.total_element_period_amount) || 0,
+      // ------------------------------------
+      // 1️ FIXED studentIndividualFeeDetails
+      // ------------------------------------
+      // 1️ FIXED studentIndividualFeeDetails — remove invalid rows
+      const studentIndividualFeeDetails = feeStructure
+        .filter((item) => item.id && item.total_element_period_amount !== null)
+        .map((item) => ({
+          student_fee_details_id: Number(item.id),
+          update_amount: Number(item.total_element_period_amount) || 0,
+          update_flag: Boolean(item.updateflag),
+          remove_flag: Boolean(item.removeflag),
+        }));
+
+      // 2️⃣ FIXED studentFeeDetails — safe mapping
+      const studentFeeDetails = unpaidElements.map((item) => ({
+        fee_element: item.element_name || "",
+        student_id: Number(studentId),
+        update_amount: Number(item.updateamount) || 0,
         update_flag: Boolean(item.updateflag),
         remove_flag: Boolean(item.removeflag),
       }));
 
-    // 2️⃣ FIXED studentFeeDetails — safe mapping
-    const studentFeeDetails = unpaidElements.map((item) => ({
-      fee_element: item.element_name || "",
-      student_id: Number(studentId),
-      update_amount: Number(item.updateamount) || 0,
-      update_flag: Boolean(item.updateflag),
-      remove_flag: Boolean(item.removeflag),
-    }));
+      // 3️⃣ FIXED addfeeElement — validated frequency & semester values
+      const addfeeElement = addedFeeElements
+        .filter((el) => el.frequency && el.name)
+        .map((el) => {
+          const periods = Array.from({ length: 8 }).map(
+            (_, i) => Number(el.periods?.[i]) || 0
+          );
+          return {
+            student_id: Number(studentId),
+            element_name: el.name,
+            frequency_id: Number(el.frequency),
+            semester_id: 1,
+            organization_id: Number(organization_id),
+            branch_id: Number(branch_id),
+            amount: Number(el.amount) || 0,
+            semester_1: periods[0],
+            semester_2: periods[1],
+            semester_3: periods[2],
+            semester_4: periods[3],
+            semester_5: periods[4],
+            semester_6: periods[5],
+            semester_7: periods[6],
+            semester_8: periods[7],
+          };
+        });
 
-    // 3️⃣ FIXED addfeeElement — validated frequency & semester values
-    const addfeeElement = addedFeeElements
-      .filter((el) => el.frequency && el.name)
-      .map((el) => {
-        const periods = Array.from({ length: 8 }).map(
-          (_, i) => Number(el.periods?.[i]) || 0
-        );
-        return {
-          student_id: Number(studentId),
-          element_name: el.name,
-          frequency_id: Number(el.frequency),
-          semester_id: 1,
-          organization_id: Number(organization_id),
-          branch_id: Number(branch_id),
-          amount: Number(el.amount) || 0,
-          semester_1: periods[0],
-          semester_2: periods[1],
-          semester_3: periods[2],
-          semester_4: periods[3],
-          semester_5: periods[4],
-          semester_6: periods[5],
-          semester_7: periods[6],
-          semester_8: periods[7],
-        };
+
+      // ------------------------------------
+      // FINAL PAYLOAD
+      // ------------------------------------
+      const payload = {
+        loginUser: userId,
+        organization_id: Number(organization_id),
+        branch_id: Number(branch_id),
+        studentIndividualFeeDetails,
+        studentFeeDetails,
+        addfeeElement,
+      };
+
+      // 🔍 Detect operation type
+      const isUpdate =
+        studentIndividualFeeDetails.some((item) => item.update_flag) ||
+        studentFeeDetails.some((item) => item.update_flag);
+
+      const isRemove =
+        studentIndividualFeeDetails.some((item) => item.remove_flag) ||
+        studentFeeDetails.some((item) => item.remove_flag);
+
+      const isAdd = addfeeElement.length > 0;
+
+      const response = await fetch(
+        `${ApiUrl.apiurl}StudentFeeDetails/StudentFeesManagement/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json();
+
+      if (isAdd) {
+        alert("Fee element added successfully!");
+      } else if (isRemove) {
+        alert("Fee element removed successfully!");
+      } else if (isUpdate) {
+        alert("Fee updated successfully!");
+      } else {
+        alert("Operation completed successfully!");
+      }
+      handleClear();
+
+
+      // RESET STATES
+      setSelectedStudent({
+        name: "",
+        barcode: "",
+        admissionNo: "",
+        fatherName: "",
+        motherName: "",
+        schoolAdmissionNo: "",
       });
 
-
-    // ------------------------------------
-    // FINAL PAYLOAD
-    // ------------------------------------
-const payload = {
-  loginUser: userId,
-  organization_id: Number(organization_id),
-  branch_id: Number(branch_id),
-  studentIndividualFeeDetails,
-  studentFeeDetails,
-  addfeeElement,
-};
-
-// 🔍 Detect operation type
-const isUpdate =
-  studentIndividualFeeDetails.some((item) => item.update_flag) ||
-  studentFeeDetails.some((item) => item.update_flag);
-
-const isRemove =
-  studentIndividualFeeDetails.some((item) => item.remove_flag) ||
-  studentFeeDetails.some((item) => item.remove_flag);
-
-const isAdd = addfeeElement.length > 0;
-
-const response = await fetch(
-  `${ApiUrl.apiurl}StudentFeeDetails/StudentFeesManagement/`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  }
-);
-
-const data = await response.json();
-
-if (isAdd) {
-  alert("Fee element added successfully!");
-} else if (isRemove) {
-  alert("Fee element removed successfully!");
-} else if (isUpdate) {
-  alert("Fee updated successfully!");
-} else {
-  alert("Operation completed successfully!");
-}
-handleClear();
-
-
-    // RESET STATES
-    setSelectedStudent({
-      name: "",
-      barcode: "",
-      admissionNo: "",
-      fatherName: "",
-      motherName: "",
-      schoolAdmissionNo: "",
-    });
-
-    setFeeStructure([]);
-    setUnpaidElements([]);
-    setAddedFeeElements([]);
-    setFeeElement({
-      name: "",
-      element_type_id: null,
-      frequency: "",
-      amount: 0,
-      periods: Array(8).fill(""),
-      adjustment_flag: "N",
-      period_month: "",
-    });
-  } catch (error) {
-    console.error("Error saving:", error);
-    alert("Failed to save data. Please try again.");
-  }
-};
+      setFeeStructure([]);
+      setUnpaidElements([]);
+      setAddedFeeElements([]);
+      setFeeElement({
+        name: "",
+        element_type_id: null,
+        frequency: "",
+        amount: 0,
+        periods: Array(8).fill(""),
+        adjustment_flag: "N",
+        period_month: "",
+      });
+    } catch (error) {
+      console.error("Error saving:", error);
+      alert("Failed to save data. Please try again.");
+    }
+  };
 
 
 
@@ -1130,9 +1149,9 @@ handleClear();
                                       prev.map((detail) =>
                                         detail.id === item.id
                                           ? {
-                                              ...detail,
-                                              updateamount: newValue,
-                                            }
+                                            ...detail,
+                                            updateamount: newValue,
+                                          }
                                           : detail
                                       )
                                     );
@@ -1221,6 +1240,9 @@ handleClear();
                           <Select
                             options={frequencyOptions}
                             className="detail"
+                            isDisabled={
+                              !selectedSession?.value || !selectedCourse?.value
+                            }
                             value={
                               frequencyOptions.find(
                                 (option) =>
@@ -1336,7 +1358,7 @@ handleClear();
 
                       <tbody>
                         {Array.isArray(addedFeeElements) &&
-                        addedFeeElements.length > 0 ? (
+                          addedFeeElements.length > 0 ? (
                           addedFeeElements.map((element, idx) => (
                             <tr key={idx}>
                               <td>{idx + 1}</td>
