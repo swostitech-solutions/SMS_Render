@@ -822,6 +822,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Select from "react-select";
+import ReactPaginate from "react-paginate";
 import useFetchBookCategories from "../../hooks/useFetchBookCategories";
 import useFetchBookSubCategories from "../../hooks/useFetchBookSubCategories";
 import { ApiUrl } from "../../../ApiUrl";
@@ -838,6 +839,24 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   const bookNameRef = useRef();
   const bookCodeRef = useRef();
   const bookAccessionNoRef = useRef();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+
+  // Pagination calculations
+  const offset = currentPage * itemsPerPage;
+  const currentItems = bookData.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(bookData.length / itemsPerPage);
+
+  const handlePageClick = ({ selected }) => {
+    setCurrentPage(selected);
+  };
+
+  // Reset to first page when book data changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [bookData]);
 
   const categoryOptions = categories.map((category) => ({
     value: category.id,
@@ -1144,9 +1163,9 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                             </td>
                           </tr>
                         ) : (
-                          bookData.map((book, index) => (
+                          currentItems.map((book, index) => (
                             <tr key={book.id}>
-                              <td>{index + 1}</td>
+                              <td>{offset + index + 1}</td>
                               <td>{book.bookCode}</td>
                               <td>{book.bookName}</td>
                               <td>{book.barcode}</td>
@@ -1166,6 +1185,32 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Pagination Component */}
+                  {pageCount > 1 && (
+                    <div className="d-flex justify-content-center mt-3">
+                      <ReactPaginate
+                        previousLabel={"Previous"}
+                        nextLabel={"Next"}
+                        breakLabel={"..."}
+                        breakClassName={"page-item"}
+                        breakLinkClassName={"page-link"}
+                        pageCount={pageCount}
+                        marginPagesDisplayed={2}
+                        pageRangeDisplayed={5}
+                        onPageChange={handlePageClick}
+                        containerClassName={"pagination justify-content-center"}
+                        pageClassName={"page-item"}
+                        pageLinkClassName={"page-link"}
+                        previousClassName={"page-item"}
+                        previousLinkClassName={"page-link"}
+                        nextClassName={"page-item"}
+                        nextLinkClassName={"page-link"}
+                        activeClassName={"active"}
+                        forcePage={currentPage}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

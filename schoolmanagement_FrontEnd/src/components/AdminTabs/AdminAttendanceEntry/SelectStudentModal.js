@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Select from "react-select";
+import ReactPaginate from "react-paginate";
 import "./SelectStudentModal.css";
 
 import { ApiUrl } from "../../../ApiUrl";
@@ -21,6 +22,24 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
     motherName: "",
     schoolAdmissionNo: "",
   });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+
+  // Pagination calculations
+  const offset = currentPage * itemsPerPage;
+  const currentItems = studentData.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(studentData.length / itemsPerPage);
+
+  const handlePageClick = ({ selected }) => {
+    setCurrentPage(selected);
+  };
+
+  // Reset to first page when student data changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [studentData]);
 
   // Extract unique semesters from student data - no API call needed!
   const SemesterList = useMemo(() => {
@@ -457,7 +476,7 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
                             </td>
                           </tr>
                         ) : (
-                          studentData.map((student, index) => {
+                          currentItems.map((student, index) => {
                             const studentDetails = student.studentBasicDetails;
                             return (
                               <tr key={index}>
@@ -490,6 +509,32 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Pagination Component */}
+                  {pageCount > 1 && (
+                    <div className="d-flex justify-content-center mt-3">
+                      <ReactPaginate
+                        previousLabel={"Previous"}
+                        nextLabel={"Next"}
+                        breakLabel={"..."}
+                        breakClassName={"page-item"}
+                        breakLinkClassName={"page-link"}
+                        pageCount={pageCount}
+                        marginPagesDisplayed={2}
+                        pageRangeDisplayed={5}
+                        onPageChange={handlePageClick}
+                        containerClassName={"pagination justify-content-center"}
+                        pageClassName={"page-item"}
+                        pageLinkClassName={"page-link"}
+                        previousClassName={"page-item"}
+                        previousLinkClassName={"page-link"}
+                        nextClassName={"page-item"}
+                        nextLinkClassName={"page-link"}
+                        activeClassName={"active"}
+                        forcePage={currentPage}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

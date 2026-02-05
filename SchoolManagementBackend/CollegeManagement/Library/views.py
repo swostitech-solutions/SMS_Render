@@ -3182,6 +3182,33 @@ class AllBookBarcodeFilterListAPIView(ListAPIView):
                 if filterdata:
                     responsedata = []
                     for item in filterdata:
+                        # Calculate total copies for this book (all active barcodes)
+                        total_copies = LibraryBooksBarcode.objects.filter(
+                            book=item.book,
+                            is_active=True
+                        ).count()
+                        
+                        # Calculate issued copies (books that are issued and not returned)
+                        issued_copies = LibraryBooksIssues.objects.filter(
+                            book_detail__book=item.book,
+                            return_date__isnull=True,
+                            is_active=True
+                        ).count()
+                        
+                        # Calculate available copies
+                        available_copies = total_copies - issued_copies
+                        
+                        # Check if this specific barcode is currently issued
+                        is_this_barcode_issued = LibraryBooksIssues.objects.filter(
+                            book_detail=item,
+                            return_date__isnull=True,
+                            is_active=True
+                        ).exists()
+                        
+                        # Determine if this barcode is available (status is active and not currently issued)
+                        valid_statuses = ['Available', 'ACTIVE', 'Active', 'available']
+                        is_available = (item.book_barcode_status in valid_statuses) and not is_this_barcode_issued
+                        
                         data = {
                             'id': item.id,
                             'barcode': item.barcode,
@@ -3191,7 +3218,10 @@ class AllBookBarcodeFilterListAPIView(ListAPIView):
                             'categoryName': item.book.book_category.category_name,
                             'subcategoryId': item.book.book_sub_category.id,
                             'subcategoryName': item.book.book_sub_category.sub_category_name,
-
+                            'bookBarcodeStatus': item.book_barcode_status,
+                            'totalCopies': total_copies,
+                            'availableCopies': available_copies,
+                            'isAvailable': is_available,
                         }
 
                         responsedata.append(data)
