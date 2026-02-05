@@ -20136,7 +20136,11 @@ class SearchStudentCourseListAPIView(ListAPIView):
 
             # Specific field filters (only if search_query is not provided, or as additional filters)
             if student_name and not search_query:
+                print(f"DEBUG: student_name received: '{student_name}'")
                 name_parts = student_name.strip().split()
+                print(f"DEBUG: name_parts: {name_parts}, length: {len(name_parts)}")
+                print(f"DEBUG: studentCourseList count before name filter: {studentCourseList.count()}")
+                
                 if len(name_parts) == 1:
                     first = name_parts[0].strip()
                     studentCourseList = studentCourseList.filter(
@@ -20147,20 +20151,30 @@ class SearchStudentCourseListAPIView(ListAPIView):
                     )
                 elif len(name_parts) == 2:  # First + Last
                     first, last = name_parts
+                    # Debug: Check what students have "sonali" in their name
+                    debug_students = studentCourseList.filter(
+                        Q(student__first_name__icontains=first) |
+                        Q(student__middle_name__icontains=first) |
+                        Q(student__last_name__icontains=first),
+                        student__is_active=True
+                    )[:5]
+                    for s in debug_students:
+                        print(f"DEBUG: Student found with '{first}': first_name='{s.student.first_name}', middle_name='{s.student.middle_name}', last_name='{s.student.last_name}'")
+                    
+                    # More flexible search: first word OR second word can be in ANY name field
                     studentCourseList = studentCourseList.filter(
-                        Q(student__first_name__iexact=first, student__last_name__iexact=last) |
-                        Q(student__first_name__iexact=first, student__middle_name__iexact=last,
-                          student__last_name__isnull=False) |
-                        Q(student__first_name__iexact=first, student__middle_name__isnull=False,
-                          student__last_name__iexact=last),
+                        # Both terms somewhere in the name (more flexible)
+                        (Q(student__first_name__icontains=first) | Q(student__middle_name__icontains=first) | Q(student__last_name__icontains=first)) &
+                        (Q(student__first_name__icontains=last) | Q(student__middle_name__icontains=last) | Q(student__last_name__icontains=last)),
                         student__is_active=True
                     )
+                    print(f"DEBUG: After 2-word filter, count: {studentCourseList.count()}")
                 elif len(name_parts) == 3:  # First + Middle + Last
                     first, middle, last = name_parts
                     studentCourseList = studentCourseList.filter(
-                        student__first_name__iexact=first,
-                        student__middle_name__iexact=middle,
-                        student__last_name__iexact=last,
+                        student__first_name__icontains=first,
+                        student__middle_name__icontains=middle,
+                        student__last_name__icontains=last,
                         student__is_active=True
                     )
 

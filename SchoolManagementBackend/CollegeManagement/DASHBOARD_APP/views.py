@@ -142,7 +142,7 @@ class AttendanceCourseSemesterSectionWiseListAPIView(ListAPIView):
                 ATTENDANCE_RECORD = Attendance.objects.filter(
                     organization=organization_id,
                     branch=branch_id,
-                    batch=batch_id,
+                    # batch=batch_id,  # Removed: Show all attendance for the date regardless of batch
                     attendance_date=attendance_date,
                     is_active=True
                 )
