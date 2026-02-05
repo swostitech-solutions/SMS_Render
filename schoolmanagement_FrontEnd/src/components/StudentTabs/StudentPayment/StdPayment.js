@@ -243,8 +243,8 @@ const StdPayment = () => {
       );
 
       const result = response.data;
-      if (result) {
-        setReceiptDetails(result);
+      if (result && result.data) {
+        setReceiptDetails(result.data);  // Access the nested 'data' property
         setShowReceiptModal(true);
       }
     } catch (err) {

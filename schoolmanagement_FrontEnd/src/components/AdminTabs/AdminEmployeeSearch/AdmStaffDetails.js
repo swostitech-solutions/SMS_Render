@@ -545,15 +545,15 @@ export default function BasicTabs() {
         </div>
       </div>
 
-      <Tabs value={value} onChange={(e) => e.preventDefault()}>
-        <Tab label="Staff Basic Info" {...a11yProps(0)} disabled />
-        <Tab label="Address" {...a11yProps(1)} disabled />
-        <Tab label="Documents" {...a11yProps(2)} disabled />
-        <Tab label="Family" {...a11yProps(3)} disabled />
-        <Tab label="Educational" {...a11yProps(4)} disabled />
-        <Tab label="Courses" {...a11yProps(5)} disabled />
-        <Tab label="Languages Known" {...a11yProps(6)} disabled />
-        <Tab label="Previous Experience" {...a11yProps(7)} disabled />
+      <Tabs value={value} onChange={handleChange}>
+        <Tab label="Staff Basic Info" {...a11yProps(0)} />
+        <Tab label="Address" {...a11yProps(1)} />
+        <Tab label="Documents" {...a11yProps(2)} />
+        <Tab label="Family" {...a11yProps(3)} />
+        <Tab label="Educational" {...a11yProps(4)} />
+        <Tab label="Courses" {...a11yProps(5)} />
+        <Tab label="Languages Known" {...a11yProps(6)} />
+        <Tab label="Previous Experience" {...a11yProps(7)} />
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>

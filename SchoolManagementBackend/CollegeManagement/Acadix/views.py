@@ -16939,8 +16939,9 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                     filterdata = filterdata.filter(section=section_id)
                 if date_from and date_to:
                     filterdata = filterdata.filter(receipt_date__range=(date_from, date_to))
-                if not date_from and not date_to:
-                    filterdata = filterdata.filter(receipt_date=date.today())
+                # Removed default filter to today's date - students should see ALL receipts when no date filter is provided
+                # if not date_from and not date_to:
+                #     filterdata = filterdata.filter(receipt_date=date.today())
                 if date_from and not date_to:
                     filterdata = filterdata.filter(receipt_date__range=(date_from, date.today()))
                 if not date_from and date_to:
@@ -17067,9 +17068,58 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                     ])
                     student_name = ' '.join(student_name)
 
+
+                    # Extract payment method from payment_detail JSON if it exists
+                    payment_method_value = None
+                    if item.payment_detail:
+                        if isinstance(item.payment_detail, dict):
+                            payment_method_value = item.payment_detail.get('payment_type', None)
+                        elif isinstance(item.payment_detail, str):
+                            # If it's a string (JSON string), try to parse it
+                            try:
+                                import json
+                                payment_detail_dict = json.loads(item.payment_detail)
+                                payment_method_value = payment_detail_dict.get('payment_type', None)
+                            except:
+                                payment_method_value = item.payment_detail
+
+                    # Get the actual semester for which fee was paid from receipt details
+                    # Instead of student's current semester from StudentCourse
+                    receipt_semester_id = None
+                    receipt_semester_description = None
+                    if receiptdetailsrecords:
+                        # Get the first receipt detail's fee_detail to find the semester
+                        first_detail = receiptdetailsrecords.first()
+                        print(f"DEBUG: Processing receipt {item.id}, first_detail exists: {first_detail is not None}")
+                        if first_detail and first_detail.fee_detail:
+                            print(f"DEBUG: fee_detail ID: {first_detail.fee_detail.id}, element: {first_detail.fee_detail.element_name}")
+                            print(f"DEBUG: fee_applied_from: {first_detail.fee_detail.fee_applied_from}")
+                            print(f"DEBUG: semester: {first_detail.fee_detail.semester}")
+                            # Use semester field FIRST (it has correct data)
+                            # fee_applied_from is often incorrectly set to "1st Semester" for all records
+                            if first_detail.fee_detail.semester:
+                                receipt_semester_id = first_detail.fee_detail.semester.id
+                                receipt_semester_description = first_detail.fee_detail.semester.semester_description
+                                print(f"DEBUG: Using semester field: {receipt_semester_description}")
+                            elif first_detail.fee_detail.fee_applied_from:
+                                # Fallback to fee_applied_from if semester is not set
+                                receipt_semester_id = first_detail.fee_detail.fee_applied_from.id
+                                receipt_semester_description = first_detail.fee_detail.fee_applied_from.semester_description
+                                print(f"DEBUG: Using fee_applied_from (fallback): {receipt_semester_description}")
+
+                    # Fallback to student's current semester if receipt doesn't have semester info
+                    if not receipt_semester_id:
+                        receipt_semester_id = studentcourseInstance.semester.id
+                        receipt_semester_description = studentcourseInstance.semester.semester_description
+                        print(f"DEBUG: Using fallback (student current semester): {receipt_semester_description}")
+                    else:
+                        print(f"DEBUG: Final semester for receipt {item.id}: {receipt_semester_description}")
+
                     # Make response data
                     responsedata.append({
                         'receiptId': item.id,
+                        'receipt_id': item.id,  # Frontend also checks for receipt_id
+                        'id': item.id,  # Frontend also checks for id
                         'receipt_no': item.receipt_no,
                         'studentId': item.student.id,
                         # 'studentname': f'{RegistrationInstance.first_name}{RegistrationInstance.middle_name}{RegistrationInstance.last_name}',
@@ -17081,8 +17131,9 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                         'department_description': studentcourseInstance.department.department_description,
                         'academic_year_id': studentcourseInstance.academic_year.id,
                         'academic_year_code': studentcourseInstance.academic_year.academic_year_code,
-                        'semester_id': studentcourseInstance.semester.id,
-                        'semester_description': studentcourseInstance.semester.semester_description,
+                        'semester_id': receipt_semester_id,  # Use semester from receipt, not student's current semester
+                        'semester_description': receipt_semester_description,  # Use semester from receipt
+                        'semester': receipt_semester_description,  # Frontend looks for 'semester' - use receipt semester
                         'section_id': studentcourseInstance.section.id,
                         'section_name': studentcourseInstance.section.section_name,
                         'barcode': item.student.barcode,
@@ -17091,9 +17142,15 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
 
                         'cancellation_remarks': item.cancellation_remarks,
                         'receiptDate': item.receipt_date,
+                        'receipt_date': item.receipt_date,  # Frontend looks for 'receipt_date' (lowercase)
                         'amount': total_amount,
+                        'receipt_amount': total_amount,  # Frontend looks for 'receipt_amount'
+                        'payment_amount': total_amount,  # Frontend also checks for 'payment_amount'
                         'discount_amount': total_discount,
-                        'payment_detail': item.payment_detail
+                        'discount': total_discount,  # Frontend also checks for 'discount'
+                        'payment_detail': item.payment_detail,
+                        'payment_method': payment_method_value,  # Frontend looks for 'payment_method' (extracted from payment_detail)
+                        'payment_method_name': payment_method_value  # Frontend also checks for 'payment_method_name'
                         # 'period_month': periodmonthInstance.period_name,
 
                     })
@@ -21516,16 +21573,16 @@ class GetReceiptDetailsListAPIView(ListAPIView):
                 return Response({'message': f"No active receipt found for ID {receipt_id}"},
                                 status=status.HTTP_404_NOT_FOUND)
 
-            # Get StdPayment Instance
+            # Get StdPayment Instance (make it optional - don't fail if not found)
+            StudentPaymentInstance = None
             try:
                 StudentPaymentInstance = StudentPayment.objects.get(receipt_id=receipt_id, is_active=True)
             except ObjectDoesNotExist:
-                return Response({'message': f"No active Payment receipt found for ID {receipt_id}'"},
-                                status=status.HTTP_404_NOT_FOUND)
+                pass  # Continue without payment details
 
             # Get bank Instance (handle None case)
             BANKInstance = None
-            if StudentPaymentInstance.bank_id:
+            if StudentPaymentInstance and StudentPaymentInstance.bank_id:
                 try:
                     BANKInstance = Bank.objects.get(id=StudentPaymentInstance.bank_id, is_active=True)
                 except ObjectDoesNotExist:
@@ -21533,27 +21590,54 @@ class GetReceiptDetailsListAPIView(ListAPIView):
 
             # Get Account Details (handle None case)
             AccountDetailsInstance = None
-            if StudentPaymentInstance.bank_account_id:
+            if StudentPaymentInstance and StudentPaymentInstance.bank_account_id:
                 try:
                     AccountDetailsInstance = BankAccountDetail.objects.get(
-                        id=StudentPaymentInstance.bank_id, is_active=True
+                        id=StudentPaymentInstance.bank_account_id, is_active=True
                     )
                 except ObjectDoesNotExist:
                     AccountDetailsInstance = None  # Explicitly set to None if not found
 
+            # Get student name
+            student_name_parts = filter(None, [
+                StudentFeeReceiptHeaderInstance.student.first_name,
+                StudentFeeReceiptHeaderInstance.student.middle_name,
+                StudentFeeReceiptHeaderInstance.student.last_name
+            ])
+            student_name = ' '.join(student_name_parts)
+
+            # Calculate discount from receipt details
+            total_discount = 0
+            try:
+                receipt_details = StudentFeeReceiptDetail.objects.filter(
+                    receipt_id=StudentFeeReceiptHeaderInstance.id
+                )
+                total_discount = sum(detail.discount_amount or 0 for detail in receipt_details)
+            except:
+                total_discount = 0
+
             # Prepare response data
             responsedata = {
                 'receiptId': StudentFeeReceiptHeaderInstance.id,
+                'receipt_id': StudentFeeReceiptHeaderInstance.id,
+                'id': StudentFeeReceiptHeaderInstance.id,
+                'receipt_no': StudentFeeReceiptHeaderInstance.receipt_no,
                 'receipt_date': StudentFeeReceiptHeaderInstance.receipt_date,
-                'payment_methodId': StudentFeeReceiptHeaderInstance.payment_method.id,
-                'payment_method': StudentFeeReceiptHeaderInstance.payment_method.payment_method,
+                'student_name': student_name,
+                'payment_methodId': StudentFeeReceiptHeaderInstance.payment_method.id if StudentFeeReceiptHeaderInstance.payment_method else None,
+                'payment_method': StudentFeeReceiptHeaderInstance.payment_method.payment_method if StudentFeeReceiptHeaderInstance.payment_method else None,
                 'bankId': BANKInstance.id if BANKInstance else None,
                 'bankName': BANKInstance.bank_name if BANKInstance else None,
+                'bank_name': BANKInstance.bank_name if BANKInstance else None,
                 'bankdetailsId': AccountDetailsInstance.id if AccountDetailsInstance else None,
                 'bank_account': AccountDetailsInstance.bank_account if AccountDetailsInstance else None,
-                'amount': StudentPaymentInstance.amount,
-                'payment_reference': StudentPaymentInstance.payment_reference,
-                'reference_date': StudentPaymentInstance.reference_date,
+                'amount': StudentPaymentInstance.amount if StudentPaymentInstance else 0,
+                'receipt_amount': StudentPaymentInstance.amount if StudentPaymentInstance else 0,
+                'payment_amount': StudentPaymentInstance.amount if StudentPaymentInstance else 0,
+                'discount': total_discount,
+                'discount_amount': total_discount,
+                'payment_reference': StudentPaymentInstance.payment_reference if StudentPaymentInstance else None,
+                'reference_date': StudentPaymentInstance.reference_date if StudentPaymentInstance else None,
             }
 
             return Response({'message': 'success!!', 'data': responsedata}, status=status.HTTP_200_OK)

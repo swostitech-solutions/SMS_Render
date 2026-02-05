@@ -776,6 +776,8 @@ const EditTransportModal = ({
   useEffect(() => {
     if (!transportDetails || Object.keys(transportDetails).length === 0) return;
 
+    console.log("🔍 EditTransportModal useEffect triggered", transportDetails);
+
     setStudentData((prev) => ({
       ...prev,
       student_id: transportDetails.student_id,
@@ -786,28 +788,34 @@ const EditTransportModal = ({
 
     setTransportAvailed(Boolean(transportDetails.transport_avail));
 
-    // ✅ Availed semesters (checked but editable)
-    const availedSemesters = Array.isArray(transportDetails.choice_semester)
+    // ✅ SELECTED semesters (semesters the student previously chose)
+    const previouslySelectedIds = Array.isArray(transportDetails.choice_semester)
       ? transportDetails.choice_semester
-        .filter((s) => String(s.flag).toLowerCase() === "yes")
+        .filter((s) => s.selected === true)  // Use the 'selected' flag from backend
         .map((s) => Number(s.semester_id))
       : [];
 
-    // ✅ PAID semesters (LOCKED)
-    const paidSemestersFromApi = Array.isArray(
-      transportDetails.transport_paid_sems
-    )
-      ? transportDetails.transport_paid_sems.map((s) => Number(s.semester_id))
+    console.log("📌 Previously Selected IDs:", previouslySelectedIds);
+
+    // ✅ PAID semesters (LOCKED - flag = "No")
+    const paidSemesterIds = Array.isArray(transportDetails.choice_semester)
+      ? transportDetails.choice_semester
+        .filter((s) => String(s.flag).toLowerCase() === "no")
+        .map((s) => Number(s.semester_id))
       : [];
 
-    // ✅ Paid semesters must always stay selected
-    const mergedSelected = [
-      ...new Set([...availedSemesters, ...paidSemestersFromApi]),
+    console.log("💰 Paid Semester IDs:", paidSemesterIds);
+
+    // ✅ Merge selected and paid (paid must always stay selected)
+    const allSelectedIds = [
+      ...new Set([...previouslySelectedIds, ...paidSemesterIds]),
     ];
 
-    setSelectedSemesters(mergedSelected);
-    setPaidSemesters(paidSemestersFromApi); // 🔒 ONLY PAID
-    setLockedSemesters(paidSemestersFromApi);
+    console.log("✅ ALL Selected IDs (setting state):", allSelectedIds);
+
+    setSelectedSemesters(allSelectedIds);
+    setPaidSemesters(paidSemesterIds); // 🔒 ONLY PAID
+    setLockedSemesters(paidSemesterIds);
 
     // Route
     const matchedRoute =
@@ -1030,57 +1038,77 @@ const EditTransportModal = ({
               </div>
               <div className="row g-2 mt-3">
                 {(() => {
-                  // Logic to determine current semester number
-                  const getNumber = (name) => {
-                    if (!name) return 0;
-                    const match = name.match(/\d+/);
-                    return match ? parseInt(match[0], 10) : 0;
-                  };
+                  // Use the choice_semester array which contains actual semester data with IDs
+                  const semesterList = Array.isArray(transportDetails?.choice_semester)
+                    ? transportDetails.choice_semester
+                    : [];
 
-                  let currentSemNum = 0;
-                  const semName = transportDetails?.semester_name || "";
-
-                  if (semName.toLowerCase().includes("default")) {
-                    const yearVal = getNumber(transportDetails?.academic_year);
-                    if (yearVal > 0) {
-                      currentSemNum = (yearVal - 1) * 2 + 1;
-                    } else {
-                      currentSemNum = 1;
-                    }
-                  } else {
-                    currentSemNum = getNumber(semName);
+                  if (semesterList.length === 0) {
+                    return <p className="text-muted">No semesters available</p>;
                   }
 
-                  return Array.from(
-                    { length: transportDetails?.total_semesters || 0 },
-                    (_, index) => {
-                      const sem = index + 1;
-                      const isLocked = paidSemesters.includes(sem);
-                      const isPastSemester = sem < currentSemNum;
-                      const isDisabled = !transportAvailed || isLocked || isPastSemester;
+                  // Helper function to extract semester number from semester name
+                  const extractSemesterNumber = (semesterName) => {
+                    if (!semesterName) return 999; // Unknown semesters go to end
 
-                      return (
-                        <div key={sem} className="col-6 col-md-3">
-                          <label
-                            className="form-check-label"
-                            style={{
-                              opacity: isDisabled ? 0.6 : 1,
-                              cursor: isDisabled ? "not-allowed" : "pointer",
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              className="form-check-input me-2"
-                              checked={selectedSemesters.includes(sem)}
-                              onChange={() => handleSemesterToggle(sem)}
-                              disabled={isDisabled}
-                            />
-                            Semester {sem}
-                          </label>
-                        </div>
-                      );
-                    }
+                    // Match patterns like "1st Semester", "2nd Semester", "Semester 3", etc.
+                    const match = semesterName.match(/(\d+)/);
+                    return match ? parseInt(match[1], 10) : 999;
+                  };
+
+                  // Get current semester number
+                  const currentSemesterData = semesterList.find(
+                    (s) => Number(s.semester_id) === Number(transportDetails?.current_semester_id)
                   );
+                  const currentSemesterNumber = currentSemesterData
+                    ? extractSemesterNumber(currentSemesterData.semester_name)
+                    : 1;
+
+                  console.log("🎯 Current Semester Number:", currentSemesterNumber);
+
+                  return semesterList.map((semesterData) => {
+                    const semesterId = Number(semesterData.semester_id);
+                    const semesterName = semesterData.semester_name || `Semester ${semesterData.semester_id}`;
+                    const semesterNumber = extractSemesterNumber(semesterName);
+
+                    const isPaid = String(semesterData.flag).toLowerCase() === "no"; // flag "no" means it's already paid
+                    const isPastSemester = semesterNumber < currentSemesterNumber; // Compare semester numbers, not IDs!
+
+                    console.log(`📊 ${semesterName}: ID=${semesterId}, Number=${semesterNumber}, isPast=${isPastSemester}`);
+
+                    // Disable if: transport not availed, already paid, or past semester
+                    const isDisabled = !transportAvailed || isPaid || isPastSemester;
+                    const isLocked = isPaid; // Only paid semesters are truly locked
+
+                    return (
+                      <div key={semesterId} className="col-6 col-md-3">
+                        <label
+                          className="form-check-label"
+                          style={{
+                            opacity: isDisabled ? 0.6 : 1,
+                            cursor: isDisabled ? "not-allowed" : "pointer",
+                          }}
+                          title={
+                            isPaid
+                              ? "This semester has been paid and cannot be modified"
+                              : isPastSemester
+                                ? "Past semester cannot be selected"
+                                : ""
+                          }
+                        >
+                          <input
+                            type="checkbox"
+                            className="form-check-input me-2"
+                            checked={selectedSemesters.includes(semesterId)}
+                            onChange={() => handleSemesterToggle(semesterId)}
+                            disabled={isDisabled}
+                          />
+                          {semesterName}
+                          {isPaid && " 🔒"}
+                        </label>
+                      </div>
+                    );
+                  });
                 })()}
               </div>
 

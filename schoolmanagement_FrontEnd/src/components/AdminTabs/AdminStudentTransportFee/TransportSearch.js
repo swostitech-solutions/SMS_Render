@@ -1223,6 +1223,8 @@ const AdmAttendanceEntry = () => {
             ? data.data.choice_semester.map((sem) => ({
               semester_id: Number(sem.semester_id),
               semester_name: sem.semester_name,
+              semester_code: sem.semester_code,  // ✅ Keep semester_code
+              selected: sem.selected,  // ✅ Keep selected flag
               flag: sem.flag,
             }))
             : [],
@@ -1233,6 +1235,9 @@ const AdmAttendanceEntry = () => {
               semester_id: Number(s.semester_id),
             }))
             : [],
+
+          // Current semester ID to disable past semesters
+          current_semester_id: data.data.current_semester_id,
 
           // 🔢 Total semesters
           total_semesters: data.data.total_semesters || 0,

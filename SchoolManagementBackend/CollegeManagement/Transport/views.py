@@ -1063,18 +1063,42 @@ class UpdateTransportDetailsUpdateAPIView(UpdateAPIView):
 
 
             if choice_semesters:
-
+                # Validate all semester IDs upfront
+                invalid_semester_ids = []
+                valid_semesters = []
+                
+                for semester_id in choice_semesters:
+                    try:
+                        semester = Semester.objects.get(id=semester_id)
+                        valid_semesters.append(semester)
+                    except Semester.DoesNotExist:
+                        invalid_semester_ids.append(semester_id)
+                
+                # If any semester IDs are invalid, return error with all invalid IDs
+                if invalid_semester_ids:
+                    self.log_exception(request, f'Invalid semester IDs: {invalid_semester_ids}, choice_semesters={choice_semesters}')
+                    return Response({
+                        'message': f'Invalid semester selection. Semester IDs {invalid_semester_ids} do not exist in the database. Please select valid semesters.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Get fee_applied_from (first valid semester)
                 if studentcourseInstance.choice_semester:
                     try:
-                        fee_applied_from = Semester.objects.get(id=ast.literal_eval(studentcourseInstance.choice_semester)[0])
-                    except Semester.DoesNotExist:
-                        fee_applied_from = []
+                        # Try to get the first semester from existing choice_semester
+                        existing_semesters = ast.literal_eval(studentcourseInstance.choice_semester)
+                        if isinstance(existing_semesters, list) and len(existing_semesters) > 0:
+                            fee_applied_from = Semester.objects.get(id=existing_semesters[0])
+                        else:
+                            fee_applied_from = valid_semesters[0]
+                    except (Semester.DoesNotExist, ValueError, SyntaxError, IndexError):
+                        # If parsing or lookup fails, use the first valid semester
+                        fee_applied_from = valid_semesters[0]
                 else:
-                    fee_applied_from = Semester.objects.get(id=choice_semesters[0])
+                    fee_applied_from = valid_semesters[0]
 
-                for item in choice_semesters:
-
-                    semesterInstance = Semester.objects.get(id=item)
+                # Create fee details for each valid semester
+                for semesterInstance in valid_semesters:
+                    
                     # Insert Record Into DB
                     try:
                         student_fee_details_Instance = StudentFeeDetail.objects.create(
@@ -1102,19 +1126,14 @@ class UpdateTransportDetailsUpdateAPIView(UpdateAPIView):
 
                         )
                     except Exception as e:
-                        return Response({'message':f'your transport not updated because{str(e)}'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                        return Response({'message':f'Transport not updated: {str(e)}'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             # update the student record
 
             studentcourseInstance.transport_availed=transport_avail
-            if studentcourseInstance.choice_semester:
-                choice_semester = ast.literal_eval(studentcourseInstance.choice_semester)
-            else:
-                choice_semester = choice_semesters
+            # Update choice_semester with the new selection (replace, not append)
             if choice_semesters:
-                for item in choice_semesters:
-                    choice_semester.append(item)
-            studentcourseInstance.choice_semester= choice_semester
+                studentcourseInstance.choice_semester = str(choice_semesters)
             studentcourseInstance.route_id= pickup_point_id # here we pass route details id
 
             studentcourseInstance.save()
@@ -1168,13 +1187,14 @@ class StudentTransportDetailsRetriveAPIView(RetrieveAPIView):
 
             # step -1 convert string to list
             # Convert choice_month from string to list safely
+            previously_selected_semester_ids = []
             if isinstance(studentCourseInstance.choice_semester, str) and studentCourseInstance.choice_semester:
                 try:
-                    choice_semester_list = json.loads(studentCourseInstance.choice_semester)
+                    previously_selected_semester_ids = json.loads(studentCourseInstance.choice_semester)
                 except json.JSONDecodeError:
-                    return Response({'message': 'Invalid choice_semester format'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                choice_semester_list = studentCourseInstance.choice_semester if studentCourseInstance.choice_semester else []
+                    previously_selected_semester_ids = []
+            elif studentCourseInstance.choice_semester:
+                previously_selected_semester_ids = studentCourseInstance.choice_semester
 
 
 
@@ -1189,25 +1209,25 @@ class StudentTransportDetailsRetriveAPIView(RetrieveAPIView):
                 is_active=True
             ).values_list('fee_applied_from', flat=True)  # Extracts only 'feeappfrom' values as a list
 
-
-
-            for item in choice_semester_list:
-                semesterInstance= Semester.objects.get(id=item)
-
+            # Always fetch ALL semesters for the student's course
+            all_semesters = Semester.objects.filter(
+                organization=studentCourseInstance.organization,
+                branch=studentCourseInstance.branch,
+                batch=studentCourseInstance.batch,
+                course=studentCourseInstance.course,
+                department=studentCourseInstance.department,
+                is_active=True
+            ).order_by('id')
+            
+            # Build response with selected and paid flags
+            for semesterInstance in all_semesters:
                 transport_choice_semester.append({
                     "semester_id": semesterInstance.id,
                     "semester_name": semesterInstance.semester_description,
-                    # "period_start_date": semesterInstance.period_start_date,
-                    # "period_end_date": semesterInstance.period_end_date,
-                    "flag": "No" if item in feeappfrom_ids else "Yes"
-
+                    "semester_code": semesterInstance.semester_code,
+                    "selected": semesterInstance.id in previously_selected_semester_ids,  # Previously selected by student
+                    "flag": "No" if semesterInstance.id in feeappfrom_ids else "Yes"  # "No" = paid, "Yes" = can select
                 })
-
-            if not transport_choice_semester:
-                semesterInstance = Semester.objects.all()
-                serializer = SemesterSerializer(semesterInstance, many=True)
-                for semester in serializer.data:
-                    transport_choice_semester.append(semester)
 
             # Get RouteDetails Data
             try:
@@ -1238,6 +1258,7 @@ class StudentTransportDetailsRetriveAPIView(RetrieveAPIView):
                 "college_admission_no": studentCourseInstance.student.college_admission_no,
                 "transport_avail": studentCourseInstance.transport_availed,
                 "choice_semester":transport_choice_semester,
+                "current_semester_id": studentCourseInstance.semester.id,  # Current semester of the student
                 "routeId": routedetailsInstance.route_master.id if routedetailsInstance else None,
                 "route_name": routedetailsInstance.route_master.transport_name if routedetailsInstance else None,
                 "pickup_point_id": routedetailsInstance.pickup_point.id if routedetailsInstance else None,
