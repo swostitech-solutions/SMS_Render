@@ -173,7 +173,16 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelatio
     pfShare: "",
   });
 
-  const [dataList, setDataList] = useState([]);
+  // Initialize dataList from parent if available (handles when user navigates back)
+  const [dataList, setDataList] = useState(() => {
+    if (relationDetails && relationDetails.length > 0) {
+      // Check if already in local format
+      if (relationDetails[0].name !== undefined) {
+        return relationDetails;
+      }
+    }
+    return [];
+  });
   const [genderList, setGenderList] = useState([]);
 
   useEffect(() => {
@@ -193,6 +202,14 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelatio
   }, []);
   useEffect(() => {
     if (relationDetails && relationDetails.length > 0) {
+      // Check if already in local format (has name property with first/last etc)
+      if (relationDetails[0].name !== undefined) {
+        console.log("FamilyDetails: Data already in local format, using directly");
+        setDataList(relationDetails);
+        return;
+      }
+
+      // Map from API format
       const formatted = relationDetails.map((item, index) => {
         const getGenderId = (val) => {
           if (!val) return "Select";
@@ -225,7 +242,6 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelatio
         }
       });
 
-      // Load first row into form
       // Load ALL rows into the table
       setDataList(formatted);
 
@@ -757,12 +773,6 @@ const App = ({ goToTab, relationDetails, setEducationDetailsInParent, setRelatio
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div className="d-flex justify-content-end mb-3">
-        <button className="btn btn-primary border" onClick={handleNext}>
-          Next
-        </button>
       </div>
     </div>
   );

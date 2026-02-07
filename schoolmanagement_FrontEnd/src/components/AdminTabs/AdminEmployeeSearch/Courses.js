@@ -12,7 +12,16 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent, setCourseDeta
     grade: "",
   });
 
-  const [tableData, setTableData] = useState([]);
+  // Initialize tableData from parent if available (handles when user navigates back)
+  const [tableData, setTableData] = useState(() => {
+    if (prefilledCourses && Array.isArray(prefilledCourses) && prefilledCourses.length > 0) {
+      // Check if already in local format (has courseName property)
+      if (prefilledCourses[0].courseName !== undefined) {
+        return prefilledCourses;
+      }
+    }
+    return [];
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,6 +84,14 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent, setCourseDeta
       Array.isArray(prefilledCourses) &&
       prefilledCourses.length > 0
     ) {
+      // Check if already in local format (has courseName property)
+      if (prefilledCourses[0].courseName !== undefined) {
+        console.log("Courses: Data already in local format, using directly");
+        setTableData(prefilledCourses);
+        return;
+      }
+
+      // Map from API format
       const formatted = prefilledCourses.map((item, index) => ({
         srNo: index + 1,
         courseName: item.course_name || "",
@@ -87,17 +104,6 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent, setCourseDeta
       }));
 
       setTableData(formatted); // Load ALL rows into the table
-
-      // Reset form data
-      setFormData({
-        srNo: "",
-        courseName: "",
-        coursePlace: "",
-        dateFrom: "",
-        dateTo: "",
-        validUpTo: "",
-        grade: "",
-      });
     }
   }, [prefilledCourses]);
 
@@ -152,73 +158,14 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent, setCourseDeta
   //   }
   // };
 
-  const handleNext = async () => {
-    if (tableData.length === 0) {
-      alert("Please add at least one course before proceeding.");
-      return;
+  // Navigate to next tab - NO API calls here
+  // Data is already synced to parent via handleAdd/handleRemove
+  const handleNext = () => {
+    // Sync current data to parent before navigating
+    if (setCourseDetails) {
+      setCourseDetails(tableData);
     }
-
-    const employeeId = localStorage.getItem("employeeId");
-    const createdBy = sessionStorage.getItem("userId");
-
-    if (!employeeId || !createdBy) {
-      alert("Employee ID or User ID is missing.");
-      return;
-    }
-
-    const payload = {
-      created_by: parseInt(createdBy),
-      course_details: tableData.map((row) => ({
-        course_id: row.employee_course_id || 0, // Use existing ID if available
-        course_name: row.courseName,
-        course_place: row.coursePlace,
-        date_from: row.dateFrom,
-        date_to: row.dateTo,
-        valid_upto: row.validUpTo,
-        course_results: row.grade,
-      })),
-    };
-
-    try {
-      const orgId = localStorage.getItem("orgId");
-      const branchId = localStorage.getItem("branchId");
-
-      const courseUrl = `${ApiUrl.apiurl}STAFF/RegistrationCourseCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
-      const courseResponse = await fetch(courseUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const courseText = await courseResponse.text();
-      let courseResult = {};
-
-      try {
-        courseResult = courseText ? JSON.parse(courseText) : {};
-      } catch (err) {
-        console.error("Failed to parse course response:", courseText);
-        alert("Invalid response from course API.");
-        return;
-      }
-
-      if (
-        !courseResponse.ok ||
-        courseResult.message?.toLowerCase() !== "success"
-      ) {
-        alert(courseResult.message || "Course submission failed.");
-        return;
-      }
-
-      console.log("Course Submission Success:", courseResult);
-
-      // Navigate directly to Languages tab
-      goToTab(6);
-    } catch (error) {
-      console.error("Error in handleNext:", error);
-      alert("An error occurred: " + error.message);
-    }
+    goToTab(6); // Navigate to Languages Known tab
   };
 
 
@@ -331,12 +278,6 @@ const App = ({ goToTab, prefilledCourses, setLanguageDataInParent, setCourseDeta
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div className="d-flex justify-content-end mb-3">
-        <button className="btn btn-primary border" onClick={handleNext}>
-          Next
-        </button>
       </div>
     </div>
   );

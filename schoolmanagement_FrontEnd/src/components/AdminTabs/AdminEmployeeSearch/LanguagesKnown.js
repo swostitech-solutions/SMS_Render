@@ -3,9 +3,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 
 const App = ({ goToTab, languageData, setExperienceDataInParent, setLanguageData }) => {
-  const [selectedLanguages, setSelectedLanguages] = useState([]);
-  const [languageId, setLanguageId] = useState(0);
-
   const languages = ["HINDI", "ENGLISH", "SANSKRIT", "URDU"];
 
   // Mapping language to code dynamically
@@ -15,6 +12,26 @@ const App = ({ goToTab, languageData, setExperienceDataInParent, setLanguageData
     SANSKRIT: "3",
     URDU: "4",
   };
+
+  // Initialize selectedLanguages from parent if available (handles when user navigates back)
+  const [selectedLanguages, setSelectedLanguages] = useState(() => {
+    if (languageData && languageData.language_code) {
+      const codes = (languageData.language_code || "").toString().split(",");
+      return languages.filter((lang) =>
+        codes.some((c) => {
+          const found = Object.entries(languageCodes).find(
+            ([_, code]) => (code || "").toString() === c.trim()
+          );
+          return found && found[0] === lang;
+        })
+      );
+    }
+    return [];
+  });
+
+  const [languageId, setLanguageId] = useState(() => {
+    return languageData?.employee_language_id || 0;
+  });
 
   const handleLanguageClick = (language) => {
     let newLanguages;
@@ -99,104 +116,14 @@ const App = ({ goToTab, languageData, setExperienceDataInParent, setLanguageData
   //   }
   // };
 
-  const handleNextClick = async () => {
+  // Navigate to next tab - NO API calls here
+  // Data is already synced to parent via handleLanguageClick
+  const handleNextClick = () => {
     if (selectedLanguages.length === 0) {
       alert("Please select at least one language before proceeding.");
       return;
     }
-
-    const employeeId = localStorage.getItem("employeeId");
-    const createdBy = sessionStorage.getItem("userId");
-
-    if (!employeeId || !createdBy) {
-      alert("Employee ID or User ID is missing.");
-      return;
-    }
-
-    // Convert selected languages to comma-separated codes
-    const languageCodesString = selectedLanguages
-      .map((lang) => languageCodes[lang])
-      .join(",");
-
-    const payload = {
-      employee_language_id: languageId || 0,
-      language_code: languageCodesString,
-      created_by: parseInt(createdBy),
-    };
-
-    try {
-      // Step 1: Save selected language
-      const orgId = localStorage.getItem("orgId");
-      const branchId = localStorage.getItem("branchId");
-
-      const langSaveUrl = `${ApiUrl.apiurl}STAFF/RegistrationLANGUAGECreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
-      const langSaveResponse = await fetch(langSaveUrl, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const langSaveText = await langSaveResponse.text();
-      let langSaveResult = {};
-
-      try {
-        langSaveResult = langSaveText ? JSON.parse(langSaveText) : {};
-      } catch (err) {
-        console.error("Failed to parse language save response:", langSaveText);
-        alert("Invalid response from language save API.");
-        return;
-      }
-
-      if (
-        !langSaveResponse.ok ||
-        langSaveResult.message?.toLowerCase() !== "success"
-      ) {
-        alert(langSaveResult.message || "Language submission failed.");
-        return;
-      }
-
-      console.log("Language Save Success:", langSaveResult);
-
-      // Step 2: Fetch experience data
-      const experienceUrl = `${ApiUrl.apiurl}STAFF/RegistrationExperienceDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
-      const experienceResponse = await fetch(experienceUrl);
-
-      if (experienceResponse.status === 204) {
-        console.warn("Experience API returned 204 No Content");
-        goToTab(7); // Proceed anyway
-        return;
-      }
-
-      const experienceText = await experienceResponse.text();
-      let experienceResult = {};
-
-      try {
-        experienceResult = experienceText ? JSON.parse(experienceText) : {};
-      } catch (err) {
-        console.error("Failed to parse experience response:", experienceText);
-        alert("Invalid response from experience API.");
-        return;
-      }
-
-      console.log("Experience API Success:", experienceResult);
-
-      if (
-        experienceResponse.ok &&
-        experienceResult.message?.toLowerCase() === "success"
-      ) {
-        // Optional: Pass experience data to parent if needed
-        setExperienceDataInParent(experienceResult.data);
-
-        goToTab(7); // Proceed to next tab
-      } else {
-        alert(
-          experienceResult.message || "Failed to retrieve experience data."
-        );
-      }
-    } catch (error) {
-      console.error("Error in handleNextClick:", error);
-      alert("An error occurred: " + error.message);
-    }
+    goToTab(7); // Navigate to next tab
   };
 
   return (
@@ -222,15 +149,6 @@ const App = ({ goToTab, languageData, setExperienceDataInParent, setLanguageData
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="d-flex justify-content-end mb-3 mt-3">
-        <button
-          className="btn btn-primary border"
-          onClick={handleNextClick} // API call on Next
-        >
-          Next
-        </button>
       </div>
 
       {selectedLanguages.length > 0 && (

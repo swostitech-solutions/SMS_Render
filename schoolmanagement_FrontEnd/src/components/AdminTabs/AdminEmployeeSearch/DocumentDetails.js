@@ -407,7 +407,27 @@ import { ApiUrl } from "../../../ApiUrl";
 
 const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocumentDetails }) => {
   const [documentTypes, setDocumentTypes] = useState([]);
-  const [tableData, setTableData] = useState([]);
+
+  // Initialize tableData from parent if available (for when user navigates back)
+  const [tableData, setTableData] = useState(() => {
+    if (documentDetails && documentDetails.length > 0) {
+      // Check if data is already in local format (has documentType property)
+      if (documentDetails[0].documentType !== undefined) {
+        return documentDetails;
+      }
+      // Otherwise map from API format
+      return documentDetails.map((doc, index) => ({
+        srNo: index + 1,
+        documentType: doc.document_type_id,
+        documentNumber: doc.document_number,
+        documentFile: doc.document_path,
+        validFrom: doc.valid_from,
+        validTo: doc.valid_to,
+        enabled: doc.is_active,
+      }));
+    }
+    return [];
+  });
 
   // Input field states
   const [formData, setFormData] = useState({
@@ -419,40 +439,29 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
     validTo: "",
     enabled: false,
   });
-  // const [relationDetails, setRelationDetails] = useState([]);
 
+  // Update tableData when documentDetails changes from parent (for edit mode)
   useEffect(() => {
     console.log("DocumentDetails received from parent:", documentDetails);
-    if (documentDetails?.length > 0) {
-      const mappedData = documentDetails.map((doc, index) => ({
-        srNo: index + 1,
-        documentType: doc.document_type_id,
-        documentNumber: doc.document_number,
-        documentFile: doc.document_path,
-        validFrom: doc.valid_from,
-        validTo: doc.valid_to, // Fixed: backend returns valid_to not to_from
-        enabled: doc.is_active,
-      }));
-
-      console.log("Mapped document data:", mappedData);
-
-      // Load ALL rows into the table
-      setTableData(mappedData);
-
-      // Reset form data to empty state
-      setFormData({
-        srNo: "",
-        documentType: "",
-        documentNumber: "",
-        documentFile: "",
-        validFrom: "",
-        validTo: "",
-        enabled: false,
-      });
-
-      console.log("Document table data set to:", mappedData);
-    } else {
-      console.log("No document details received or empty array");
+    if (documentDetails && documentDetails.length > 0) {
+      // Check if data is already in local format
+      if (documentDetails[0].documentType !== undefined) {
+        console.log("Data already in local format, using directly");
+        setTableData(documentDetails);
+      } else {
+        // Map from API format
+        const mappedData = documentDetails.map((doc, index) => ({
+          srNo: index + 1,
+          documentType: doc.document_type_id,
+          documentNumber: doc.document_number,
+          documentFile: doc.document_path,
+          validFrom: doc.valid_from,
+          validTo: doc.valid_to,
+          enabled: doc.is_active,
+        }));
+        console.log("Mapped document data:", mappedData);
+        setTableData(mappedData);
+      }
     }
   }, [documentDetails]);
 
@@ -479,117 +488,14 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
       });
   }, []);
 
-  const handleNextClick = async () => {
-    try {
-      const employeeId = localStorage.getItem("employeeId");
-      const userId = sessionStorage.getItem("userId");
-
-      if (!employeeId || !userId) {
-        alert("Employee ID or User ID not found.");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("created_by", userId);
-
-      // Prepare metadata array
-      const docDetailsMetadata = tableData.map(doc => ({
-        document_type_id: doc.documentType,
-        document_number: doc.documentNumber,
-        valid_from: doc.validFrom,
-        valid_to: doc.validTo,
-        enabled: doc.enabled
-      }));
-
-      formData.append("document_details", JSON.stringify(docDetailsMetadata));
-
-      // Append files
-      tableData.forEach((doc, index) => {
-        if (doc.documentFile) {
-          formData.append(`document_file_${index}`, doc.documentFile);
-        }
-      });
-
-      // Step 1: Upload documents
-      const orgId = localStorage.getItem("orgId");
-      const branchId = localStorage.getItem("branchId");
-
-      const uploadUrl = `${ApiUrl.apiurl}STAFF/RegistrationDocumentUploadCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        // headers: { "Content-Type": "application/json" }, // DO NOT SET CONTENT-TYPE for FormData
-        body: formData,
-      });
-
-      const uploadText = await uploadResponse.text();
-      let uploadResult = {};
-
-      try {
-        uploadResult = uploadText ? JSON.parse(uploadText) : {};
-      } catch (err) {
-        console.error("Failed to parse document upload response:", uploadText);
-        alert("Invalid response from document upload API.");
-        return;
-      }
-
-      if (
-        !uploadResponse.ok ||
-        uploadResult.message?.toLowerCase() !== "success"
-      ) {
-        console.warn("Document Upload Failed:", uploadResult);
-        alert(uploadResult.message || "Document upload failed.");
-        return;
-      }
-
-      console.log("Document Upload Response:", uploadResult);
-      localStorage.setItem(
-        "documentUploadResponse",
-        JSON.stringify(uploadResult)
-      );
-
-      // Step 2: Fetch relation details
-      const empId = uploadResult.employee_id || employeeId;
-      const relationUrl = `${ApiUrl.apiurl}STAFF/RegistrationRelationDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${empId}`;
-      const relationResponse = await fetch(relationUrl);
-
-      //  Handle 204 No Content
-      if (relationResponse.status === 204) {
-        console.warn("Relation API returned 204 No Content");
-        goToTab(3);
-        return;
-      }
-
-      const relationText = await relationResponse.text();
-      let relationResult = {};
-
-      try {
-        relationResult = relationText ? JSON.parse(relationText) : {};
-      } catch (err) {
-        console.error(
-          "Failed to parse relation details response:",
-          relationText
-        );
-        alert("Invalid response from relation details API.");
-        return;
-      }
-
-      console.log("Relation Details Response:", relationResult);
-      if (
-        relationResponse.ok &&
-        relationResult.message?.toLowerCase() === "success"
-      ) {
-        if (setRelationDetailsInParent) {
-          setRelationDetailsInParent(relationResult.data);
-        }
-
-        goToTab(3);
-      } else {
-        alert(relationResult.message || "Failed to retrieve relation details.");
-      }
-    } catch (error) {
-      console.error("Error in handleNextClick:", error);
-      alert("An error occurred: " + error.message);
+  // Navigate to next tab - NO API calls here
+  // Data is already synced to parent via handleAddRow/handleRemoveRow
+  const handleNextClick = () => {
+    // Sync current data to parent before navigating
+    if (setDocumentDetails) {
+      setDocumentDetails(tableData);
     }
+    goToTab(3); // Navigate to Family Details tab
   };
 
   const handleInputChange = (e) => {
@@ -776,11 +682,6 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
             </tbody>
           </table>
         </div>
-      </div>
-      <div className="d-flex justify-content-end mb-3">
-        <button className="btn btn-primary border" onClick={handleNextClick}>
-          Next
-        </button>
       </div>
     </div>
   );

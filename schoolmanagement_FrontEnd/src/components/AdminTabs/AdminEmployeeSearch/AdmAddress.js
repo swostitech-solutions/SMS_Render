@@ -9,41 +9,59 @@ const ParentDetailsForm = ({
   goToTab,
   addressDetails,
   setDocumentDetailsInParent,
+  setAddressFormDataInParent,
+  addressFormData, // Data from parent to restore on tab return
 }) => {
-  // State to store form values
-  const [formValues, setFormValues] = useState({
-    residenceAddress: "",
-    residenceCity: "",
-    residenceState: "",
-    residenceCountry: "Select",
-    residencePincode: "",
-    residencePhone: "",
-    permanentAddress: "",
-    permanentCity: "",
-    permanentState: "",
-    permanentCountry: "",
-    permanentPincode: "",
-    permanentPhone: "",
-    sameAsResidence: false,
+  // State to store form values - initialize from parent data if available
+  const [formValues, setFormValues] = useState(() => {
+    if (addressFormData && addressFormData.formValues) {
+      return addressFormData.formValues;
+    }
+    return {
+      residenceAddress: "",
+      residenceCity: "",
+      residenceState: "",
+      residenceCountry: "Select",
+      residencePincode: "",
+      residencePhone: "",
+      permanentAddress: "",
+      permanentCity: "",
+      permanentState: "",
+      permanentCountry: "",
+      permanentPincode: "",
+      permanentPhone: "",
+      sameAsResidence: false,
+    };
   });
 
   const { countries } = useFetchCountries();
-  const [selectedCountry, setSelectedCountry] = useState(null); // Selected country state
+
+  // Initialize dropdown selections from parent data if available
+  const [selectedCountry, setSelectedCountry] = useState(() =>
+    addressFormData?.selectedCountry || null
+  );
   const [states, setStates] = useState([]);
-  const [selectedState, setSelectedState] = useState(null); // Selected state
+  const [selectedState, setSelectedState] = useState(() =>
+    addressFormData?.selectedState || null
+  );
   const [cities, setCities] = useState([]);
 
   // Separate state arrays for permanent address
   const [permanentStates, setPermanentStates] = useState([]);
   const [permanentCities, setPermanentCities] = useState([]);
 
-  const [selectedResidenceDistrict, setSelectedResidenceDistrict] =
-    useState(null);
-  const [selectedPermanentState, setSelectedPermanentState] = useState(null);
-  const [selectedPermanentDistrict, setSelectedPermanentDistrict] =
-    useState(null);
-  const [selectedPermanentCountry, setSelectedPermanentCountry] =
-    useState(null);
+  const [selectedResidenceDistrict, setSelectedResidenceDistrict] = useState(() =>
+    addressFormData?.selectedResidenceDistrict || null
+  );
+  const [selectedPermanentState, setSelectedPermanentState] = useState(() =>
+    addressFormData?.selectedPermanentState || null
+  );
+  const [selectedPermanentDistrict, setSelectedPermanentDistrict] = useState(() =>
+    addressFormData?.selectedPermanentDistrict || null
+  );
+  const [selectedPermanentCountry, setSelectedPermanentCountry] = useState(() =>
+    addressFormData?.selectedPermanentCountry || null
+  );
 
   const [fetchedAddressDetails, setFetchedAddressDetails] = useState(null);
 
@@ -411,6 +429,22 @@ const ParentDetailsForm = ({
     }
   }, [selectedPermanentState]);
 
+  // Sync address form data to parent on every change
+  useEffect(() => {
+    if (setAddressFormDataInParent) {
+      setAddressFormDataInParent({
+        formValues,
+        selectedCountry,
+        selectedState,
+        selectedResidenceDistrict,
+        selectedPermanentCountry,
+        selectedPermanentState,
+        selectedPermanentDistrict,
+      });
+    }
+  }, [formValues, selectedCountry, selectedState, selectedResidenceDistrict,
+    selectedPermanentCountry, selectedPermanentState, selectedPermanentDistrict,
+    setAddressFormDataInParent]);
 
 
   const handleInputChange = (e) => {
@@ -978,14 +1012,6 @@ const ParentDetailsForm = ({
                     onChange={handleInputChange}
                     disabled={formValues.sameAsResidence}
                   />
-                </div>
-                <div className="d-flex justify-content-end mb-3">
-                  <button
-                    className="btn btn-primary border"
-                    onClick={handleAddressSubmit}
-                  >
-                    Next
-                  </button>
                 </div>
               </div>
             </div>

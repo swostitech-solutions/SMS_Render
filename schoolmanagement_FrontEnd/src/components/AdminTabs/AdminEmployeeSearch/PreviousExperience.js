@@ -199,7 +199,16 @@ const PreviousExperience = ({ goToTab, setExperienceData, experienceData }) => {
     experienceLetterProvided: false,
   });
 
-  const [dataList, setDataList] = useState([]);
+  // Initialize dataList from parent if available (handles when user navigates back)
+  const [dataList, setDataList] = useState(() => {
+    if (experienceData && Array.isArray(experienceData) && experienceData.length > 0) {
+      // Check if already in local format (has organization property)
+      if (experienceData[0].organization !== undefined) {
+        return experienceData;
+      }
+    }
+    return [];
+  });
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -210,6 +219,15 @@ const PreviousExperience = ({ goToTab, setExperienceData, experienceData }) => {
       Array.isArray(experienceData) &&
       experienceData.length > 0
     ) {
+      // Check if already in local format (has organization property)
+      if (experienceData[0].organization !== undefined) {
+        console.log("PreviousExperience: Data already in local format, using directly");
+        setDataList(experienceData);
+        setIsInitialized(true);
+        return;
+      }
+
+      // Map from API format
       const formatted = experienceData.map((exp, index) => ({
         srNo: index + 1,
         organization: exp.previous_company_worked || "",

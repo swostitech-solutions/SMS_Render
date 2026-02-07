@@ -9,7 +9,7 @@ import useFetchLanguages from "../../hooks/useFetchLanguages";
 import { ApiUrl } from "../../../ApiUrl";
 import { useLocation } from "react-router-dom";
 
-const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent }) => {
+const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basicInfoData }) => {
   // const [frontCover, setFrontCover] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,41 +23,81 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent }) => 
   const [employeeTypeOptions, setEmployeeTypeOptions] = useState([]);
   const [genders, setGenders] = useState([]);
 
-  const [formData, setFormData] = useState({
-    employeeId: "",
-    orgId: "",
-    branchId: "",
-    location: "JAYDEV VIHAR",
-    employeeCode: "",
-    title: "",
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    dob: "",
-    placeOfBirth: "",
-    maritalStatus: "", // dropdown value (ID)
-    bloodGroup: "", // dropdown value (ID)
-    nationality: "", // dropdown value (ID)
-    religion: "", // dropdown value (ID)
-    gender: "", // dropdown value (ID)
-    motherTongue: "", // dropdown value (ID)
-    employeeType: "", // dropdown value (ID)
-    email: "",
-    officeEmail: "",
-    phoneNumber: "",
-    emergencyContactNumber: "",
-    createdBy: "",
-    profilePicture: null,
+  const [formData, setFormData] = useState(() => {
+    // Initialize from basicInfoData if available (for when user returns to tab)
+    if (basicInfoData && Object.keys(basicInfoData).length > 0 && basicInfoData.firstName) {
+      return basicInfoData;
+    }
+    // Otherwise use default empty state
+    return {
+      employeeId: "",
+      orgId: "",
+      branchId: "",
+      location: "JAYDEV VIHAR",
+      employeeCode: "",
+      title: "",
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      dob: "",
+      placeOfBirth: "",
+      maritalStatus: "",
+      bloodGroup: "",
+      nationality: "",
+      religion: "",
+      gender: "",
+      motherTongue: "",
+      employeeType: "",
+      email: "",
+      officeEmail: "",
+      phoneNumber: "",
+      emergencyContactNumber: "",
+      createdBy: "",
+      profilePicture: null,
+    };
   });
 
-  // Sync data to parent whenever formData changes
+  // Initialize frontCover from basicInfoData if available (must be a valid image URL)
+  const [frontCover, setFrontCover] = useState(() => {
+    if (
+      basicInfoData &&
+      basicInfoData.profilePicture &&
+      typeof basicInfoData.profilePicture === 'string' &&
+      (basicInfoData.profilePicture.startsWith('data:') || basicInfoData.profilePicture.startsWith('http'))
+    ) {
+      return basicInfoData.profilePicture;
+    }
+    return null;
+  });
+
+  // Use ref to track if we've initialized from basicInfoData to prevent infinite loop
+  const hasInitialized = React.useRef(false);
+
+  // Update formData and frontCover when basicInfoData changes (only once in edit mode)
+  useEffect(() => {
+    if (basicInfoData && Object.keys(basicInfoData).length > 0 && basicInfoData.firstName && !hasInitialized.current) {
+      console.log("📝 Initializing StaffBasicInfo with basicInfoData (one-time):", basicInfoData);
+      hasInitialized.current = true;  // Mark as initialized
+      setFormData(basicInfoData);
+
+      // Update profile picture preview if available
+      if (basicInfoData.profile_photo_path || basicInfoData.profilePicture) {
+        const picUrl = basicInfoData.profile_photo_path || basicInfoData.profilePicture;
+        if (typeof picUrl === 'string' && (picUrl.startsWith('data:') || picUrl.startsWith('http'))) {
+          setFrontCover(picUrl);
+        }
+      }
+    }
+  }, [basicInfoData]);
+
+  // Sync data to parent whenever formData or frontCover changes
   useEffect(() => {
     if (setBasicInfoDataInParent) {
+      // Send the File object (formData.profilePicture) not the base64 preview (frontCover)
+      // frontCover is only for preview display, formData.profilePicture is the actual File for upload
       setBasicInfoDataInParent(formData);
     }
   }, [formData, setBasicInfoDataInParent]);
-
-  const [frontCover, setFrontCover] = useState(null); // for the profile picture
 
 
   useEffect(() => {
@@ -228,11 +268,8 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent }) => 
     }
 
     try {
-      // Save form data and image
-      sessionStorage.setItem("tempFormData", JSON.stringify(formData));
-      if (frontCover) {
-        sessionStorage.setItem("tempFrontCover", frontCover);
-      }
+      // Data is already synced to parent via useEffect - no need for sessionStorage
+      // (sessionStorage has size limits and fails with large base64 images)
 
       const employeeId = formData.employeeId;
       const employeeTypeId = formData.employeeType; // This already contains employee_type_id
@@ -708,7 +745,7 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent }) => 
                         className="form-control detail"
                       />
 
-                      {frontCover && (
+                      {frontCover && (typeof frontCover === 'string') && (frontCover.startsWith('data:') || frontCover.startsWith('http')) && (
                         <Image
                           src={frontCover}
                           alt="Front Cover Preview"
@@ -721,17 +758,6 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent }) => 
                           }}
                         />
                       )}
-                    </div>
-                    <div className="d-flex justify-content-end mb-3">
-                      <button
-                        className="btn btn-primary border"
-                        onClick={() => {
-                          handleNext(); // Call your existing async logic
-                          // goToTab(1); // Also navigate to next tab immediately (optional)
-                        }}
-                      >
-                        Next
-                      </button>
                     </div>
                   </div>
                 </div>

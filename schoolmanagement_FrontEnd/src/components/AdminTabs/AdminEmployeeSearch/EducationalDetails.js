@@ -14,24 +14,35 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
     highestQualification: "",
   });
 
-  const [dataList, setDataList] = useState([]);
+  // Initialize dataList from parent if available (handles when user navigates back)
+  const [dataList, setDataList] = useState(() => {
+    if (educationData && educationData.length > 0) {
+      // Check if already in local format (has yearFrom property)
+      if (educationData[0].yearFrom !== undefined) {
+        return educationData;
+      }
+    }
+    return [];
+  });
 
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Simple handleChange - just update local form state, NO parent sync
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const newForm = { ...formData, [name]: value };
-    setFormData(newForm);
-
-    if (setEducationData) {
-      // Sync combined data (Form + List)
-      const combined = [newForm, ...dataList].filter(i => i.qualification);
-      setEducationData(combined);
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
 
-
+  // Only load from API format once on mount
   useEffect(() => {
-    if (educationData && educationData.length > 0) {
+    if (
+      !isInitialized &&
+      educationData &&
+      educationData.length > 0 &&
+      educationData[0].yearFrom === undefined // Only API format
+    ) {
+      // Map from API format
       const formatted = educationData.map((item, index) => ({
         qualification: item.qualification || "",
         yearFrom: item.date_from ? item.date_from.split("-")[0] : "",
@@ -43,39 +54,41 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
         employee_qualification_id: item.employee_qualification_id, // Store ID
       }));
 
-      // Set the first item into input fields
-      setFormData({
-        qualification: "",
-        yearFrom: "",
-        yearTo: "",
-        university: "",
-        institution: "",
-        div: "",
-        highestQualification: "",
-      });
       // Load ALL rows into the table
       setDataList(formatted);
-    } else {
-      // Reset form data to empty state if educationData is empty or null
-      setFormData({
-        qualification: "",
-        yearFrom: "",
-        yearTo: "",
-        university: "",
-        institution: "",
-        div: "",
-        highestQualification: "",
-      });
-      setDataList([]);
+      setIsInitialized(true);
     }
-  }, [educationData]);
+  }, [educationData, isInitialized]);
 
-  // Sync with Parent
   // Sync with Parent removed (handled in handlers)
 
 
 
   const handleAdd = () => {
+    // Validation: Year From and Year To must be exactly 4 digits
+    const yearRegex = /^\d{4}$/;
+
+    if (!formData.qualification) {
+      alert("Please select a Qualification.");
+      return;
+    }
+
+    if (!formData.yearFrom || !yearRegex.test(formData.yearFrom)) {
+      alert("Year From must be exactly 4 digits (e.g., 2020).");
+      return;
+    }
+
+    if (!formData.yearTo || !yearRegex.test(formData.yearTo)) {
+      alert("Year To must be exactly 4 digits (e.g., 2024).");
+      return;
+    }
+
+    // Optional: Check that yearTo >= yearFrom
+    if (parseInt(formData.yearTo) < parseInt(formData.yearFrom)) {
+      alert("Year To cannot be earlier than Year From.");
+      return;
+    }
+
     // Add the form data to the end of the list
     const updatedList = [...dataList, formData];
     setDataList(updatedList);
@@ -103,9 +116,8 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
     setDataList(updatedData);
 
     if (setEducationData) {
-      // Sync combined data
-      const combined = [formData, ...updatedData].filter(i => i.qualification);
-      setEducationData(combined);
+      // Sync only the actual rows, NOT the in-progress form
+      setEducationData(updatedData);
     }
   };
 
@@ -169,139 +181,14 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
   //   }
   // };
 
-  const handleNext = async () => {
-    const employeeId = localStorage.getItem("employeeId");
-
-    if (!employeeId) {
-      alert("Employee ID not found in local storage.");
-      return;
+  // Navigate to next tab - NO API calls here
+  // Data is already synced to parent via handleAdd/handleRemove/handleChange
+  const handleNext = () => {
+    // Sync only the actual rows to parent before navigating
+    if (setEducationData) {
+      setEducationData(dataList);
     }
-
-    // Validate that we have at least one qualification to submit
-    if (dataList.length === 0) {
-      alert("Please add at least one qualification before proceeding.");
-      return;
-    }
-
-    // Validate all entries have required fields
-    for (let i = 0; i < dataList.length; i++) {
-      const entry = dataList[i];
-      if (!entry.qualification || entry.qualification === "") {
-        alert(`Qualification ${i + 1}: Please select Qualification`);
-        return;
-      }
-      if (!entry.yearFrom || entry.yearFrom.length !== 4) {
-        alert(`Qualification ${i + 1}: Please enter valid Year From (4 digits)`);
-        return;
-      }
-      if (!entry.yearTo || entry.yearTo.length !== 4) {
-        alert(`Qualification ${i + 1}: Please enter valid Year To (4 digits)`);
-        return;
-      }
-      if (!entry.highestQualification || entry.highestQualification === "") {
-        alert(`Qualification ${i + 1}: Please select Highest Qualification`);
-        return;
-      }
-    }
-
-    const formatYearToDate = (year) => {
-      if (!year || year.length !== 4) return null;
-      return `${year}-01-01`;
-    };
-
-    const payload = {
-      created_by: sessionStorage.getItem("userId") || "1",
-      qualifications_details: dataList.map((item) => ({
-        employee_qualification_id: item.employee_qualification_id || 0, // Use existing ID if available
-        qualification: item.qualification, // Changed from qualification_type
-        highest_qualification: item.highestQualification, // Added this required field
-        date_from: formatYearToDate(item.yearFrom), // Changed from year_from
-        date_to: formatYearToDate(item.yearTo), // Changed from year_to
-        university: item.university,
-        institution: item.institution,
-        marks: item.div,
-      })),
-    };
-
-    try {
-      // Step 1: Submit qualification details
-      const orgId = localStorage.getItem("orgId");
-      const branchId = localStorage.getItem("branchId");
-
-      const qualificationUrl = `${ApiUrl.apiurl}STAFF/RegistrationQualificationCreateUpdate/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
-      const qualificationResponse = await fetch(qualificationUrl, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const qualificationText = await qualificationResponse.text();
-      let qualificationResult = {};
-
-      try {
-        qualificationResult = qualificationText
-          ? JSON.parse(qualificationText)
-          : {};
-      } catch (err) {
-        console.error(
-          "Failed to parse qualification response:",
-          qualificationText
-        );
-        alert("Invalid response from qualification API.");
-        return;
-      }
-
-      if (
-        !qualificationResponse.ok ||
-        qualificationResult.message?.toLowerCase() !== "success"
-      ) {
-        console.warn("Qualification API failed:", qualificationResult);
-        alert(
-          qualificationResult.message || "Qualification submission failed."
-        );
-        return;
-      }
-
-      console.log("Qualification API Success:", qualificationResult);
-
-      // Step 2: Fetch Course Details
-      const courseUrl = `${ApiUrl.apiurl}STAFF/RegistrationCourseDetailsRetrieve/?organization_id=${orgId}&branch_id=${branchId}&employee_id=${employeeId}`;
-      const courseResponse = await fetch(courseUrl);
-
-      if (courseResponse.status === 204) {
-        console.warn("Course API returned 204 No Content");
-        goToTab(5); // Proceed anyway
-        return;
-      }
-
-      const courseText = await courseResponse.text();
-      let courseResult = {};
-
-      try {
-        courseResult = courseText ? JSON.parse(courseText) : {};
-      } catch (err) {
-        console.error("Failed to parse course details response:", courseText);
-        alert("Invalid response from course API.");
-        return;
-      }
-
-      console.log("Course API Success:", courseResult);
-
-      if (
-        courseResponse.ok &&
-        courseResult.message?.toLowerCase() === "success"
-      ) {
-        // Optionally pass course data to parent here if needed
-        setCourseDetailsInParent(courseResult.data);
-
-        goToTab(5); // Move to Courses tab
-      } else {
-        alert(courseResult.message || "Failed to retrieve course details.");
-      }
-    } catch (error) {
-      console.error("Error in handleNext:", error);
-      alert("An error occurred: " + error.message);
-    }
+    goToTab(5); // Navigate to Courses tab
   };
 
   return (
@@ -437,11 +324,6 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
             </tr>
           </tbody>
         </table>
-      </div>
-      <div className="d-flex justify-content-end mb-3">
-        <button className="btn btn-primary border" onClick={handleNext}>
-          Next
-        </button>
       </div>
     </div>
   );
