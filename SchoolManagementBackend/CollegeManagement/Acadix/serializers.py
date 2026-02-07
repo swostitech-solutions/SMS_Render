@@ -205,6 +205,33 @@ class ChangePasswordSerializer(serializers.Serializer):
         return data
 
 
+class CreateAdminUserSerializer(serializers.Serializer):
+    user_name = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, min_length=6)
+    organization_id = serializers.IntegerField(required=True)
+    branch_id = serializers.IntegerField(required=True)
+    accessible_modules = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        allow_empty=True
+    )
+
+    def validate_user_name(self, value):
+        if UserLogin.objects.filter(user_name=value).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+
+    def validate_organization_id(self, value):
+        if not Organization.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Organization does not exist.")
+        return value
+
+    def validate_branch_id(self, value):
+        if not Branch.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Branch does not exist.")
+        return value
+
+
 class EmployeeDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeDetail

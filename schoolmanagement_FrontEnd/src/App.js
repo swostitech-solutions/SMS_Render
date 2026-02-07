@@ -160,6 +160,7 @@ import StdTrainingPlacement from "./components/StudentTabs/StudentTrainingPlacem
 import Inventory from "./pages/AdminPanel/Inventory";
 import InventorySearch from "./pages/AdminPanel/InventorySearch";
 import NewInventory from "./components/AdminTabs/AdminInventoryMgmt/AdmNewInventory";
+import CreateAdminUserPage from "./pages/AdminPanel/CreateAdminUserPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -601,6 +602,7 @@ function App() {
                 element={<InventorySearch />}
               />
               <Route path="/admin/inventory-new" element={<NewInventory />} />
+              <Route path="/admin/create-admin-user" element={<CreateAdminUserPage />} />
             </>
           )}
         </Routes>

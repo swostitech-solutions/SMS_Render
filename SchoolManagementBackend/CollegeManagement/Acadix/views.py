@@ -873,7 +873,9 @@ class RegisterUserLoginAPIView(CreateAPIView):
                             'userId': user.reference_id,
                             'username': user.user_name,
                             'userRole': AdminInstance.user_type,
-                            'userTypeId': AdminInstance.id
+                            'userTypeId': AdminInstance.id,
+                            'user_login_id': user.id,
+                            'accessible_modules': user.accessible_modules if user.accessible_modules else []
                         }
                         return Response({'message': 'Logged in  Successfully', 'data': data}, status=status.HTTP_200_OK)
                     elif user_type == 'STAFF':
@@ -1008,6 +1010,97 @@ class RegisterUserChangePasswordAPIView(CreateAPIView):
 
             message=error_message,
 
+        )
+
+
+class CreateAdminUserAPIView(CreateAPIView):
+    """
+    API endpoint to create a new admin user with accessible modules selection
+    """
+    serializer_class = CreateAdminUserSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user_name = serializer.validated_data['user_name']
+            password = serializer.validated_data['password']
+            organization_id = serializer.validated_data['organization_id']
+            branch_id = serializer.validated_data['branch_id']
+            accessible_modules = serializer.validated_data.get('accessible_modules', [])
+
+            # Get UserType for admin
+            try:
+                admin_user_type = UserType.objects.get(user_type__iexact='admin')
+            except UserType.DoesNotExist:
+                return Response(
+                    {'message': 'Admin user type not found. Please create it first.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get Organization and Branch instances
+            organization = Organization.objects.get(id=organization_id)
+            branch = Branch.objects.get(id=branch_id)
+
+            # Create new admin user
+            new_user = UserLogin(
+                user_name=user_name,
+                plain_password=password,
+                user_type=admin_user_type,
+                organization=organization,
+                branch=branch,
+                reference_id=0,  # Not linked to any employee
+                accessible_modules=accessible_modules,
+                is_active=True,
+                is_staff=False
+            )
+            
+            # Set encrypted password
+            new_user.set_password(password)
+            new_user.save()
+
+            data = {
+                "id": new_user.id,
+                "user_name": new_user.user_name,
+                "user_type": admin_user_type.user_type,
+                "organization": organization.organization_code,
+                "branch": branch.branch_name,
+                "accessible_modules": accessible_modules,
+                "is_active": new_user.is_active,
+                "created_at": new_user.date_joined
+            }
+
+            return Response(
+                {'message': 'Admin user created successfully', 'data': data},
+                status=status.HTTP_201_CREATED
+            )
+
+        except Organization.DoesNotExist:
+            return Response(
+                {'message': 'Organization not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Branch.DoesNotExist:
+            return Response(
+                {'message': 'Branch not found'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ValidationError as e:
+            return Response({'message': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            error_message = str(e)
+            self.log_exception(request, error_message)
+            return Response(
+                {'error': error_message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def log_exception(self, request, error_message):
+        ExceptionTrack.objects.create(
+            request=str(request),
+            process_name='CreateAdminUser',
+            message=error_message,
         )
 
 

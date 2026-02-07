@@ -316,6 +316,7 @@ useEffect(() => {
         branch_id,
         branch_name,
         user_login_id,
+        accessible_modules,
       } = loginData.data;
 
 
@@ -330,6 +331,11 @@ useEffect(() => {
       sessionStorage.setItem("branch_id", branch_id);
       sessionStorage.setItem("branch_name", branch_name);
       localStorage.setItem("user_login_id", user_login_id);
+
+      // Store accessible modules if user is admin
+      if (accessible_modules && Array.isArray(accessible_modules)) {
+        sessionStorage.setItem("accessible_modules", JSON.stringify(accessible_modules));
+      }
 
       // --- Also store in localStorage for components that use localStorage ---
       localStorage.setItem("orgId", organization_id);

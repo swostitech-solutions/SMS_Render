@@ -36,6 +36,7 @@ function Sidebar({ state, setState }) {
   const [expandedSection, setExpandedSection] = useState(null);
 
   const [userRole, setUserRole] = useState("guest");
+  const [accessibleModules, setAccessibleModules] = useState([]);
 
   useEffect(() => {
     const storedUserRole = sessionStorage.getItem("userRole");
@@ -43,7 +44,29 @@ function Sidebar({ state, setState }) {
     if (storedUserRole) {
       setUserRole(storedUserRole);
     }
+
+    // Get accessible modules for admin users
+    const modulesStr = sessionStorage.getItem("accessible_modules");
+    if (modulesStr) {
+      try {
+        const modules = JSON.parse(modulesStr);
+        setAccessibleModules(modules);
+        console.log("Accessible Modules:", modules);
+      } catch (error) {
+        console.error("Error parsing accessible modules:", error);
+        setAccessibleModules([]);
+      }
+    }
   }, []);
+
+  // Helper function to check if module is accessible
+  const isModuleAccessible = (moduleCode) => {
+    // If no modules specified, show all (for backward compatibility)
+    if (!accessibleModules || accessibleModules.length === 0) {
+      return true;
+    }
+    return accessibleModules.includes(moduleCode);
+  };
 
   const handleToggle = (section) => () => {
     setExpandedSection((prev) => (prev === section ? null : section));
@@ -108,11 +131,11 @@ function Sidebar({ state, setState }) {
       <List>
         {(userRole === "principal" || userRole === "admin") && (
           <>
-            {createExpandableSection("Dashboards", <MdDashboard />, [
+            {isModuleAccessible("dashboard") && createExpandableSection("Dashboards", <MdDashboard />, [
               { path: "/admin/fee-dashboard", text: "Fee" },
               { path: "/admin/student-attendance-list", text: "Attendance" },
             ])}
-            {createExpandableSection("Student", <PiStudentBold />, [
+            {isModuleAccessible("student") && createExpandableSection("Student", <PiStudentBold />, [
               { path: "/admin/registration", text: "Registration" },
 
               { path: "/admin/Attendance-update", text: "Attendance" },
@@ -132,17 +155,17 @@ function Sidebar({ state, setState }) {
               { path: "/admin/circular-entry", text: "Circulars" },
             ])}
             {/* {createExpandableSection("Others", <PersonAddOutlinedIcon />, [])} */}
-            {createExpandableSection("Staff", <PiChalkboardTeacherFill />, [
+            {isModuleAccessible("staff") && createExpandableSection("Staff", <PiChalkboardTeacherFill />, [
               { path: "/admin/employee-search", text: "Registration" },
             ])}
-            {createExpandableSection("Fee", <BsCashCoin />, [
+            {isModuleAccessible("fee") && createExpandableSection("Fee", <BsCashCoin />, [
               { path: "/admin/fee-search", text: "Search" },
               { path: "/admin/adhoc-fees", text: "ADHOC Fees" },
               { path: "/admin/fee-ledger", text: "Fee Ledger" },
               { path: "/admin/student-fee", text: "Student Fee" },
               { path: "/admin/fee-structure", text: "Fee Structure" },
             ])}
-            {createExpandableSection("Library", <HiOutlineLibrary />, [
+            {isModuleAccessible("library") && createExpandableSection("Library", <HiOutlineLibrary />, [
               { path: "/admin/book-dashboard", text: "Book Dashboard" },
 
               { path: "/admin/book-category", text: "Book Category" },
@@ -172,10 +195,10 @@ function Sidebar({ state, setState }) {
                 text: "Most Circulated Book Report",
               },
             ])}
-            {createExpandableSection("Exam Results", <PiExam />, [
+            {isModuleAccessible("exam_results") && createExpandableSection("Exam Results", <PiExam />, [
               { path: "/admin/result", text: "Result" },
             ])}
-            {createExpandableSection("Transport", <FaBusAlt />, [
+            {isModuleAccessible("transport") && createExpandableSection("Transport", <FaBusAlt />, [
               {
                 path: "/admin/transport-search",
                 text: " Search",
@@ -186,7 +209,7 @@ function Sidebar({ state, setState }) {
                 text: "Student Transport",
               },
             ])}
-            {createExpandableSection("Expense", <FaMoneyBillTransfer />, [
+            {isModuleAccessible("expense") && createExpandableSection("Expense", <FaMoneyBillTransfer />, [
               { path: "/admin/search-expense", text: "Search Expense" },
               {
                 path: "/admin/expense-category",
@@ -197,10 +220,10 @@ function Sidebar({ state, setState }) {
               { path: "/admin/profit-loss", text: "Profit & Loss" },
               { path: "/admin/day-book", text: "Day Book" },
             ])}
-            {createExpandableSection("Other Income", <GiMoneyStack />, [
+            {isModuleAccessible("other_income") && createExpandableSection("Other Income", <GiMoneyStack />, [
               { path: "/admin/Search-income", text: "Search Income" },
             ])}
-            {createExpandableSection("Hostel", <MdOutlineAddHomeWork />, [
+            {isModuleAccessible("hostel") && createExpandableSection("Hostel", <MdOutlineAddHomeWork />, [
               { path: "/admin/search-hostel", text: "Search " },
               {
                 path: "/admin/student-hostel-details",
@@ -211,41 +234,44 @@ function Sidebar({ state, setState }) {
                 text: "Student Hostel Fee ",
               },
             ])}
-            {createExpandableSection("TimeTable", <FaRegCalendarTimes />, [
+            {isModuleAccessible("timetable") && createExpandableSection("TimeTable", <FaRegCalendarTimes />, [
               { path: "/admin/class-time-table", text: "Class TimeTable" },
               { path: "/admin/teacher-time-table", text: "Teacher TimeTable" },
             ])}
-            {createExpandableSection("LessonPlan", <FaBookOpen />, [
+            {isModuleAccessible("lessonplan") && createExpandableSection("LessonPlan", <FaBookOpen />, [
               { path: "/admin/lesson-plan", text: "Lesson Plan" },
               {
                 path: "/admin/teacher-lesson-plan",
                 text: "Teacher Lesson Plan",
               },
             ])}
-            {createExpandableSection("Mentor", <PiChalkboardTeacher />, [
+            {isModuleAccessible("mentor") && createExpandableSection("Mentor", <PiChalkboardTeacher />, [
               { path: "/admin/assign-mentor", text: "Assign Mentor" },
               { path: "/admin/follows-ups", text: "Follow Ups" },
               { path: "/admin/student-details", text: "Student Details" },
             ])}
-            {createExpandableSection("Academics", <HiOutlineAcademicCap />, [
+            {isModuleAccessible("academics") && createExpandableSection("Academics", <HiOutlineAcademicCap />, [
               { path: "/admin/document-upload", text: "Document Upload" },
             ])}
 
-            {createExpandableSection("Grievance", <LuBaggageClaim />, [
+            {isModuleAccessible("grievance") && createExpandableSection("Grievance", <LuBaggageClaim />, [
               { path: "/admin/student-grievance", text: "Student Grievances" },
             ])}
-            {createExpandableSection("Visitors", <FaPeopleGroup />, [
+            {isModuleAccessible("visitors") && createExpandableSection("Visitors", <FaPeopleGroup />, [
               { path: "/admin/visitors-list", text: "Visitors List" },
             ])}
-            {createExpandableSection("MOU", <RiNewspaperLine />, [
+            {isModuleAccessible("mou") && createExpandableSection("MOU", <RiNewspaperLine />, [
               { path: "/admin/mou-list", text: "Mou List" },
             ])}
-            {createExpandableSection("Training and Placements", <ImOffice />, [
+            {isModuleAccessible("training_placements") && createExpandableSection("Training and Placements", <ImOffice />, [
               { path: "/admin/training", text: "Training" },
             ])}
-            {createExpandableSection("Inventory Management", <FaWarehouse />, [
+            {isModuleAccessible("inventory") && createExpandableSection("Inventory Management", <FaWarehouse />, [
               { path: "/admin/inventory", text: "Inventory Category" },
               { path: "/admin/inventory-search", text: "Inventory Search" },
+            ])}
+            {createExpandableSection("Role Based Access", <PersonAddOutlinedIcon />, [
+              { path: "/admin/create-admin-user", text: "Create Admin User" },
             ])}
           </>
         )}
