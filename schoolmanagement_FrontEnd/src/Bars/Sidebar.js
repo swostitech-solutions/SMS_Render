@@ -270,7 +270,8 @@ function Sidebar({ state, setState }) {
               { path: "/admin/inventory", text: "Inventory Category" },
               { path: "/admin/inventory-search", text: "Inventory Search" },
             ])}
-            {(!accessibleModules || accessibleModules.length === 0) && createExpandableSection("Role Based Access", <PersonAddOutlinedIcon />, [
+            {/* Temporary Disable: Role Based Access */}
+            {false && (!accessibleModules || accessibleModules.length === 0) && createExpandableSection("Role Based Access", <PersonAddOutlinedIcon />, [
               { path: "/admin/create-admin-user", text: "Create Admin User" },
             ])}
           </>
