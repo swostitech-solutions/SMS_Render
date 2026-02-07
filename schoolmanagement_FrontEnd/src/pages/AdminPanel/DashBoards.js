@@ -9,6 +9,8 @@ import {
   FaBell,
   FaCalendarAlt,
   FaFileInvoice,
+  FaShieldAlt,
+  FaCheckCircle,
 } from "react-icons/fa";
 import {
   CircularProgressbarWithChildren,
@@ -18,6 +20,51 @@ import "react-circular-progressbar/dist/styles.css";
 import { ApiUrl } from "../../ApiUrl";
 
 const AutoLayoutExample = () => {
+  const [accessibleModules, setAccessibleModules] = useState(null);
+  const [isRestrictedUser, setIsRestrictedUser] = useState(false);
+
+  // Check user permissions on mount
+  useEffect(() => {
+    const modulesStr = sessionStorage.getItem("accessible_modules");
+    if (modulesStr) {
+      try {
+        const modules = JSON.parse(modulesStr);
+        setAccessibleModules(modules);
+        // If user has specific modules set, they are restricted
+        setIsRestrictedUser(modules && modules.length > 0);
+      } catch (error) {
+        console.error("Error parsing accessible modules:", error);
+        setAccessibleModules([]);
+        setIsRestrictedUser(false);
+      }
+    } else {
+      setIsRestrictedUser(false);
+    }
+  }, []);
+
+  // Module display names mapping
+  const moduleNames = {
+    dashboard: "Dashboard",
+    student: "Student Management",
+    staff: "Staff Management",
+    fee: "Fee Management",
+    library: "Library",
+    exam_results: "Exam Results",
+    transport: "Transport",
+    expense: "Expense Management",
+    other_income: "Other Income",
+    hostel: "Hostel Management",
+    timetable: "TimeTable",
+    lessonplan: "Lesson Plan",
+    mentor: "Mentor Management",
+    academics: "Academics",
+    grievance: "Grievance Management",
+    visitors: "Visitors Management",
+    mou: "MOU",
+    training_placements: "Training and Placements",
+    inventory: "Inventory Management",
+  };
+
   const [sessionFeeDetails, setSessionFeeDetails] = useState({});
   const [feeTableData, setFeeTableData] = useState([]);
   const [isDataReady, setIsDataReady] = useState(false);
@@ -304,6 +351,70 @@ const AutoLayoutExample = () => {
         });
       });
   }, [sessionFeeYear, isDataReady]);
+
+  // If user has restricted access, show welcome screen instead of full dashboard
+  if (isRestrictedUser && accessibleModules && accessibleModules.length > 0) {
+    const organizationName = sessionStorage.getItem("organization_name") || "Sparsh College";
+    const userName = sessionStorage.getItem("username") || "User";
+
+    return (
+      <div className="container-fluid p-4">
+        <Row className="mb-4">
+          <Col>
+            <div className="card">
+              <div className="card-body text-center" style={{ padding: "40px 20px" }}>
+                <h2 style={{ fontWeight: 600, color: "#2c3e50", marginBottom: "10px" }}>
+                  Welcome to {organizationName}
+                </h2>
+                <p style={{ fontSize: "16px", color: "#6c757d", marginBottom: "0" }}>
+                  Hello, <strong>{userName}</strong>
+                </p>
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        <Row>
+          <Col>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title mb-4" style={{ fontWeight: 600, color: "#2c3e50" }}>
+                  Your Authorized Modules
+                </h5>
+                <Row>
+                  {accessibleModules.map((moduleCode, index) => (
+                    <Col md={4} sm={6} key={index} className="mb-3">
+                      <div className="card h-100" style={{ 
+                        borderLeft: "4px solid #4a90e2",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                        transition: "all 0.3s ease"
+                      }}>
+                        <div className="card-body d-flex align-items-center">
+                          <FaCheckCircle size={20} style={{ color: "#28a745", marginRight: "12px", flexShrink: 0 }} />
+                          <span style={{ fontSize: "15px", fontWeight: 500, color: "#2c3e50" }}>
+                            {moduleNames[moduleCode] || moduleCode}
+                          </span>
+                        </div>
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+                <div className="mt-4 p-3" style={{ 
+                  backgroundColor: "#f8f9fa", 
+                  borderRadius: "8px",
+                  border: "1px solid #dee2e6"
+                }}>
+                  <p style={{ fontSize: "14px", color: "#6c757d", marginBottom: "0", textAlign: "center" }}>
+                    Use the sidebar navigation to access your authorized modules. For additional access, please contact your system administrator.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </div>
+    );
+  }
 
   return (
     <div className="container-fluid">

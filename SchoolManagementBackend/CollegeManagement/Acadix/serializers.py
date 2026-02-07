@@ -206,7 +206,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class CreateAdminUserSerializer(serializers.Serializer):
-    user_name = serializers.EmailField(required=True)
+    user_name = serializers.CharField(required=True, min_length=3)
     password = serializers.CharField(required=True, min_length=6)
     organization_id = serializers.IntegerField(required=True)
     branch_id = serializers.IntegerField(required=True)
@@ -219,6 +219,8 @@ class CreateAdminUserSerializer(serializers.Serializer):
     def validate_user_name(self, value):
         if UserLogin.objects.filter(user_name=value).exists():
             raise serializers.ValidationError("A user with this username already exists.")
+        if len(value) < 3:
+            raise serializers.ValidationError("Username must be at least 3 characters long.")
         return value
 
     def validate_organization_id(self, value):

@@ -12,7 +12,13 @@ import {
   Grid,
   Alert,
   CircularProgress,
+  Paper,
+  Divider,
+  Chip,
 } from "@mui/material";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import LockIcon from "@mui/icons-material/Lock";
+import SecurityIcon from "@mui/icons-material/Security";
 import { ApiUrl } from "../../../ApiUrl";
 
 const CreateAdminUser = () => {
@@ -93,9 +99,9 @@ const CreateAdminUser = () => {
     const newErrors = {};
 
     if (!formData.user_name.trim()) {
-      newErrors.user_name = "Username (Email) is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.user_name)) {
-      newErrors.user_name = "Please enter a valid email address";
+      newErrors.user_name = "Username is required";
+    } else if (formData.user_name.length < 3) {
+      newErrors.user_name = "Username must be at least 3 characters";
     }
 
     if (!formData.password) {
@@ -168,11 +174,15 @@ const CreateAdminUser = () => {
   };
 
   return (
-    <Card sx={{ maxWidth: 800, margin: "20px auto" }}>
-      <CardContent>
-        <Typography variant="h5" component="h2" gutterBottom align="center">
-          Create New Admin User
-        </Typography>
+    <Card sx={{ maxWidth: 900, margin: "20px auto", boxShadow: 3 }}>
+      <CardContent sx={{ p: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 3 }}>
+          <PersonAddIcon sx={{ fontSize: 40, color: "primary.main", mr: 2 }} />
+          <Typography variant="h4" component="h2" sx={{ fontWeight: 600, color: "primary.main" }}>
+            Create Admin User
+          </Typography>
+        </Box>
+        <Divider sx={{ mb: 3 }} />
 
         {successMessage && (
           <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage("")}>
@@ -190,14 +200,19 @@ const CreateAdminUser = () => {
           <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              label="Username (Email)"
+              label="Username"
               name="user_name"
-              type="email"
+              type="text"
               value={formData.user_name}
               onChange={handleInputChange}
               error={!!errors.user_name}
               helperText={errors.user_name}
+              placeholder="Enter username"
               required
+              variant="outlined"
+              InputProps={{
+                startAdornment: <PersonAddIcon sx={{ color: "action.active", mr: 1 }} />,
+              }}
             />
           </Box>
 
@@ -211,7 +226,12 @@ const CreateAdminUser = () => {
               onChange={handleInputChange}
               error={!!errors.password}
               helperText={errors.password}
+              placeholder="Minimum 6 characters"
               required
+              variant="outlined"
+              InputProps={{
+                startAdornment: <LockIcon sx={{ color: "action.active", mr: 1 }} />,
+              }}
             />
           </Box>
 
@@ -225,16 +245,24 @@ const CreateAdminUser = () => {
               onChange={handleInputChange}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword}
+              placeholder="Re-enter password"
               required
+              variant="outlined"
+              InputProps={{
+                startAdornment: <LockIcon sx={{ color: "action.active", mr: 1 }} />,
+              }}
             />
           </Box>
 
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Select Visible Modules
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Only selected modules will be visible in the sidebar for this user
+          <Paper elevation={2} sx={{ p: 3, mb: 3, backgroundColor: "#f8f9fa" }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <SecurityIcon sx={{ color: "primary.main", mr: 1.5 }} />
+              <Typography variant="h6" sx={{ fontWeight: 600, color: "primary.main" }}>
+                Module Access Permissions
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Select which modules this admin user can access. User will only have permissions for checked modules.
             </Typography>
 
             {errors.modules && (
@@ -243,43 +271,74 @@ const CreateAdminUser = () => {
               </Alert>
             )}
 
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
               <Button
-                variant="outlined"
-                size="small"
+                variant="contained"
+                size="medium"
                 onClick={handleSelectAll}
+                sx={{ borderRadius: 2 }}
               >
                 {selectedModules.length === availableModules.length
                   ? "Deselect All"
                   : "Select All"}
               </Button>
-              <Typography variant="body2" color="text.secondary">
-                {selectedModules.length} of {availableModules.length} selected
-              </Typography>
+              <Chip 
+                label={`${selectedModules.length} of ${availableModules.length} selected`}
+                color="primary"
+                variant="outlined"
+              />
             </Box>
 
             <FormGroup>
               <Grid container spacing={2}>
                 {availableModules.map((module) => (
                   <Grid item xs={12} sm={6} md={4} key={module.code}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={selectedModules.includes(module.code)}
-                          onChange={() => handleModuleToggle(module.code)}
-                        />
-                      }
-                      label={module.label}
-                    />
+                    <Paper 
+                      elevation={selectedModules.includes(module.code) ? 3 : 1}
+                      sx={{ 
+                        p: 1.5, 
+                        borderRadius: 2,
+                        backgroundColor: selectedModules.includes(module.code) ? "primary.light" : "white",
+                        transition: "all 0.3s ease",
+                        border: selectedModules.includes(module.code) ? "2px solid" : "1px solid",
+                        borderColor: selectedModules.includes(module.code) ? "primary.main" : "divider",
+                        "&:hover": {
+                          boxShadow: 4,
+                          transform: "translateY(-2px)"
+                        }
+                      }}
+                    >
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedModules.includes(module.code)}
+                            onChange={() => handleModuleToggle(module.code)}
+                            sx={{ color: selectedModules.includes(module.code) ? "primary.contrastText" : "inherit" }}
+                          />
+                        }
+                        label={
+                          <Typography 
+                            sx={{ 
+                              fontWeight: selectedModules.includes(module.code) ? 600 : 400,
+                              color: selectedModules.includes(module.code) ? "primary.contrastText" : "text.primary"
+                            }}
+                          >
+                            {module.label}
+                          </Typography>
+                        }
+                      />
+                    </Paper>
                   </Grid>
                 ))}
               </Grid>
             </FormGroup>
-          </Box>
+          </Paper>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}>
+          <Divider sx={{ my: 3 }} />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
             <Button
               variant="outlined"
+              size="large"
               onClick={() => {
                 setFormData({
                   user_name: "",
@@ -291,17 +350,20 @@ const CreateAdminUser = () => {
                 setSuccessMessage("");
                 setErrorMessage("");
               }}
+              sx={{ borderRadius: 2, px: 4 }}
             >
-              Cancel
+              Reset
             </Button>
             <Button
               type="submit"
               variant="contained"
               color="primary"
+              size="large"
               disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PersonAddIcon />}
+              sx={{ borderRadius: 2, px: 4 }}
             >
-              {loading ? "Creating..." : "Create User"}
+              {loading ? "Creating User..." : "Create Admin User"}
             </Button>
           </Box>
         </form>
