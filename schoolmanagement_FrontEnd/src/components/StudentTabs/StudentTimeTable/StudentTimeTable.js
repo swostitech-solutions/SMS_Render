@@ -8,6 +8,7 @@ const StudentTimeTable = () => {
   const navigate = useNavigate();
   const [timeTableData, setTimeTableData] = useState([]);
   const [batchId, setBatchId] = useState(null);
+  const [academicYearId, setAcademicYearId] = useState(null);
   const [batchIdFetched, setBatchIdFetched] = useState(false);
   const [viewType, setViewType] = useState({ value: "weekly", label: "Weekly" });
   const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStart(new Date()));
@@ -25,7 +26,7 @@ const StudentTimeTable = () => {
   const getWeekDates = () => {
     const dates = [];
     const dayNames = ["Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
-    
+
     for (let i = 0; i < 6; i++) {
       const date = new Date(currentWeekStart);
       date.setDate(currentWeekStart.getDate() + i);
@@ -44,20 +45,20 @@ const StudentTimeTable = () => {
     const dates = [];
     const dayNames = ["Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
     const dayFullNames = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-    
+
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-    
+
     // Get the first and last day of the month
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0); // Last day of the month
-    
+
     // Iterate through all days in the month
     for (let date = new Date(firstDay); date <= lastDay; date.setDate(date.getDate() + 1)) {
       const dayOfWeek = date.getDay();
       // Convert Sunday (0) to 6, Monday (1) to 0, etc.
       const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      
+
       // Only include Mon-Sat (skip Sunday)
       if (adjustedDay >= 0 && adjustedDay < 6) {
         dates.push({
@@ -68,7 +69,7 @@ const StudentTimeTable = () => {
         });
       }
     }
-    
+
     return dates;
   };
 
@@ -85,7 +86,7 @@ const StudentTimeTable = () => {
     if (batchIdFetched) {
       fetchTimeTableData();
     }
-  }, [batchId, batchIdFetched]);
+  }, [batchId, academicYearId, batchIdFetched]);
 
   const fetchStudentBatchId = async () => {
     try {
@@ -96,6 +97,7 @@ const StudentTimeTable = () => {
 
       if (!studentId || !organizationId || !branchId) {
         setBatchId(null);
+        setAcademicYearId(null);
         setBatchIdFetched(true);
         return;
       }
@@ -112,16 +114,28 @@ const StudentTimeTable = () => {
 
       if (response.ok) {
         const result = await response.json();
-        if (result.message === "Success" && result.data && result.data.batch_id) {
-          setBatchId(result.data.batch_id);
+        if (result.message === "Success" && result.data) {
+          if (result.data.batch_id) {
+            setBatchId(result.data.batch_id);
+          } else {
+            setBatchId(null);
+          }
+          if (result.data.academic_year_id) {
+            setAcademicYearId(result.data.academic_year_id);
+          } else {
+            setAcademicYearId(null);
+          }
         } else {
           setBatchId(null);
+          setAcademicYearId(null);
         }
       } else {
         setBatchId(null);
+        setAcademicYearId(null);
       }
     } catch (error) {
       setBatchId(null);
+      setAcademicYearId(null);
     } finally {
       setBatchIdFetched(true);
     }
@@ -131,7 +145,6 @@ const StudentTimeTable = () => {
     try {
       const orgId = sessionStorage.getItem("organization_id") || localStorage.getItem("orgId") || "";
       const branchId = sessionStorage.getItem("branch_id") || localStorage.getItem("branchId") || "";
-      const academicYearId = localStorage.getItem("academicSessionId") || "";
 
       if (!orgId || !branchId) {
         setTimeTableData([]);
@@ -141,15 +154,15 @@ const StudentTimeTable = () => {
       const params = new URLSearchParams();
       params.append("organization_id", orgId);
       params.append("branch_id", branchId);
-      
+
       if (batchId !== null && batchId !== undefined && batchId !== "") {
         params.append("batch_id", batchId.toString());
       } else {
         params.append("batch_id", "");
       }
 
-      if (academicYearId) {
-        params.append("academic_year_id", academicYearId);
+      if (academicYearId !== null && academicYearId !== undefined && academicYearId !== "") {
+        params.append("academic_year_id", academicYearId.toString());
       }
 
       const apiUrl = `${ApiUrl.apiurl}TIME_TABLE/GetSearchedTimeTableList/?${params.toString()}`;
@@ -163,7 +176,7 @@ const StudentTimeTable = () => {
         },
       });
       const data = await response.json();
-      
+
       if (data.message === "success" && Array.isArray(data.data)) {
         setTimeTableData(data.data);
       } else if (Array.isArray(data)) {
@@ -237,10 +250,10 @@ const StudentTimeTable = () => {
   ];
 
   return (
-    <div 
+    <div
       className="container-fluid p-3"
-      style={{ 
-        backgroundColor: "#e8f4fc", 
+      style={{
+        backgroundColor: "#e8f4fc",
         minHeight: "100vh",
         borderRadius: "8px"
       }}
@@ -249,8 +262,8 @@ const StudentTimeTable = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <button
           className="btn btn-danger"
-          style={{ 
-            borderRadius: "20px", 
+          style={{
+            borderRadius: "20px",
             padding: "8px 24px",
             fontWeight: "500"
           }}
@@ -258,16 +271,16 @@ const StudentTimeTable = () => {
         >
           Close
         </button>
-        
-        <h4 
-          className="mb-0" 
-                style={{
-            fontWeight: "600", 
+
+        <h4
+          className="mb-0"
+          style={{
+            fontWeight: "600",
             color: "#333",
             letterSpacing: "1px"
-                }}
-              >
-                TIME TABLE
+          }}
+        >
+          TIME TABLE
         </h4>
 
         <Select
@@ -294,16 +307,16 @@ const StudentTimeTable = () => {
           >
             ← Previous
           </button>
-          <div 
+          <div
             className="text-center"
-            style={{ 
+            style={{
               minWidth: "200px",
               fontWeight: "600",
               fontSize: "16px",
               color: "#333"
             }}
           >
-            {viewType.value === "weekly" 
+            {viewType.value === "weekly"
               ? `Week of ${currentWeekStart.toLocaleDateString('default', { month: 'short', day: 'numeric' })}`
               : currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })
             }
@@ -320,20 +333,20 @@ const StudentTimeTable = () => {
 
       {/* Timetable Grid */}
       <div className="table-responsive">
-        <table 
-          className="table table-bordered mb-0" 
-          style={{ 
-            borderCollapse: "separate", 
+        <table
+          className="table table-bordered mb-0"
+          style={{
+            borderCollapse: "separate",
             borderSpacing: "8px",
             border: "none"
           }}
         >
-                    <thead>
-                      <tr>
-              <th 
+          <thead>
+            <tr>
+              <th
                 className="text-center text-white"
-                style={{ 
-                  backgroundColor: "#9e9e9e", 
+                style={{
+                  backgroundColor: "#9e9e9e",
                   borderRadius: "4px",
                   padding: "12px",
                   border: "none",
@@ -343,28 +356,28 @@ const StudentTimeTable = () => {
                 Day
               </th>
               {periods.map((period, index) => (
-                <th 
+                <th
                   key={period}
                   className="text-center text-white"
-                  style={{ 
-                    backgroundColor: "#9e9e9e", 
+                  style={{
+                    backgroundColor: "#9e9e9e",
                     borderRadius: "4px",
                     padding: "12px",
                     border: "none"
                   }}
                 >
                   {period}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
             {displayDates.map((day, dayIndex) => (
               <tr key={day.dayFull}>
                 {/* Day Column */}
-                <td 
-                              className="text-center"
-                  style={{ 
+                <td
+                  className="text-center"
+                  style={{
                     backgroundColor: "#fff",
                     borderRadius: "4px",
                     padding: "15px 10px",
@@ -374,22 +387,22 @@ const StudentTimeTable = () => {
                 >
                   <div style={{ fontWeight: "600", fontSize: "14px" }}>
                     {day.dayName}
-                                      </div>
+                  </div>
                   <div style={{ fontSize: "12px", color: "#666" }}>
                     {day.date}{day.month}
-                              </div>
-                            </td>
-                
+                  </div>
+                </td>
+
                 {/* Period Columns */}
                 {periods.map((period, periodIndex) => {
                   const entry = getEntryForCell(day.dayFull, periodIndex);
                   const isLastPeriod = periodIndex === periods.length - 1;
-                  
+
                   return (
-                    <td 
+                    <td
                       key={`${day.dayFull}-${period}`}
                       className="text-center"
-                      style={{ 
+                      style={{
                         backgroundColor: isLastPeriod ? "#ffcdd2" : "#e8f5e9",
                         borderRadius: "4px",
                         padding: "15px 10px",
@@ -420,10 +433,10 @@ const StudentTimeTable = () => {
                     </td>
                   );
                 })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

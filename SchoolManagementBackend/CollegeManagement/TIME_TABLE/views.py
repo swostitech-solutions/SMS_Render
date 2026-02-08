@@ -339,7 +339,7 @@ class GetSearchedTimeTableListAPIView(ListAPIView):
             if filterdata:
                 responseData = []
                 if serializer.validated_data.get('professor_id'):
-                    filterdata = filterdata.filter(teacher_id=serializer.validated_data.get('professor_id'))
+                    filterdata = filterdata.filter(professor=serializer.validated_data.get('professor_id'))
 
                 if serializer.validated_data.get('course_id'):
                     filterdata = filterdata.filter(course=serializer.validated_data.get('course_id'))
