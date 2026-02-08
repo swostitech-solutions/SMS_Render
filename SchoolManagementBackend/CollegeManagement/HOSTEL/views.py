@@ -1164,21 +1164,32 @@ class AssignStudentHostelCreate_UpdateAPI(CreateAPIView):
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 # Fee Details Creation
+                # Fee Details Creation
                 if choice_semester_ids:
-                    # Determine fee_applied_from
+                    # Determine fee_applied_from - take the first semester in the choice list as the starting point
                     fee_applied_from_instance = None
                     try:
-                         all_choices = ast.literal_eval(studentCourseInstance.hostel_choice_semester)
-                         if all_choices:
-                             fee_applied_from_instance = Semester.objects.get(id=all_choices[0], is_active=True)
-                    except Exception:
+                         # Use the first semester from the payload as fee_applied_from
+                         first_sem_id = choice_semester_ids[0]
+                         fee_applied_from_instance = Semester.objects.get(id=first_sem_id, is_active=True)
+                    except Exception as e:
+                         # Log error but proceed? Or fail? Best to fail if we can't determine base semester
                          pass
 
                     for choice_semester in choice_semester_ids:
                         try:
                             choice_semester_instance = Semester.objects.get(id=choice_semester,is_active=True)
                             
-                            if fee_applied_from_instance:
+                            # Check if fee already exists to prevent duplicates
+                            existing_fee = StudentFeeDetail.objects.filter(
+                                student=studentCourseInstance.student,
+                                student_course=studentCourseInstance,
+                                element_name__iexact="Hostel Fees",
+                                semester=choice_semester_instance,
+                                is_active=True
+                            ).exists()
+
+                            if not existing_fee and fee_applied_from_instance:
                                 StudentFeeDetail.objects.create(
                                     student=studentCourseInstance.student,
                                     student_course=studentCourseInstance,
@@ -1197,7 +1208,8 @@ class AssignStudentHostelCreate_UpdateAPI(CreateAPIView):
                                     total_element_period_amount= StudentHostelRecord.bed.bed_cost,
                                     paid_amount= 0.00,
                                     created_by= created_by,
-                                    updated_by = created_by
+                                    updated_by = created_by,
+                                    is_active=True
                                 )
                         except Exception as e:
                             # Log or handle individual failure? For now assuming if one fails we might want to return error or continue
@@ -1261,7 +1273,7 @@ class StudentHostelFeesListAPIView(ListAPIView):
 
             # Get student_class record based on academic year & Organization And branch
             try:
-                filterdata = StudentCourse.objects.filter(student__academic_year= academic_year_id,student__organization=organization_id,student__branch=branch_id,student__batch=batch_id,hostel_availed=True,is_active=True)
+                filterdata = StudentCourse.objects.filter(academic_year= academic_year_id,organization=organization_id,branch=branch_id,batch=batch_id,hostel_availed=True,is_active=True)
             except:
                 filterdata=None
 
@@ -1294,7 +1306,7 @@ class StudentHostelFeesListAPIView(ListAPIView):
                     # batch=batch_id,
                     branch=branch_id,
                     student__in=students,
-                    element_name="Hostel Fees",
+                    element_name__iexact="Hostel Fees",
                     # element_name="HOSTEL FEES",
                     is_active=True
                 )
@@ -1455,7 +1467,7 @@ class StudentAllFeesCalculationBasedOnElement(ListAPIView):
 
             try:
                 student_fee_record= StudentFeeDetail.objects.filter(student=student_id,organization=organization_id,
-                                                                       branch=branch_id,fee_applied_from=fee_applied_from_id,element_type='Hostel Fees',is_active=True)
+                                                                       branch=branch_id,fee_applied_from=fee_applied_from_id,element_name__iexact='Hostel Fees',is_active=True)
             except:
                 student_fee_record= None
             if not student_fee_record.exists():
