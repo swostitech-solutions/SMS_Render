@@ -10795,7 +10795,15 @@ class UtilityGroupMixin:
             for documents in documentsDetails:
                 document_no = documents.get('document_no')
                 document_type = documents.get('document_type')
-                document_pic = document_files[count]
+
+                # Skip empty/invalid rows to prevent creating junk records
+                if not document_no and not document_type:
+                    continue
+
+                if count < len(document_files):
+                    document_pic = document_files[count]
+                else:
+                    document_pic = None
                 start_from = documents.get('start_from')
                 end_to = documents.get('end_to')
 
@@ -11867,11 +11875,9 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                 # data = request.data
 
                 # validate input data
-                try:
-                    serializer = self.get_serializer(instance, data=data)
-                    serializer.is_valid(raise_exception=True)
-                except Exception as e:
-                    print(e)
+                serializer = self.get_serializer(instance, data=data)
+                serializer.is_valid(raise_exception=True)
+
 
                 # Access serializer data
 
@@ -11887,7 +11893,7 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                 barcode = student_basic_detail.get('barcode')
 
                 if registration_no:
-                    if StudentRegistration.objects.filter(registration_no=registration_no).exists():
+                    if StudentRegistration.objects.exclude(pk=instance.pk).filter(registration_no=registration_no).exists():
                         return Response(
                             {'message': 'duplicate registration number, required unique registration number'},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -11897,7 +11903,7 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                     student_basic_detail['registration_no'] = ''
 
                 if barcode:
-                    if StudentRegistration.objects.filter(barcode=barcode).exists():
+                    if StudentRegistration.objects.exclude(pk=instance.pk).filter(barcode=barcode).exists():
                         return Response({'message': 'duplicate barcode, required unique barcode'},
                                         status=status.HTTP_400_BAD_REQUEST)
                     else:
@@ -12041,7 +12047,7 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
 
         except Exception as e:
             self.log_exception(request, str(e))
-            return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'An unexpected error occurred: ' + str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def log_exception(self, request, error_message):
         ExceptionTrack.objects.create(

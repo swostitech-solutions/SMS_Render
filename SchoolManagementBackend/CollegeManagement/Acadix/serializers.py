@@ -1696,9 +1696,11 @@ class StudentBasicDetailUpdateSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     profile_pic = serializers.ImageField(required=False, allow_null=True)
     registration_no = serializers.CharField(required=False, allow_blank=True)
-    email = serializers.EmailField(required=True, allow_blank=False)
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
     children_in_family = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     remarks = serializers.CharField(allow_null=True, required=False, allow_blank=True)
+    student_aadhaar_no = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = StudentRegistration

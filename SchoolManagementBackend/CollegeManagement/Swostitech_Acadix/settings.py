@@ -20,7 +20,7 @@ load_dotenv()
 
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
-print(f'{DB_HOST}:{DB_NAME}')
+# print(f'{DB_HOST}:{DB_NAME}')
 
 # if DEBUG:
 #     # env_path = os.getenv("ENV_PATH")
