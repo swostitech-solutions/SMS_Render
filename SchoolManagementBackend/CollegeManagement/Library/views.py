@@ -2878,13 +2878,18 @@ class BookRetrunedUpdateAPIView(UpdateAPIView):
                         # Fetch related records
                         try:
                             registrationInstance = StudentRegistration.objects.get(id=studentId, is_active=True)
-                            academicInstance = AcademicYear.objects.get(id=academicyearId, is_active=True)
-                            OrganizationInstance = Organization.objects.get(id=orgId, is_active=True)
-                            # Get Branch instance (not Batch)
-                            BranchInstance = Branch.objects.get(id=batch_id, is_active=True)
-                            # Get StudentCourse for the student
-                            studentCourseInstance = StudentCourse.objects.get(student=registrationInstance,
-                                                                              is_active=True)
+                            
+                            # Get StudentCourse - using filter().first() to be safer than get() in case of history
+                            studentCourseInstance = StudentCourse.objects.filter(student=registrationInstance, is_active=True).first()
+                            
+                            if not studentCourseInstance:
+                                return Response({"message": "Active Student Course record not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+                            # Use Student's Context for the Fee Record
+                            academicInstance = studentCourseInstance.academic_year
+                            OrganizationInstance = studentCourseInstance.organization # Use from StudentCourse directly
+                            BranchInstance = studentCourseInstance.branch         # Use from StudentCourse directly
+
                         except ObjectDoesNotExist as e:
                             return Response({"message": f"Record not found: {str(e)}"},
                                             status=status.HTTP_400_BAD_REQUEST)
