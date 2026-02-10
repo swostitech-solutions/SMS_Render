@@ -22,7 +22,7 @@ class FeesDuesSerializer(serializers.Serializer):
     organization_id = serializers.IntegerField(required=True, allow_null=False)
     branch_id = serializers.IntegerField(required=True, allow_null=False)
     batch_id = serializers.IntegerField(required=True, allow_null=False)
-    year = serializers.IntegerField(required=True, allow_null=False)
+    year = serializers.IntegerField(required=False, allow_null=True)
 
 class FeesDuesSearchSerializer(serializers.Serializer):
     # academic_year_id = serializers.IntegerField(required=True, allow_null=False)

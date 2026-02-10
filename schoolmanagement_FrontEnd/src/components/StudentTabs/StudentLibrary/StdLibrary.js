@@ -20,10 +20,9 @@ const StdLibrary = () => {
     try {
       setError("");
       const studentId = sessionStorage.getItem("userId") || localStorage.getItem("userId");
-      const academicYearId = localStorage.getItem("academicSessionId");
       const token = localStorage.getItem("accessToken");
 
-      if (!studentId || !academicYearId) {
+      if (!studentId) {
         setError("Session data not found. Please login again.");
         return;
       }
@@ -35,8 +34,9 @@ const StdLibrary = () => {
       }
       // The backend requires flag parameter (default is 'A' for All)
       // 'A' = All books, 'I' = Issued books only (not returned)
+      // Note: Removed academic_year_id parameter as it was incorrectly using batch_id
 
-      const apiUrl = `${ApiUrl.apiurl}ISSUEBOOK/BOOKISSUESEARCHLIST/?student_id=${studentId}&academic_year_id=${academicYearId}&flag=A`;
+      const apiUrl = `${ApiUrl.apiurl}ISSUEBOOK/BOOKISSUESEARCHLIST/?student_id=${studentId}&flag=A`;
 
       console.log("Fetching library data from:", apiUrl);
 

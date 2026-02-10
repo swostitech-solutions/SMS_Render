@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import JsBarcode from "jsbarcode";
 import jsPDF from "jspdf";
 import { ApiUrl } from "../../../ApiUrl";
+import ReactPaginate from "react-paginate";
 
 const AdmBookBarcode = () => {
   // const [rows, setRows] = useState(
@@ -27,6 +28,10 @@ const AdmBookBarcode = () => {
   const [selectedRowId, setSelectedRowId] = useState(null);
   const navigate = useNavigate();
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+
   const handleClear = () => {
     setRows((prevRows) =>
       prevRows.map((row) => ({
@@ -38,6 +43,7 @@ const AdmBookBarcode = () => {
         subcategoryName: "",
       }))
     );
+    setCurrentPage(0);
   };
   //  const handleAddRow = () => {
   //    const newRow = {
@@ -211,6 +217,16 @@ const AdmBookBarcode = () => {
     setRows((prevRows) => prevRows.filter((row) => row.id !== rowId));
   };
 
+  // Pagination handler
+  const handlePageClick = (data) => {
+    setCurrentPage(data.selected);
+  };
+
+  // Calculate paginated data
+  const offset = currentPage * itemsPerPage;
+  const currentRows = rows.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(rows.length / itemsPerPage);
+
   return (
     <div className="container-fluid">
       <div className="row">
@@ -284,9 +300,9 @@ const AdmBookBarcode = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {rows.map((row, index) => (
+                          {currentRows.map((row, index) => (
                             <tr key={row.id}>
-                              <td>{index + 1}</td>
+                              <td>{offset + index + 1}</td>
                               <td>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                                   <input
@@ -361,6 +377,28 @@ const AdmBookBarcode = () => {
                         </tbody>
                       </table>
                     </div>
+                    {rows.length > itemsPerPage && (
+                      <ReactPaginate
+                        previousLabel="Previous"
+                        nextLabel="Next"
+                        breakLabel="..."
+                        pageCount={pageCount}
+                        onPageChange={handlePageClick}
+                        forcePage={currentPage}
+                        containerClassName="pagination justify-content-center mt-3"
+                        pageClassName="page-item"
+                        pageLinkClassName="page-link"
+                        previousClassName="page-item"
+                        previousLinkClassName="page-link"
+                        nextClassName="page-item"
+                        nextLinkClassName="page-link"
+                        breakClassName="page-item"
+                        breakLinkClassName="page-link"
+                        activeClassName="active"
+                        marginPagesDisplayed={1}
+                        pageRangeDisplayed={5}
+                      />
+                    )}
                   </div>
                 </div>
               )}

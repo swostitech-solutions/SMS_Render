@@ -1014,7 +1014,7 @@ class LibraryBookSearchAPIView(ListAPIView):
                     filterdata = filterdata.filter(ISBN=ISBN)
 
                 if typeofbooks:
-                    filterdata = filterdata.filter(type=typeofbooks)
+                    filterdata = filterdata.filter(type__iexact=typeofbooks)
 
                 # Filter by location if provided
                 if locationId:
@@ -1195,10 +1195,14 @@ class GetAllLibraryBranchListAPIView(ListAPIView):
             org_id = self.kwargs.get('org_id')
             branch_id = self.kwargs.get('branch_id')
 
-            # Get library branch based on org and branch
+            # Get library branches for the organization
+            # Note: branch_id parameter is not used because LibraryBranch doesn't have
+            # an organization branch field - it only has organization and batch
             try:
-                libraryBranch_Record = LibraryBranch.objects.filter(organization_id=org_id, batch_id=branch_id,
-                                                                    is_active=True)
+                libraryBranch_Record = LibraryBranch.objects.filter(
+                    organization_id=org_id,
+                    is_active=True
+                )
             except:
                 libraryBranch_Record = None
 
@@ -1293,23 +1297,19 @@ class LibraryBookCreateAPIView(CreateAPIView):
             # Use the Batch associated with the Academic Year
             branch_instance = AcademicYearinstance.batch
 
-            # Library branch is optional - create if it doesn't exist
+            # Library branch is optional - must exist in database
             Library_branch_instance = None
             if libraryBookdetails.get('library_branch_Id'):
                 try:
-                    # Try to get existing LibraryBranch by ID
+                    # Get existing LibraryBranch by ID
                     Library_branch_instance = LibraryBranch.objects.get(
                         library_branch_id=libraryBookdetails['library_branch_Id'],
                         is_active=True)
                 except LibraryBranch.DoesNotExist:
-                    # Auto-create LibraryBranch if it doesn't exist
-                    # Use the requested ID in the name (e.g., "Branch 1")
-                    branch_name = f"Branch {libraryBookdetails['library_branch_Id']}"
-                    Library_branch_instance = LibraryBranch.objects.create(
-                        library_branch_name=branch_name,
-                        organization=organization_instance,
-                        batch=branch_instance,
-                        is_active=True
+                    # Return error if library branch doesn't exist
+                    return Response(
+                        {'message': f"Library Branch with ID {libraryBookdetails['library_branch_Id']} does not exist"},
+                        status=status.HTTP_400_BAD_REQUEST
                     )
 
             # AcademicYearinstance is already fetched above
@@ -2067,23 +2067,19 @@ class LibraryBookUpdateAPIView(APIView):
             except ObjectDoesNotExist:
                 return Response({'message': 'provided Book Id not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-            # Library branch is optional - create if it doesn't exist
+            # Library branch is optional - must exist in database
             librarybranchInstance = None
             if libraryBookdetails.get('library_branch_Id'):
                 try:
-                    # Try to get existing LibraryBranch by ID
+                    # Get existing LibraryBranch by ID
                     librarybranchInstance = LibraryBranch.objects.get(
                         library_branch_id=libraryBookdetails.get('library_branch_Id'),
                         is_active=True)
                 except ObjectDoesNotExist:
-                    # Auto-create LibraryBranch if it doesn't exist
-                    # Use the requested ID in the name (e.g., "Branch 1")
-                    branch_name = f"Branch {libraryBookdetails.get('library_branch_Id')}"
-                    librarybranchInstance = LibraryBranch.objects.create(
-                        library_branch_name=branch_name,
-                        organization=organizationInstance,
-                        batch=branchInstance,
-                        is_active=True
+                    # Return error if library branch doesn't exist
+                    return Response(
+                        {'message': f"Library Branch with ID {libraryBookdetails.get('library_branch_Id')} does not exist"},
+                        status=status.HTTP_400_BAD_REQUEST
                     )
 
             # update the book details
@@ -2181,16 +2177,19 @@ class LibraryBookUpdateAPIView(APIView):
                 # print(booklocationInstance)
 
                 # library book location Instance
+                # Check if this is an update (ID exists in database) or create (ID doesn't exist or is 0/None)
+                barcodedetailsInstance = None
                 if item.get('id') and item.get('id') > 0:
-
-                    # library barcode details Instance
+                    # library barcode details Instance - try to get existing record
                     try:
                         barcodedetailsInstance = LibraryBooksBarcode.objects.get(id=item.get('id'), is_active=True)
                     except ObjectDoesNotExist:
-                        return Response({'message': 'provided barcode details Id not Exist'},
-                                        status=status.HTTP_404_NOT_FOUND)
+                        # ID doesn't exist in database (e.g., timestamp ID from frontend)
+                        # Treat it as a new record
+                        barcodedetailsInstance = None
 
-                    # update the barcode record
+                # Update existing barcode record
+                if barcodedetailsInstance:
                     barcodedetailsInstance.book = bookInstance
                     barcodedetailsInstance.barcode = item.get('barcode')
                     barcodedetailsInstance.book_barcode_status = item.get('book_barcode_status')
@@ -2202,7 +2201,8 @@ class LibraryBookUpdateAPIView(APIView):
                     barcodedetailsInstance.updated_by = item.get('updated_by')
                     barcodedetailsInstance.save()
 
-                if item.get('id') == 0 or item.get('id') is None:
+                # Create new barcode record
+                elif item.get('id') == 0 or item.get('id') is None or not barcodedetailsInstance:
                     # create barcode record
 
                     # Check if the barcode already exists
@@ -2495,8 +2495,8 @@ class BookIssuesSearchListAPIView(ListAPIView):
             book_barcode_no = request.query_params.get('book_barcode_no')
             flag = request.query_params.get('flag')
 
-            if not flag and not academic_year_id:
-                return Response({'message': 'please provide flag value & academic year '},
+            if not flag:
+                return Response({'message': 'please provide flag value'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             if professor_id and student_id:

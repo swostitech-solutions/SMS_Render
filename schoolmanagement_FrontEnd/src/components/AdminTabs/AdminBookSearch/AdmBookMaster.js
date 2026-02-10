@@ -4790,6 +4790,7 @@ const BookForm = () => {
 
       console.log("Updated Book Details:", firstBookDetails);
       console.log("Total Number of Copies:", totalCopies);
+      console.log("Setting Branch ID to:", firstBookDetails.library_branch_id);
     }
   }, [bookData]);
 
@@ -5008,14 +5009,45 @@ const BookForm = () => {
         return;
       }
 
-      // Default branches
-      const defaultBranches = [
-        { value: 1, label: "Branch 1" },
-        { value: 2, label: "Branch 2" },
-        { value: 3, label: "Branch 3" },
-      ];
+      console.log("🔵 Fetching branches for orgId:", orgId, "branchId:", branchId);
 
-      setBranches(defaultBranches);
+      try {
+        const apiUrl = `${ApiUrl.apiurl}LIBRARYBRANCH/GetLibraryBranchList/${orgId}/${branchId}/`;
+        console.log("📡 Branch API URL:", apiUrl);
+
+        const response = await fetch(apiUrl);
+        console.log("📥 Branch API Response Status:", response.status, response.statusText);
+
+        const result = await response.json();
+        console.log("Library Branch API Response:", result);
+
+        if (response.ok && result.message === "success" && Array.isArray(result.data)) {
+          const branchOptions = result.data.map((branch) => ({
+            value: branch.library_branch_id,
+            label: branch.library_branch_name,
+          }));
+          console.log("Mapped Branch Options:", branchOptions);
+          setBranches(branchOptions);
+        } else {
+          console.warn("⚠️ Branch API returned non-success or invalid data:", result);
+          // Fallback to default branches if API fails
+          const defaultBranches = [
+            { value: 1, label: "Branch 1" },
+            { value: 2, label: "Branch 2" },
+            { value: 3, label: "Branch 3" },
+          ];
+          setBranches(defaultBranches);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching branches:", error);
+        // Fallback to default branches on error
+        const defaultBranches = [
+          { value: 1, label: "Branch 1" },
+          { value: 2, label: "Branch 2" },
+          { value: 3, label: "Branch 3" },
+        ];
+        setBranches(defaultBranches);
+      }
     };
 
     fetchBranches();
@@ -5037,15 +5069,39 @@ const BookForm = () => {
 
       if (!orgId || !branchId) return;
 
-      // Default locations
-      const defaultLocations = [
-        { value: 1, label: "Location 1" },
-        { value: 2, label: "Location 2" },
-        { value: 3, label: "Location 3" },
-        { value: 4, label: "Location 4" },
-      ];
+      try {
+        const response = await fetch(
+          `${ApiUrl.apiurl}BOOK_LOCATION/GetALLBookLocationList/${orgId}/${branchId}/`
+        );
+        const result = await response.json();
 
-      setLocations(defaultLocations);
+        if (response.ok && result.message === "success" && Array.isArray(result.data)) {
+          const locationOptions = result.data.map((location) => ({
+            value: location.id,
+            label: location.booklocation,
+          }));
+          setLocations(locationOptions);
+        } else {
+          // Fallback to default locations if API fails
+          const defaultLocations = [
+            { value: 1, label: "Location 1" },
+            { value: 2, label: "Location 2" },
+            { value: 3, label: "Location 3" },
+            { value: 4, label: "Location 4" },
+          ];
+          setLocations(defaultLocations);
+        }
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+        // Fallback to default locations on error
+        const defaultLocations = [
+          { value: 1, label: "Location 1" },
+          { value: 2, label: "Location 2" },
+          { value: 3, label: "Location 3" },
+          { value: 4, label: "Location 4" },
+        ];
+        setLocations(defaultLocations);
+      }
     };
 
     fetchLocations();
@@ -5341,6 +5397,7 @@ const BookForm = () => {
       publish_year: bookDetails.publish_year || new Date().getFullYear(),
       edition: bookDetails.edition || 1,
       volume: bookDetails.volume ? parseInt(bookDetails.volume) : null,
+      pages: bookDetails.pages ? parseInt(bookDetails.pages) : null,
       ISBN: bookDetails.ISBN,
       createdDate: new Date().toISOString().split("T")[0],
       IssueNo: bookDetails.IssueNo || "ISS123",
