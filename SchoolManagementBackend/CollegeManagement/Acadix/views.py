@@ -1026,8 +1026,10 @@ class CreateAdminUserAPIView(CreateAPIView):
 
             user_name = serializer.validated_data['user_name']
             password = serializer.validated_data['password']
+            role_name = serializer.validated_data.get('role_name', '')
             organization_id = serializer.validated_data['organization_id']
             branch_id = serializer.validated_data['branch_id']
+            reference_id = serializer.validated_data.get('reference_id', 0)
             accessible_modules = serializer.validated_data.get('accessible_modules', [])
 
             # Get UserType for admin
@@ -1047,10 +1049,11 @@ class CreateAdminUserAPIView(CreateAPIView):
             new_user = UserLogin(
                 user_name=user_name,
                 plain_password=password,
+                role_name=role_name if role_name else '',
                 user_type=admin_user_type,
                 organization=organization,
                 branch=branch,
-                reference_id=0,  # Not linked to any employee
+                reference_id=reference_id if reference_id else 0,
                 accessible_modules=accessible_modules,
                 is_active=True,
                 is_staff=False
@@ -1066,6 +1069,7 @@ class CreateAdminUserAPIView(CreateAPIView):
                 "user_type": admin_user_type.user_type,
                 "organization": organization.organization_code,
                 "branch": branch.branch_name,
+                "reference_id": new_user.reference_id,
                 "accessible_modules": accessible_modules,
                 "is_active": new_user.is_active,
                 "created_at": new_user.date_joined
@@ -1102,6 +1106,72 @@ class CreateAdminUserAPIView(CreateAPIView):
             process_name='CreateAdminUser',
             message=error_message,
         )
+
+
+class ListAdminUserAPIView(ListAPIView):
+    """
+    API endpoint to list all admin users
+    """
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get organization and branch from query params
+            org_id = request.query_params.get('org_id')
+            branch_id = request.query_params.get('branch_id')
+
+            # Base queryset
+            queryset = UserLogin.objects.all()
+
+            # Filter by organization if provided
+            if org_id:
+                queryset = queryset.filter(organization_id=org_id)
+
+            # Filter by branch if provided
+            if branch_id:
+                queryset = queryset.filter(branch_id=branch_id)
+
+            # Get admin user type
+            try:
+                admin_user_type = UserType.objects.get(user_type__iexact='admin')
+                queryset = queryset.filter(user_type=admin_user_type)
+            except UserType.DoesNotExist:
+                pass
+
+            # Build response data
+            admin_users_data = []
+            for user in queryset:
+                admin_users_data.append({
+                    "id": user.id,
+                    "user_name": user.user_name,
+                    "role_name": user.role_name if hasattr(user, 'role_name') else '',
+                    "user_type": user.user_type.user_type if user.user_type else "N/A",
+                    "reference_id": user.reference_id,
+                    "organization": user.organization.organization_code if user.organization else "N/A",
+                    "branch": user.branch.branch_name if user.branch else "N/A",
+                    "accessible_modules": user.accessible_modules if user.accessible_modules else [],
+                    "is_active": user.is_active,
+                    "date_joined": user.date_joined
+                })
+
+            return Response(
+                {
+                    'message': 'Admin users fetched successfully',
+                    'data': admin_users_data,
+                    'count': len(admin_users_data)
+                },
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            error_message = str(e)
+            ExceptionTrack.objects.create(
+                request=str(request),
+                process_name='ListAdminUser',
+                message=error_message,
+            )
+            return Response(
+                {'error': error_message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class EmployeeEducationDetailCreateView(CreateAPIView):

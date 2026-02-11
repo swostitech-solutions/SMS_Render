@@ -158,6 +158,32 @@ function Sidebar({ state, setState }) {
             {isModuleAccessible("staff") && createExpandableSection("Staff", <PiChalkboardTeacherFill />, [
               { path: "/admin/employee-search", text: "Registration" },
             ])}
+            {isModuleAccessible("staff") && (
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={{
+                    minHeight: 48,
+                    px: 2.5,
+                    backgroundColor:
+                      location.pathname === "/admin/non-teaching-staff" ||
+                      location.pathname === "/admin/non-teaching-staff-details"
+                        ? "blue"
+                        : "transparent",
+                    color:
+                      location.pathname === "/admin/non-teaching-staff" ||
+                      location.pathname === "/admin/non-teaching-staff-details"
+                        ? "black"
+                        : "inherit",
+                  }}
+                  onClick={handleNavigation("/admin/non-teaching-staff")}
+                >
+                  <ListItemIcon sx={{ minWidth: 30, justifyContent: "center" }}>
+                    <FaPeopleGroup />
+                  </ListItemIcon>
+                  <ListItemText primary="Non-Teaching Staff" />
+                </ListItemButton>
+              </ListItem>
+            )}
             {isModuleAccessible("fee") && createExpandableSection("Fee", <BsCashCoin />, [
               { path: "/admin/fee-search", text: "Search" },
               { path: "/admin/adhoc-fees", text: "ADHOC Fees" },
@@ -270,8 +296,8 @@ function Sidebar({ state, setState }) {
               { path: "/admin/inventory", text: "Inventory Category" },
               { path: "/admin/inventory-search", text: "Inventory Search" },
             ])}
-            {(!accessibleModules || accessibleModules.length === 0) && createExpandableSection("Role Based Access", <PersonAddOutlinedIcon />, [
-              { path: "/admin/create-admin-user", text: "Create Admin User" },
+            {(!accessibleModules || accessibleModules.length === 0) && createExpandableSection("Role", <PersonAddOutlinedIcon />, [
+              { path: "/admin/create-admin-user", text: "Create New Role" },
             ])}
           </>
         )}

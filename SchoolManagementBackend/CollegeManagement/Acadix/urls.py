@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/RegisterEmployee/ChangePassword/', views.RegisterUserChangePasswordAPIView.as_view(),
          name='UserChangePassword'),
     path('api/AdminUser/Create/', views.CreateAdminUserAPIView.as_view(), name='CreateAdminUser'),
+    path('api/AdminUser/List/', views.ListAdminUserAPIView.as_view(), name='ListAdminUser'),
 
     path('api/EducationDetails/create/', views.EmployeeEducationDetailCreateView.as_view(),
          name='EmployeeEducationDetailsCreate'),

@@ -208,8 +208,10 @@ class ChangePasswordSerializer(serializers.Serializer):
 class CreateAdminUserSerializer(serializers.Serializer):
     user_name = serializers.CharField(required=True, min_length=3)
     password = serializers.CharField(required=True, min_length=6)
+    role_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     organization_id = serializers.IntegerField(required=True)
     branch_id = serializers.IntegerField(required=True)
+    reference_id = serializers.IntegerField(required=False, allow_null=True)
     accessible_modules = serializers.ListField(
         child=serializers.CharField(),
         required=False,

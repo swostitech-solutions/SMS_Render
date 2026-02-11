@@ -1067,8 +1067,9 @@ class StudentCourse(models.Model):
 class UserLogin(AbstractBaseUser, PermissionsMixin):
     user_name = models.CharField(max_length=255, unique=True, null=False, blank=False)
     plain_password = models.CharField(max_length=255)  # Consider removing this for security
+    role_name = models.CharField(max_length=255, null=True, blank=True)  # Role name for admin users
     user_type = models.ForeignKey('UserType', default=1, on_delete=models.CASCADE)
-    reference_id = models.IntegerField(default=0)
+    reference_id = models.IntegerField(default=0, null=True, blank=True)  # Link to employee/staff/student (0 = not linked)
     organization = models.ForeignKey(Organization,default=1, on_delete=models.CASCADE)
     branch = models.ForeignKey(Branch,default=1, on_delete=models.CASCADE)
     accessible_modules = models.JSONField(default=list, blank=True, null=True)  # Store accessible modules for admin users

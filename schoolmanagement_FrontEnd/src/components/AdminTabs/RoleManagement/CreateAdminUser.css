@@ -1,0 +1,99 @@
+.create-admin-user-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.create-admin-user-container .card {
+  border: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.create-admin-user-container .card-header {
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+}
+
+.create-admin-user-container .role-form-section .card {
+  border: 1px solid #dee2e6;
+  margin-bottom: 20px;
+}
+
+.create-admin-user-container .role-form-section .card-header {
+  background-color: #f8f9fa !important;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.create-admin-user-container .table {
+  margin-bottom: 0;
+}
+
+.create-admin-user-container .table thead th {
+  vertical-align: middle;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.create-admin-user-container .table tbody td {
+  vertical-align: middle;
+}
+
+.create-admin-user-container .btn {
+  border-radius: 5px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.create-admin-user-container .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.create-admin-user-container .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.create-admin-user-container .form-control {
+  border-radius: 5px;
+  border: 1px solid #ced4da;
+  padding: 10px 12px;
+}
+
+.create-admin-user-container .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.create-admin-user-container .badge {
+  padding: 6px 12px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.create-admin-user-container .alert {
+  border-radius: 5px;
+  border: none;
+  font-weight: 500;
+}
+
+.create-admin-user-container .gap-2 > * {
+  margin-left: 0.5rem;
+}
+
+.create-admin-user-container .gap-2 > *:first-child {
+  margin-left: 0;
+}
+
+/* React Select customization to match Bootstrap theme */
+.create-admin-user-container .css-b62m3t-container {
+  width: 100%;
+}
+
+.create-admin-user-container .is-invalid + .text-danger {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+}
