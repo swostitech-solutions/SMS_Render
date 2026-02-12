@@ -178,7 +178,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     # user_id = serializers.IntegerField(required=True)
     username = serializers.CharField(max_length=200,required=True)
     old_password = serializers.CharField(required=False)
-    new_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=6)
     confirm_password = serializers.CharField(required=True)
 
     def validate_username(self, username):

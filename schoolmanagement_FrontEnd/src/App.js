@@ -50,8 +50,7 @@ import StudentMessage from "./pages/AdminPanel/StudentMessage";
 import AdmStudentMessageList from "./components/AdminTabs/AdminStudentMessage/AdmStudentMessageList";
 import StudentClub from "./pages/AdminPanel/StudentClub";
 import EmployeeSearch from "./pages/AdminPanel/EmployeeSearch";
-import NonTeachingStaffSearch from "./components/AdminTabs/NonTeachingStaff/NonTeachingStaffSearch";
-import NonTeachingStaffDetails from "./components/AdminTabs/NonTeachingStaff/NonTeachingStaffDetails";
+
 
 import CircularEntry from "./pages/AdminPanel/CircularEntry";
 import FeeSearch from "./pages/AdminPanel/FeeSearch";
@@ -164,6 +163,7 @@ import InventorySearch from "./pages/AdminPanel/InventorySearch";
 import NewInventory from "./components/AdminTabs/AdminInventoryMgmt/AdmNewInventory";
 import CreateAdminUserPage from "./pages/AdminPanel/CreateAdminUserPage";
 import CreateNewAdminUser from "./components/AdminTabs/RoleManagement/CreateNewAdminUser";
+import AdminChangePassword from "./components/AdminTabs/AdminChangePassword/AdminChangePassword";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -443,14 +443,7 @@ function App() {
                 path="/admin/employee-Search"
                 element={<EmployeeSearch />}
               />
-              <Route
-                path="/admin/non-teaching-staff"
-                element={<NonTeachingStaffSearch />}
-              />
-              <Route
-                path="/admin/non-teaching-staff-details"
-                element={<NonTeachingStaffDetails />}
-              />
+
               <Route path="/admin/circular-entry" element={<CircularEntry />} />
               <Route path="/admin/fee-search" element={<FeeSearch />} />
               <Route path="/admin/fee-structure" element={<FeeStructure />} />
@@ -611,6 +604,7 @@ function App() {
               <Route path="/admin/inventory-new" element={<NewInventory />} />
               <Route path="/admin/create-admin-user" element={<CreateAdminUserPage />} />
               <Route path="/admin/create-admin-user/new" element={<CreateNewAdminUser />} />
+              <Route path="/admin/change-password" element={<AdminChangePassword />} />
             </>
           )}
         </Routes>

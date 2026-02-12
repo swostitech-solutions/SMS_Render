@@ -122,7 +122,7 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
             # Check all active  employee
             try:
                 EmployeeMaster_Records = EmployeeMaster.objects.filter(
-                    is_active=True,id=request.data.get('id')
+                    id=request.data.get('id')
                 )
             except:
                 EmployeeMaster_Records = None
@@ -157,6 +157,15 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                 staffcreateInstance.office_email = serializer.validated_data.get('office_email')
                 staffcreateInstance.phone_number = serializer.validated_data.get('phone_number')
                 staffcreateInstance.emergency_contact_number = serializer.validated_data.get('emergency_contact_number')
+
+                # Update is_active status
+                is_active_val = request.data.get('is_active')
+                if is_active_val is not None:
+                    if str(is_active_val).lower() == 'true':
+                        staffcreateInstance.is_active = True
+                    else:
+                        staffcreateInstance.is_active = False
+
                 if serializer.validated_data.get('profile_pic'):
                     staffcreateInstance.profile_pic = serializer.validated_data.get('profile_pic')
                 staffcreateInstance.updated_by = serializer.validated_data.get('created_by')
@@ -1205,7 +1214,7 @@ class StaffRegistrationDetailsRetrieveAPIView(RetrieveAPIView):
 
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeMasterInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id,is_active=True)
+                    EmployeeMasterInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({"message":"No Employee Found !!!"}, status=status.HTTP_404_NOT_FOUND)
             else:
@@ -1269,6 +1278,7 @@ class StaffRegistrationDetailsRetrieveAPIView(RetrieveAPIView):
                 'emergency_contact_number': EmployeeMasterInstance.emergency_contact_number,
                 'mother_tongue': EmployeeMasterInstance.mother_tongue.mother_tongue_name,
                 'mother_tongue_id': EmployeeMasterInstance.mother_tongue.id,
+                'is_active': EmployeeMasterInstance.is_active,
                 'profile':EmployeeMasterInstance.profile_photo_path
                 # 'profile':profile
             }

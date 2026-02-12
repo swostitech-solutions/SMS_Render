@@ -52,6 +52,7 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
       officeEmail: "",
       phoneNumber: "",
       emergencyContactNumber: "",
+      status: "ACTIVE",
       createdBy: "",
       profilePicture: null,
     };
@@ -170,6 +171,7 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
         officeEmail: employeeDetails.office_email || "",
         phoneNumber: employeeDetails.phone_number || "",
         emergencyContactNumber: employeeDetails.emergency_contact_number || "",
+        status: employeeDetails.is_active ? "ACTIVE" : "INACTIVE",
         profilePicture: employeeDetails.profile || "",
       });
 
@@ -647,6 +649,32 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                             employeeType: selectedOption.value, // store ID (value)
                           })
                         }
+                      />
+                    </div>
+
+                    <div className="col-md-3 mb-3">
+                      <label htmlFor="status" className="form-label">
+                        Status <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <Select
+                        inputId="status"
+                        classNamePrefix="marital-status-select"
+                        className="detail"
+                        options={[
+                          { value: "ACTIVE", label: "ACTIVE" },
+                          { value: "INACTIVE", label: "INACTIVE" },
+                        ]}
+                        value={{
+                          value: formData.status || "ACTIVE",
+                          label: formData.status || "ACTIVE",
+                        }}
+                        onChange={(selectedOption) =>
+                          setFormData({
+                            ...formData,
+                            status: selectedOption.value,
+                          })
+                        }
+                        isDisabled={!formData.employeeId}
                       />
                     </div>
 

@@ -65,7 +65,35 @@ function Sidebar({ state, setState }) {
     if (!accessibleModules || accessibleModules.length === 0) {
       return true;
     }
-    return accessibleModules.includes(moduleCode);
+    
+    // Check if user has parent-level access (backward compatibility)
+    if (accessibleModules.includes(moduleCode)) {
+      return true;
+    }
+    
+    // Check if user has any child-level access for this parent
+    const hasChildAccess = accessibleModules.some(m => m.startsWith(moduleCode + "."));
+    return hasChildAccess;
+  };
+
+  // Helper function to check if specific child menu is accessible
+  const isChildAccessible = (childCode) => {
+    // If no modules specified, show all (for backward compatibility)
+    if (!accessibleModules || accessibleModules.length === 0) {
+      return true;
+    }
+    
+    // Extract parent from child code (e.g., "student.registration" -> "student")
+    const parent = childCode.split('.')[0];
+    
+    // If user has parent-level access, show all children (backward compatibility)
+    if (accessibleModules.includes(parent)) {
+      return true;
+    }
+    
+    // Check if user has specific child access
+    const hasAccess = accessibleModules.includes(childCode);
+    return hasAccess;
   };
 
   const handleToggle = (section) => () => {
@@ -132,173 +160,106 @@ function Sidebar({ state, setState }) {
         {(userRole === "principal" || userRole === "admin") && (
           <>
             {isModuleAccessible("dashboard") && createExpandableSection("Dashboards", <MdDashboard />, [
-              { path: "/admin/fee-dashboard", text: "Fee" },
-              { path: "/admin/student-attendance-list", text: "Attendance" },
-            ])}
+              isChildAccessible("dashboard.fee_dashboard") && { path: "/admin/fee-dashboard", text: "Fee" },
+              isChildAccessible("dashboard.attendance") && { path: "/admin/student-attendance-list", text: "Attendance" },
+            ].filter(Boolean))}
             {isModuleAccessible("student") && createExpandableSection("Student", <PiStudentBold />, [
-              { path: "/admin/registration", text: "Registration" },
-
-              { path: "/admin/Attendance-update", text: "Attendance" },
-
-              { path: "/admin/assignment-entry", text: "Assignment" },
-
-              { path: "/admin/student-promotion", text: "Promotion" },
-              { path: "/admin/student-class", text: "Student Course" },
-              { path: "/admin/student-confirm", text: "Student Confirm" },
-              {
-                path: "/admin/student-certificate",
-                text: "Student Certificate",
-              },
-              { path: "/admin/student-message", text: "Student Message" },
-              { path: "/admin/student-club", text: "Student Club" },
-
-              { path: "/admin/circular-entry", text: "Circulars" },
-            ])}
+              isChildAccessible("student.registration") && { path: "/admin/registration", text: "Registration" },
+              isChildAccessible("student.attendance") && { path: "/admin/Attendance-update", text: "Attendance" },
+              isChildAccessible("student.assignment") && { path: "/admin/assignment-entry", text: "Assignment" },
+              isChildAccessible("student.promotion") && { path: "/admin/student-promotion", text: "Promotion" },
+              isChildAccessible("student.class") && { path: "/admin/student-class", text: "Student Course" },
+              isChildAccessible("student.confirm") && { path: "/admin/student-confirm", text: "Student Confirm" },
+              isChildAccessible("student.certificate") && { path: "/admin/student-certificate", text: "Student Certificate" },
+              isChildAccessible("student.message") && { path: "/admin/student-message", text: "Student Message" },
+              isChildAccessible("student.club") && { path: "/admin/student-club", text: "Student Club" },
+              isChildAccessible("student.circular") && { path: "/admin/circular-entry", text: "Circulars" },
+            ].filter(Boolean))}
             {/* {createExpandableSection("Others", <PersonAddOutlinedIcon />, [])} */}
             {isModuleAccessible("staff") && createExpandableSection("Staff", <PiChalkboardTeacherFill />, [
-              { path: "/admin/employee-search", text: "Registration" },
-            ])}
-            {isModuleAccessible("staff") && (
-              <ListItem disablePadding>
-                <ListItemButton
-                  sx={{
-                    minHeight: 48,
-                    px: 2.5,
-                    backgroundColor:
-                      location.pathname === "/admin/non-teaching-staff" ||
-                      location.pathname === "/admin/non-teaching-staff-details"
-                        ? "blue"
-                        : "transparent",
-                    color:
-                      location.pathname === "/admin/non-teaching-staff" ||
-                      location.pathname === "/admin/non-teaching-staff-details"
-                        ? "black"
-                        : "inherit",
-                  }}
-                  onClick={handleNavigation("/admin/non-teaching-staff")}
-                >
-                  <ListItemIcon sx={{ minWidth: 30, justifyContent: "center" }}>
-                    <FaPeopleGroup />
-                  </ListItemIcon>
-                  <ListItemText primary="Non-Teaching Staff" />
-                </ListItemButton>
-              </ListItem>
-            )}
+              isChildAccessible("staff.registration") && { path: "/admin/employee-search", text: "Registration" },
+            ].filter(Boolean))}
             {isModuleAccessible("fee") && createExpandableSection("Fee", <BsCashCoin />, [
-              { path: "/admin/fee-search", text: "Search" },
-              { path: "/admin/adhoc-fees", text: "ADHOC Fees" },
-              { path: "/admin/fee-ledger", text: "Fee Ledger" },
-              { path: "/admin/student-fee", text: "Student Fee" },
-              { path: "/admin/fee-structure", text: "Fee Structure" },
-            ])}
+              isChildAccessible("fee.search") && { path: "/admin/fee-search", text: "Search" },
+              isChildAccessible("fee.adhoc") && { path: "/admin/adhoc-fees", text: "ADHOC Fees" },
+              isChildAccessible("fee.ledger") && { path: "/admin/fee-ledger", text: "Fee Ledger" },
+              isChildAccessible("fee.student_fee") && { path: "/admin/student-fee", text: "Student Fee" },
+              isChildAccessible("fee.structure") && { path: "/admin/fee-structure", text: "Fee Structure" },
+            ].filter(Boolean))}
             {isModuleAccessible("library") && createExpandableSection("Library", <HiOutlineLibrary />, [
-              { path: "/admin/book-dashboard", text: "Book Dashboard" },
-
-              { path: "/admin/book-category", text: "Book Category" },
-              { path: "/admin/book-search", text: "Search" },
-              {
-                path: "/admin/book-Configurations",
-                text: "Book Configurations",
-              },
-              { path: "/admin/book-movements", text: "Issue/Return" },
-              { path: "/admin/book-barcode", text: "Book Barcode" },
-              { path: "/admin/book-title-report", text: "Book Title Report" },
-              { path: "/admin/book-journal-report", text: "Journal Report" },
-              {
-                path: "/admin/book-accession-report",
-                text: "	Book Accession Report",
-              },
-              {
-                path: "/admin/book-issue-return-report",
-                text: "Issue/Return Report",
-              },
-              {
-                path: "/admin/book-issue-damaged-report",
-                text: "	Lost/Damaged Report",
-              },
-              {
-                path: "/admin/book-most-circulated",
-                text: "Most Circulated Book Report",
-              },
-            ])}
+              isChildAccessible("library.dashboard") && { path: "/admin/book-dashboard", text: "Book Dashboard" },
+              isChildAccessible("library.category") && { path: "/admin/book-category", text: "Book Category" },
+              isChildAccessible("library.search") && { path: "/admin/book-search", text: "Search" },
+              isChildAccessible("library.configurations") && { path: "/admin/book-Configurations", text: "Book Configurations" },
+              isChildAccessible("library.movements") && { path: "/admin/book-movements", text: "Issue/Return" },
+              isChildAccessible("library.barcode") && { path: "/admin/book-barcode", text: "Book Barcode" },
+              isChildAccessible("library.title_report") && { path: "/admin/book-title-report", text: "Book Title Report" },
+              isChildAccessible("library.journal_report") && { path: "/admin/book-journal-report", text: "Journal Report" },
+              isChildAccessible("library.accession_report") && { path: "/admin/book-accession-report", text: "	Book Accession Report" },
+              isChildAccessible("library.issue_return_report") && { path: "/admin/book-issue-return-report", text: "Issue/Return Report" },
+              isChildAccessible("library.damaged_report") && { path: "/admin/book-issue-damaged-report", text: "	Lost/Damaged Report" },
+              isChildAccessible("library.most_circulated") && { path: "/admin/book-most-circulated", text: "Most Circulated Book Report" },
+            ].filter(Boolean))}
             {isModuleAccessible("exam_results") && createExpandableSection("Exam Results", <PiExam />, [
-              { path: "/admin/result", text: "Result" },
-            ])}
+              isChildAccessible("exam_results.result") && { path: "/admin/result", text: "Result" },
+            ].filter(Boolean))}
             {isModuleAccessible("transport") && createExpandableSection("Transport", <FaBusAlt />, [
-              {
-                path: "/admin/transport-search",
-                text: " Search",
-              },
-
-              {
-                path: "/admin/student-transport-fee",
-                text: "Student Transport",
-              },
-            ])}
+              isChildAccessible("transport.search") && { path: "/admin/transport-search", text: " Search" },
+              isChildAccessible("transport.student_fee") && { path: "/admin/student-transport-fee", text: "Student Transport" },
+            ].filter(Boolean))}
             {isModuleAccessible("expense") && createExpandableSection("Expense", <FaMoneyBillTransfer />, [
-              { path: "/admin/search-expense", text: "Search Expense" },
-              {
-                path: "/admin/expense-category",
-                text: "Expense/Income Category",
-              },
-              { path: "/admin/party-master", text: "Party Master" },
-              { path: "/admin/expense-ledger", text: "Expense Ledger" },
-              { path: "/admin/profit-loss", text: "Profit & Loss" },
-              { path: "/admin/day-book", text: "Day Book" },
-            ])}
+              isChildAccessible("expense.search") && { path: "/admin/search-expense", text: "Search Expense" },
+              isChildAccessible("expense.category") && { path: "/admin/expense-category", text: "Expense/Income Category" },
+              isChildAccessible("expense.party_master") && { path: "/admin/party-master", text: "Party Master" },
+              isChildAccessible("expense.ledger") && { path: "/admin/expense-ledger", text: "Expense Ledger" },
+              isChildAccessible("expense.profit_loss") && { path: "/admin/profit-loss", text: "Profit & Loss" },
+              isChildAccessible("expense.day_book") && { path: "/admin/day-book", text: "Day Book" },
+            ].filter(Boolean))}
             {isModuleAccessible("other_income") && createExpandableSection("Other Income", <GiMoneyStack />, [
-              { path: "/admin/Search-income", text: "Search Income" },
-            ])}
+              isChildAccessible("other_income.search") && { path: "/admin/Search-income", text: "Search Income" },
+            ].filter(Boolean))}
             {isModuleAccessible("hostel") && createExpandableSection("Hostel", <MdOutlineAddHomeWork />, [
-              { path: "/admin/search-hostel", text: "Search " },
-              {
-                path: "/admin/student-hostel-details",
-                text: "Student Hostel Details",
-              },
-              {
-                path: "/admin/student-hostel-fee",
-                text: "Student Hostel Fee ",
-              },
-            ])}
+              isChildAccessible("hostel.search") && { path: "/admin/search-hostel", text: "Search " },
+              isChildAccessible("hostel.student_details") && { path: "/admin/student-hostel-details", text: "Student Hostel Details" },
+              isChildAccessible("hostel.student_fee") && { path: "/admin/student-hostel-fee", text: "Student Hostel Fee " },
+            ].filter(Boolean))}
             {isModuleAccessible("timetable") && createExpandableSection("TimeTable", <FaRegCalendarTimes />, [
-              { path: "/admin/class-time-table", text: "Class TimeTable" },
-              { path: "/admin/teacher-time-table", text: "Teacher TimeTable" },
-            ])}
+              isChildAccessible("timetable.class") && { path: "/admin/class-time-table", text: "Class TimeTable" },
+              isChildAccessible("timetable.teacher") && { path: "/admin/teacher-time-table", text: "Teacher TimeTable" },
+            ].filter(Boolean))}
             {isModuleAccessible("lessonplan") && createExpandableSection("LessonPlan", <FaBookOpen />, [
-              { path: "/admin/lesson-plan", text: "Lesson Plan" },
-              {
-                path: "/admin/teacher-lesson-plan",
-                text: "Teacher Lesson Plan",
-              },
-            ])}
+              isChildAccessible("lessonplan.lesson_plan") && { path: "/admin/lesson-plan", text: "Lesson Plan" },
+              isChildAccessible("lessonplan.teacher") && { path: "/admin/teacher-lesson-plan", text: "Teacher Lesson Plan" },
+            ].filter(Boolean))}
             {isModuleAccessible("mentor") && createExpandableSection("Mentor", <PiChalkboardTeacher />, [
-              { path: "/admin/assign-mentor", text: "Assign Mentor" },
-              { path: "/admin/follows-ups", text: "Follow Ups" },
-              { path: "/admin/student-details", text: "Student Details" },
-            ])}
+              isChildAccessible("mentor.assign") && { path: "/admin/assign-mentor", text: "Assign Mentor" },
+              isChildAccessible("mentor.follow_ups") && { path: "/admin/follows-ups", text: "Follow Ups" },
+              isChildAccessible("mentor.student_details") && { path: "/admin/student-details", text: "Student Details" },
+            ].filter(Boolean))}
             {isModuleAccessible("academics") && createExpandableSection("Academics", <HiOutlineAcademicCap />, [
-              { path: "/admin/document-upload", text: "Document Upload" },
-            ])}
+              isChildAccessible("academics.document_upload") && { path: "/admin/document-upload", text: "Document Upload" },
+            ].filter(Boolean))}
 
             {isModuleAccessible("grievance") && createExpandableSection("Grievance", <LuBaggageClaim />, [
-              { path: "/admin/student-grievance", text: "Student Grievances" },
-            ])}
+              isChildAccessible("grievance.student") && { path: "/admin/student-grievance", text: "Student Grievances" },
+            ].filter(Boolean))}
             {isModuleAccessible("visitors") && createExpandableSection("Visitors", <FaPeopleGroup />, [
-              { path: "/admin/visitors-list", text: "Visitors List" },
-            ])}
+              isChildAccessible("visitors.list") && { path: "/admin/visitors-list", text: "Visitors List" },
+            ].filter(Boolean))}
             {isModuleAccessible("mou") && createExpandableSection("MOU", <RiNewspaperLine />, [
-              { path: "/admin/mou-list", text: "Mou List" },
-            ])}
+              isChildAccessible("mou.list") && { path: "/admin/mou-list", text: "Mou List" },
+            ].filter(Boolean))}
             {isModuleAccessible("training_placements") && createExpandableSection("Training and Placements", <ImOffice />, [
-              { path: "/admin/training", text: "Training" },
-            ])}
+              isChildAccessible("training_placements.training") && { path: "/admin/training", text: "Training" },
+            ].filter(Boolean))}
             {isModuleAccessible("inventory") && createExpandableSection("Inventory Management", <FaWarehouse />, [
-              { path: "/admin/inventory", text: "Inventory Category" },
-              { path: "/admin/inventory-search", text: "Inventory Search" },
-            ])}
-            {(!accessibleModules || accessibleModules.length === 0) && createExpandableSection("Role", <PersonAddOutlinedIcon />, [
-              { path: "/admin/create-admin-user", text: "Create New Role" },
-            ])}
+              isChildAccessible("inventory.category") && { path: "/admin/inventory", text: "Inventory Category" },
+              isChildAccessible("inventory.search") && { path: "/admin/inventory-search", text: "Inventory Search" },
+            ].filter(Boolean))}
+            {isModuleAccessible("role") && createExpandableSection("Role", <PersonAddOutlinedIcon />, [
+              isChildAccessible("role.create_admin_user") && { path: "/admin/create-admin-user", text: "Create New Role" },
+              isChildAccessible("role.change_password") && { path: "/admin/change-password", text: "Change Password" },
+            ].filter(Boolean))}
           </>
         )}
         {userRole === "student" && (

@@ -112,6 +112,7 @@ export default function BasicTabs() {
                 motherTongue: basicResult.data.mother_tongue_id,
                 employeeType: basicResult.data.employee_type_id,
                 gender: basicResult.data.gender_id,
+                status: basicResult.data.is_active ? "ACTIVE" : "INACTIVE",
                 // Map profile image URL to profilePicture (backend uses 'profile' field)
                 profilePicture: basicResult.data.profile || null,
               };
@@ -326,6 +327,7 @@ export default function BasicTabs() {
         basicPayload.append("place_of_birth", basicInfoData.placeOfBirth || "");
         basicPayload.append("marital_status", basicInfoData.maritalStatus || "1");
         basicPayload.append("gender", basicInfoData.gender || "");
+        basicPayload.append("is_active", "True"); // Default active for new staff
         basicPayload.append("nationality", mapVal(basicInfoData.nationality, nationalities) || 3);
         basicPayload.append("religion", mapVal(basicInfoData.religion, religions) || 5);
         basicPayload.append("email", basicInfoData.email || "");
@@ -735,6 +737,8 @@ export default function BasicTabs() {
           basicPayload.append("place_of_birth", basicInfoData.placeOf_birth || "");
           basicPayload.append("marital_status", basicInfoData.maritalStatus || "1");
           basicPayload.append("gender", basicInfoData.gender || "");
+          // Map status to is_active (backend expects "True"/"False" string or boolean)
+          basicPayload.append("is_active", basicInfoData.status === "ACTIVE" ? "True" : "False");
 
           basicPayload.append("nationality", mapVal(basicInfoData.nationality, nationalities) || 3);
           basicPayload.append("religion", mapVal(basicInfoData.religion, religions) || 5);

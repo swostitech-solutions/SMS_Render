@@ -1174,6 +1174,88 @@ class ListAdminUserAPIView(ListAPIView):
             )
 
 
+class UpdateAdminUserAPIView(UpdateAPIView):
+    """
+    API endpoint to update an existing admin user
+    Only allows updating role_name and accessible_modules
+    Username, password, and reference_id cannot be changed
+    """
+    def put(self, request, *args, **kwargs):
+        try:
+            user_id = kwargs.get('pk')
+            
+            if not user_id:
+                return Response(
+                    {'message': 'User ID is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get the user to update
+            try:
+                user = UserLogin.objects.get(id=user_id)
+            except UserLogin.DoesNotExist:
+                return Response(
+                    {'message': 'User not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Extract updateable fields from request
+            role_name = request.data.get('role_name')
+            accessible_modules = request.data.get('accessible_modules')
+
+            # Validate role_name
+            if role_name is not None:
+                if not role_name.strip():
+                    return Response(
+                        {'message': 'Role name cannot be empty'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                user.role_name = role_name.strip()
+
+            # Validate accessible_modules
+            if accessible_modules is not None:
+                if not isinstance(accessible_modules, list):
+                    return Response(
+                        {'message': 'Accessible modules must be a list'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                user.accessible_modules = accessible_modules
+
+            # Save the updated user
+            user.save()
+
+            # Prepare response data
+            response_data = {
+                "id": user.id,
+                "user_name": user.user_name,
+                "role_name": user.role_name,
+                "user_type": user.user_type.user_type if user.user_type else "N/A",
+                "reference_id": user.reference_id,
+                "accessible_modules": user.accessible_modules,
+                "is_active": user.is_active,
+                "updated_at": user.date_joined
+            }
+
+            return Response(
+                {'message': 'Admin user updated successfully', 'data': response_data},
+                status=status.HTTP_200_OK
+            )
+
+        except ValidationError as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            error_message = str(e)
+            ExceptionTrack.objects.create(
+                request=str(request),
+                process_name='UpdateAdminUser',
+                message=error_message,
+            )
+            return Response(
+                {'error': error_message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 class EmployeeEducationDetailCreateView(CreateAPIView):
     queryset = EmployeeDetail.objects.all()
     serializer_class = EmployeeDetailSerializer

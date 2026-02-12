@@ -41,7 +41,6 @@ urlpatterns = [
     path('',include('REPORT_CARD.urls')),
     # path('',include('REPORT_CARD.urls')),
     path('',include('INVENTORY.urls')),
-    path('',include('NON_TEACHING_STAFF.urls')),
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # login
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')  # refresh

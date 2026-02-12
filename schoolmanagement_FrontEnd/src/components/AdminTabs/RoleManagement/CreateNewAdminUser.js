@@ -10,44 +10,204 @@ const CreateNewAdminUser = () => {
   const navigate = useNavigate();
 
   // State management
-  const [nonTeachingStaffList, setNonTeachingStaffList] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     roleName: "",
     userName: "",
     password: "",
     confirmPassword: "",
-    nonTeachingStaff: null,
+    linkedStaff: null,
   });
-  const [selectedModules, setSelectedModules] = useState([]);
+  const [selectedModules, setSelectedModules] = useState(["role.change_password"]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [expandedParents, setExpandedParents] = useState({});
 
-  // All available modules matching the sidebar
-  const availableModules = [
-    { code: "dashboard", label: "Dashboard" },
-    { code: "student", label: "Student" },
-    { code: "staff", label: "Staff" },
-    { code: "non_teaching_staff", label: "Non-Teaching Staff" },
-    { code: "fee", label: "Fee" },
-    { code: "library", label: "Library" },
-    { code: "exam_results", label: "Exam Results" },
-    { code: "transport", label: "Transport" },
-    { code: "expense", label: "Expense" },
-    { code: "other_income", label: "Other Income" },
-    { code: "hostel", label: "Hostel" },
-    { code: "timetable", label: "TimeTable" },
-    { code: "lessonplan", label: "LessonPlan" },
-    { code: "mentor", label: "Mentor" },
-    { code: "academics", label: "Academics" },
-    { code: "grievance", label: "Grievance" },
-    { code: "visitors", label: "Visitors" },
-    { code: "mou", label: "MOU" },
-    { code: "training_placements", label: "Training and Placements" },
-    { code: "inventory", label: "Inventory Management" },
+  // Hierarchical module structure matching the sidebar
+  const moduleHierarchy = [
+    {
+      parent: "dashboard",
+      label: "Dashboard",
+      children: [
+        { code: "dashboard.fee_dashboard", label: "Fee Dashboard" },
+        { code: "dashboard.attendance", label: "Attendance Dashboard" },
+      ]
+    },
+    {
+      parent: "student",
+      label: "Student",
+      children: [
+        { code: "student.registration", label: "Registration" },
+        { code: "student.attendance", label: "Attendance" },
+        { code: "student.assignment", label: "Assignment" },
+        { code: "student.promotion", label: "Promotion" },
+        { code: "student.class", label: "Student Course" },
+        { code: "student.confirm", label: "Student Confirm" },
+        { code: "student.certificate", label: "Student Certificate" },
+        { code: "student.message", label: "Student Message" },
+        { code: "student.club", label: "Student Club" },
+        { code: "student.circular", label: "Circulars" },
+      ]
+    },
+    {
+      parent: "staff",
+      label: "Staff",
+      children: [
+        { code: "staff.registration", label: "Registration" },
+      ]
+    },
+    {
+      parent: "fee",
+      label: "Fee",
+      children: [
+        { code: "fee.search", label: "Search" },
+        { code: "fee.adhoc", label: "ADHOC Fees" },
+        { code: "fee.ledger", label: "Fee Ledger" },
+        { code: "fee.student_fee", label: "Student Fee" },
+        { code: "fee.structure", label: "Fee Structure" },
+      ]
+    },
+    {
+      parent: "library",
+      label: "Library",
+      children: [
+        { code: "library.dashboard", label: "Book Dashboard" },
+        { code: "library.category", label: "Book Category" },
+        { code: "library.search", label: "Search" },
+        { code: "library.configurations", label: "Book Configurations" },
+        { code: "library.movements", label: "Issue/Return" },
+        { code: "library.barcode", label: "Book Barcode" },
+        { code: "library.title_report", label: "Book Title Report" },
+        { code: "library.journal_report", label: "Journal Report" },
+        { code: "library.accession_report", label: "Book Accession Report" },
+        { code: "library.issue_return_report", label: "Issue/Return Report" },
+        { code: "library.damaged_report", label: "Lost/Damaged Report" },
+        { code: "library.most_circulated", label: "Most Circulated Book Report" },
+      ]
+    },
+    {
+      parent: "exam_results",
+      label: "Exam Results",
+      children: [
+        { code: "exam_results.result", label: "Result" },
+      ]
+    },
+    {
+      parent: "transport",
+      label: "Transport",
+      children: [
+        { code: "transport.search", label: "Search" },
+        { code: "transport.student_fee", label: "Student Transport Fee" },
+      ]
+    },
+    {
+      parent: "expense",
+      label: "Expense",
+      children: [
+        { code: "expense.search", label: "Search Expense" },
+        { code: "expense.category", label: "Expense/Income Category" },
+        { code: "expense.party_master", label: "Party Master" },
+        { code: "expense.ledger", label: "Expense Ledger" },
+        { code: "expense.profit_loss", label: "Profit & Loss" },
+        { code: "expense.day_book", label: "Day Book" },
+      ]
+    },
+    {
+      parent: "other_income",
+      label: "Other Income",
+      children: [
+        { code: "other_income.search", label: "Search Income" },
+      ]
+    },
+    {
+      parent: "hostel",
+      label: "Hostel",
+      children: [
+        { code: "hostel.search", label: "Search" },
+        { code: "hostel.student_details", label: "Student Hostel Details" },
+        { code: "hostel.student_fee", label: "Student Hostel Fee" },
+      ]
+    },
+    {
+      parent: "timetable",
+      label: "TimeTable",
+      children: [
+        { code: "timetable.class", label: "Class TimeTable" },
+        { code: "timetable.teacher", label: "Teacher TimeTable" },
+      ]
+    },
+    {
+      parent: "lessonplan",
+      label: "LessonPlan",
+      children: [
+        { code: "lessonplan.lesson_plan", label: "Lesson Plan" },
+        { code: "lessonplan.teacher", label: "Teacher Lesson Plan" },
+      ]
+    },
+    {
+      parent: "mentor",
+      label: "Mentor",
+      children: [
+        { code: "mentor.assign", label: "Assign Mentor" },
+        { code: "mentor.follow_ups", label: "Follow Ups" },
+        { code: "mentor.student_details", label: "Student Details" },
+      ]
+    },
+    {
+      parent: "academics",
+      label: "Academics",
+      children: [
+        { code: "academics.document_upload", label: "Document Upload" },
+      ]
+    },
+    {
+      parent: "grievance",
+      label: "Grievance",
+      children: [
+        { code: "grievance.student", label: "Student Grievances" },
+      ]
+    },
+    {
+      parent: "visitors",
+      label: "Visitors",
+      children: [
+        { code: "visitors.list", label: "Visitors List" },
+      ]
+    },
+    {
+      parent: "mou",
+      label: "MOU",
+      children: [
+        { code: "mou.list", label: "MOU List" },
+      ]
+    },
+    {
+      parent: "training_placements",
+      label: "Training and Placements",
+      children: [
+        { code: "training_placements.training", label: "Training" },
+      ]
+    },
+    {
+      parent: "inventory",
+      label: "Inventory Management",
+      children: [
+        { code: "inventory.category", label: "Inventory Category" },
+        { code: "inventory.search", label: "Inventory Search" },
+      ]
+    },
+    {
+      parent: "role",
+      label: "Role",
+      children: [
+        { code: "role.create_admin_user", label: "Create New Role" },
+        { code: "role.change_password", label: "Change Password", disabled: true },
+      ]
+    },
   ];
 
   // Get organization and branch from session/local storage
@@ -55,19 +215,19 @@ const CreateNewAdminUser = () => {
   const getBranchId = () => sessionStorage.getItem("branch_id") || localStorage.getItem("branchId");
   const getAccessToken = () => localStorage.getItem("accessToken");
 
-  // Fetch non-teaching staff list on component mount
+  // Fetch staff list on component mount
   useEffect(() => {
-    fetchNonTeachingStaff();
+    fetchStaffList();
   }, []);
 
-  // Fetch non-teaching staff list
-  const fetchNonTeachingStaff = async () => {
+  // Fetch staff list (Non Teaching Staff from EmployeeMaster)
+  const fetchStaffList = async () => {
     try {
       const orgId = getOrgId();
       const branchId = getBranchId();
 
       const response = await fetch(
-        `${ApiUrl.apiurl}NON_TEACHING_STAFF/List/?org_id=${orgId}&branch_id=${branchId}`,
+        `${ApiUrl.apiurl}STAFF/RegistrationstaffList/?organization_id=${orgId}&branch_id=${branchId}`,
         {
           method: "GET",
           headers: {
@@ -80,15 +240,17 @@ const CreateNewAdminUser = () => {
       if (response.ok) {
         const result = await response.json();
         if (result.data) {
-          const staffOptions = result.data.map((staff) => ({
-            value: staff.nts_id,
-            label: `${staff.first_name} ${staff.last_name}`,
-          }));
-          setNonTeachingStaffList(staffOptions);
+          const staffOptions = result.data
+            .filter((staff) => staff.employee_type?.toLowerCase().replace(/-/g, " ").includes("non teaching"))
+            .map((staff) => ({
+              value: staff.id,
+              label: staff.employee_name,
+            }));
+          setStaffList(staffOptions);
         }
       }
     } catch (error) {
-      console.error("Error fetching non-teaching staff:", error);
+      console.error("Error fetching staff list:", error);
     }
   };
 
@@ -108,10 +270,10 @@ const CreateNewAdminUser = () => {
   const handleDropdownChange = (selectedOption) => {
     setFormData((prev) => ({
       ...prev,
-      nonTeachingStaff: selectedOption,
+      linkedStaff: selectedOption,
     }));
-    if (errors.nonTeachingStaff) {
-      setErrors((prev) => ({ ...prev, nonTeachingStaff: "" }));
+    if (errors.linkedStaff) {
+      setErrors((prev) => ({ ...prev, linkedStaff: "" }));
     }
   };
 
@@ -129,13 +291,104 @@ const CreateNewAdminUser = () => {
     }
   };
 
+  // Handle parent module toggle (select/deselect all children)
+  const handleParentToggle = (parentModule) => {
+    const children = parentModule.children.map(c => c.code);
+    const disabledChildren = parentModule.children.filter(c => c.disabled).map(c => c.code);
+    const selectableChildren = children.filter(code => !disabledChildren.includes(code));
+    const allSelectableSelected = selectableChildren.every(code => selectedModules.includes(code));
+    
+    setSelectedModules((prev) => {
+      if (allSelectableSelected) {
+        // Deselect only selectable children, keep disabled ones
+        return prev.filter(code => !selectableChildren.includes(code));
+      } else {
+        // Select all selectable children (disabled ones are already selected by default)
+        const newCodes = selectableChildren.filter(code => !prev.includes(code));
+        return [...prev, ...newCodes];
+      }
+    });
+    
+    if (errors.modules) {
+      setErrors((prev) => ({ ...prev, modules: "" }));
+    }
+  };
+
+  // Handle child toggle with parent auto-deselect
+  const handleChildToggle = (parentModule, childCode) => {
+    // Check if this child is disabled - if so, don't allow toggle
+    const child = parentModule.children.find(c => c.code === childCode);
+    if (child && child.disabled) {
+      return; // Don't allow toggling disabled children
+    }
+    
+    setSelectedModules((prev) => {
+      if (prev.includes(childCode)) {
+        // Deselecting child - remove it
+        return prev.filter((code) => code !== childCode);
+      } else {
+        // Selecting child - add it
+        return [...prev, childCode];
+      }
+    });
+    
+    if (errors.modules) {
+      setErrors((prev) => ({ ...prev, modules: "" }));
+    }
+  };
+
+  // Check if parent is fully selected
+  const isParentFullySelected = (parentModule) => {
+    const children = parentModule.children.map(c => c.code);
+    return children.length > 0 && children.every(code => selectedModules.includes(code));
+  };
+
+  // Check if parent is partially selected
+  const isParentPartiallySelected = (parentModule) => {
+    const children = parentModule.children.map(c => c.code);
+    const disabledChildren = parentModule.children.filter(c => c.disabled).map(c => c.code);
+    const selectableChildren = children.filter(code => !disabledChildren.includes(code));
+    const selectedCount = selectableChildren.filter(code => selectedModules.includes(code)).length;
+    return selectedCount > 0 && selectedCount < selectableChildren.length;
+  };
+
+  // Get selected count for parent
+  const getSelectedCount = (parentModule) => {
+    const children = parentModule.children.map(c => c.code);
+    return children.filter(code => selectedModules.includes(code)).length;
+  };
+
+  // Toggle parent expansion
+  const toggleParentExpansion = (parentCode) => {
+    setExpandedParents(prev => ({
+      ...prev,
+      [parentCode]: !prev[parentCode]
+    }));
+  };
+
   // Handle select all modules
   const handleSelectAll = () => {
-    if (selectedModules.length === availableModules.length) {
-      setSelectedModules([]);
+    const allSelectableChildCodes = moduleHierarchy.flatMap(parent => 
+      parent.children.filter(c => !c.disabled).map(c => c.code)
+    );
+    const disabledChildCodes = moduleHierarchy.flatMap(parent => 
+      parent.children.filter(c => c.disabled).map(c => c.code)
+    );
+    
+    const allSelectableSelected = allSelectableChildCodes.every(code => selectedModules.includes(code));
+    
+    if (allSelectableSelected) {
+      // Deselect all selectable, keep disabled ones
+      setSelectedModules(disabledChildCodes);
     } else {
-      setSelectedModules(availableModules.map((m) => m.code));
+      // Select all (selectable + disabled)
+      setSelectedModules([...allSelectableChildCodes, ...disabledChildCodes]);
     }
+  };
+
+  // Get total module count
+  const getTotalModuleCount = () => {
+    return moduleHierarchy.reduce((sum, parent) => sum + parent.children.length, 0);
   };
 
   // Validate form
@@ -164,8 +417,8 @@ const CreateNewAdminUser = () => {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
-    if (!formData.nonTeachingStaff) {
-      newErrors.nonTeachingStaff = "Non-Teaching Staff is required";
+    if (!formData.linkedStaff) {
+      newErrors.linkedStaff = "Non Teaching Staff is required";
     }
 
     if (selectedModules.length === 0) {
@@ -202,7 +455,7 @@ const CreateNewAdminUser = () => {
           role_name: formData.roleName,
           organization_id: parseInt(orgId),
           branch_id: parseInt(branchId),
-          reference_id: formData.nonTeachingStaff ? formData.nonTeachingStaff.value : null,
+          reference_id: formData.linkedStaff ? formData.linkedStaff.value : null,
           accessible_modules: selectedModules,
         }),
       });
@@ -232,7 +485,7 @@ const CreateNewAdminUser = () => {
       userName: "",
       password: "",
       confirmPassword: "",
-      nonTeachingStaff: null,
+      linkedStaff: null,
     });
     setSelectedModules([]);
     setErrors({});
@@ -328,6 +581,7 @@ const CreateNewAdminUser = () => {
                         value={formData.userName}
                         onChange={handleInputChange}
                         placeholder="Enter username (min 3 characters)"
+                        autoComplete="off"
                       />
                       {errors.userName && (
                         <div className="invalid-feedback">{errors.userName}</div>
@@ -338,19 +592,19 @@ const CreateNewAdminUser = () => {
                   <div className="col-md-6">
                     <div className="form-group mb-3">
                       <label className="form-label">
-                        Non-Teaching Staff <span className="text-danger">*</span>
+                        Non Teaching Staff <span className="text-danger">*</span>
                       </label>
                       <Select
-                        options={nonTeachingStaffList}
-                        value={formData.nonTeachingStaff}
+                        options={staffList}
+                        value={formData.linkedStaff}
                         onChange={handleDropdownChange}
-                        placeholder="Select Non-Teaching Staff"
+                        placeholder="Select Non Teaching Staff"
                         isClearable
-                        className={errors.nonTeachingStaff ? "is-invalid" : ""}
+                        className={errors.linkedStaff ? "is-invalid" : ""}
                       />
-                      {errors.nonTeachingStaff && (
+                      {errors.linkedStaff && (
                         <div className="text-danger small mt-1">
-                          {errors.nonTeachingStaff}
+                          {errors.linkedStaff}
                         </div>
                       )}
                     </div>
@@ -369,6 +623,7 @@ const CreateNewAdminUser = () => {
                           value={formData.password}
                           onChange={handleInputChange}
                           placeholder="Enter password (min 6 characters)"
+                          autoComplete="new-password"
                         />
                         <InputGroup.Text
                           style={{
@@ -406,6 +661,7 @@ const CreateNewAdminUser = () => {
                           value={formData.confirmPassword}
                           onChange={handleInputChange}
                           placeholder="Re-enter password"
+                          autoComplete="new-password"
                         />
                         <InputGroup.Text
                           style={{
@@ -436,7 +692,7 @@ const CreateNewAdminUser = () => {
                   <div className="card-header bg-light">
                     <h5 className="mb-0">Module Access Permissions</h5>
                     <small className="text-muted">
-                      Select which modules this admin user can access
+                      Select specific submenu items this admin user can access
                     </small>
                   </div>
                   <div className="card-body">
@@ -452,35 +708,78 @@ const CreateNewAdminUser = () => {
                         className="btn btn-sm btn-outline-primary"
                         onClick={handleSelectAll}
                       >
-                        {selectedModules.length === availableModules.length
-                          ? "Deselect All"
-                          : "Select All"}
+                        {(() => {
+                          const allSelectableChildCodes = moduleHierarchy.flatMap(parent => 
+                            parent.children.filter(c => !c.disabled).map(c => c.code)
+                          );
+                          const allSelectableSelected = allSelectableChildCodes.every(code => selectedModules.includes(code));
+                          return allSelectableSelected ? "Deselect All" : "Select All";
+                        })()}
                       </button>
                       <span className="badge bg-primary">
-                        {selectedModules.length} of {availableModules.length} selected
+                        {selectedModules.length} of {getTotalModuleCount()} selected
                       </span>
                     </div>
 
+                    {/* Flat Module List with Parent-Child Structure */}
                     <div className="row">
-                      {availableModules.map((module) => (
-                        <div className="col-md-4 col-sm-6" key={module.code}>
-                          <div className="form-check mb-2">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id={`module-${module.code}`}
-                              checked={selectedModules.includes(module.code)}
-                              onChange={() => handleModuleToggle(module.code)}
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor={`module-${module.code}`}
-                            >
-                              {module.label}
-                            </label>
+                      {moduleHierarchy.map((parentModule) => {
+                        const isFullySelected = isParentFullySelected(parentModule);
+                        const isPartiallySelected = isParentPartiallySelected(parentModule);
+                        const selectedCount = getSelectedCount(parentModule);
+                        const totalCount = parentModule.children.length;
+
+                        return (
+                          <div key={parentModule.parent} className="col-12 mb-4">
+                            {/* Parent Module */}
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`parent-${parentModule.parent}`}
+                                checked={isFullySelected}
+                                ref={(el) => {
+                                  if (el) el.indeterminate = isPartiallySelected;
+                                }}
+                                onChange={() => handleParentToggle(parentModule)}
+                              />
+                              <label
+                                className="form-check-label fw-bold"
+                                htmlFor={`parent-${parentModule.parent}`}
+                              >
+                                {parentModule.label}
+                                <span className="badge bg-secondary ms-2">
+                                  {selectedCount}/{totalCount}
+                                </span>
+                              </label>
+                            </div>
+
+                            {/* Child Modules - Always Visible */}
+                            <div className="row ms-4">
+                              {parentModule.children.map((child) => (
+                                <div className="col-md-4 col-sm-6" key={child.code}>
+                                  <div className="form-check mb-2">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      id={`child-${child.code}`}
+                                      checked={selectedModules.includes(child.code)}
+                                      onChange={() => handleChildToggle(parentModule, child.code)}
+                                      disabled={child.disabled || false}
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor={`child-${child.code}`}
+                                    >
+                                      {child.label}
+                                    </label>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
