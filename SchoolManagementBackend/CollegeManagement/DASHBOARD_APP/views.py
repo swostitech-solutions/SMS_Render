@@ -442,26 +442,28 @@ class FeesDuesListAPIView(ListAPIView):
             batch_id = serializer.validated_data.get('batch_id')
             year = serializer.validated_data.get('year')
 
+            # Initialize date range variables
+            from_date = None
+            to_date = None
+
             if year:
                 from_date = datetime.strptime(f"01-01-{year}", '%d-%m-%Y').date()
                 to_date = datetime.strptime(f"31-12-{year}", '%d-%m-%Y').date()
 
             try:
+                # Get ALL fee details for organization/branch (NO batch filtering)
                 filterdata = StudentFeeDetail.objects.filter(
-                    # academic_year_id=serializer.validated_data.get('academic_year_id'),
                     organization= organization_id,
                     branch= branch_id,
-                    student_course__batch= batch_id,
-                    is_active=True,
-                    created_at__range = (from_date,to_date)
+                    is_active=True
                 )
-            except:
-
+                    
+            except Exception as e:
                 filterdata=[]
 
             if filterdata:
 
-                # Calculate element amount, paid amount,discount amount and
+                # Calculate element amount, paid amount, discount amount
                 group_data = filterdata.annotate(
                     element_positive=Case(
                         When(element_amount__gt=0, then=F('element_amount')),
@@ -480,26 +482,32 @@ class FeesDuesListAPIView(ListAPIView):
                     )
                 )
 
-                # Get academic year Instance
+                # Get batch Instance (optional - for display purposes)
+                batch_label = 'All Batches'
                 try:
-                    batchInstance = Batch.objects.get(id=batch_id)
+                    if batch_id:
+                        batchInstance = Batch.objects.get(id=batch_id)
+                        batch_label = batchInstance.batch_code
                 except:
-                    return Response({'message':'No Batch record found'},status=status.HTTP_400_BAD_REQUEST)
+                    pass  # Use 'All Batches' if batch not found
 
-                batch= {'batch':batchInstance.batch_code}
+                batch= {'batch': batch_label}
                 result = group_data.aggregate(
 
                     element_amount=Sum('element_positive'),
                     total_paid_amount=Sum('paid_positive'),
                     total_discount_amount=Sum('element_negative')
 
-                        # output_field=DecimalField()
-                    )
+                )
 
-                # Include academic year
+                # Include batch info
                 result.update(batch)
 
-                result.update({'from_date':from_date,'to_date':to_date})
+                # Include date range info
+                if from_date and to_date:
+                    result.update({'from_date':from_date,'to_date':to_date})
+                else:
+                    result.update({'from_date': None, 'to_date': None})
 
 
 
@@ -508,7 +516,17 @@ class FeesDuesListAPIView(ListAPIView):
                 return Response({'message':'success','data':result},status=status.HTTP_200_OK)
 
             else:
-                return Response({'message':'No Record Found'},status=status.HTTP_204_NO_CONTENT)
+                return Response({
+                    'message': 'success',
+                    'data': {
+                        'element_amount': 0,
+                        'total_paid_amount': 0,
+                        'total_discount_amount': 0,
+                        'batch': '',
+                        'from_date': from_date,
+                        'to_date': to_date
+                    }
+                }, status=status.HTTP_200_OK)
 
         except ValidationError as e:
 

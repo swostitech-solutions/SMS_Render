@@ -14,9 +14,15 @@ import { ApiUrl } from "../../../ApiUrl";
 import ReactPaginate from "react-paginate";
 import fetchSessionList from "../../hooks/fetchSessionList"
 
-
-
 const FeeSearchPage = () => {
+  // Get today's date in YYYY-MM-DD format (local timezone)
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const [viewReceipts, setViewReceipts] = useState(true); // Radio selection
 
   const [classOptions, setClassOptions] = useState([]);
@@ -72,8 +78,8 @@ const FeeSearchPage = () => {
   const [bankOptions, setBankOptions] = useState([]);
   const [accountDetails, setAccountDetails] = useState([]);
   const [formData, setFormData] = useState({
-    dateFrom: "",
-    dateTo: "",
+    dateFrom: getTodayDate(),
+    dateTo: getTodayDate(),
   });
   const [selectedSession, setSelectedSession] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState({
@@ -85,6 +91,17 @@ const FeeSearchPage = () => {
     bankId: "",
     bankName: "",
   });
+
+  // Payment method specific fields
+  const [chequeNumber, setChequeNumber] = useState("");
+  const [chequeBankName, setChequeBankName] = useState("");
+  const [chequeBranchName, setChequeBranchName] = useState("");
+  const [ddNumber, setDdNumber] = useState("");
+  const [ddIssuingBank, setDdIssuingBank] = useState("");
+  const [upiUtrNo, setUpiUtrNo] = useState("");
+  const [rtgsUtrNo, setRtgsUtrNo] = useState("");
+  const [rtgsSenderBank, setRtgsSenderBank] = useState("");
+  const [rtgsAccountNo, setRtgsAccountNo] = useState("");
   const handleSelectStudent = async (selectedStudent) => {
     try {
       const studentId =
@@ -192,6 +209,12 @@ const FeeSearchPage = () => {
       console.error("Error fetching student details:", error);
     }
   };
+
+  // Fetch today's data on page load
+  useEffect(() => {
+    handleSearch();
+  }, []);
+
   // You can adjust this to show more or fewer items per page
   const handlePageClick = (data) => {
     setCurrentPage(data.selected);
@@ -233,10 +256,10 @@ const FeeSearchPage = () => {
     setClassId(null);
     setSectionId(null);
 
-    //  Date filters (IMPORTANT FIX)
+    //  Date filters - Reset to today's date
     setFormData({
-      dateFrom: "",
-      dateTo: "",
+      dateFrom: getTodayDate(),
+      dateTo: getTodayDate(),
     });
     setStartDate(null);
     setEndDate(null);
@@ -263,6 +286,11 @@ const FeeSearchPage = () => {
     setShowUpdateModal(false);
     setShowCancelModal(false);
     setCancelRemark("");
+
+    // Fetch today's data after clearing
+    setTimeout(() => {
+      handleSearch();
+    }, 100);
   };
 
 
@@ -434,6 +462,9 @@ const FeeSearchPage = () => {
       };
 
       fetchAccountDetails();
+    } else {
+      // Clear account details when no bank is selected
+      setAccountDetails([]);
     }
   }, [selectedReceipt]);
 
@@ -1673,21 +1704,172 @@ const FeeSearchPage = () => {
                                   ? selectedOption.value
                                   : null;
 
+                                // Find the label of the selected payment method
+                                const selectedLabel = selectedOption
+                                  ? selectedOption.label?.toLowerCase()
+                                  : "";
+
+                                // Reset bank and account when payment method changes
                                 setSelectedReceipt((prev) => ({
                                   ...prev,
                                   paymentMethodId: selectedValue,
-
-                                  // If payment method is CASH (value = 2) → disable/reset bank + account
-                                  bankId:
-                                    selectedValue === 2 ? null : prev.bankId,
-                                  accountNumber:
-                                    selectedValue === 2
-                                      ? ""
-                                      : prev.accountNumber,
+                                  paymentMethodLabel: selectedLabel, // Store label for conditional rendering
+                                  // Reset bank and account for ALL payment method changes
+                                  bankId: selectedLabel === "cash" ? null : null,
+                                  bankdetailsId: null,
+                                  accountNumber: "",
                                 }));
+
+                                // Clear account details when payment method changes
+                                setAccountDetails([]);
+
+                                // Clear all payment-specific fields
+                                setChequeNumber("");
+                                setChequeBankName("");
+                                setChequeBranchName("");
+                                setDdNumber("");
+                                setDdIssuingBank("");
+                                setUpiUtrNo("");
+                                setRtgsUtrNo("");
+                                setRtgsSenderBank("");
+                                setRtgsAccountNo("");
                               }}
                             />
                           </div>
+
+                          {/* Cheque Fields */}
+                          {selectedReceipt.paymentMethodLabel === "cheque" && (
+                            <>
+                              <div className="form-group">
+                                <label className="form-label">Cheque Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={chequeNumber}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    if (value.length <= 6) setChequeNumber(value);
+                                  }}
+                                  maxLength="6"
+                                  placeholder="Enter Cheque Number (6 digits)"
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label className="form-label">Cheque Bank Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={chequeBankName}
+                                  onChange={(e) => setChequeBankName(e.target.value)}
+                                  placeholder="Cheque Bank Name"
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label className="form-label">Cheque Branch Name</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={chequeBranchName}
+                                  onChange={(e) => setChequeBranchName(e.target.value)}
+                                  placeholder="Cheque Branch Name"
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* DD Fields */}
+                          {selectedReceipt.paymentMethodLabel === "dd" && (
+                            <>
+                              <div className="form-group">
+                                <label className="form-label">DD Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={ddNumber}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    if (value.length <= 6) setDdNumber(value);
+                                  }}
+                                  maxLength="6"
+                                  placeholder="Enter DD Number (6 digits)"
+                                />
+                              </div>
+
+                              <div className="form-group">
+                                <label className="form-label">Issuing Bank</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={ddIssuingBank}
+                                  onChange={(e) => setDdIssuingBank(e.target.value)}
+                                  placeholder="Issuing Bank"
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* UPI Fields */}
+                          {selectedReceipt.paymentMethodLabel?.includes("upi") && (
+                            <div className="form-group">
+                              <label className="form-label">UTR No</label>
+                              <input
+                                type="text"
+                                className="form-control detail"
+                                value={upiUtrNo}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/\D/g, '');
+                                  if (value.length <= 22) setUpiUtrNo(value);
+                                }}
+                                maxLength="22"
+                                placeholder="Enter UTR No (22 digits)"
+                              />
+                            </div>
+                          )}
+
+                          {/* RTGS/NEFT Fields */}
+                          {(selectedReceipt.paymentMethodLabel?.includes("rtgs") ||
+                            selectedReceipt.paymentMethodLabel?.includes("neft")) && (
+                              <>
+                                <div className="form-group">
+                                  <label className="form-label">UTR No</label>
+                                  <input
+                                    type="text"
+                                    className="form-control detail"
+                                    value={rtgsUtrNo}
+                                    onChange={(e) => {
+                                      const value = e.target.value.replace(/\D/g, '');
+                                      if (value.length <= 22) setRtgsUtrNo(value);
+                                    }}
+                                    maxLength="22"
+                                    placeholder="Enter UTR No (22 digits)"
+                                  />
+                                </div>
+
+                                <div className="form-group">
+                                  <label className="form-label">Sender Bank</label>
+                                  <input
+                                    type="text"
+                                    className="form-control detail"
+                                    value={rtgsSenderBank}
+                                    onChange={(e) => setRtgsSenderBank(e.target.value)}
+                                    placeholder="Sender Bank"
+                                  />
+                                </div>
+
+                                <div className="form-group">
+                                  <label className="form-label">Account No</label>
+                                  <input
+                                    type="text"
+                                    className="form-control detail"
+                                    value={rtgsAccountNo}
+                                    onChange={(e) => setRtgsAccountNo(e.target.value)}
+                                    placeholder="Account No"
+                                  />
+                                </div>
+                              </>
+                            )}
 
                           {/* Bank Name Dropdown */}
                           <div className="form-group">
@@ -1704,6 +1886,8 @@ const FeeSearchPage = () => {
                               }
                               onChange={handleBankSelect}
                               options={bankOptions}
+                              placeholder="Select Bank"
+                              isClearable
                               isDisabled={
                                 paymentMethodOptions.find(
                                   (option) => option.value === selectedReceipt.paymentMethodId
@@ -1726,6 +1910,8 @@ const FeeSearchPage = () => {
                               }
                               onChange={handleAccountSelect}
                               options={accountDetails}
+                              placeholder="Select Account"
+                              isClearable
                               isDisabled={
                                 paymentMethodOptions.find(
                                   (option) => option.value === selectedReceipt.paymentMethodId

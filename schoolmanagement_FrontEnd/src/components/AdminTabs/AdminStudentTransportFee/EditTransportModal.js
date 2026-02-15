@@ -931,7 +931,7 @@ const EditTransportModal = ({
   };
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered>
+    <Modal show={show} onHide={handleClose} size="xl" centered>
       <Modal.Header closeButton>
         <Modal.Title>Edit Transport Details</Modal.Title>
       </Modal.Header>
@@ -1087,6 +1087,7 @@ const EditTransportModal = ({
                           style={{
                             opacity: isDisabled ? 0.6 : 1,
                             cursor: isDisabled ? "not-allowed" : "pointer",
+                            whiteSpace: "nowrap",
                           }}
                           title={
                             isPaid

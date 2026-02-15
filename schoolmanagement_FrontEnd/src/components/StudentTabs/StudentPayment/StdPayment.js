@@ -657,8 +657,8 @@ const StdPayment = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {groupedFees && groupedFees.length > 0 ? (
-                            groupedFees.map((group, index) => {
+                          {groupedFees && groupedFees.filter(group => group.totalDue > 0).length > 0 ? (
+                            groupedFees.filter(group => group.totalDue > 0).map((group, index) => {
                               const isExpanded = expandedRows.has(group.groupId);
                               const hasDue = group.totalDue > 0;
                               const groupSubFees = group.subFees || [];
@@ -708,8 +708,8 @@ const StdPayment = () => {
                                   {isExpanded && groupSubFees.filter((subFee) => {
                                     const elementAmount = parseFloat(subFee.element_amount || 0);
                                     const paidAmount = parseFloat(subFee.paid_amount || 0);
-                                    const discountAmount = parseFloat(subFee.discount || 0);
-                                    return !(elementAmount === 0 && paidAmount === 0 && discountAmount === 0);
+                                    const balance = elementAmount - paidAmount;
+                                    return balance > 0;
                                   }).length > 0 && (
                                       <tr>
                                         <td colSpan="6" style={{ padding: "0", border: "none" }}>
@@ -727,11 +727,11 @@ const StdPayment = () => {
                                               <tbody>
                                                 {groupSubFees
                                                   .filter((subFee) => {
-                                                    // Filter out sub-fees where total, paid, and discount are all zero
+                                                    // Filter out sub-fees where balance is zero
                                                     const elementAmount = parseFloat(subFee.element_amount || 0);
                                                     const paidAmount = parseFloat(subFee.paid_amount || 0);
-                                                    const discountAmount = parseFloat(subFee.discount || 0);
-                                                    return !(elementAmount === 0 && paidAmount === 0 && discountAmount === 0);
+                                                    const balance = elementAmount - paidAmount;
+                                                    return balance > 0;
                                                   })
                                                   .map((subFee) => {
                                                     const elementAmount = parseFloat(subFee.element_amount || 0);

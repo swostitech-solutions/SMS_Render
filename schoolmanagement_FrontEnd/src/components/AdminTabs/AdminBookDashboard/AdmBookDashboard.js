@@ -306,7 +306,7 @@ const AdmBookDashboard = () => {
                     <Table bordered size="sm">
                       <thead style={{ backgroundColor: "#f8f9fa" }}>
                         <tr>
-                          <th>#</th>
+                          <th>Sl No.</th>
                           <th>Book Name</th>
                           <th>Borrower</th>
                           <th>Type</th>
