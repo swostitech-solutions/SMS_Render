@@ -67,22 +67,29 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
                     },
                   });
 
-                  const blob = await fileRes.blob();
+                  // ✅ Check if file exists before processing
+                  if (fileRes.ok) {
+                    const blob = await fileRes.blob();
 
-                  // ✅ Convert image blob to base64 for preview
-                  base64Preview = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(blob);
-                  });
+                    // ✅ Convert image blob to base64 for preview
+                    base64Preview = await new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.readAsDataURL(blob);
+                    });
 
-                  // ✅ Store file info in sessionStorage
-                  sessionStorage.setItem("document_pic_base64", base64Preview);
-                  sessionStorage.setItem(
-                    "document_pic_name",
-                    doc.document_type || "document"
-                  );
-                  sessionStorage.setItem("document_pic_type", blob.type);
+                    // ✅ Store file info in sessionStorage
+                    sessionStorage.setItem("document_pic_base64", base64Preview);
+                    sessionStorage.setItem(
+                      "document_pic_name",
+                      doc.document_type || "document"
+                    );
+                    sessionStorage.setItem("document_pic_type", blob.type);
+                  } else {
+                    console.warn(
+                      `⚠️ Document file not found (${fileRes.status}): ${previewUrl}`
+                    );
+                  }
                 } catch (err) {
                   console.warn("⚠️ Failed to load document_pic:", err);
                 }

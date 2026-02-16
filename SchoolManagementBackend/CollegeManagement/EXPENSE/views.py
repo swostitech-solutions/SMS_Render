@@ -3067,7 +3067,15 @@ class DayBookListAPIView(ListAPIView):
             FeeReceiptDetailsList = []
 
             try:
-                fee_branch_id = branch_id if branch_id else filter_id
+                # Get the actual branch_id for fee receipts filtering
+                actual_branch_id = branch_id
+                if not actual_branch_id and filter_id:
+                    # If branch_id not provided, extract it from the batch
+                    try:
+                        batch_instance = Batch.objects.get(id=filter_id, is_active=True)
+                        actual_branch_id = batch_instance.branch.id
+                    except Exception:
+                        actual_branch_id = filter_id
 
                 fee_from_datetime = datetime.strptime(from_date, '%Y-%m-%d')
                 fee_to_datetime = datetime.strptime(to_date, '%Y-%m-%d') + timedelta(days=1)
@@ -3080,7 +3088,7 @@ class DayBookListAPIView(ListAPIView):
 
                 FeeReceiptPaymentRecords = StudentPayment.objects.filter(
                     receipt__organization=organization,
-                    receipt__branch=fee_branch_id,
+                    receipt__branch=actual_branch_id,
                     receipt__receipt_date__gte=fee_from_datetime,
                     receipt__receipt_date__lt=fee_to_datetime,
                     is_active=True

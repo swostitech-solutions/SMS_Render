@@ -419,26 +419,45 @@ export default function BasicTabs() {
                 // Fetch preview in base64 & store in sessionStorage
                 try {
                   if (fullUrl) {
-                    fetch(fullUrl)
-                      .then((res) => res.blob())
+                    fetch(fullUrl, {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    })
+                      .then((res) => {
+                        // ✅ Check if file exists before processing
+                        if (res.ok) {
+                          return res.blob();
+                        } else {
+                          console.warn(
+                            `⚠️ Document file not found (${res.status}): ${fullUrl}`
+                          );
+                          return null;
+                        }
+                      })
                       .then((blob) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          const base64Preview = reader.result;
-                          sessionStorage.setItem(
-                            `document_pic_base64_${index}`,
-                            base64Preview
-                          );
-                          sessionStorage.setItem(
-                            `document_pic_name_${index}`,
-                            d.document_type || `document_${index}`
-                          );
-                          sessionStorage.setItem(
-                            `document_pic_type_${index}`,
-                            blob.type
-                          );
-                        };
-                        reader.readAsDataURL(blob);
+                        if (blob) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64Preview = reader.result;
+                            sessionStorage.setItem(
+                              `document_pic_base64_${index}`,
+                              base64Preview
+                            );
+                            sessionStorage.setItem(
+                              `document_pic_name_${index}`,
+                              d.document_type || `document_${index}`
+                            );
+                            sessionStorage.setItem(
+                              `document_pic_type_${index}`,
+                              blob.type
+                            );
+                          };
+                          reader.readAsDataURL(blob);
+                        }
+                      })
+                      .catch((err) => {
+                        console.warn("⚠️ Error loading document preview:", err);
                       });
                   }
                 } catch (err) {
@@ -892,58 +911,29 @@ export default function BasicTabs() {
       }
 
       // ✅ Handle document images (supports 3 cases)
-      for (
-        let index = 0;
-        index < (formData.documentsDetails || []).length;
-        index++
-      ) {
-        const doc = formData.documentsDetails[index];
+      // Attach document images - only upload newly selected files
+      for (let index = 0; index < formData.documentsDetails.length; index++) {
         try {
-          // 1️⃣ New file selected
-          if (doc.document_pic && typeof doc.document_pic !== "string") {
+          const doc = formData.documentsDetails[index];
+
+          // 1️⃣ Check if it's a File object (new upload by user)
+          if (doc.document_pic instanceof File) {
             formPayload.append(`document_pic[${index}]`, doc.document_pic);
+            console.log(`✅ Uploading new document_pic[${index}]`);
+            continue;
           }
-          // 2️⃣ From sessionStorage (base64)
-          else {
-            const base64Data = sessionStorage.getItem(
-              `document_pic_base64_${index}`
-            );
-            const fileName = sessionStorage.getItem(
-              `document_pic_name_${index}`
-            );
-            const fileType = sessionStorage.getItem(
-              `document_pic_type_${index}`
-            );
 
-            if (base64Data && fileName && fileType) {
-              const res = await fetch(base64Data);
-              const blob = await res.blob();
-              formPayload.append(
-                `document_pic[${index}]`,
-                new File([blob], fileName, { type: fileType })
-              );
-              continue;
-            }
-
-            // 3️⃣ From API URL (fallback)
-            const fileUrl = doc.preview_url || doc.document_pic || "";
-            if (fileUrl) {
-              const finalUrl = fileUrl.startsWith("http")
-                ? fileUrl
-                : `${ApiUrl.apiurl}${fileUrl}`;
-              const res = await fetch(finalUrl);
-              const blob = await res.blob();
-              const ext = blob.type.split("/")[1] || "pdf";
-              formPayload.append(
-                `document_pic[${index}]`,
-                new File([blob], `document_${index}.${ext}`, {
-                  type: blob.type,
-                })
-              );
-            }
+          // 2️⃣ Skip if document already exists (URL string) - don't re-upload
+          // The backend will keep the existing document if not provided
+          if (typeof doc.document_pic === "string" || typeof doc.preview_url === "string") {
+            console.log(`⏭️ Skipping existing document_pic[${index}] - no changes`);
+            continue;
           }
+
+          // 3️⃣ No document provided - skip
+          console.log(`⏭️ No document provided for index ${index}`);
         } catch (error) {
-          console.warn(`⚠️ Error attaching document_pic[${index}]:`, error);
+          console.warn(`⚠️ Error processing document_pic[${index}]:`, error);
         }
       }
 

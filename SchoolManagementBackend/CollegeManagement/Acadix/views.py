@@ -10976,8 +10976,10 @@ class UtilityGroupMixin:
                     created_by=instance.created_by,
                     updated_by=instance.created_by
                 )
-                StudentDocumentData.document_url = request.build_absolute_uri(StudentDocumentData.document_pic.url)
-                StudentDocumentData.save()
+                # Only build the URL if a document file was actually uploaded
+                if document_pic:
+                    StudentDocumentData.document_url = request.build_absolute_uri(StudentDocumentData.document_pic.url)
+                    StudentDocumentData.save()
                 count = count + 1
                 # if document_files:
                 #     for document_file in document_files:
@@ -12006,7 +12008,9 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                     data['previous_education_detail'] = json.loads(
                         data.get('previous_education_detail', '[]'))  # Convert string to list
 
+
                     # Attach file fields if present
+                    profile_pic = None  # Initialize to prevent UnboundLocalError
                     if 'profile_pic' in request.FILES:
                         profile_pic = request.FILES['profile_pic']
 
@@ -12019,6 +12023,7 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                     for item, item_obj in request.FILES.items():
                         if item != 'profile_pic':
                             document_files.append(item_obj)
+
 
                         # if 'document_file' in request.FILES:
                     #     document_file = request.FILES['document_file']

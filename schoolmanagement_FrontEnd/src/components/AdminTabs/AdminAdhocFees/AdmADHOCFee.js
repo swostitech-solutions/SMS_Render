@@ -3110,7 +3110,7 @@ const AdmADHOCFee = () => {
 
       if (response.ok) {
         console.log("Assigned Data Response:", result);
-        alert("Data assigned successfully!");
+        alert("Adhoc Fees added Successfully");
 
         // ✅ CLEAR EVERYTHING HERE (ONLY AFTER ASSIGN)
         setStudents([]);
