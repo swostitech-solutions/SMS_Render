@@ -9,18 +9,18 @@ const ParentDetailsForm = ({
   setDocumentDetailsInParent,
 }) => {
   const navigate = useNavigate();
-  
+
   // Get student ID from sessionStorage
   const studentId = sessionStorage.getItem("userId");
-  
+
   // Fetch student details using the hook
   const { studentDetails, error } = useStudentDetails(studentId);
-  
+
   // Extract address details from API response
   const addressData = studentDetails?.address_details?.[0] || addressDetails;
-  
+
   const handleClose = () => {
-    navigate(-1);
+    navigate("/student/dashboards");
   };
 
   // Check if addresses are same
@@ -29,15 +29,9 @@ const ParentDetailsForm = ({
     addressData?.present_pincode === addressData?.permanent_pincode;
 
   return (
-    <div style={{ width: "100%",  padding: "20px", minHeight: "100vh" }}>
+    <div style={{ width: "100%", padding: "20px", minHeight: "100vh" }}>
       <Row style={{ margin: 0 }}>
         <Col style={{ padding: "10px" }}>
-          {/* Close Button */}
-          <div className="mb-3">
-            <Button variant="danger" onClick={handleClose} style={{ width: "120px", borderRadius: "6px" }}>
-              Close
-            </Button>
-          </div>
 
           <Card
             style={{
@@ -47,6 +41,12 @@ const ParentDetailsForm = ({
             }}
           >
             <Card.Body style={{ padding: "24px", backgroundColor: "rgba(55, 123, 241, 0.1)" }}>
+              {/* Close Button */}
+              <div className="mb-3">
+                <Button variant="danger" onClick={handleClose} style={{ width: "120px", borderRadius: "6px" }}>
+                  Close
+                </Button>
+              </div>
               {/* Error State */}
               {error && (
                 <Alert variant="danger">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Alert } from "react-bootstrap";
+import { Alert, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import useStudentDetails from "../../hooks/useStudentDetails";
 import api from "../../../utils/api";
 import jsPDF from "jspdf";
@@ -9,6 +10,11 @@ import { ApiUrl } from "../../../ApiUrl";
 const StdResults = () => {
   // Get student ID from sessionStorage
   const studentId = sessionStorage.getItem("userId");
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    navigate("/student/dashboards");
+  };
 
   // Fetch student details
   const { studentDetails, error: studentDetailsError } =
@@ -252,6 +258,12 @@ const StdResults = () => {
         <div className="col-12">
           <div className="card p-0">
             <div className="card-body">
+              {/* Close Button */}
+              <div className="mb-3">
+                <Button variant="danger" onClick={handleClose} style={{ width: "120px", borderRadius: "6px" }}>
+                  Close
+                </Button>
+              </div>
               <p
                 style={{
                   marginBottom: "0px",

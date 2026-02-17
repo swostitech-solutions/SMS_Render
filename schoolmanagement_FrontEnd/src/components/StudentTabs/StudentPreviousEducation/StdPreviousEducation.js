@@ -5,7 +5,7 @@ import useStudentDetails from "../../hooks/useStudentDetails";
 
 function StdPreviousEducation() {
   const navigate = useNavigate();
-  
+
   // Get student ID from sessionStorage
   const studentId = sessionStorage.getItem("userId");
 
@@ -13,7 +13,7 @@ function StdPreviousEducation() {
   const { studentDetails, error } = useStudentDetails(studentId);
 
   const handleClose = () => {
-    navigate(-1);
+    navigate("/student/dashboards");
   };
 
   const [previousEducation, setPreviousEducation] = useState([]);

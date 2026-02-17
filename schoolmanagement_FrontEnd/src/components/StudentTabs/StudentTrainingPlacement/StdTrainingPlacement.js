@@ -62,7 +62,7 @@ const StdTrainingPlacement = () => {
   }, []);
 
   const handleClose = () => {
-    navigate(-1);
+    navigate("/student/dashboards");
   };
 
   return (

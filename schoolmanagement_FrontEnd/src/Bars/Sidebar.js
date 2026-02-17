@@ -65,12 +65,12 @@ function Sidebar({ state, setState }) {
     if (!accessibleModules || accessibleModules.length === 0) {
       return true;
     }
-    
+
     // Check if user has parent-level access (backward compatibility)
     if (accessibleModules.includes(moduleCode)) {
       return true;
     }
-    
+
     // Check if user has any child-level access for this parent
     const hasChildAccess = accessibleModules.some(m => m.startsWith(moduleCode + "."));
     return hasChildAccess;
@@ -82,15 +82,15 @@ function Sidebar({ state, setState }) {
     if (!accessibleModules || accessibleModules.length === 0) {
       return true;
     }
-    
+
     // Extract parent from child code (e.g., "student.registration" -> "student")
     const parent = childCode.split('.')[0];
-    
+
     // If user has parent-level access, show all children (backward compatibility)
     if (accessibleModules.includes(parent)) {
       return true;
     }
-    
+
     // Check if user has specific child access
     const hasAccess = accessibleModules.includes(childCode);
     return hasAccess;
@@ -299,10 +299,10 @@ function Sidebar({ state, setState }) {
                 path: "/student/previous-education",
                 text: "Previous Education",
               },
-              {
-                path: "/student/submit-application",
-                text: "RTGS Submit Application",
-              },
+              // {
+              //   path: "/student/submit-application",
+              //   text: "RTGS Submit Application",
+              // },
             ])}
           </>
         )}

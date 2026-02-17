@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 import "./StdAssignment.css";
-import { Alert } from "react-bootstrap";
+import { Alert, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import useStudentDetails from "../../hooks/useStudentDetails";
 import useStudentAssignments from "../../hooks/useStudentAssignments";
 
 function Assignment() {
   // Get student ID from sessionStorage
   const studentId = sessionStorage.getItem("userId");
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    navigate("/student/dashboards");
+  };
 
   // Fetch student details
   const { studentDetails, error: studentDetailsError } =
@@ -69,6 +75,12 @@ function Assignment() {
         <div className="col-12">
           <div className="card p-0">
             <div className="card-body">
+              {/* Close Button */}
+              <div className="mb-3">
+                <Button variant="danger" onClick={handleClose} style={{ width: "120px", borderRadius: "6px" }}>
+                  Close
+                </Button>
+              </div>
               <p
                 style={{
                   marginBottom: "0px",

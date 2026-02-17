@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Form, Table, Row, Col } from "react-bootstrap";
+import { Form, Table, Row, Col, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { FaCalendarAlt } from "react-icons/fa";
 import { Bar } from "react-chartjs-2";
 import {
@@ -21,6 +22,11 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const StaffViewAttendance = () => {
   // Get student ID from sessionStorage
   const studentId = sessionStorage.getItem("userId");
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    navigate("/student/dashboards");
+  };
 
   // Initialize dates with current date
   const [startDate, setStartDate] = useState(new Date());
@@ -182,7 +188,7 @@ const StaffViewAttendance = () => {
     datasets: [
       {
         label: "Present",
-        data: monthLabels.length > 0 
+        data: monthLabels.length > 0
           ? monthLabels.map((month) => monthlyData[month]?.present || 0)
           : [0],
         backgroundColor: "#28a745",
@@ -220,6 +226,7 @@ const StaffViewAttendance = () => {
         <div className="col-12">
           <div className="card">
             <div className="card-body">
+
               <p
                 style={{
                   marginBottom: "0px",
@@ -255,6 +262,17 @@ const StaffViewAttendance = () => {
                   >
                     Details
                   </button>
+                  <Button
+                    variant="danger"
+                    onClick={handleClose}
+                    className="me-2"
+                    style={{
+                      width: "150px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Close
+                  </Button>
                 </div>
               </div>
               {/* Grey Div for all other content */}
@@ -262,13 +280,109 @@ const StaffViewAttendance = () => {
                 <div className="col-12 custom-section-box mt-3 mb-4  ">
                   {/* Content - Always show, handle errors gracefully */}
                   <>
-                      {showSummary ? (
-                        <>
-                          <Row className="mb-4 mt-3">
-                            <Col md={5}>
-                              <Form.Label>
-                                From Date <FaCalendarAlt className="ms-1" />
-                              </Form.Label>
+                    {showSummary ? (
+                      <>
+                        <Row className="mb-4 mt-3">
+                          <Col md={5}>
+                            <Form.Label>
+                              From Date <FaCalendarAlt className="ms-1" />
+                            </Form.Label>
+                            <DatePicker
+                              selected={startDate}
+                              onChange={(date) => {
+                                setStartDate(date);
+                                if (date && endDate && date > endDate) {
+                                  setEndDate(date);
+                                }
+                              }}
+                              maxDate={endDate || new Date()}
+                              dateFormat="dd/MM/yyyy"
+                              className="form-control"
+                              placeholderText="Select start date (optional)"
+                              onChangeRaw={(e) => e.preventDefault()}
+                              onKeyDown={(e) => {
+                                if (e.key !== "Tab" && e.key !== "Enter") {
+                                  e.preventDefault();
+                                }
+                              }}
+                            />
+                          </Col>
+                          <Col md={5}>
+                            <Form.Label>
+                              To Date <FaCalendarAlt className="ms-1" />
+                            </Form.Label>
+                            <DatePicker
+                              selected={endDate}
+                              onChange={(date) => {
+                                setEndDate(date);
+                                if (date && startDate && date < startDate) {
+                                  setStartDate(date);
+                                }
+                              }}
+                              minDate={startDate}
+                              maxDate={new Date()}
+                              dateFormat="dd/MM/yyyy"
+                              className="form-control"
+                              placeholderText="Select end date (optional)"
+                              onChangeRaw={(e) => e.preventDefault()}
+                              onKeyDown={(e) => {
+                                if (e.key !== "Tab" && e.key !== "Enter") {
+                                  e.preventDefault();
+                                }
+                              }}
+                            />
+                          </Col>
+                        </Row>
+
+                        {/* Attendance Summary Table - Always show */}
+                        <Table
+                          bordered
+                          responsive
+                          className="text-center mb-4"
+                          style={{
+                            maxWidth: "700px",
+                            margin: "auto",
+                            border: "1px solid #ccc",
+                          }}
+                        >
+                          <thead>
+                            <tr style={{ backgroundColor: "#d89443" }}>
+                              <th>Total Present</th>
+                              <th>Total Absent</th>
+                              <th>Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td>{totalPresent}</td>
+                              <td>{totalAbsent}</td>
+                              <td>{total}</td>
+                            </tr>
+                          </tbody>
+                        </Table>
+
+                        {/* Attendance Chart - Always show, even if empty */}
+                        <div
+                          style={{
+                            width: "300px",
+                            height: "250px",
+                            margin: "0 auto",
+                            padding: "10px",
+                            backgroundColor: "#fff",
+                            border: "1px solid #ccc",
+                          }}
+                        >
+                          <Bar data={chartData} options={chartOptions} />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Row className="mb-4 mt-3">
+                          <Col md={5}>
+                            <Form.Label>
+                              From Date <FaCalendarAlt className="ms-1" />
+                            </Form.Label>
+                            <div style={{ position: "relative" }}>
                               <DatePicker
                                 selected={startDate}
                                 onChange={(date) => {
@@ -287,12 +401,15 @@ const StaffViewAttendance = () => {
                                     e.preventDefault();
                                   }
                                 }}
+                                wrapperClassName="date-picker-wrapper"
                               />
-                            </Col>
-                            <Col md={5}>
-                              <Form.Label>
-                                To Date <FaCalendarAlt className="ms-1" />
-                              </Form.Label>
+                            </div>
+                          </Col>
+                          <Col md={5}>
+                            <Form.Label>
+                              To Date <FaCalendarAlt className="ms-1" />
+                            </Form.Label>
+                            <div style={{ position: "relative" }}>
                               <DatePicker
                                 selected={endDate}
                                 onChange={(date) => {
@@ -312,163 +429,64 @@ const StaffViewAttendance = () => {
                                     e.preventDefault();
                                   }
                                 }}
+                                wrapperClassName="date-picker-wrapper"
                               />
-                            </Col>
-                          </Row>
-
-                          {/* Attendance Summary Table - Always show */}
-                          <Table
-                            bordered
-                            responsive
-                            className="text-center mb-4"
-                            style={{
-                              maxWidth: "700px",
-                              margin: "auto",
-                              border: "1px solid #ccc",
-                            }}
-                          >
-                            <thead>
-                              <tr style={{ backgroundColor: "#d89443" }}>
-                                <th>Total Present</th>
-                                <th>Total Absent</th>
-                                <th>Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td>{totalPresent}</td>
-                                <td>{totalAbsent}</td>
-                                <td>{total}</td>
-                              </tr>
-                            </tbody>
-                          </Table>
-
-                          {/* Attendance Chart - Always show, even if empty */}
-                          <div
-                            style={{
-                              width: "300px",
-                              height: "250px",
-                              margin: "0 auto",
-                              padding: "10px",
-                              backgroundColor: "#fff",
-                              border: "1px solid #ccc",
-                            }}
-                          >
-                            <Bar data={chartData} options={chartOptions} />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <Row className="mb-4 mt-3">
-                            <Col md={5}>
-                              <Form.Label>
-                                From Date <FaCalendarAlt className="ms-1" />
-                              </Form.Label>
-                              <div style={{ position: "relative" }}>
-                                <DatePicker
-                                  selected={startDate}
-                                  onChange={(date) => {
-                                    setStartDate(date);
-                                    if (date && endDate && date > endDate) {
-                                      setEndDate(date);
-                                    }
-                                  }}
-                                  maxDate={endDate || new Date()}
-                                  dateFormat="dd/MM/yyyy"
-                                  className="form-control"
-                                  placeholderText="Select start date (optional)"
-                                  onChangeRaw={(e) => e.preventDefault()}
-                                  onKeyDown={(e) => {
-                                    if (e.key !== "Tab" && e.key !== "Enter") {
-                                      e.preventDefault();
-                                    }
-                                  }}
-                                  wrapperClassName="date-picker-wrapper"
-                                />
-                              </div>
-                            </Col>
-                            <Col md={5}>
-                              <Form.Label>
-                                To Date <FaCalendarAlt className="ms-1" />
-                              </Form.Label>
-                              <div style={{ position: "relative" }}>
-                                <DatePicker
-                                  selected={endDate}
-                                  onChange={(date) => {
-                                    setEndDate(date);
-                                    if (date && startDate && date < startDate) {
-                                      setStartDate(date);
-                                    }
-                                  }}
-                                  minDate={startDate}
-                                  maxDate={new Date()}
-                                  dateFormat="dd/MM/yyyy"
-                                  className="form-control"
-                                  placeholderText="Select end date (optional)"
-                                  onChangeRaw={(e) => e.preventDefault()}
-                                  onKeyDown={(e) => {
-                                    if (e.key !== "Tab" && e.key !== "Enter") {
-                                      e.preventDefault();
-                                    }
-                                  }}
-                                  wrapperClassName="date-picker-wrapper"
-                                />
-                              </div>
-                            </Col>
-                          </Row>
-                          {/* Details Table - Always show, even if empty */}
-                          <Table
-                            striped
-                            bordered
-                            responsive
-                            className="text-center mt-4"
-                            style={{
-                              maxWidth: "100%",
-                              margin: "auto",
-                              border: "1px solid #ccc",
-                            }}
-                          >
-                            <thead>
-                              <tr style={{ backgroundColor: "#d89443" }}>
-                                <th>Sr. No</th>
-                                <th>Date</th>
-                                <th>Subject</th>
-                                <th>Attendance</th>
-                                <th>Remarks</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {transformedData.length > 0 ? (
-                                transformedData.map((record, index) => (
-                                  <tr key={index}>
-                                    <td>{index + 1}</td>
-                                    <td>{record.date}</td>
-                                    <td>{record.subject}</td>
-                                    <td>
-                                      <span
-                                        style={{
-                                          color: record.attendance === "Present" ? "#28a745" : "#dc3545",
-                                          fontWeight: "600",
-                                        }}
-                                      >
-                                        {record.attendance}
-                                      </span>
-                                    </td>
-                                    <td>{record.remarks || "-"}</td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan="5" className="text-center" style={{ color: "#999" }}>
-                                    No records to display
+                            </div>
+                          </Col>
+                        </Row>
+                        {/* Details Table - Always show, even if empty */}
+                        <Table
+                          striped
+                          bordered
+                          responsive
+                          className="text-center mt-4"
+                          style={{
+                            maxWidth: "100%",
+                            margin: "auto",
+                            border: "1px solid #ccc",
+                          }}
+                        >
+                          <thead>
+                            <tr style={{ backgroundColor: "#d89443" }}>
+                              <th>Sr. No</th>
+                              <th>Date</th>
+                              <th>Subject</th>
+                              <th>Attendance</th>
+                              <th>Remarks</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {transformedData.length > 0 ? (
+                              transformedData.map((record, index) => (
+                                <tr key={index}>
+                                  <td>{index + 1}</td>
+                                  <td>{record.date}</td>
+                                  <td>{record.subject}</td>
+                                  <td>
+                                    <span
+                                      style={{
+                                        color: record.attendance === "Present" ? "#28a745" : "#dc3545",
+                                        fontWeight: "600",
+                                      }}
+                                    >
+                                      {record.attendance}
+                                    </span>
                                   </td>
+                                  <td>{record.remarks || "-"}</td>
                                 </tr>
-                              )}
-                            </tbody>
-                          </Table>
-                        </>
-                      )}
-                    </>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="5" className="text-center" style={{ color: "#999" }}>
+                                  No records to display
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </Table>
+                      </>
+                    )}
+                  </>
                 </div>
               </div>
             </div>

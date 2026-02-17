@@ -8,7 +8,7 @@ function StdHostelDetails() {
   const [error, setError] = useState(null);
 
   const handleClose = () => {
-    navigate(-1);
+    navigate("/student/dashboards");
   };
 
   useEffect(() => {
@@ -58,7 +58,7 @@ function StdHostelDetails() {
           if (response.status === 404) {
             // Use the API's error message if available, otherwise use a default message
             const errorMessage = result.message || 'Hostel details not found for this student.';
-            setError(errorMessage.includes('not found') 
+            setError(errorMessage.includes('not found')
               ? 'You are not currently assigned to any hostel. Please contact the administration for hostel assignment.'
               : errorMessage);
             return;
@@ -113,10 +113,10 @@ function StdHostelDetails() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <div style={{ 
-                    textAlign: 'center', 
-                    backgroundColor: 'white', 
-                    color: 'black', 
+                  <div style={{
+                    textAlign: 'center',
+                    backgroundColor: 'white',
+                    color: 'black',
                     border: '1px solid #dee2e6',
                     borderRadius: '0.25rem',
                     padding: '1rem 1.25rem',
@@ -169,10 +169,10 @@ function StdHostelDetails() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <div style={{ 
-                    textAlign: 'center', 
-                    backgroundColor: 'white', 
-                    color: 'black', 
+                  <div style={{
+                    textAlign: 'center',
+                    backgroundColor: 'white',
+                    color: 'black',
                     border: '1px solid #dee2e6',
                     borderRadius: '0.25rem',
                     padding: '1rem 1.25rem',

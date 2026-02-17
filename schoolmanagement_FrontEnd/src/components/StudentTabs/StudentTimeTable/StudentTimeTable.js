@@ -215,7 +215,7 @@ const StudentTimeTable = () => {
   };
 
   const handleClose = () => {
-    navigate(-1); // Go back to previous page
+    navigate("/student/dashboards"); // Go back to dashboard
   };
 
   // Handle week navigation for weekly view
@@ -263,9 +263,8 @@ const StudentTimeTable = () => {
         <button
           className="btn btn-danger"
           style={{
-            borderRadius: "20px",
-            padding: "8px 24px",
-            fontWeight: "500"
+            width: "120px",
+            borderRadius: "6px",
           }}
           onClick={handleClose}
         >
