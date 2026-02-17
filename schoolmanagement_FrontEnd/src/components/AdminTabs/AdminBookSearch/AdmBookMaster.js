@@ -4879,8 +4879,9 @@ const BookForm = () => {
       }
     } else {
       setNextBarcode(null);
-      const resetRows = accessionRows.map((row) => ({ ...row, barcode: "" }));
-      setAccessionRows(resetRows);
+      // Do not clear the rows, just allow manual editing
+      // const resetRows = accessionRows.map((row) => ({ ...row, barcode: "" }));
+      // setAccessionRows(resetRows);
     }
   };
 
@@ -4953,7 +4954,10 @@ const BookForm = () => {
     }));
 
     // Call the updateAccessionRows function to update the accession rows based on the new number of copies
-    updateAccessionRows(updatedRows, isChecked ? nextBarcode : null);
+    // Only update if totalCopies is valid and greater than 0 to prevent clearing rows on temporary empty input
+    if (totalCopies > 0) {
+      updateAccessionRows(updatedRows, isChecked ? nextBarcode : null);
+    }
   };
 
   const updateAccessionRows = (rows, startingBarcode) => {
@@ -4966,29 +4970,48 @@ const BookForm = () => {
     // Ensure the number of accession rows matches the total number of copies
     const newAccessionRows = [];
     let existingRowIndex = 0;
+    let generatedCount = 0; // Counter for determining how many *new* barcodes to generate
 
     for (let i = 0; i < totalCopies; i++) {
       if (existingRowIndex < accessionRows.length) {
         // Preserve existing rows and update necessary fields
         const existingRow = accessionRows[existingRowIndex];
+
+        // Determine if we should keep the existing barcode or generate a new one
+        let barcodeToUse = existingRow.barcode;
+
+        if (startingBarcode) {
+          // If auto-generation is ON
+          // Only overwrite if the barcode is empty/null/undefined
+          // This preserves existing book barcodes
+          if (!existingRow.barcode || String(existingRow.barcode).trim() === "") {
+            barcodeToUse = (parseInt(startingBarcode) + generatedCount).toString();
+            generatedCount++;
+          }
+        }
+        // If startingBarcode is null (unchecked), we just keep existingRow.barcode as is.
+
         newAccessionRows.push({
           ...existingRow,
           id: existingRow.id || Date.now() + i,
-          barcode: startingBarcode
-            ? (parseInt(startingBarcode) + i).toString()
-            : existingRow.barcode || "",
+          barcode: barcodeToUse,
           location: existingRow.location || "",
           status: existingRow.status || "Available",
           remarks: existingRow.remarks || "",
         });
         existingRowIndex++;
       } else {
-        // Create new rows if there aren't enough existing rows
+        // Create new rows
+        let barcodeToUse = "";
+
+        if (startingBarcode) {
+          barcodeToUse = (parseInt(startingBarcode) + generatedCount).toString();
+          generatedCount++;
+        }
+
         newAccessionRows.push({
           id: Date.now() + i,
-          barcode: startingBarcode
-            ? (parseInt(startingBarcode) + i).toString()
-            : "",
+          barcode: barcodeToUse,
           location: "",
           status: "Available",
           remarks: "",
