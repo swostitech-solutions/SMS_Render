@@ -78,63 +78,67 @@
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
-.create-admin-user-container .badge {
-  padding: 6px 12px;
-  font-weight: 500;
-  font-size: 0.85rem;
-}
-
-.create-admin-user-container .alert {
+.create-admin-user-container .search-section {
+  background-color: #f8f9fa;
+  padding: 15px;
   border-radius: 5px;
-  border: none;
-  font-weight: 500;
+  margin-bottom: 20px;
 }
 
-.create-admin-user-container .gap-2>* {
-  margin-left: 0.5rem;
+.create-admin-user-container .search-input {
+  flex: 1;
+  max-width: 400px;
 }
 
-.create-admin-user-container .gap-2>*:first-child {
-  margin-left: 0;
+.create-admin-user-container .edit-icon-btn {
+  color: #0d6efd;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
 }
 
-/* React Select customization to match Bootstrap theme */
-.create-admin-user-container .css-b62m3t-container {
-  width: 100%;
+.create-admin-user-container .edit-icon-btn:hover {
+  color: #0056b3;
+  transform: scale(1.1);
 }
 
-.create-admin-user-container .is-invalid+.text-danger {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.875em;
+/* Role edit modal */
+.create-admin-user-container .modal-content {
+  border-radius: 8px;
 }
 
-/* Indeterminate checkbox styling for parent modules */
-.create-admin-user-container .form-check-input:indeterminate {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
-}
-
-.create-admin-user-container .fw-bold {
-  font-weight: 600;
-}
-
-/* Edit Modal Styles */
 .create-admin-user-container .modal-header {
-  border-bottom: 2px solid #dee2e6;
+  background-color: #f8f9fa;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
 }
 
 .create-admin-user-container .modal-footer {
-  border-top: 2px solid #dee2e6;
+  background-color: #f8f9fa;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
+/* Form field styles */
+.create-admin-user-container .form-group {
+  margin-bottom: 1rem;
+}
+
+.create-admin-user-container .form-group label {
+  font-weight: 500;
+  color: #495057;
+}
+
+/* Module permissions section */
 .create-admin-user-container .module-selection {
-  padding: 10px 0;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 5px;
+  margin-top: 20px;
 }
 
 .create-admin-user-container .module-selection .form-check {
-  padding-left: 1.5em;
+  margin-bottom: 10px;
 }
 
 .create-admin-user-container .module-selection .form-check-input {
@@ -162,4 +166,9 @@
   .create-admin-user-container .modal-xl {
     max-width: 95%;
   }
+}
+
+/* Module expand/collapse arrows - force black color */
+.module-expand-arrow {
+  color: #000 !important;
 }

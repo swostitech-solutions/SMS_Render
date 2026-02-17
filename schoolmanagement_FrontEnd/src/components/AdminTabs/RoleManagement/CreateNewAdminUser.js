@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { InputGroup } from "react-bootstrap";
-import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { BsEye, BsEyeSlash, BsChevronDown, BsChevronRight } from "react-icons/bs";
 import { ApiUrl } from "../../../ApiUrl";
 import "./CreateAdminUser.css";
 
@@ -297,7 +297,7 @@ const CreateNewAdminUser = () => {
     const disabledChildren = parentModule.children.filter(c => c.disabled).map(c => c.code);
     const selectableChildren = children.filter(code => !disabledChildren.includes(code));
     const allSelectableSelected = selectableChildren.every(code => selectedModules.includes(code));
-    
+
     setSelectedModules((prev) => {
       if (allSelectableSelected) {
         // Deselect only selectable children, keep disabled ones
@@ -308,7 +308,7 @@ const CreateNewAdminUser = () => {
         return [...prev, ...newCodes];
       }
     });
-    
+
     if (errors.modules) {
       setErrors((prev) => ({ ...prev, modules: "" }));
     }
@@ -321,7 +321,7 @@ const CreateNewAdminUser = () => {
     if (child && child.disabled) {
       return; // Don't allow toggling disabled children
     }
-    
+
     setSelectedModules((prev) => {
       if (prev.includes(childCode)) {
         // Deselecting child - remove it
@@ -331,7 +331,7 @@ const CreateNewAdminUser = () => {
         return [...prev, childCode];
       }
     });
-    
+
     if (errors.modules) {
       setErrors((prev) => ({ ...prev, modules: "" }));
     }
@@ -368,15 +368,15 @@ const CreateNewAdminUser = () => {
 
   // Handle select all modules
   const handleSelectAll = () => {
-    const allSelectableChildCodes = moduleHierarchy.flatMap(parent => 
+    const allSelectableChildCodes = moduleHierarchy.flatMap(parent =>
       parent.children.filter(c => !c.disabled).map(c => c.code)
     );
-    const disabledChildCodes = moduleHierarchy.flatMap(parent => 
+    const disabledChildCodes = moduleHierarchy.flatMap(parent =>
       parent.children.filter(c => c.disabled).map(c => c.code)
     );
-    
+
     const allSelectableSelected = allSelectableChildCodes.every(code => selectedModules.includes(code));
-    
+
     if (allSelectableSelected) {
       // Deselect all selectable, keep disabled ones
       setSelectedModules(disabledChildCodes);
@@ -501,28 +501,47 @@ const CreateNewAdminUser = () => {
   return (
     <div className="create-admin-user-container">
       <div className="container-fluid">
-        <div className="row mt-4">
+        <div className="row">
           <div className="col-12">
-            <div className="card">
-              <div className="card-header bg-primary text-white">
-                <h4 className="mb-0">Create New Admin User</h4>
-              </div>
+            <div className="card p-0">
               <div className="card-body">
+                <p
+                  style={{
+                    marginBottom: "0px",
+                    textAlign: "center",
+                    fontSize: "20px",
+                    fontWeight: "700",
+                  }}
+                >
+                  CREATE NEW USER ROLE
+                </p>
+
                 {/* Action Buttons */}
-                <div className="d-flex gap-2 mb-3">
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSave}
-                    disabled={loading}
-                  >
-                    {loading ? "Saving..." : "Save"}
-                  </button>
-                  <button className="btn btn-secondary" onClick={handleClear}>
-                    Clear
-                  </button>
-                  <button className="btn btn-danger" onClick={handleClose}>
-                    Close
-                  </button>
+                <div className="row mb-3 mt-3 mx-0">
+                  <div className="col-12 d-flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-primary me-2"
+                      onClick={handleSave}
+                      disabled={loading}
+                    >
+                      {loading ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary me-2"
+                      onClick={handleClear}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger me-2"
+                      onClick={handleClose}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
 
                 {/* Success/Error Messages */}
@@ -548,154 +567,159 @@ const CreateNewAdminUser = () => {
                   </div>
                 )}
 
-                {/* Form */}
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        Role Name <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control ${errors.roleName ? "is-invalid" : ""}`}
-                        name="roleName"
-                        value={formData.roleName}
-                        onChange={handleInputChange}
-                        placeholder="Enter role name (e.g., Admin Manager, HR Admin)"
-                      />
-                      {errors.roleName && (
-                        <div className="invalid-feedback">{errors.roleName}</div>
-                      )}
-                    </div>
-                  </div>
+                {/* Form Section + Module Access (Single White Box) */}
+                <div className="row mt-3 mx-2">
+                  <div className="col-12 custom-section-box">
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                      <div className="row flex-grow-1 mt-2">
+                        {/* Column 1: Role Name + Username + Non Teaching Staff */}
+                        <div className="col-12 col-md-6">
+                          <div className="form-group mb-2">
+                            <label htmlFor="roleName" className="form-label">
+                              Role Name <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              id="roleName"
+                              className={`form-control detail ${errors.roleName ? "is-invalid" : ""}`}
+                              name="roleName"
+                              value={formData.roleName}
+                              onChange={handleInputChange}
+                              placeholder="Enter role name (e.g., Admin Manager, HR Admin)"
+                            />
+                            {errors.roleName && (
+                              <div className="invalid-feedback">{errors.roleName}</div>
+                            )}
+                          </div>
 
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        Username <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control ${errors.userName ? "is-invalid" : ""}`}
-                        name="userName"
-                        value={formData.userName}
-                        onChange={handleInputChange}
-                        placeholder="Enter username (min 3 characters)"
-                        autoComplete="off"
-                      />
-                      {errors.userName && (
-                        <div className="invalid-feedback">{errors.userName}</div>
-                      )}
-                    </div>
-                  </div>
+                          <div className="form-group mb-2">
+                            <label htmlFor="userName" className="form-label">
+                              Username <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              id="userName"
+                              className={`form-control detail ${errors.userName ? "is-invalid" : ""}`}
+                              name="userName"
+                              value={formData.userName}
+                              onChange={handleInputChange}
+                              placeholder="Enter username (min 3 characters)"
+                              autoComplete="off"
+                            />
+                            {errors.userName && (
+                              <div className="invalid-feedback">{errors.userName}</div>
+                            )}
+                          </div>
 
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        Non Teaching Staff <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={staffList}
-                        value={formData.linkedStaff}
-                        onChange={handleDropdownChange}
-                        placeholder="Select Non Teaching Staff"
-                        isClearable
-                        className={errors.linkedStaff ? "is-invalid" : ""}
-                      />
-                      {errors.linkedStaff && (
-                        <div className="text-danger small mt-1">
-                          {errors.linkedStaff}
+                          <div className="form-group mb-2">
+                            <label htmlFor="linkedStaff" className="form-label">
+                              Non Teaching Staff <span className="text-danger">*</span>
+                            </label>
+                            <Select
+                              id="linkedStaff"
+                              options={staffList}
+                              value={formData.linkedStaff}
+                              onChange={handleDropdownChange}
+                              placeholder="Select Non Teaching Staff"
+                              isClearable
+                              className={errors.linkedStaff ? "is-invalid" : ""}
+                              classNamePrefix="detail"
+                            />
+                            {errors.linkedStaff && (
+                              <div className="text-danger small mt-1">
+                                {errors.linkedStaff}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        Password <span className="text-danger">*</span>
-                      </label>
-                      <InputGroup hasValidation>
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          className={`form-control ${errors.password ? "is-invalid" : ""}`}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder="Enter password (min 6 characters)"
-                          autoComplete="new-password"
-                        />
-                        <InputGroup.Text
-                          style={{
-                            cursor: "pointer",
-                            backgroundColor: "#fff",
-                            borderColor: errors.password ? "#dc3545" : "#ced4da",
-                          }}
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <BsEyeSlash size={18} />
-                          ) : (
-                            <BsEye size={18} />
-                          )}
-                        </InputGroup.Text>
-                        {errors.password && (
-                          <div className="invalid-feedback" style={{ display: "block" }}>
-                            {errors.password}
+                        {/* Column 2: Password + Confirm Password */}
+                        <div className="col-12 col-md-6">
+                          <div className="form-group mb-2">
+                            <label htmlFor="password" className="form-label">
+                              Password <span className="text-danger">*</span>
+                            </label>
+                            <InputGroup hasValidation>
+                              <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                className={`form-control detail ${errors.password ? "is-invalid" : ""}`}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                placeholder="Enter password (min 6 characters)"
+                                autoComplete="new-password"
+                              />
+                              <InputGroup.Text
+                                style={{
+                                  cursor: "pointer",
+                                  backgroundColor: "#fff",
+                                  borderColor: errors.password ? "#dc3545" : "#ced4da",
+                                }}
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <BsEyeSlash size={18} />
+                                ) : (
+                                  <BsEye size={18} />
+                                )}
+                              </InputGroup.Text>
+                              {errors.password && (
+                                <div className="invalid-feedback" style={{ display: "block" }}>
+                                  {errors.password}
+                                </div>
+                              )}
+                            </InputGroup>
                           </div>
-                        )}
-                      </InputGroup>
-                    </div>
-                  </div>
 
-                  <div className="col-md-6">
-                    <div className="form-group mb-3">
-                      <label className="form-label">
-                        Confirm Password <span className="text-danger">*</span>
-                      </label>
-                      <InputGroup hasValidation>
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
-                          name="confirmPassword"
-                          value={formData.confirmPassword}
-                          onChange={handleInputChange}
-                          placeholder="Re-enter password"
-                          autoComplete="new-password"
-                        />
-                        <InputGroup.Text
-                          style={{
-                            cursor: "pointer",
-                            backgroundColor: "#fff",
-                            borderColor: errors.confirmPassword ? "#dc3545" : "#ced4da",
-                          }}
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                          {showConfirmPassword ? (
-                            <BsEyeSlash size={18} />
-                          ) : (
-                            <BsEye size={18} />
-                          )}
-                        </InputGroup.Text>
-                        {errors.confirmPassword && (
-                          <div className="invalid-feedback" style={{ display: "block" }}>
-                            {errors.confirmPassword}
+                          <div className="form-group mb-2">
+                            <label htmlFor="confirmPassword" className="form-label">
+                              Confirm Password <span className="text-danger">*</span>
+                            </label>
+                            <InputGroup hasValidation>
+                              <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                id="confirmPassword"
+                                className={`form-control detail ${errors.confirmPassword ? "is-invalid" : ""}`}
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleInputChange}
+                                placeholder="Re-enter password"
+                                autoComplete="new-password"
+                              />
+                              <InputGroup.Text
+                                style={{
+                                  cursor: "pointer",
+                                  backgroundColor: "#fff",
+                                  borderColor: errors.confirmPassword ? "#dc3545" : "#ced4da",
+                                }}
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              >
+                                {showConfirmPassword ? (
+                                  <BsEyeSlash size={18} />
+                                ) : (
+                                  <BsEye size={18} />
+                                )}
+                              </InputGroup.Text>
+                              {errors.confirmPassword && (
+                                <div className="invalid-feedback" style={{ display: "block" }}>
+                                  {errors.confirmPassword}
+                                </div>
+                              )}
+                            </InputGroup>
                           </div>
-                        )}
-                      </InputGroup>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Module Access Permissions */}
-                <div className="card mb-3">
-                  <div className="card-header bg-light">
-                    <h5 className="mb-0">Module Access Permissions</h5>
-                    <small className="text-muted">
+                    {/* Module Access Permissions Section */}
+                    <hr className="my-4" />
+
+                    <h5 className="mb-2">Module Access Permissions</h5>
+                    <small className="text-muted d-block mb-3">
                       Select specific submenu items this admin user can access
                     </small>
-                  </div>
-                  <div className="card-body">
+
                     {errors.modules && (
                       <div className="alert alert-danger" role="alert">
                         {errors.modules}
@@ -709,7 +733,7 @@ const CreateNewAdminUser = () => {
                         onClick={handleSelectAll}
                       >
                         {(() => {
-                          const allSelectableChildCodes = moduleHierarchy.flatMap(parent => 
+                          const allSelectableChildCodes = moduleHierarchy.flatMap(parent =>
                             parent.children.filter(c => !c.disabled).map(c => c.code)
                           );
                           const allSelectableSelected = allSelectableChildCodes.every(code => selectedModules.includes(code));
@@ -721,65 +745,197 @@ const CreateNewAdminUser = () => {
                       </span>
                     </div>
 
-                    {/* Flat Module List with Parent-Child Structure */}
+                    {/* Collapsible Module List - Two Columns */}
                     <div className="row">
-                      {moduleHierarchy.map((parentModule) => {
-                        const isFullySelected = isParentFullySelected(parentModule);
-                        const isPartiallySelected = isParentPartiallySelected(parentModule);
-                        const selectedCount = getSelectedCount(parentModule);
-                        const totalCount = parentModule.children.length;
+                      {/* Left Column */}
+                      <div className="col-md-6" style={{ borderRight: "2px solid #dee2e6", paddingRight: "20px" }}>
+                        {moduleHierarchy.slice(0, Math.ceil(moduleHierarchy.length / 2)).map((parentModule) => {
+                          const isFullySelected = isParentFullySelected(parentModule);
+                          const isPartiallySelected = isParentPartiallySelected(parentModule);
+                          const selectedCount = getSelectedCount(parentModule);
+                          const totalCount = parentModule.children.length;
+                          const isExpanded = expandedParents[parentModule.parent];
 
-                        return (
-                          <div key={parentModule.parent} className="col-12 mb-4">
-                            {/* Parent Module */}
-                            <div className="form-check mb-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                id={`parent-${parentModule.parent}`}
-                                checked={isFullySelected}
-                                ref={(el) => {
-                                  if (el) el.indeterminate = isPartiallySelected;
-                                }}
-                                onChange={() => handleParentToggle(parentModule)}
-                              />
-                              <label
-                                className="form-check-label fw-bold"
-                                htmlFor={`parent-${parentModule.parent}`}
-                              >
-                                {parentModule.label}
-                                <span className="badge bg-secondary ms-2">
-                                  {selectedCount}/{totalCount}
+                          return (
+                            <div
+                              key={parentModule.parent}
+                              className="mb-3"
+                              style={{
+                                border: "1px solid #dee2e6",
+                                borderRadius: "4px",
+                                padding: "10px",
+                                backgroundColor: isExpanded ? "#f8f9fa" : "#fff"
+                              }}
+                            >
+                              {/* Parent Module with Arrow */}
+                              <div className="d-flex align-items-center">
+                                <input
+                                  className="form-check-input me-2"
+                                  type="checkbox"
+                                  id={`parent-${parentModule.parent}`}
+                                  checked={isFullySelected}
+                                  ref={(el) => {
+                                    if (el) el.indeterminate = isPartiallySelected;
+                                  }}
+                                  onChange={() => handleParentToggle(parentModule)}
+                                  style={{ flexShrink: 0 }}
+                                />
+                                <label
+                                  className="form-check-label fw-bold flex-grow-1 mb-0"
+                                  htmlFor={`parent-${parentModule.parent}`}
+                                  style={{ cursor: "pointer" }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleParentExpansion(parentModule.parent);
+                                  }}
+                                >
+                                  {parentModule.label}
+                                  <span className="badge bg-secondary ms-2" style={{ fontSize: "11px" }}>
+                                    {selectedCount}/{totalCount}
+                                  </span>
+                                </label>
+                                <span
+                                  className="module-expand-arrow"
+                                  style={{
+                                    cursor: "pointer",
+                                    marginLeft: "8px",
+                                    color: "#000",
+                                    fontWeight: "bold",
+                                    flexShrink: 0,
+                                    display: "flex",
+                                    alignItems: "center"
+                                  }}
+                                  onClick={() => toggleParentExpansion(parentModule.parent)}
+                                >
+                                  {isExpanded ? <BsChevronDown size={16} /> : <BsChevronRight size={16} />}
                                 </span>
-                              </label>
-                            </div>
+                              </div>
 
-                            {/* Child Modules - Always Visible */}
-                            <div className="row ms-4">
-                              {parentModule.children.map((child) => (
-                                <div className="col-md-4 col-sm-6" key={child.code}>
-                                  <div className="form-check mb-2">
-                                    <input
-                                      className="form-check-input"
-                                      type="checkbox"
-                                      id={`child-${child.code}`}
-                                      checked={selectedModules.includes(child.code)}
-                                      onChange={() => handleChildToggle(parentModule, child.code)}
-                                      disabled={child.disabled || false}
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor={`child-${child.code}`}
-                                    >
-                                      {child.label}
-                                    </label>
-                                  </div>
+                              {/* Child Modules - Show only when expanded */}
+                              {isExpanded && (
+                                <div className="mt-2 pt-2" style={{ borderTop: "1px solid #dee2e6" }}>
+                                  {parentModule.children.map((child) => (
+                                    <div key={child.code} className="ms-3 mb-1">
+                                      <div className="form-check">
+                                        <input
+                                          className="form-check-input"
+                                          type="checkbox"
+                                          id={`child-${child.code}`}
+                                          checked={selectedModules.includes(child.code)}
+                                          onChange={() => handleChildToggle(parentModule, child.code)}
+                                          disabled={child.disabled || false}
+                                        />
+                                        <label
+                                          className="form-check-label"
+                                          htmlFor={`child-${child.code}`}
+                                          style={{ fontSize: "14px" }}
+                                        >
+                                          {child.label}
+                                        </label>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
+                              )}
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="col-md-6" style={{ paddingLeft: "20px" }}>
+                        {moduleHierarchy.slice(Math.ceil(moduleHierarchy.length / 2)).map((parentModule) => {
+                          const isFullySelected = isParentFullySelected(parentModule);
+                          const isPartiallySelected = isParentPartiallySelected(parentModule);
+                          const selectedCount = getSelectedCount(parentModule);
+                          const totalCount = parentModule.children.length;
+                          const isExpanded = expandedParents[parentModule.parent];
+
+                          return (
+                            <div
+                              key={parentModule.parent}
+                              className="mb-3"
+                              style={{
+                                border: "1px solid #dee2e6",
+                                borderRadius: "4px",
+                                padding: "10px",
+                                backgroundColor: isExpanded ? "#f8f9fa" : "#fff"
+                              }}
+                            >
+                              {/* Parent Module with Arrow */}
+                              <div className="d-flex align-items-center">
+                                <input
+                                  className="form-check-input me-2"
+                                  type="checkbox"
+                                  id={`parent-${parentModule.parent}`}
+                                  checked={isFullySelected}
+                                  ref={(el) => {
+                                    if (el) el.indeterminate = isPartiallySelected;
+                                  }}
+                                  onChange={() => handleParentToggle(parentModule)}
+                                  style={{ flexShrink: 0 }}
+                                />
+                                <label
+                                  className="form-check-label fw-bold flex-grow-1 mb-0"
+                                  htmlFor={`parent-${parentModule.parent}`}
+                                  style={{ cursor: "pointer" }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    toggleParentExpansion(parentModule.parent);
+                                  }}
+                                >
+                                  {parentModule.label}
+                                  <span className="badge bg-secondary ms-2" style={{ fontSize: "11px" }}>
+                                    {selectedCount}/{totalCount}
+                                  </span>
+                                </label>
+                                <span
+                                  className="module-expand-arrow"
+                                  style={{
+                                    cursor: "pointer",
+                                    marginLeft: "8px",
+                                    color: "#000",
+                                    fontWeight: "bold",
+                                    flexShrink: 0,
+                                    display: "flex",
+                                    alignItems: "center"
+                                  }}
+                                  onClick={() => toggleParentExpansion(parentModule.parent)}
+                                >
+                                  {isExpanded ? <BsChevronDown size={16} /> : <BsChevronRight size={16} />}
+                                </span>
+                              </div>
+
+                              {/* Child Modules - Show only when expanded */}
+                              {isExpanded && (
+                                <div className="mt-2 pt-2" style={{ borderTop: "1px solid #dee2e6" }}>
+                                  {parentModule.children.map((child) => (
+                                    <div key={child.code} className="ms-3 mb-1">
+                                      <div className="form-check">
+                                        <input
+                                          className="form-check-input"
+                                          type="checkbox"
+                                          id={`child-${child.code}`}
+                                          checked={selectedModules.includes(child.code)}
+                                          onChange={() => handleChildToggle(parentModule, child.code)}
+                                          disabled={child.disabled || false}
+                                        />
+                                        <label
+                                          className="form-check-label"
+                                          htmlFor={`child-${child.code}`}
+                                          style={{ fontSize: "14px" }}
+                                        >
+                                          {child.label}
+                                        </label>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
