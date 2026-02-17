@@ -1210,13 +1210,13 @@ const FeeDashboard = () => {
       const branch_id = localStorage.getItem("branchId");
       const academic_year_id = localStorage.getItem("academicSessionId");
 
-      const url1 = `${ApiUrl.apiurl}FeesDashBoard/FeesReceiptSearch/?organization_id=${org_id}&branch_id=${branch_id}&batch_id=${academic_year_id}&from_date=${start_date}&to_date=${end_date}`;
-      console.log("💰 Calling FeesReceiptSearch API:", url1);
+      const url1 = `${ApiUrl.apiurl}FeesDashBoard/dashboard/?organization_id=${org_id}&branch_id=${branch_id}&batch_id=${academic_year_id}&from_date=${start_date}&to_date=${end_date}`;
+      console.log("💰 Calling FeesDashBoard/dashboard API:", url1);
 
       fetch(url1)
         .then((res) => res.json())
         .then((data) => {
-          console.log("✅ FeesReceiptSearch response:", data);
+          console.log("✅ FeesDashBoard/dashboard response:", data);
           if (data?.data) setFeeData(data.data);
           else setFeeData([]);
         })
@@ -1383,12 +1383,12 @@ const FeeDashboard = () => {
     // Convert feeData to a map for quick access
     const feeMap = {};
     feeData.forEach((item) => {
-      // Match API response: 'date' and 'payment_detail.total_amount'
+      // Match API response from FeesDashBoard/dashboard: 'receipt_date' and 'received_amount'
       // Only process valid dates
-      if (!item.date) return;
+      if (!item.receipt_date) return;
 
-      const key = new Date(item.date).toLocaleDateString("en-CA");
-      const amount = item.payment_detail?.total_amount || 0;
+      const key = new Date(item.receipt_date).toLocaleDateString("en-CA");
+      const amount = item.received_amount || 0;
 
       // Aggregate amounts if multiple receipts exist for the same day
       if (feeMap[key]) {

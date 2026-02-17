@@ -319,11 +319,9 @@ class FeesDashboardListAPIView(ListAPIView):
 
             try:
                 filterdata = StudentFeeReceiptDetail.objects.filter(
-                    # receipt__academic_year_id=serializer.validated_data.get('academic_year_id'),
                     receipt__organization= organization_id,
                     receipt__branch = branch_id,
-                    receipt__batch = batch_id,
-                    receipt_id__receipt_status='APPROVED',
+                    receipt__receipt_status='APPROVED',
                     is_active=True
                 )
             except:
@@ -451,7 +449,8 @@ class FeesDuesListAPIView(ListAPIView):
                 to_date = datetime.strptime(f"31-12-{year}", '%d-%m-%Y').date()
 
             try:
-                # Get ALL fee details for organization/branch (NO batch filtering)
+                # Filter StudentFeeDetail by organization and branch ONLY (NO batch filtering)
+                # This gives us the fee structure elements (total dues and discounts) for ALL batches
                 filterdata = StudentFeeDetail.objects.filter(
                     organization= organization_id,
                     branch= branch_id,
@@ -463,8 +462,8 @@ class FeesDuesListAPIView(ListAPIView):
 
             if filterdata:
 
-                # Calculate element amount, paid amount, discount amount
-                group_data = filterdata.annotate(
+                # Calculate element amount and discount amount from StudentFeeDetail
+                element_data = filterdata.annotate(
                     element_positive=Case(
                         When(element_amount__gt=0, then=F('element_amount')),
                         default=Value(0),
@@ -474,12 +473,41 @@ class FeesDuesListAPIView(ListAPIView):
                         When(element_amount__lt=0, then=F('element_amount')),
                         default=Value(0),
                         output_field=DecimalField()
-                    ),
+                    )
+                )
+                
+                # Calculate total dues and discount
+                structure_totals = element_data.aggregate(
+                    element_amount=Sum('element_positive'),
+                    total_discount_amount=Sum('element_negative')
+                )
+                
+                # Now calculate total_paid_amount from StudentFeeReceiptDetail
+                # Filter by receipt_date if year is provided (NO batch filtering)
+                receipt_filter = {
+                    'receipt__organization': organization_id,
+                    'receipt__branch': branch_id,
+                    'receipt__receipt_status': 'APPROVED',
+                    'is_active': True
+                }
+                
+                # Add date range filter if year is provided
+                if from_date and to_date:
+                    receipt_filter['receipt__receipt_date__gte'] = from_date
+                    receipt_filter['receipt__receipt_date__lte'] = to_date
+                
+                # Query StudentFeeReceiptDetail for actual paid amounts
+                receipt_data = StudentFeeReceiptDetail.objects.filter(**receipt_filter)
+                
+                # Sum only positive amounts (actual payments)
+                paid_sum = receipt_data.annotate(
                     paid_positive=Case(
-                        When(paid_amount__gt=0, then=F('paid_amount')),
+                        When(amount__gt=0, then=F('amount')),
                         default=Value(0),
                         output_field=DecimalField()
                     )
+                ).aggregate(
+                    total_paid_amount=Sum('paid_positive')
                 )
 
                 # Get batch Instance (optional - for display purposes)
@@ -492,13 +520,13 @@ class FeesDuesListAPIView(ListAPIView):
                     pass  # Use 'All Batches' if batch not found
 
                 batch= {'batch': batch_label}
-                result = group_data.aggregate(
-
-                    element_amount=Sum('element_positive'),
-                    total_paid_amount=Sum('paid_positive'),
-                    total_discount_amount=Sum('element_negative')
-
-                )
+                
+                # Combine structure totals with paid totals
+                result = {
+                    'element_amount': structure_totals.get('element_amount') or 0,
+                    'total_discount_amount': structure_totals.get('total_discount_amount') or 0,
+                    'total_paid_amount': paid_sum.get('total_paid_amount') or 0
+                }
 
                 # Include batch info
                 result.update(batch)
@@ -508,7 +536,6 @@ class FeesDuesListAPIView(ListAPIView):
                     result.update({'from_date':from_date,'to_date':to_date})
                 else:
                     result.update({'from_date': None, 'to_date': None})
-
 
 
 

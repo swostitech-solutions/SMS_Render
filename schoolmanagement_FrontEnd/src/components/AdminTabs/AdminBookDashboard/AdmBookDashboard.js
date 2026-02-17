@@ -63,7 +63,8 @@ const AdmBookDashboard = () => {
       }
 
       // Fetch recent book issues
-      const issuesUrl = `${ApiUrl.apiurl}ISSUEBOOK/BOOKISSUESEARCHLIST/?academic_year_id=${academicYearId}`;
+      // flag=A means "All" (both issued and returned books)
+      const issuesUrl = `${ApiUrl.apiurl}ISSUEBOOK/BOOKISSUESEARCHLIST/?academic_year_id=${academicYearId}&flag=A`;
       const issuesResponse = await fetch(issuesUrl, { method: "GET", headers });
       const issuesResult = await issuesResponse.json();
 
