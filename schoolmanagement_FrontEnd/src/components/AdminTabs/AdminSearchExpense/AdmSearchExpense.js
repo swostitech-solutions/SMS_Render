@@ -1,6 +1,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Modal, Button, Table } from "react-bootstrap";
 import SelectSearchParty from "../AdminSearchExpense/SelectSearchParty";
 import { useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
@@ -30,6 +31,8 @@ const AdmAttendanceEntry = () => {
   const [expenseData, setExpenseData] = useState([]);
   // const [expenseCategory, setExpenseCategory] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(0);
@@ -273,17 +276,90 @@ const AdmAttendanceEntry = () => {
       const result = response.data;
 
       if (result.message === "success") {
-        console.log("Navigating to /admin/expense_edit (view mode) with state:", result.data);
-
-        navigate("/admin/expense_edit", {
-          state: { expenseData: result.data, mode: "view" },
-        });
+        setSelectedExpense(result.data);
+        setShowReceiptModal(true);
       } else {
         console.error("Failed to fetch Expense details: " + result.message);
       }
     } catch (error) {
       console.error("Error fetching expense details:", error);
     }
+  };
+
+  const handleCloseReceiptModal = () => {
+    setShowReceiptModal(false);
+    setSelectedExpense(null);
+  };
+
+  const handleDownloadReceipt = () => {
+    if (!selectedExpense) return;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Expense Receipt", 105, 20, null, null, "center");
+
+    doc.setFontSize(14);
+    doc.text("Sparsh College of Nursing and Allied Sciences", 105, 30, null, null, "center");
+
+    doc.setFontSize(12);
+    doc.text(`Expense No: ${selectedExpense.expense_no}`, 15, 45);
+    doc.text(`Date: ${selectedExpense.date}`, 140, 45);
+    doc.text(`Party Name: ${selectedExpense.party_name || ""}`, 15, 55);
+    doc.text(`Reference: ${selectedExpense.party_reference || ""}`, 140, 55);
+
+    const tableColumn = ["Sr.No", "Category", "Remarks", "Amount"];
+    const tableRows = [];
+
+    if (selectedExpense.ExpenseDetailsdata && Array.isArray(selectedExpense.ExpenseDetailsdata)) {
+      selectedExpense.ExpenseDetailsdata.forEach((item, index) => {
+        const rowData = [
+          index + 1,
+          item.expense_category_name || "",
+          item.remarks || "",
+          Number(item.amount || 0).toFixed(2)
+        ];
+        tableRows.push(rowData);
+      });
+    }
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 65,
+      theme: 'grid',
+    });
+
+    let currentY = doc.lastAutoTable.finalY + 10;
+
+    // Payment Details Section
+    if (selectedExpense.PaymentDetailsData && Array.isArray(selectedExpense.PaymentDetailsData) && selectedExpense.PaymentDetailsData.length > 0) {
+      doc.text("Payment Details", 15, currentY);
+      const payColumn = ["Method", "Amount", "Details"];
+      const payRows = selectedExpense.PaymentDetailsData.map(p => {
+        let details = "-";
+        if (p.payment_method === 'Bank') {
+          const bankName = p.bank_name || p.bankName || "";
+          const acc = p.bank_account || p.bank_accountId || "";
+          details = `${bankName} ${acc ? `(${acc})` : ''}`;
+        }
+        return [p.payment_method, Number(p.applied_amount || 0).toFixed(2), details];
+      });
+
+      doc.autoTable({
+        head: [payColumn],
+        body: payRows,
+        startY: currentY + 5,
+        theme: 'grid'
+      });
+      currentY = doc.lastAutoTable.finalY + 10;
+    }
+
+    // Totals
+    doc.text(`Total Amount: ${Number(selectedExpense.total_amount).toFixed(2)}`, 140, currentY);
+    doc.text(`Paid Amount: ${Number(selectedExpense.paid_amount).toFixed(2)}`, 140, currentY + 10);
+    doc.text(`Balance Amount: ${Number(selectedExpense.balance_amount).toFixed(2)}`, 140, currentY + 20);
+
+    doc.save(`Receipt_${selectedExpense.expense_no}.pdf`);
   };
 
   return (
@@ -628,6 +704,98 @@ const AdmAttendanceEntry = () => {
           </div>
         </div>
       </div>
+      <Modal show={showReceiptModal} onHide={handleCloseReceiptModal} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Expense Receipt</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedExpense && (
+            <div>
+              <div className="d-flex justify-content-between mb-3">
+                <div>
+                  <strong>Party Name:</strong> {selectedExpense.party_name} <br />
+                  <strong>Reference:</strong> {selectedExpense.party_reference}
+                </div>
+                <div>
+                  <strong>Expense No:</strong> {selectedExpense.expense_no} <br />
+                  <strong>Date:</strong> {selectedExpense.date}
+                </div>
+              </div>
+
+              <h6 className="mt-3">Expense Details</h6>
+              <Table striped bordered hover size="sm">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Category</th>
+                    <th>Remarks</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedExpense.ExpenseDetailsdata && selectedExpense.ExpenseDetailsdata.map((item, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{item.expense_category_name}</td>
+                      <td>{item.remarks}</td>
+                      <td>{Number(item.amount).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+
+              {/* Payment Details Section in Modal */}
+              {selectedExpense.PaymentDetailsData && selectedExpense.PaymentDetailsData.length > 0 && (
+                <>
+                  <h6 className="mt-3">Payment Details</h6>
+                  <Table striped bordered hover size="sm">
+                    <thead>
+                      <tr>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedExpense.PaymentDetailsData.map((p, index) => {
+                        let details = "-";
+                        if (p.payment_method === 'Bank') {
+                          const bankName = p.bank_name || p.bankName || "";
+                          const acc = p.bank_account || p.bank_accountId || "";
+                          details = `${bankName} ${acc ? `(${acc})` : ''}`;
+                        }
+                        return (
+                          <tr key={index}>
+                            <td>{p.payment_method}</td>
+                            <td>{Number(p.applied_amount || 0).toFixed(2)}</td>
+                            <td>{details}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </>
+              )}
+
+              <div className="d-flex justify-content-end mt-3">
+                <div style={{ textAlign: 'right' }}>
+                  <p><strong>Total Amount:</strong> {Number(selectedExpense.total_amount).toFixed(2)}</p>
+                  <p><strong>Paid Amount:</strong> {Number(selectedExpense.paid_amount).toFixed(2)}</p>
+                  <p><strong>Balance Amount:</strong> {Number(selectedExpense.balance_amount).toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseReceiptModal}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleDownloadReceipt}>
+            Download Receipt
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

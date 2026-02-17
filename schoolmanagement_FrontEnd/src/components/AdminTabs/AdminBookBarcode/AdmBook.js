@@ -1064,7 +1064,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
 
                   {/* Filter Fields */}
                   <div className="row mt-3 mx-2">
-                    <div className="col-12" style={{ border: "1px solid #ccc", padding: "10px" }}>
+                    <div className="col-12" style={{ border: "1px solid #ccc", padding: "10px", backgroundColor: "white" }}>
                       <div className="row mt-3 mb-3">
                         <div className="col-12 col-md-3 mb-2">
                           <label htmlFor="book-name" className="form-label">

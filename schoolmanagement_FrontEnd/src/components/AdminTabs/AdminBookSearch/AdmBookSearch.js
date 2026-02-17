@@ -702,7 +702,7 @@ const AdmBookSearch = () => {
               </div>
 
               <div className="row mt-3 mx-2">
-                <div className="col-12 custom-section-box">
+                <div className="col-12 custom-section-box" style={{ backgroundColor: "white" }}>
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
                     <div className="row flex-grow-1">
                       <div className="col-12 col-md-3 mb-3">
