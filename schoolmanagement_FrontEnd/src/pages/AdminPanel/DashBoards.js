@@ -72,7 +72,7 @@ const AutoLayoutExample = () => {
   // Separate state for month and year dropdowns
   const [selectedMonthValue, setSelectedMonthValue] = useState(new Date().getMonth()); // 0-11
   const [selectedYearValue, setSelectedYearValue] = useState(new Date().getFullYear());
-  
+
   // State for Session Fee Details year dropdown
   const [sessionFeeYear, setSessionFeeYear] = useState(new Date().getFullYear());
 
@@ -91,7 +91,7 @@ const AutoLayoutExample = () => {
     { value: 10, label: "November" },
     { value: 11, label: "December" }
   ];
-  
+
   // Generate dynamic year options (past 5 years and future 5 years from current year)
   // This automatically adapts to any future year
   const generateYearOptions = () => {
@@ -102,7 +102,7 @@ const AutoLayoutExample = () => {
     }
     return years;
   };
-  
+
   // Year options for both Fee Dashboard and Session Fee Details
   const yearOptions = useMemo(() => generateYearOptions(), []);
 
@@ -252,8 +252,8 @@ const AutoLayoutExample = () => {
     }
 
     // Fetch fee table data
-    const url1 = `${ApiUrl.apiurl}FeesDashBoard/FeesReceiptSearch/?organization_id=${org_id}&branch_id=${branch_id}&batch_id=${academic_year_id}&from_date=${start_date}&to_date=${end_date}`;
-    console.log(" Calling FeesReceiptSearch API:", url1);
+    const url1 = `${ApiUrl.apiurl}FeesDashBoard/dashboard/?organization_id=${org_id}&branch_id=${branch_id}&batch_id=${academic_year_id}&from_date=${start_date}&to_date=${end_date}`;
+    console.log(" Calling FeesDashBoard/dashboard API:", url1);
 
     fetch(url1)
       .then((res) => {
@@ -263,33 +263,10 @@ const AutoLayoutExample = () => {
         return res.json();
       })
       .then((data) => {
-        console.log(" FeesReceiptSearch response:", data);
+        console.log(" FeesDashBoard/dashboard response:", data);
         if (Array.isArray(data?.data)) {
-          // Aggregate amounts by date
-          const feeMap = {};
-
-          data.data.forEach((item) => {
-            // Use validation similar to AdmDashBoardFee.js
-            if (!item.date) return;
-
-            // Normalize date to local YYYY-MM-DD
-            const dateKey = new Date(item.date).toLocaleDateString("en-CA");
-
-            const amount = parseFloat(item.payment_detail?.total_amount || 0);
-            if (feeMap[dateKey]) {
-              feeMap[dateKey] += amount;
-            } else {
-              feeMap[dateKey] = amount;
-            }
-          });
-
-          // Convert map back to array for rendering logic, matching previous structure
-          const processedData = Object.keys(feeMap).map(date => ({
-            receipt_date: date, // Keep key compatible with rendering code
-            received_amount: feeMap[date] // Keep key compatible with rendering code
-          }));
-
-          setFeeTableData(processedData);
+          // Data from dashboard API already has correct structure: receipt_date and received_amount
+          setFeeTableData(data.data);
         } else {
           setFeeTableData([]);
         }
@@ -384,7 +361,7 @@ const AutoLayoutExample = () => {
                 <Row>
                   {accessibleModules.map((moduleCode, index) => (
                     <Col md={4} sm={6} key={index} className="mb-3">
-                      <div className="card h-100" style={{ 
+                      <div className="card h-100" style={{
                         borderLeft: "4px solid #4a90e2",
                         boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                         transition: "all 0.3s ease"
@@ -399,8 +376,8 @@ const AutoLayoutExample = () => {
                     </Col>
                   ))}
                 </Row>
-                <div className="mt-4 p-3" style={{ 
-                  backgroundColor: "#f8f9fa", 
+                <div className="mt-4 p-3" style={{
+                  backgroundColor: "#f8f9fa",
                   borderRadius: "8px",
                   border: "1px solid #dee2e6"
                 }}>

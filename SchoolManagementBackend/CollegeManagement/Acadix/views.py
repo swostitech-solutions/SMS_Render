@@ -8317,18 +8317,18 @@ class StudentAddressCreateAPIView(CreateAPIView):
 
             # Get validate Data
             reference_id = serializer.validated_data.get('reference_id')
-            present_address = serializer.validated_data.get('present_address').upper()
+            present_address = serializer.validated_data.get('present_address')
             present_pincode = serializer.validated_data.get('present_pincode')
-            present_city = serializer.validated_data.get('present_city').upper()
+            present_city = serializer.validated_data.get('present_city')
 
-            present_state = serializer.validated_data.get('present_state').upper()
-            present_country = serializer.validated_data.get('present_country').upper()
+            present_state = serializer.validated_data.get('present_state')
+            present_country = serializer.validated_data.get('present_country')
             present_phone_number = serializer.validated_data.get('present_phone_number')
-            permanent_address = serializer.validated_data.get('permanent_address').upper()
+            permanent_address = serializer.validated_data.get('permanent_address')
             permanent_pincode = serializer.validated_data.get('permanent_pincode')
-            permanent_city = serializer.validated_data.get('permanent_city').upper()
-            permanent_state = serializer.validated_data.get('permanent_state').upper()
-            permanent_country = serializer.validated_data.get('permanent_country').upper()
+            permanent_city = serializer.validated_data.get('permanent_city')
+            permanent_state = serializer.validated_data.get('permanent_state')
+            permanent_country = serializer.validated_data.get('permanent_country')
             permanent_phone_number = serializer.validated_data.get('permanent_phone_number')
             created_by = serializer.validated_data.get('created_by')
 
@@ -8510,18 +8510,18 @@ class StudentAddressUpdateAPIView(UpdateAPIView):
 
             # Get validate Data
 
-            present_address = serializer.validated_data.get('present_address').upper()
+            present_address = serializer.validated_data.get('present_address')
             present_pincode = serializer.validated_data.get('present_pincode')
-            present_city = serializer.validated_data.get('present_city').upper()
-            present_state = serializer.validated_data.get('present_state').upper()
-            present_country = serializer.validated_data.get('present_country').upper()
+            present_city = serializer.validated_data.get('present_city')
+            present_state = serializer.validated_data.get('present_state')
+            present_country = serializer.validated_data.get('present_country')
             present_phone_number = serializer.validated_data.get('present_phone_number')
 
-            permanent_address = serializer.validated_data.get('permanent_address').upper()
+            permanent_address = serializer.validated_data.get('permanent_address')
             permanent_pincode = serializer.validated_data.get('permanent_pincode')
-            permanent_city = serializer.validated_data.get('permanent_city').upper()
-            permanent_state = serializer.validated_data.get('permanent_state').upper()
-            permanent_country = serializer.validated_data.get('permanent_country').upper()
+            permanent_city = serializer.validated_data.get('permanent_city')
+            permanent_state = serializer.validated_data.get('permanent_state')
+            permanent_country = serializer.validated_data.get('permanent_country')
             permanent_phone_number = serializer.validated_data.get('permanent_phone_number')
             updated_by = serializer.validated_data.get('updated_by')
 
@@ -10768,17 +10768,17 @@ class UtilityGroupMixin:
     def addressDetailsProcess(self, addressDetail, student_instance):
 
         try:
-            present_address = addressDetail.get('present_address').upper()
+            present_address = addressDetail.get('present_address')
             present_pincode = addressDetail.get('present_pincode')
-            present_city = addressDetail.get('present_city').upper()
-            present_state = addressDetail.get('present_state').upper()
-            present_country = addressDetail.get('present_country').upper()
+            present_city = addressDetail.get('present_city')
+            present_state = addressDetail.get('present_state')
+            present_country = addressDetail.get('present_country')
             present_phone_number = addressDetail.get('present_phone_number')
-            permanent_address = addressDetail.get('permanent_address').upper()
+            permanent_address = addressDetail.get('permanent_address')
             permanent_pincode = addressDetail.get('permanent_pincode')
-            permanent_city = addressDetail.get('permanent_city').upper()
-            permanent_state = addressDetail.get('permanent_state').upper()
-            permanent_country = addressDetail.get('permanent_country').upper()
+            permanent_city = addressDetail.get('permanent_city')
+            permanent_state = addressDetail.get('permanent_state')
+            permanent_country = addressDetail.get('permanent_country')
             permanent_phone_number = addressDetail.get('permanent_phone_number')
             # created_by = student_instance.get('created_by')
 

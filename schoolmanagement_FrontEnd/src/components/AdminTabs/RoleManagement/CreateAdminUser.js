@@ -8,7 +8,7 @@ import "./CreateAdminUser.css";
 
 const CreateAdminUser = () => {
   const navigate = useNavigate();
-  
+
   // State management
   const [roles, setRoles] = useState([]);
   const [filteredRoles, setFilteredRoles] = useState([]);
@@ -35,8 +35,7 @@ const CreateAdminUser = () => {
     } else {
       const filtered = roles.filter((role) => {
         const roleNameMatch = role.role_name?.toLowerCase().includes(searchTerm.toLowerCase());
-        const userNameMatch = role.user_name?.toLowerCase().includes(searchTerm.toLowerCase());
-        return roleNameMatch || userNameMatch;
+        return roleNameMatch;
       });
       setFilteredRoles(filtered);
     }
@@ -80,7 +79,7 @@ const CreateAdminUser = () => {
     try {
       const orgId = getOrgId();
       const branchId = getBranchId();
-      
+
       let url = `${ApiUrl.apiurl}AdminUser/List/`;
       if (searchQuery) {
         url += `?search=${encodeURIComponent(searchQuery)}`;
@@ -171,8 +170,8 @@ const CreateAdminUser = () => {
 
     // Format for display
     const formattedItems = Object.keys(parentGroups).map(parent => {
-      const count = parentGroups[parent].includes('all') 
-        ? 'All' 
+      const count = parentGroups[parent].includes('all')
+        ? 'All'
         : parentGroups[parent].length;
       // Capitalize first letter
       const parentName = parent.charAt(0).toUpperCase() + parent.slice(1).replace(/_/g, ' ');
@@ -185,104 +184,134 @@ const CreateAdminUser = () => {
   return (
     <div className="create-admin-user-container">
       <div className="container-fluid">
-        <div className="row mt-4">
+        <div className="row">
           <div className="col-12">
-            {/* Search and Action Buttons */}
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <div className="input-group">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search by role name or username..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                  />
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="d-flex gap-2">
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleNew}
-                  >
-                    <i className="bi bi-plus-circle me-2"></i>
-                    New
-                  </button>
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={handleSearch}
-                    style={{ width: "150px" }}
-                  >
-                    Search
-                  </button>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={handleClear}
-                    style={{ width: "150px" }}
-                  >
-                    Clear
-                  </button>
-                  <button className="btn btn-danger" onClick={handleClose}>
-                    <i className="bi bi-x-circle me-2"></i>
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
+            <div className="card p-0">
               <div className="card-body">
+                <p
+                  style={{
+                    marginBottom: "0px",
+                    textAlign: "center",
+                    fontSize: "20px",
+                    fontWeight: "700",
+                  }}
+                >
+                  ADMIN USER MANAGEMENT
+                </p>
+
+                {/* Action Buttons */}
+                <div className="row mb-3 mt-3 mx-0">
+                  <div className="col-12 d-flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-primary me-2"
+                      onClick={handleNew}
+                    >
+                      New
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary me-2"
+                      onClick={handleSearch}
+                    >
+                      Search
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary me-2"
+                      onClick={handleClear}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger me-2"
+                      onClick={handleClose}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search Input Section (White Box) */}
+                <div className="row mt-3 mx-2">
+                  <div className="col-12 custom-section-box">
+                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                      <div className="row flex-grow-1 mt-2">
+                        <div className="col-12 col-md-6 mb-2">
+                          <label htmlFor="searchTerm" className="form-label">
+                            Search by Role Name
+                          </label>
+                          <input
+                            type="text"
+                            id="searchTerm"
+                            name="searchTerm"
+                            className="form-control detail"
+                            placeholder="Search by role name"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSearch();
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Roles Table */}
-                <div className="table-responsive">
-                  <table className="table table-bordered table-striped table-hover">
-                    <thead className="table-primary">
-                      <tr>
-                        <th>S.No</th>
-                        <th>Role Name</th>
-                        <th>User Name</th>
-                        <th>Non Teaching Staff</th>
-                        <th>Modules Access</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRoles.filter(role => role.role_name && role.role_name.trim() !== "").length > 0 ? (
-                        filteredRoles.filter(role => role.role_name && role.role_name.trim() !== "").map((role, index) => (
-                          <tr key={role.id}>
-                            <td>{index + 1}</td>
-                            <td>{role.role_name}</td>
-                            <td>{role.user_name}</td>
-                            <td>
-                              {role.reference_id && role.reference_id !== 0
-                                ? staffMap[role.reference_id] || "N/A"
-                                : "N/A"}
-                            </td>
-                            <td>
-                              {formatModulesDisplay(role.accessible_modules)}
-                            </td>
-                            <td>
-                              <button
-                                className="btn btn-sm btn-primary me-2"
-                                onClick={() => handleEdit(role)}
-                                title="Edit Role"
-                              >
-                                <FaEdit /> Edit
-                              </button>
-                            </td>
+                <div className="row mt-3">
+                  <div className="col-12">
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-hover table-sm">
+                        <thead className="table-dark">
+                          <tr>
+                            <th scope="col">S.No</th>
+                            <th scope="col">Role Name</th>
+                            <th scope="col">User Name</th>
+                            <th scope="col">Non Teaching Staff</th>
+                            <th scope="col">Modules Access</th>
+                            <th scope="col">Actions</th>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="6" className="text-center">
-                            No roles found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        </thead>
+                        <tbody>
+                          {filteredRoles.filter(role => role.role_name && role.role_name.trim() !== "").length > 0 ? (
+                            filteredRoles.filter(role => role.role_name && role.role_name.trim() !== "").map((role, index) => (
+                              <tr key={role.id}>
+                                <td>{index + 1}</td>
+                                <td>{role.role_name}</td>
+                                <td>{role.user_name}</td>
+                                <td>
+                                  {role.reference_id && role.reference_id !== 0
+                                    ? staffMap[role.reference_id] || "N/A"
+                                    : "N/A"}
+                                </td>
+                                <td>
+                                  {formatModulesDisplay(role.accessible_modules)}
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-primary me-2"
+                                    onClick={() => handleEdit(role)}
+                                    title="Edit Role"
+                                  >
+                                    <FaEdit /> Edit
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="text-center">
+                                No roles found
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
