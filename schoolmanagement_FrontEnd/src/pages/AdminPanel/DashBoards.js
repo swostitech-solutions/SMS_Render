@@ -221,9 +221,8 @@ const AutoLayoutExample = () => {
   useEffect(() => {
     if (!isDataReady || selectedMonthValue === undefined || selectedYearValue === undefined) return;
 
-    // Clear data when month/year changes
+    // Clear only fee table data when month/year changes (Session Fee Details is independent)
     setFeeTableData([]);
-    setSessionFeeDetails({});
 
     const month = selectedMonthValue;
     const year = selectedYearValue;
