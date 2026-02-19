@@ -2,6 +2,8 @@ import base64
 import json
 import os
 import uuid
+import re
+import unicodedata
 from datetime import date
 from sqlite3 import DatabaseError
 # from MySQLdb import DatabaseError
@@ -33,13 +35,41 @@ from Acadix.models import Document
 # Create your views here.
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
-import re
 from .utils import save_base64_file
 # views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 # from .serializers import staffRegistrationserializer
+
+
+def sanitize_uploaded_filename(filename):
+    """
+    Sanitize filename by:
+    1. Removing/replacing special characters
+    2. Replacing spaces with underscores
+    3. Ensuring it's URL-safe
+    """
+    # Get the name and extension
+    name, ext = os.path.splitext(filename)
+    
+    # Normalize unicode characters
+    name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+    
+    # Replace spaces and special chars with underscore
+    name = re.sub(r'[^\w\-]', '_', name)
+    
+    # Remove consecutive underscores
+    name = re.sub(r'_+', '_', name)
+    
+    # Remove leading/trailing underscores
+    name = name.strip('_')
+    
+    # If name is empty after sanitization, use a default
+    if not name:
+        name = 'profile_' + str(uuid.uuid4())[:8]
+    
+    return f"{name}{ext}"
 
 class StaffRegistrationBasicInfoCreateAPIView1(APIView):
     def post(self, request, *args, **kwargs):
@@ -166,13 +196,29 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                     else:
                         staffcreateInstance.is_active = False
 
+                # Handle profile picture upload with filename sanitization
                 if serializer.validated_data.get('profile_pic'):
-                    staffcreateInstance.profile_pic = serializer.validated_data.get('profile_pic')
+                    profile_pic_file = serializer.validated_data.get('profile_pic')
+                    # Sanitize the filename before saving
+                    original_name = profile_pic_file.name
+                    sanitized_name = sanitize_uploaded_filename(original_name)
+                    profile_pic_file.name = sanitized_name
+                    staffcreateInstance.profile_pic = profile_pic_file
+                    print(f"✅ Profile picture sanitized: {original_name} -> {sanitized_name}")
+                
                 staffcreateInstance.updated_by = serializer.validated_data.get('created_by')
-                if staffcreateInstance.profile_pic:
-                    staffcreateInstance.profile_photo_path =request.build_absolute_uri(staffcreateInstance.profile_pic.url)
-
+                
+                # SAVE FIRST - this writes the file to disk
                 staffcreateInstance.save()
+                print(f"✅ Staff instance saved with ID: {staffcreateInstance.id}")
+                
+                # NOW build the URL after the file has been saved
+                if staffcreateInstance.profile_pic:
+                    staffcreateInstance.profile_photo_path = request.build_absolute_uri(staffcreateInstance.profile_pic.url)
+                    staffcreateInstance.save(update_fields=['profile_photo_path'])
+                    print(f"✅ Profile photo URL: {staffcreateInstance.profile_photo_path}")
+                    print(f"✅ Profile photo file path: {staffcreateInstance.profile_pic.path}")
+
                 response_data = {'message': 'Successfully updated.'}
 
             elif request.data.get('id'):
@@ -184,6 +230,17 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                 if UserLogin.objects.filter(user_name=email_to_check).exists():
                     return Response({'message': f'Email "{email_to_check}" is already associated with an account. Please use a different email.'}, 
                                     status=status.HTTP_400_BAD_REQUEST)
+
+                # Handle profile picture for new staff
+                profile_pic_to_save = None
+                if serializer.validated_data.get('profile_pic'):
+                    profile_pic_file = serializer.validated_data.get('profile_pic')
+                    # Sanitize the filename before saving
+                    original_name = profile_pic_file.name
+                    sanitized_name = sanitize_uploaded_filename(original_name)
+                    profile_pic_file.name = sanitized_name
+                    profile_pic_to_save = profile_pic_file
+                    print(f"✅ Profile picture sanitized: {original_name} -> {sanitized_name}")
 
                 staffcreateInstance = EmployeeMaster.objects.create(
                     organization= serializer.validated_data.get('organization'),
@@ -212,13 +269,16 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                     phone_number = serializer.validated_data.get('phone_number'),
                     emergency_contact_number = serializer.validated_data.get('emergency_contact_number'),
                     created_by = serializer.validated_data.get('created_by'),
-                    profile_pic = serializer.validated_data.get('profile_pic'),
+                    profile_pic = profile_pic_to_save,
                     profile_photo_path =""
                 )
 
+                # Build the absolute URL AFTER saving
                 if staffcreateInstance.profile_pic:
                     staffcreateInstance.profile_photo_path = request.build_absolute_uri(staffcreateInstance.profile_pic.url)
-                staffcreateInstance.save()
+                    staffcreateInstance.save(update_fields=['profile_photo_path'])
+                    print(f"✅ Profile photo URL: {staffcreateInstance.profile_photo_path}")
+                    print(f"✅ Profile photo file path: {staffcreateInstance.profile_pic.path}")
 
                 user_type_instance = UserType.objects.get(id=3,is_active=True)
 

@@ -154,7 +154,9 @@ const AdmAttendanceEntry = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [initialChoiceSemesterIds, setInitialChoiceSemesterIds] = useState([]);
+  const [paidSemesters, setPaidSemesters] = useState([]); // 🔒 Store paid semester IDs (flag="no")
   const [lockAllSemesters, setLockAllSemesters] = useState(false);
+  const [semesterDataList, setSemesterDataList] = useState([]); // 🔥 Store actual semester data with IDs
 
   // Function to close the modal
   const modalClose = () => {
@@ -352,6 +354,21 @@ const AdmAttendanceEntry = () => {
       const branchId = sessionStorage.getItem("branch_id");
       const token = localStorage.getItem("accessToken");
 
+      // 🔥 STEP 1: Fetch transport details (ALL semesters) like TransportSearch
+      const transportApiUrl = `${ApiUrl.apiurl}Transport/TransportDetailsRetereiveByStudent/?student_id=${student.student_id}&branch_id=${branchId}&organization_id=${organizationId}`;
+
+      const transportResponse = await fetch(transportApiUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const transportResult = await transportResponse.json();
+      console.log("🚀 Transport API Response:", transportResult);
+
+      // 🔥 STEP 2: Also fetch basic student data for IDs
       const apiUrl = `${ApiUrl.apiurl}StudentCourse/GetStudentDataBasedId/?student_id=${student.student_id}&branch_id=${branchId}&organization_id=${organizationId}`;
 
       const response = await fetch(apiUrl, {
@@ -404,58 +421,72 @@ const AdmAttendanceEntry = () => {
           pickuppoitId: s.pickuppoitId,
         });
 
-        // 🟢 Fee App From + Fee Group
+        // 🟢 Transport Availed - Use data from Transport API
+        const transportData = transportResult.data || {};
+        setIsTransportAvailed(Boolean(transportData.transport_avail));
+
+        // 🟢 Fee App From + Fee Group + Transport Data
         setFormData((prev) => ({
           ...prev,
           feeappfrom: s.fee_applied_from || "",
           feegroup: s.FeeStructureMaster || "",
           feeappfromId: s.fee_applied_fromId,
           feegroupId: s.FeeStructureMasterId,
-          routeid: s.routeid || "",
-          selectedPickUpPoint: s.pickuppoitId || "",
-          amount: s.amount || "",
+          routeid: transportData.routeId || "",
+          selectedPickUpPoint: transportData.pickup_point_id || "",
+          amount: transportData.amount || "",
           house_id: s.house_id || "",
           sectionId: s.section_id,
         }));
 
-        // 🟢 Transport Availed
-        setIsTransportAvailed(Boolean(s.transport_availed));
+        // ===================== 🔥 NEW FIX - USE TRANSPORT API (ALL SEMESTERS) 🔥 =====================
 
-        // ===================== 🔥 FIX STARTS 🔥 =====================
+        console.log("🔍 Transport API - choice_semester:", transportData.choice_semester);
+        console.log("🔍 Transport API - transport_paid_sems:", transportData.transport_paid_sems);
 
-        // ✅ 1. SELECTED SEMESTERS FROM API (choice_semester)
-        const selectedSemesterIds = Array.isArray(s.choice_semester)
-          ? s.choice_semester.map((sem) => sem.id)
-          : [];
+        // ✅ 1. STORE THE ACTUAL SEMESTER DATA (with IDs) - Now includes ALL semesters
+        const semesterList = Array.isArray(transportData.choice_semester) ? transportData.choice_semester : [];
+        
+        // 🔥 Map semester data to match our component structure
+        const mappedSemesterList = semesterList.map((sem) => ({
+          id: sem.semester_id,
+          semester: sem.semester_name,
+          selected: sem.selected, // true if previously selected
+          flag: sem.flag, // "No" if paid, "Yes" if can select
+        }));
+        
+        setSemesterDataList(mappedSemesterList); // 🔥 Save for rendering checkboxes
 
-        // ✅ 2. PAID SEMESTERS (LOCK THESE)
-        const paidSemesterIds = Array.isArray(s.transport_paid_sems)
-          ? s.transport_paid_sems.map((p) => p.semester_id)
-          : [];
+        console.log("✅ Semester List with IDs (ALL SEMESTERS):", mappedSemesterList);
 
+        // ✅ 2. PAID SEMESTER IDs (flag="no" - these are locked)
+        const paidSemesterIds = mappedSemesterList
+          .filter((sem) => String(sem.flag).toLowerCase() === "no")
+          .map((sem) => Number(sem.id));
+
+        console.log("🔒 Paid Semester IDs:", paidSemesterIds);
+        setPaidSemesters(paidSemesterIds); // 🔥 Store paid semesters
         setInitialChoiceSemesterIds(paidSemesterIds);
 
-        const totalSemesters = s.total_semesters || 0;
-        let semesterSelection = {};
+        // ✅ 3. SELECTED SEMESTER IDs (build checkbox state using actual IDs)
+        const semesterSelection = {};
+        mappedSemesterList.forEach((sem) => {
+          const semId = Number(sem.id);
+          // Use the 'selected' flag from API to determine if checkbox should be checked
+          semesterSelection[semId] = sem.selected === true;
+        });
 
-        // ✅ 3. BUILD CHECKBOX STATE
-        for (let i = 1; i <= totalSemesters; i++) {
-          semesterSelection[i] = selectedSemesterIds.includes(i);
-        }
+        console.log("📋 Semester Selection State (by ID):", semesterSelection);
 
         // ✅ 4. APPLY TO UI
         setSelectedMonths(semesterSelection);
 
         // 🔒 5. LOCK ALL IF ALL ARE PAID
-        setLockAllSemesters(paidSemesterIds.length === totalSemesters);
+        setLockAllSemesters(paidSemesterIds.length === mappedSemesterList.length && mappedSemesterList.length > 0);
+
+        console.log("🔥 Final - selectedMonths set with actual IDs:", semesterSelection);
 
         // ===================== 🔥 FIX ENDS 🔥 =====================
-
-        // Do not preload old payload
-        setFormData((prev) => ({
-          ...prev,
-          choice_month: [],
-        }));
 
         setCurrentStudentId(student.student_id);
         setShowEditModal(true);
@@ -476,12 +507,14 @@ const AdmAttendanceEntry = () => {
 
   const [error, setError] = useState(null);
   const [selectedMonths, setSelectedMonths] = useState({});
-  useEffect(() => {
-    if (formData.transportAvailed) {
-      const updatedMonths = formData.selectedMonths || {};
-      setSelectedMonths(updatedMonths);
-    }
-  }, [formData]);
+  
+  // ❌ COMMENTED OUT - This was clearing the selectedMonths after we set it in handleEditClick
+  // useEffect(() => {
+  //   if (formData.transportAvailed) {
+  //     const updatedMonths = formData.selectedMonths || {};
+  //     setSelectedMonths(updatedMonths);
+  //   }
+  // }, [formData]);
 
   const handleModalClose = () => {
     setShowEditModal(false);
@@ -736,8 +769,8 @@ const AdmAttendanceEntry = () => {
   //12182025
 
   const handleMonthChange = (monthId) => {
-    // 🔒 Do not allow change for already paid/locked semesters
-    if (initialChoiceSemesterIds.includes(monthId)) return;
+    // 🔒 Do not allow change for PAID semesters only (flag="no")
+    if (paidSemesters.includes(monthId)) return;
 
     setSelectedMonths((prev) => {
       const updatedMonths = {
@@ -799,52 +832,46 @@ const AdmAttendanceEntry = () => {
   const handleSaveStudentCourse = async () => {
     try {
       const token = localStorage.getItem("accessToken");
+      const userId = sessionStorage.getItem("userId") || sessionStorage.getItem("login_id");
 
       if (!selectedStudent?.student_id) {
         alert("Student ID missing");
         return;
       }
 
-      // ✅ ONLY NEWLY SELECTED SEMESTERS
-      const newlySelectedSemesters = Object.keys(selectedMonths)
+      if (!userId) {
+        alert("User ID is missing in session!");
+        return;
+      }
+
+      // ✅ Send ALL currently selected semesters (excluding paid ones)
+      const paidSet = new Set(paidSemesters.map(Number));
+      
+      const semestersToSend = Object.keys(selectedMonths)
         .filter(
-          (id) =>
-            selectedMonths[id] === true &&
-            !initialChoiceSemesterIds.includes(Number(id)) // 🔥 skip old
+          (semesterId) =>
+            selectedMonths[semesterId] === true && // Currently checked
+            !paidSet.has(Number(semesterId)) // Not already paid
         )
         .map(Number);
 
-      const payload = {
-        login_id: Number(sessionStorage.getItem("login_id")) || 1,
-        organization_id: Number(sessionStorage.getItem("organization_id")),
-        branch_id: Number(sessionStorage.getItem("branch_id")),
-        batch_id: apiStudentIds.batch_id,
-        course_id: apiStudentIds.course_id,
-        department_id: apiStudentIds.department_id,
-        academic_year_id: apiStudentIds.academic_year_id,
-        semester_id: apiStudentIds.semester_id,
-        section_id: apiStudentIds.section_id,
-        // enrollment_no: Number(selectedStudent.enrollment_no),
-        house_id: apiStudentIds.house_id,
-        fee_group_id: apiStudentIds.fee_group_id,
-        fee_applied_from_id: apiStudentIds.fee_applied_from_id,
-        transport_availed: isTransportAvailed ? 1 : 0,
-        route_id: isTransportAvailed ? Number(formData.routeid) : null,
-        amount: isTransportAvailed ? Number(formData.amount) : 0,
-        previous_year_balance: 0,
-        update_or_confirm: "C",
-        carry_or_delete: "Y",
-      };
+      console.log("🚀 Semesters to send (ALL selected, excluding paid):", semestersToSend);
 
-      if (isTransportAvailed) {
-        payload.choice_semester =
-          newlySelectedSemesters.length > 0 ? newlySelectedSemesters : [];
-      }
+      // 🔥 Use Transport API (like TransportSearch) for updating transport details
+      const payload = {
+        student_id: Number(selectedStudent.student_id),
+        transport_avail: isTransportAvailed,
+        choice_semesters: semestersToSend, // ALL selected (excluding paid)
+        route_id: isTransportAvailed ? Number(formData.routeid) : null,
+        pickup_point_id: isTransportAvailed ? Number(formData.selectedPickUpPoint) : null,
+        amount: isTransportAvailed ? Number(formData.amount) : 0,
+        created_by: Number(userId),
+      };
 
       console.log("UPDATE PAYLOAD 👉", payload);
 
       const response = await fetch(
-        `${ApiUrl.apiurl}StudentCourse/UpdateStudentCourse/?student_id=${selectedStudent.student_id}`,
+        `${ApiUrl.apiurl}Transport/UpdateStudentTransport/`,
         {
           method: "PUT",
           headers: {
@@ -862,12 +889,12 @@ const AdmAttendanceEntry = () => {
         handleModalClose();
         fetchStudentCourseRecord(); // refresh table
       } else {
-        console.error(result);
-        alert(result.message || "Update failed");
+        console.error("API Error:", result);
+        alert(result.message || result.error || "Update failed");
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert("Something went wrong while saving");
+      alert("Something went wrong while saving: " + error.message);
     }
   };
 
@@ -1538,7 +1565,8 @@ const AdmAttendanceEntry = () => {
                       }
                     />
 
-                    {Object.keys(selectedMonths).length > 0 && (
+                    {/* 🔥 Use actual semester data like TransportSearch */}
+                    {semesterDataList.length > 0 && (
                       <div
                         style={{
                           maxHeight: "200px",
@@ -1550,36 +1578,53 @@ const AdmAttendanceEntry = () => {
                           gap: "10px",
                         }}
                       >
-                        {Object.keys(selectedMonths).map((semId) => (
-                          <div
-                            key={semId}
-                            style={{
-                              flex: "1 1 calc(25% - 10px)",
-                              minWidth: "120px",
-                            }}
-                          >
-                            {/* <Form.Check
-                              type="checkbox"
-                              id={`semester-${semId}`}
-                              label={`Semester ${semId}`}
-                              checked={selectedMonths[semId]}
-                              onChange={() => handleMonthChange(Number(semId))}
-                              disabled={!isTransportEditable}
-                            /> */}
-                            <Form.Check
-                              type="checkbox"
-                              id={`semester-${semId}`}
-                              label={`Semester ${semId}`}
-                              checked={selectedMonths[semId]}
-                              onChange={() => handleMonthChange(Number(semId))}
-                              disabled={
-                                !isTransportEditable ||
-                                lockAllSemesters || //  all locked
-                                initialChoiceSemesterIds.includes(Number(semId)) //  already chosen
-                              }
-                            />
-                          </div>
-                        ))}
+                        {semesterDataList.map((semesterData) => {
+                          const semesterId = Number(semesterData.id);
+                          const semesterName = semesterData.semester || `Semester ${semesterId}`;
+                          
+                          // 🔥 Use FLAG field to determine if paid (like EditTransportModal)
+                          const isPaid = String(semesterData.flag).toLowerCase() === "no"; // "no" = paid
+                          
+                          return (
+                            <div
+                              key={semesterId}
+                              style={{
+                                flex: "1 1 calc(25% - 10px)",
+                                minWidth: "120px",
+                              }}
+                            >
+                              <Form.Check
+                                type="checkbox"
+                                id={`semester-${semesterId}`}
+                                label={
+                                  <span>
+                                    {semesterName}
+                                    {isPaid && (
+                                      <span
+                                        style={{
+                                          marginLeft: "5px",
+                                        }}
+                                        title="This semester has been paid and cannot be modified"
+                                      >
+                                        {" 🔒"}
+                                      </span>
+                                    )}
+                                  </span>
+                                }
+                                checked={selectedMonths[semesterId] || false}
+                                onChange={() => handleMonthChange(semesterId)}
+                                disabled={
+                                  !isTransportEditable ||
+                                  isPaid // 🔒 Only paid semesters are disabled
+                                }
+                                style={{
+                                  opacity: (!isTransportEditable || isPaid) ? 0.6 : 1,
+                                  cursor: (!isTransportEditable || isPaid) ? "not-allowed" : "pointer",
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 
