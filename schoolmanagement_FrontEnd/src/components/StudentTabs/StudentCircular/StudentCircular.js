@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Alert } from "react-bootstrap";
+import { Alert, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 
 function Circular() {
   const [circulars, setCirculars] = useState([]);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [studentData, setStudentData] = useState(null);
 
@@ -151,16 +153,23 @@ function Circular() {
           <div className="col-12">
             <div className="card p-0">
               <div className="card-body">
-                <p
-                  style={{
-                    marginBottom: "0px",
-                    textAlign: "center",
-                    fontSize: "20px",
-                    fontWeight: "700",
-                  }}
-                >
-                  CIRCULARS & NOTIFICATIONS
-                </p>
+                <div className="d-flex justify-content-between align-items-center mb-4 px-3 mt-3">
+                  <Button variant="danger" onClick={() => navigate("/student/dashboards")} style={{ width: "120px" }}>
+                    Close
+                  </Button>
+                  <p
+                    style={{
+                      margin: 0,
+                      textAlign: "center",
+                      fontSize: "20px",
+                      fontWeight: "700",
+                      flex: 1,
+                    }}
+                  >
+                    CIRCULARS & NOTIFICATIONS
+                  </p>
+                  <div style={{ width: "120px" }}></div>
+                </div>
                 <div className="mt-4">
                   <Alert variant="danger">{error}</Alert>
                 </div>
@@ -178,16 +187,23 @@ function Circular() {
         <div className="col-12">
           <div className="card p-0">
             <div className="card-body">
-              <p
-                style={{
-                  marginBottom: "0px",
-                  textAlign: "center",
-                  fontSize: "20px",
-                  fontWeight: "700",
-                }}
-              >
-                CIRCULARS & NOTIFICATIONS
-              </p>
+              <div className="d-flex justify-content-between align-items-center mb-4 px-3 mt-3">
+                <Button variant="danger" onClick={() => navigate("/student/dashboards")} style={{ width: "120px" }}>
+                  Close
+                </Button>
+                <p
+                  style={{
+                    margin: 0,
+                    textAlign: "center",
+                    fontSize: "20px",
+                    fontWeight: "700",
+                    flex: 1,
+                  }}
+                >
+                  CIRCULARS & NOTIFICATIONS
+                </p>
+                <div style={{ width: "120px" }}></div>
+              </div>
 
               <div className="col-12 container-fluid mt-4">
                 {circulars.length === 0 ? (

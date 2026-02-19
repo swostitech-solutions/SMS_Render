@@ -182,7 +182,7 @@ const MentorDetail = ({ onClose }) => {
     if (onClose) {
       onClose();
     } else {
-      navigate(-1);
+      navigate("/student/dashboards");
     }
   };
 
@@ -193,31 +193,30 @@ const MentorDetail = ({ onClose }) => {
         <div className="row mx-0">
           <div className="col-12">
             <div style={{ backgroundColor: "#e8f4fc", padding: "20px", borderRadius: "12px", display: "inline-block", width: "100%" }}>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  style={{ width: "120px", borderRadius: "6px" }}
+                  onClick={handleClose}
+                >
+                  Close
+                </button>
+                <p
+                  style={{
+                    marginBottom: "0px",
+                    textAlign: "center",
+                    fontSize: "24px",
+                    fontWeight: "700",
+                    color: "#333",
+                    flex: 1,
+                  }}
+                >
+                  MENTOR DETAILS
+                </p>
+                <div style={{ width: "120px" }}></div>
+              </div>
               <div style={{ backgroundColor: "#ffffff", padding: "30px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-                <div className="row mb-3 mt-3 mx-0" style={{ alignItems: "center" }}>
-                  <div className="col-12 d-flex align-items-center">
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      style={{ width: "120px", marginRight: "15px" }}
-                      onClick={handleClose}
-                    >
-                      Close
-                    </button>
-                    <p
-                      style={{
-                        marginBottom: "0px",
-                        textAlign: "center",
-                        fontSize: "24px",
-                        fontWeight: "700",
-                        color: "#333",
-                        flex: 1,
-                      }}
-                    >
-                      MENTOR DETAILS
-                    </p>
-                  </div>
-                </div>
 
                 <div className="row mt-3">
                   <Col md={12}>
@@ -278,31 +277,30 @@ const MentorDetail = ({ onClose }) => {
       <div className="row mx-0">
         <div className="col-12">
           <div style={{ backgroundColor: "#e8f4fc", padding: "20px", borderRadius: "12px", display: "inline-block", width: "100%" }}>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <button
+                type="button"
+                className="btn btn-danger"
+                style={{ width: "120px", borderRadius: "6px" }}
+                onClick={handleClose}
+              >
+                Close
+              </button>
+              <p
+                style={{
+                  marginBottom: "0px",
+                  textAlign: "center",
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "#333",
+                  flex: 1,
+                }}
+              >
+                MENTOR DETAILS
+              </p>
+              <div style={{ width: "120px" }}></div>
+            </div>
             <div style={{ backgroundColor: "#ffffff", padding: "30px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-              <div className="row mb-3 mt-3 mx-0" style={{ alignItems: "center" }}>
-                <div className="col-12 d-flex align-items-center">
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    style={{ width: "120px", marginRight: "15px" }}
-                    onClick={handleClose}
-                  >
-                    Close
-                  </button>
-                  <p
-                    style={{
-                      marginBottom: "0px",
-                      textAlign: "center",
-                      fontSize: "24px",
-                      fontWeight: "700",
-                      color: "#333",
-                      flex: 1,
-                    }}
-                  >
-                    MENTOR DETAILS
-                  </p>
-                </div>
-              </div>
 
               <div className="row mt-3">
                 <Col md={12}>

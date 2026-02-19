@@ -141,7 +141,7 @@ const AdmAttendanceEntry = () => {
                     type="button"
                     className="btn btn-danger"
                     style={{ width: "150px" }}
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate("/student/dashboards")}
                   >
                     Close
                   </button>
@@ -184,10 +184,8 @@ const AdmAttendanceEntry = () => {
                             ))
                           ) : (
                             <tr style={{ backgroundColor: "#ffffff" }}>
-                              <td colSpan="8" className="text-center">
-                                <Alert variant="info" className="mb-0">
-                                  No grievances found.
-                                </Alert>
+                              <td colSpan="8" className="text-center p-3">
+                                No grievances found.
                               </td>
                             </tr>
                           )}

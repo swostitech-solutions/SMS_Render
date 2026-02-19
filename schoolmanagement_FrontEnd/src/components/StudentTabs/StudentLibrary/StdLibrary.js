@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card, Table, Badge } from "react-bootstrap";
+import { Row, Col, Card, Table, Badge, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 
 const StdLibrary = () => {
   const [borrowedBooks, setBorrowedBooks] = useState([]);
+  const navigate = useNavigate();
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
     totalBorrowed: 0,
@@ -154,16 +156,23 @@ const StdLibrary = () => {
         <div className="col-12">
           <div className="card p-0">
             <div className="card-body">
-              <h4
-                style={{
-                  marginBottom: "20px",
-                  textAlign: "center",
-                  fontWeight: "700",
-                  color: "#333",
-                }}
-              >
-                📚 MY LIBRARY
-              </h4>
+              <div className="d-flex justify-content-between align-items-center mb-4 px-3 mt-3">
+                <Button variant="danger" onClick={() => navigate("/student/dashboards")} style={{ width: "120px" }}>
+                  Close
+                </Button>
+                <h4
+                  style={{
+                    margin: 0,
+                    textAlign: "center",
+                    fontWeight: "700",
+                    color: "#333",
+                    flex: 1,
+                  }}
+                >
+                  📚 MY LIBRARY
+                </h4>
+                <div style={{ width: "120px" }}></div>
+              </div>
 
               {error && (
                 <div className="alert alert-danger text-center">{error}</div>

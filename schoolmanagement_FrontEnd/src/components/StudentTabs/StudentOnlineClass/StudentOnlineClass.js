@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Row, Col, Button, Modal } from "react-bootstrap";
 
 const StudentOnlineClass = () => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const handleShowInstructions = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
@@ -12,16 +14,23 @@ const StudentOnlineClass = () => {
         <div className="col-12">
           <div className="card p-0">
             <div className="card-body">
-              <p
-                style={{
-                  marginBottom: "0px",
-                  textAlign: "center",
-                  fontSize: "20px",
-                  fontWeight: "700",
-                }}
-              >
-                STUDENT ONLINE CLASS SUMMARY
-              </p>
+              <div className="d-flex justify-content-between align-items-center mb-4 px-3 mt-3">
+                <Button variant="danger" onClick={() => navigate("/student/dashboards")} style={{ width: "120px" }}>
+                  Close
+                </Button>
+                <p
+                  style={{
+                    margin: 0,
+                    textAlign: "center",
+                    fontSize: "20px",
+                    fontWeight: "700",
+                    flex: 1,
+                  }}
+                >
+                  STUDENT ONLINE CLASS SUMMARY
+                </p>
+                <div style={{ width: "120px" }}></div>
+              </div>
               <br />
               <div className="row mt-3 mx-2">
                 <div

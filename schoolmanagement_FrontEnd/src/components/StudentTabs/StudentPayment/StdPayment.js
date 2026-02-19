@@ -414,7 +414,7 @@ const StdPayment = () => {
 
   // Handle page close
   const handleClose = () => {
-    navigate(-1);
+    navigate("/student/dashboards");
   };
 
   return (
@@ -422,14 +422,14 @@ const StdPayment = () => {
       <div className="row">
         <div className="col-12">
           {/* Close Button */}
-          <div className="mb-3">
-            <Button variant="danger" onClick={handleClose} style={{ width: "120px", borderRadius: "6px" }}>
-              Close
-            </Button>
-          </div>
-
           <div className="card" style={{ border: "1px solid #dee2e6", borderRadius: "8px", backgroundColor: "white" }}>
-            <div className="card-body" style={{ padding: "24px", backgroundColor: "white" }}>
+            <div className="card-body" style={{ padding: "24px", backgroundColor: "rgba(55, 123, 241, 0.1)" }}>
+              {/* Close Button */}
+              <div className="mb-3">
+                <Button variant="danger" onClick={handleClose} style={{ width: "120px", borderRadius: "6px" }}>
+                  Close
+                </Button>
+              </div>
               <p
                 style={{
                   marginBottom: "20px",
