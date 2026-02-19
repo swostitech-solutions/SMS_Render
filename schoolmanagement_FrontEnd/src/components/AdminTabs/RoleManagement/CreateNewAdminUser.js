@@ -220,7 +220,7 @@ const CreateNewAdminUser = () => {
     fetchStaffList();
   }, []);
 
-  // Fetch staff list (Non Teaching Staff from EmployeeMaster)
+  // Fetch staff list (All staff except Teaching Staff)
   const fetchStaffList = async () => {
     try {
       const orgId = getOrgId();
@@ -241,7 +241,11 @@ const CreateNewAdminUser = () => {
         const result = await response.json();
         if (result.data) {
           const staffOptions = result.data
-            .filter((staff) => staff.employee_type?.toLowerCase().replace(/-/g, " ").includes("non teaching"))
+            .filter((staff) => {
+              const empType = staff.employee_type?.toLowerCase().replace(/-/g, " ").trim();
+              // Exclude only "teaching staff" — allow all other employee types
+              return empType !== "teaching staff" && empType !== "teaching";
+            })
             .map((staff) => ({
               value: staff.id,
               label: staff.employee_name,
@@ -418,7 +422,7 @@ const CreateNewAdminUser = () => {
     }
 
     if (!formData.linkedStaff) {
-      newErrors.linkedStaff = "Non Teaching Staff is required";
+      newErrors.linkedStaff = "Staff is required";
     }
 
     if (selectedModules.length === 0) {
@@ -613,14 +617,14 @@ const CreateNewAdminUser = () => {
 
                           <div className="form-group mb-2">
                             <label htmlFor="linkedStaff" className="form-label">
-                              Non Teaching Staff <span className="text-danger">*</span>
+                              Staff <span className="text-danger">*</span>
                             </label>
                             <Select
                               id="linkedStaff"
                               options={staffList}
                               value={formData.linkedStaff}
                               onChange={handleDropdownChange}
-                              placeholder="Select Non Teaching Staff"
+                              placeholder="Select Staff"
                               isClearable
                               className={errors.linkedStaff ? "is-invalid" : ""}
                               classNamePrefix="detail"
