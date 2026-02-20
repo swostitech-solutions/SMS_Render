@@ -204,7 +204,7 @@ class EmployeeDocument(models.Model):
     # branch_id = models.ForeignKey(Branches, on_delete=models.CASCADE)
     document_type = models.ForeignKey(Document,on_delete=models.CASCADE)
     document_number = models.CharField(max_length=50,null=False,blank=False)
-    document_file = models.FileField(upload_to="employee_documents/",max_length=50,null=False,blank=False)
+    document_file = models.FileField(upload_to="employee_documents/",max_length=500,null=True,blank=True)
     document_path= models.CharField(max_length=1000, null=True, blank=True)
     valid_from = models.DateField(null=True,blank=True)
     valid_to = models.DateField(null=True, blank=True)

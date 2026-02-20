@@ -1537,7 +1537,7 @@ class StaffDocumentDetailsRetrieveAPIView(RetrieveAPIView):
                     'valid_from': item.valid_from,
                     'valid_to':item.valid_to,
                     'is_active': item.is_active,
-                    'document_path':  item.document_path if item.document_path else ""
+                    'document_path': request.build_absolute_uri(item.document_file.url) if item.document_file else (item.document_path if item.document_path else "")
                     # 'document_path':  image_path_to_base64(item.document_path) if item.document_path else None
 
                 }
