@@ -1217,7 +1217,7 @@ class StudentTransportDetailsRetriveAPIView(RetrieveAPIView):
                 course=studentCourseInstance.course,
                 department=studentCourseInstance.department,
                 is_active=True
-            ).order_by('id')
+            ).order_by('display_order', 'id')
             
             # Build response with selected and paid flags
             for semesterInstance in all_semesters:

@@ -333,6 +333,7 @@ class Semester(models.Model):   # done
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
     date_from = models.DateTimeField(null=True,blank=True)
     date_to = models.DateTimeField(null=True,blank=True)
+    display_order = models.IntegerField(default=0)  # For sorting semesters properly
     is_active = models.BooleanField(default=True)
     created_by = models.PositiveIntegerField()
     updated_by = models.PositiveIntegerField(null=True, blank=True)

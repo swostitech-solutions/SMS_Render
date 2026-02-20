@@ -74,51 +74,51 @@ const Login = ({ onLogin }) => {
   // }, []);
 
 
-useEffect(() => {
-  const fetchInstitutes = async () => {
-    try {
-      const response = await fetch(
-        `${ApiUrl.apiurl}OrganizationBranch/GetAllOrganizationBranch/`
-      );
-
-      const result = await response.json();
-      console.log("🏫 Institute API Response:", result);
-
-      if (
-        result?.message?.toLowerCase() === "success" &&
-        Array.isArray(result.data)
-      ) {
-        // ✅ STORE FULL RESPONSE IN LOCAL STORAGE
-        localStorage.setItem(
-          "organizationBranchList",
-          JSON.stringify(result.data)
+  useEffect(() => {
+    const fetchInstitutes = async () => {
+      try {
+        const response = await fetch(
+          `${ApiUrl.apiurl}OrganizationBranch/GetAllOrganizationBranch/`
         );
 
-        // ✅ Format for dropdown
-        const options = result.data.map((inst) => ({
-          value: inst.id,
-          label: inst.branch_name,
-          organization_id: inst.organization_id,
-          branch_id: inst.branch_id,
-        }));
+        const result = await response.json();
+        console.log("🏫 Institute API Response:", result);
 
-        setInstituteOptions(options);
+        if (
+          result?.message?.toLowerCase() === "success" &&
+          Array.isArray(result.data)
+        ) {
+          // ✅ STORE FULL RESPONSE IN LOCAL STORAGE
+          localStorage.setItem(
+            "organizationBranchList",
+            JSON.stringify(result.data)
+          );
 
-        // ✅ Auto-select if only one institute
-        if (options.length === 1) {
-          setFormData((prev) => ({
-            ...prev,
-            institute: options[0],
+          // ✅ Format for dropdown
+          const options = result.data.map((inst) => ({
+            value: inst.id,
+            label: inst.branch_name,
+            organization_id: inst.organization_id,
+            branch_id: inst.branch_id,
           }));
-        }
-      }
-    } catch (error) {
-      console.error("❌ Error fetching institutes:", error);
-    }
-  };
 
-  fetchInstitutes();
-}, []);
+          setInstituteOptions(options);
+
+          // ✅ Auto-select if only one institute
+          if (options.length === 1) {
+            setFormData((prev) => ({
+              ...prev,
+              institute: options[0],
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error fetching institutes:", error);
+      }
+    };
+
+    fetchInstitutes();
+  }, []);
 
 
 
@@ -300,7 +300,8 @@ useEffect(() => {
       });
 
       if (!loginResponse.ok) {
-        throw new Error("Failed to log in");
+        const errorData = await loginResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to log in");
       }
 
       const loginData = await loginResponse.json();

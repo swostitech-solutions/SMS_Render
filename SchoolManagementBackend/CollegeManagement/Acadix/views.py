@@ -879,6 +879,23 @@ class RegisterUserLoginAPIView(CreateAPIView):
                         }
                         return Response({'message': 'Logged in  Successfully', 'data': data}, status=status.HTTP_200_OK)
                     elif user_type == 'STAFF':
+                        # --- Teaching Staff Validation ---
+                        try:
+                            employee_master = EmployeeMaster.objects.get(id=user.reference_id, is_active=True)
+                            employee_type_code = employee_master.employee_type.employee_type_code
+                        except EmployeeMaster.DoesNotExist:
+                            return Response(
+                                {'message': 'You are not authorized to access Teaching staff modules to access it contact adminstration'},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
+
+                        if employee_type_code != 'Teaching Staff':
+                            return Response(
+                                {'message': 'You are not authorized to access Teaching staff modules to access it contact adminstration'},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
+                        # --- End Validation ---
+
                         StaffInstance = user.user_type
                         data = {
                             "organization_id": user.organization.id,
@@ -2934,7 +2951,7 @@ class SemesterDetailByFilters(ListAPIView):
             department_id = request.query_params.get('department_id')
             academic_year_id = request.query_params.get('academic_year_id')
 
-            filterdata = Semester.objects.filter(is_active=True)
+            filterdata = Semester.objects.filter(is_active=True).order_by('display_order', 'id')
 
             if filterdata:
                 if organization_id:
@@ -27107,7 +27124,7 @@ class GetSemesterData(APIView):
         if not (organization_id and branch_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
         
-        semesters = Semester.objects.filter(organization=organization_id, branch=branch_id)
+        semesters = Semester.objects.filter(organization=organization_id, branch=branch_id).order_by('display_order', 'id')
 
         if batch_ids:
             try:
@@ -27161,7 +27178,7 @@ class GetSemesterDataByDepartment(APIView):
         if not (organization_id and branch_id and batch_id and course_id and department_id):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
         semesters = Semester.objects.filter(organization=organization_id, branch=branch_id, batch=batch_id,
-                                            course=course_id, department=department_id)
+                                            course=course_id, department=department_id).order_by('display_order', 'id')
         serializer = Semester_Serializer(semesters, many=True)
         return Response(serializer.data)
 
