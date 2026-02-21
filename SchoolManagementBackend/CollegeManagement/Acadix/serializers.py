@@ -2604,7 +2604,7 @@ class StudentFeeReceiptCancelSerializer(serializers.Serializer):
 class EmployeeMasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeMaster
-        fields = ['id', 'organization', 'branch_id', 'employee_code', 'title', 'first_name', 'middle_name', 'last_name',
+        fields = ['id', 'organization', 'branch_id', 'employee_code', 'nuid', 'title', 'first_name', 'middle_name', 'last_name',
                   'marital_status', 'gender',
                   'nationality', 'religion', 'email', 'phone_number', 'office_email', 'employee_type',
                   'date_of_joining', 'date_of_leaving', 'payroll_group', 'place_of_birth',

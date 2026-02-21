@@ -102,6 +102,7 @@ export default function BasicTabs() {
                 firstName: basicResult.data.first_name,
                 middleName: basicResult.data.middle_name,
                 lastName: basicResult.data.last_name,
+                nuid: basicResult.data.nuid,
                 dob: basicResult.data.date_of_birth,
                 placeOfBirth: basicResult.data.place_of_birth,
                 maritalStatus: basicResult.data.marital_status,
@@ -323,6 +324,7 @@ export default function BasicTabs() {
         basicPayload.append("first_name", basicInfoData.firstName || "");
         basicPayload.append("middle_name", basicInfoData.middleName || "");
         basicPayload.append("last_name", basicInfoData.lastName || "");
+        basicPayload.append("nuid", basicInfoData.nuid || "");
         if (basicInfoData.dob) basicPayload.append("date_of_birth", basicInfoData.dob);
         basicPayload.append("place_of_birth", basicInfoData.placeOfBirth || "");
         basicPayload.append("marital_status", basicInfoData.maritalStatus || "1");
@@ -733,6 +735,7 @@ export default function BasicTabs() {
           basicPayload.append("first_name", basicInfoData.firstName || "");
           basicPayload.append("middle_name", basicInfoData.middleName || "");
           basicPayload.append("last_name", basicInfoData.lastName || "");
+          basicPayload.append("nuid", basicInfoData.nuid || "");
           if (basicInfoData.dob) basicPayload.append("date_of_birth", basicInfoData.dob);
           basicPayload.append("place_of_birth", basicInfoData.placeOf_birth || "");
           basicPayload.append("marital_status", basicInfoData.maritalStatus || "1");

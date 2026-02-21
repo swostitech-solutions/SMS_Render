@@ -168,6 +168,7 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                 staffcreateInstance.organization= serializer.validated_data.get('organization')
                 staffcreateInstance.branch = serializer.validated_data.get('branch')
                 staffcreateInstance.employee_code = serializer.validated_data.get('employee_code')
+                staffcreateInstance.nuid = serializer.validated_data.get('nuid')
                 staffcreateInstance.designation = designation_instance
                 staffcreateInstance.title = serializer.validated_data.get('title')
                 staffcreateInstance.first_name = serializer.validated_data.get('first_name')
@@ -249,6 +250,7 @@ class StaffRegistrationBasicInfoCreateAPIView(CreateAPIView):
                     # course=serializer.validated_data.get('course'),
                     # department=serializer.validated_data.get('department'),
                     employee_code = serializer.validated_data.get('employee_code'),
+                    nuid = serializer.validated_data.get('nuid'),
                     designation=designation_instance,
                     title = serializer.validated_data.get('title'),
                     first_name = serializer.validated_data.get('first_name'),
@@ -1318,6 +1320,7 @@ class StaffRegistrationDetailsRetrieveAPIView(RetrieveAPIView):
                 'middle_name':EmployeeMasterInstance.middle_name,
                 'last_name':EmployeeMasterInstance.last_name,
                 'employee_code': EmployeeMasterInstance.employee_code,
+                'nuid': EmployeeMasterInstance.nuid,
                 'date_of_birth': EmployeeMasterInstance.date_of_birth,
                 'marital_status': EmployeeMasterInstance.marital_status,
                 'gender': EmployeeMasterInstance.gender.gender_name,

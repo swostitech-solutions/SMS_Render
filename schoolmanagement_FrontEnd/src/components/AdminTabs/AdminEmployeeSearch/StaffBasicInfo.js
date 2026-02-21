@@ -35,6 +35,7 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
       branchId: "",
       location: "JAYDEV VIHAR",
       employeeCode: "",
+      nuid: "",
       title: "",
       firstName: "",
       middleName: "",
@@ -76,7 +77,38 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
 
   // Update formData and frontCover when basicInfoData changes (only once in edit mode)
   useEffect(() => {
-    if (basicInfoData && Object.keys(basicInfoData).length > 0 && basicInfoData.firstName && !hasInitialized.current) {
+    if (basicInfoData === null) {
+      hasInitialized.current = false;
+      setFormData({
+        employeeId: "",
+        orgId: "",
+        branchId: "",
+        location: "JAYDEV VIHAR",
+        employeeCode: "",
+        nuid: "",
+        title: "",
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        dob: "",
+        placeOfBirth: "",
+        maritalStatus: "",
+        bloodGroup: "",
+        nationality: "",
+        religion: "",
+        gender: "",
+        motherTongue: "",
+        employeeType: "",
+        email: "",
+        officeEmail: "",
+        phoneNumber: "",
+        emergencyContactNumber: "",
+        status: "ACTIVE",
+        createdBy: "",
+        profilePicture: null,
+      });
+      setFrontCover(null);
+    } else if (basicInfoData && Object.keys(basicInfoData).length > 0 && basicInfoData.firstName && !hasInitialized.current) {
       console.log("📝 Initializing StaffBasicInfo with basicInfoData (one-time):", basicInfoData);
       hasInitialized.current = true;  // Mark as initialized
       setFormData(basicInfoData);
@@ -151,6 +183,7 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
       setFormData({
         employeeId: employeeDetails.id || "",
         employeeCode: employeeDetails.employee_code || "",
+        nuid: employeeDetails.nuid || "",
         title: employeeDetails.title || "",
         firstName: employeeDetails.first_name || "",
         middleName: employeeDetails.middle_name || "",
@@ -347,6 +380,27 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                             setFormData({
                               ...formData,
                               employeeCode: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="col-md-3 mb-3">
+                      <label htmlFor="nuid-code" className="form-label">
+                        NUID
+                      </label>
+                      <div className="d-flex align-items-center">
+                        <input
+                          type="text"
+                          id="nuid-code"
+                          className="form-control detail"
+                          placeholder="Enter NUID Code"
+                          value={formData.nuid}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              nuid: e.target.value,
                             })
                           }
                         />

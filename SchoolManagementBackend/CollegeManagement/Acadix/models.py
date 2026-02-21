@@ -491,6 +491,7 @@ class EmployeeMaster(models.Model):
     # department = models.ForeignKey(Department, on_delete=models.CASCADE)
     designation = models.ForeignKey(Designation, on_delete=models.CASCADE,default=1)  # NOT iN fRONTEND
     employee_code = models.CharField(max_length=50,null=False,blank=False)
+    nuid = models.CharField(max_length=50, null=True, blank=True)
     title = models.CharField(max_length=10,null=False,blank=False)
     first_name = models.CharField(max_length=50,null=False,blank=False)
     middle_name = models.CharField(max_length=50, null=True, blank=True)

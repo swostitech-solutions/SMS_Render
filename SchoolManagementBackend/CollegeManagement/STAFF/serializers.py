@@ -17,7 +17,7 @@ class staffRegistrationserializer(serializers.ModelSerializer):
         fields = ['id','organization','branch','batch','employee_code','title','first_name','middle_name',
                   'last_name','date_of_birth','place_of_birth','marital_status','blood_group','nationality',
                   'religion','gender','mother_tongue','employee_type','email','office_email','profile_pic',
-                  'phone_number','emergency_contact_number','created_by']
+                  'phone_number','emergency_contact_number','created_by', 'nuid']
         # fields = ['id', 'first_name', 'upload_image', 'profile_photo']
         # read_only_fields = ['profile_photo_path']
 
@@ -56,6 +56,7 @@ class staffRegistrationserializer1(serializers.ModelSerializer):
             'phone_number',
             'emergency_contact_number',
             'created_by',
+            'nuid',
         ]
 
 class staffRegistrationAddressSerializer(serializers.ModelSerializer):
