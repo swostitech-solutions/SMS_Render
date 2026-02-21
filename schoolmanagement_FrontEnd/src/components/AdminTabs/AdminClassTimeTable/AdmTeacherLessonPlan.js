@@ -470,6 +470,51 @@ const AdmTeacherLessonPlan = () => {
     navigate("/admin/dashboard");
   };
 
+  const handleSessionChange = (selected) => {
+    setSelectedSession(selected);
+    setSelectedCourse(null);
+    setSelectedBranch(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+  };
+
+  const handleCourseChange = (selected) => {
+    setSelectedCourse(selected);
+    setSelectedBranch(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+  };
+
+  const handleBranchChange = (selected) => {
+    setSelectedBranch(selected);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+  };
+
+  const handleAcademicYearChange = (selected) => {
+    setSelectedAcademicYear(selected);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+  };
+
+  const handleSemesterChange = (selected) => {
+    setSelectedSemester(selected);
+    setSelectedSection(null);
+    setSelectedSubject(null);
+  };
+
+  const handleSectionChange = (selected) => {
+    setSelectedSection(selected);
+    setSelectedSubject(null);
+  };
+
   return (
     <div className="container-fluid">
       <div className="row">
@@ -536,7 +581,7 @@ const AdmTeacherLessonPlan = () => {
                           options={sessionOptions}
                           className="detail"
                           value={selectedSession}
-                          onChange={setSelectedSession}
+                          onChange={handleSessionChange}
                           placeholder="Select Session"
                           classNamePrefix="session-dropdown"
                         />
@@ -551,7 +596,7 @@ const AdmTeacherLessonPlan = () => {
                           options={courseOptions}
                           className="detail"
                           value={selectedCourse}
-                          onChange={setSelectedCourse}
+                          onChange={handleCourseChange}
                           placeholder="Select Course"
                           classNamePrefix="course-dropdown"
                         />
@@ -566,7 +611,7 @@ const AdmTeacherLessonPlan = () => {
                           options={branchOptions}
                           className="detail"
                           value={selectedBranch}
-                          onChange={setSelectedBranch}
+                          onChange={handleBranchChange}
                           placeholder="Select Branch"
                           classNamePrefix="branch-dropdown"
                         />
@@ -581,7 +626,7 @@ const AdmTeacherLessonPlan = () => {
                           options={academicYearOptions}
                           className="detail"
                           value={selectedAcademicYear}
-                          onChange={setSelectedAcademicYear}
+                          onChange={handleAcademicYearChange}
                           placeholder="Select Academic Year"
                           classNamePrefix="academicYear-dropdown"
                         />
@@ -596,7 +641,7 @@ const AdmTeacherLessonPlan = () => {
                           options={semesterOptions}
                           className="detail"
                           value={selectedSemester}
-                          onChange={setSelectedSemester}
+                          onChange={handleSemesterChange}
                           placeholder="Select Semester"
                           classNamePrefix="semester-dropdown"
                         />
@@ -611,7 +656,7 @@ const AdmTeacherLessonPlan = () => {
                           options={sectionOptions}
                           className="detail"
                           value={selectedSection}
-                          onChange={setSelectedSection}
+                          onChange={handleSectionChange}
                           placeholder="Select Section"
                           classNamePrefix="section-dropdown"
                         />
