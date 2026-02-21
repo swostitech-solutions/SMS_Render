@@ -14,7 +14,7 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
   // Ensure blank row when cleared
   useEffect(() => {
     if (!formData.authorizedpickup || formData.authorizedpickup.length === 0) {
-      const blankRow = [{ name: "", relationship: "", Mobile_Number: "", remark: "" }];
+      const blankRow = [{ name: "", relationship: "", Mobile_Number: "", remark: "", address: "", email: "" }];
       setAuthorisedPickups(blankRow);
       setFormData((prevData) => ({
         ...prevData,
@@ -29,7 +29,7 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
   const [authorisedPickups, setAuthorisedPickups] = useState(
     formData?.authorizedpickup && formData.authorizedpickup.length > 0
       ? formData.authorizedpickup
-      : [{ name: "", relationship: "", Mobile_Number: "", remark: "" }]
+      : [{ name: "", relationship: "", Mobile_Number: "", remark: "", address: "", email: "" }]
   );
 
   // 12-17-2025
@@ -109,6 +109,8 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
             relationship: item.relationship || "",
             Mobile_Number: item.mobile_number || "",
             remark: item.remark || "",
+            address: item.address || "",
+            email: item.email || "",
             isNew: false,
           }));
 
@@ -134,19 +136,19 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
   // Function to handle adding a new row with validation
   const handleAddRow = () => {
     const incompletePickups = authorisedPickups.filter(
-      (pickup) => !pickup.name || !pickup.relationship || !pickup.Mobile_Number
+      (pickup) => !pickup.name || !pickup.relationship || !pickup.Mobile_Number || !pickup.address || !pickup.email
     );
 
     if (incompletePickups.length > 0) {
       alert(
-        "Please fill in all required fields (Name, Relationship, Mobile No) before adding a new one."
+        "Please fill in all required fields (Name, Relationship, Mobile No, Address, Email) before adding a new one."
       );
       return;
     }
 
     setAuthorisedPickups([
       ...authorisedPickups,
-      { name: "", relationship: "", Mobile_Number: "", remark: "", isNew: true },
+      { name: "", relationship: "", Mobile_Number: "", remark: "", address: "", email: "", isNew: true },
     ]);
   };
 
@@ -166,18 +168,30 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
     const updatedRows = [...authorisedPickups];
     updatedRows[index][field] = value;
 
+    const updatedErrors = [...errors];
+    if (typeof updatedErrors[index] !== "object" || updatedErrors[index] === null) {
+      updatedErrors[index] = { mobile: typeof updatedErrors[index] === "string" ? updatedErrors[index] : "", email: "" };
+    }
+
     // Validation for Mobile_Number field
     if (field === "Mobile_Number") {
-      const updatedErrors = [...errors];
-
       if (!validatePhoneNumber(value)) {
-        updatedErrors[index] = "Phone number must contain only numbers.";
+        updatedErrors[index].mobile = "Phone number must contain only numbers.";
       } else if (value.length < 10) {
-        updatedErrors[index] = "Phone number must be exactly 10 digits.";
+        updatedErrors[index].mobile = "Phone number must be exactly 10 digits.";
       } else {
-        updatedErrors[index] = ""; // Clear error if valid
+        updatedErrors[index].mobile = ""; // Clear error if valid
       }
+      setErrors(updatedErrors); // Update error state
+    }
 
+    // Validation for Email field
+    if (field === "email") {
+      if (value && !validateEmail(value)) {
+        updatedErrors[index].email = "Please enter a valid email address.";
+      } else {
+        updatedErrors[index].email = ""; // Clear error if valid
+      }
       setErrors(updatedErrors); // Update error state
     }
 
@@ -199,6 +213,12 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
             </th>
             <th>
               Mobile No<span className="red-text">*</span>
+            </th>
+            <th>
+              Address<span className="red-text">*</span>
+            </th>
+            <th>
+              EmailId<span className="red-text">*</span>
             </th>
             <th>Remarks</th>
             <th>Actions</th>
@@ -247,7 +267,7 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                   maxLength={10}
                   required
                 />
-                {errors[index] && (
+                {errors[index]?.mobile && (
                   <span
                     style={{
                       color: "red",
@@ -256,7 +276,41 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                       display: "block",
                     }}
                   >
-                    {errors[index]}
+                    {errors[index].mobile}
+                  </span>
+                )}
+              </td>
+
+              <td>
+                <input
+                  type="text"
+                  value={row.address}
+                  onChange={(e) =>
+                    handleInputChange(index, "address", e.target.value)
+                  }
+                  required
+                />
+              </td>
+
+              <td>
+                <input
+                  type="email"
+                  value={row.email}
+                  onChange={(e) =>
+                    handleInputChange(index, "email", e.target.value)
+                  }
+                  required
+                />
+                {errors[index]?.email && (
+                  <span
+                    style={{
+                      color: "red",
+                      fontSize: "0.8em",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
+                    {errors[index].email}
                   </span>
                 )}
               </td>
@@ -291,7 +345,7 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
           className="btn btn-primary"
           onClick={handleAddRow}
         >
-          Add New Pickup
+          Add New Guardian
         </button>
       </div>
     </div>

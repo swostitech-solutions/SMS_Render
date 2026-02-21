@@ -10928,10 +10928,12 @@ class UtilityGroupMixin:
         try:
             # Call siblings processing function if list is not empty
             for authorized in authorizedpickup:
-                name = authorized.get('name').upper()
-                relationship = authorized.get('relationship').upper()
+                name = authorized.get('name', '')
+                relationship = authorized.get('relationship', '')
                 mobile_number = authorized.get('mobile_number')
                 remark = authorized.get('remark')
+                address = authorized.get('address')
+                email = authorized.get('email')
 
                 # Check if the combination of data exist or not
                 # if AuthorisedPickup.objects.filter(name=name, relationship=relationship,mobile_number=mobile_number,
@@ -10946,6 +10948,8 @@ class UtilityGroupMixin:
                     relationship=relationship,
                     mobile_number=mobile_number,
                     remark=remark,
+                    address=address,
+                    email=email,
                     created_by=student_instance.created_by,
                     updated_by=student_instance.created_by
                 )
@@ -11290,6 +11294,7 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
                     student_aadhaar_no=student_basic_detail.get('student_aadhaar_no', None),
                     user_name=student_basic_detail['user_name'],
                     remarks=student_basic_detail.get('remarks', None),
+                    referred_by=student_basic_detail.get('referred_by', None),
                     profile_pic=student_basic_detail.get('profile_pic', None),
                     father_name=student_basic_detail.get('father_name', None),
                     father_profession=student_basic_detail.get('father_profession', None),
@@ -12124,6 +12129,7 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                                                                            instance.student_aadhaar_no)
                     instance.user_name = student_basic_detail.get('user_name', instance.user_name)
                     instance.remarks = student_basic_detail.get('remarks', instance.remarks)
+                    instance.referred_by = student_basic_detail.get('referred_by', instance.referred_by)
                     # instance.profile_pic = studentBasicDetails.get('profile_pic', instance.profile_pic)
                     instance.profile_pic = student_basic_detail.get('profile_pic', instance.profile_pic)
                     # instance.enrollment_no = studentBasicDetails.get('enrollment_no', instance.enrollment_no)
@@ -13078,6 +13084,7 @@ class StudentRegistrationBasedOnIdAPIView(RetrieveAPIView):
                         'student_aadhaar_no': student_instance.student_aadhaar_no,
                         'username': student_instance.user_name,
                         'remarks': student_instance.remarks,
+                        'referred_by': student_instance.referred_by,
                         'profile_pic': request.build_absolute_uri(
                             student_instance.profile_pic.url) if student_instance.profile_pic else None,
                         'father_name': student_instance.father_name,

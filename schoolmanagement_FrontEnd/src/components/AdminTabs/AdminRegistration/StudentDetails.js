@@ -153,6 +153,7 @@ const AdmAttendanceEntry = ({
     studentaadharno: "",
     email: "",
     rollno: "",
+    referred_by: "",
   });
   const {
     houses,
@@ -471,7 +472,8 @@ const AdmAttendanceEntry = ({
     if (
       name === "first_name" ||
       name === "middle_name" ||
-      name === "last_name"
+      name === "last_name" ||
+      name === "referred_by"
     ) {
       if (value === "" || validateOnlyLetters(value)) {
         setErrors((prevErrors) => ({
@@ -1183,6 +1185,26 @@ const AdmAttendanceEntry = ({
                       {errors.registration_no && (
                         <small style={{ color: "red" }}>
                           {errors.registration_no}
+                        </small>
+                      )}
+                    </div>
+
+                    <div className="col-12 col-md-4 mb-2">
+                      <label htmlFor="referred-by" className="form-label">
+                        Referred By
+                      </label>
+                      <input
+                        type="text"
+                        id="referred-by"
+                        className="form-control detail"
+                        placeholder="Enter Referred By"
+                        name="referred_by"
+                        value={formData.referred_by || ""}
+                        onChange={handleInputChange}
+                      />
+                      {errors.referred_by && (
+                        <small style={{ color: "red" }}>
+                          {errors.referred_by}
                         </small>
                       )}
                     </div>

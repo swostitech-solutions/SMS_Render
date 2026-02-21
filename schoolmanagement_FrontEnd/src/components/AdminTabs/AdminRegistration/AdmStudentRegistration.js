@@ -90,6 +90,7 @@ export default function BasicTabs() {
     childreninfamily: "",
     username: "",
     remarks: "",
+    referred_by: "",
     profile_pic: "",
     father_aadharno: "",
     mother_aadharno: "",
@@ -198,6 +199,7 @@ export default function BasicTabs() {
       childreninfamily: "",
       username: "",
       remarks: "",
+      referred_by: "",
       profile_pic: "",
       profile_pic_preview: "", // ✅ clear preview
       father_aadharno: "",
@@ -236,7 +238,7 @@ export default function BasicTabs() {
         { name: "", relationship: "", Mobile_Number: "", remark: "" },
       ],
       authorizedpickup: [
-        { name: "", relationship: "", Mobile_Number: "", remark: "" },
+        { name: "", relationship: "", Mobile_Number: "", remark: "", address: "", email: "" },
       ],
       documentsDetails: [],
       previousEducationDetails: [],
@@ -360,6 +362,7 @@ export default function BasicTabs() {
               username: student.username || "",
               barcode: student.barcode || "",
               registration_no: student.registration_no || "",
+              referred_by: student.referred_by || "",
               father_name: student.father_name || "",
               mother_name: student.mother_name || "",
               father_profession: student.father_profession || "",
@@ -503,6 +506,8 @@ export default function BasicTabs() {
                 relationship: a.relationship,
                 Mobile_Number: a.mobile_number,
                 remark: a.remark,
+                address: a.address || "",
+                email: a.email || "",
               })),
               sibilingsDetails: (data.data.sibilings_details || []).map(
                 (s) => ({
@@ -575,6 +580,7 @@ export default function BasicTabs() {
         student_aadhaar_no: formData.studentaadharno,
         user_name: formData.username,
         remarks: formData.remarks,
+        referred_by: formData.referred_by,
         profile_pic: null,
         father_name: formData.father_name,
         father_profession: formData.father_profession,
@@ -654,6 +660,8 @@ export default function BasicTabs() {
         relationship: a.relationship,
         mobile_number: a.Mobile_Number,
         remark: a.remark,
+        address: a.address,
+        email: a.email,
       }));
 
       const document_detail = (formData.documentsDetails || []).map((d) => ({
@@ -794,6 +802,7 @@ export default function BasicTabs() {
         student_aadhaar_no: formData.studentaadharno || "",
         user_name: formData.username || "",
         remarks: formData.remarks || "",
+        referred_by: formData.referred_by || "",
         profile_pic: null,
         father_name: formData.father_name || "",
         father_profession: formData.father_profession || "",
@@ -837,6 +846,8 @@ export default function BasicTabs() {
         relationship: a.relationship || "",
         mobile_number: a.Mobile_Number || a.mobile_number || "",
         remark: a.remark || "",
+        address: a.address || "",
+        email: a.email || "",
       }));
 
       const sibling_detail = Array.isArray(formData.sibilingsDetails)
@@ -1060,7 +1071,7 @@ export default function BasicTabs() {
           <Tab label="Guardian" {...a11yProps(isEditMode ? 2 : 3)} />
           <Tab label="Sibling" {...a11yProps(isEditMode ? 3 : 4)} />
           <Tab label="Emergency Contact" {...a11yProps(isEditMode ? 4 : 5)} />
-          <Tab label="Authorised PickUp" {...a11yProps(isEditMode ? 5 : 6)} />
+          <Tab label="Local Guardian" {...a11yProps(isEditMode ? 5 : 6)} />
           <Tab label="Documents Submitted" {...a11yProps(isEditMode ? 6 : 7)} />
           <Tab label="Previous Education " {...a11yProps(isEditMode ? 7 : 8)} />
         </Tabs>

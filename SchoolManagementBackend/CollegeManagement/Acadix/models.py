@@ -595,6 +595,7 @@ class StudentRegistration(models.Model):
     student_aadhaar_no = models.CharField(max_length=12, null=True)
     user_name = models.CharField(max_length=30, null=True)
     remarks = models.CharField(max_length=50, null=True)
+    referred_by = models.CharField(max_length=200, null=True, blank=True)
     # fee_group = models.ForeignKey(FeeStructureMaster, on_delete=models.CASCADE)
     # fee_applied_from = models.ForeignKey(Period, on_delete=models.CASCADE)
     father_name = models.CharField(max_length=200, null=True, blank=True)
@@ -975,6 +976,8 @@ class AuthorisedPickup(models.Model):
         )
     ])
     remark = models.CharField(max_length=255, null=True, blank=True)
+    address = models.CharField(max_length=500, null=True, blank=True)
+    email = models.EmailField(max_length=255, null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     created_by = models.PositiveIntegerField()

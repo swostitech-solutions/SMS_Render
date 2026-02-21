@@ -1605,6 +1605,7 @@ class StudentBasicDetailSerializer(serializers.ModelSerializer):
     college_admission_no = serializers.CharField(allow_null=True, required=False,
                                                  validators=[MinValueValidator(1)])
     user_name = serializers.CharField(allow_null=True, required=False, allow_blank=True)
+    referred_by = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     profile_pic = serializers.ImageField(required=False, allow_null=True)
     
     # Optional fields for student registration - using IntegerField for FK fields
@@ -1637,7 +1638,7 @@ class StudentBasicDetailSerializer(serializers.ModelSerializer):
             'house', 'religion', 'category', 'mother_tongue',
             'enrollment_no', 'primary_guardian', 'status', 'blood',
             'nationality', 'email', 'date_of_birth', 'children_in_family', 'student_aadhaar_no',
-            'user_name', 'remarks', 'profile_pic', 'father_name',
+            'user_name', 'remarks', 'referred_by', 'profile_pic', 'father_name',
             'father_profession', 'father_contact_number', 'father_email',
             'father_aadhaar_no', 'mother_name', 'mother_profession',
             'mother_contact_number', 'mother_email', 'mother_aadhaar_no', 'status',
@@ -1696,6 +1697,7 @@ class StudentBasicDetailUpdateSerializer(serializers.ModelSerializer):
     barcode = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     college_admission_no = serializers.IntegerField(allow_null=True, required=False, validators=[MinValueValidator(1)])
     user_name = serializers.CharField(allow_null=True, required=False, allow_blank=True)
+    referred_by = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     profile_pic = serializers.ImageField(required=False, allow_null=True)
     registration_no = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
@@ -1716,7 +1718,7 @@ class StudentBasicDetailUpdateSerializer(serializers.ModelSerializer):
             'house', 'religion', 'category', 'mother_tongue',
             'enrollment_no', 'primary_guardian', 'status', 'blood',
             'nationality', 'email', 'date_of_birth', 'children_in_family', 'student_aadhaar_no',
-            'user_name', 'remarks', 'profile_pic', 'father_name',
+            'user_name', 'remarks', 'referred_by', 'profile_pic', 'father_name',
             'father_profession', 'father_contact_number', 'father_email',
             'father_aadhaar_no', 'mother_name', 'mother_profession',
             'mother_contact_number', 'mother_email', 'mother_aadhaar_no',
@@ -1879,10 +1881,12 @@ class AuthorisedPickupDetailsSerializer(serializers.ModelSerializer):
     relationship = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     mobile_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     remark = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    address = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
     
     class Meta:
         model = AuthorisedPickup
-        fields = ['id', 'name', 'relationship', 'mobile_number', 'remark', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'relationship', 'mobile_number', 'remark', 'address', 'email', 'is_active', 'created_at', 'updated_at']
 
 
 class StudentDocumentDetailsSerializer(serializers.ModelSerializer):
