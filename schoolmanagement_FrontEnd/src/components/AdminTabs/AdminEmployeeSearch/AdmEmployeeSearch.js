@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate hook
 import "bootstrap/dist/css/bootstrap.min.css";
 import SelectStudentModal from "../AdminAttendanceEntry/SelectStudentModal";
@@ -23,11 +23,11 @@ const AdmAttendanceEntry = () => {
   // Function to properly format name with correct prefix capitalization
   const formatEmployeeName = (name) => {
     if (!name) return "";
-    
+
     // Split name into parts
     const parts = name.trim().split(/\s+/);
     if (parts.length === 0) return "";
-    
+
     // Check if first part is a prefix
     const firstPart = parts[0].toLowerCase();
     const prefixMap = {
@@ -40,18 +40,18 @@ const AdmAttendanceEntry = () => {
       'dr': 'Dr.',
       'dr.': 'Dr.'
     };
-    
+
     // If first part is a prefix, format it properly
     if (prefixMap[firstPart]) {
       const formattedPrefix = prefixMap[firstPart];
-      const restOfName = parts.slice(1).map(part => 
+      const restOfName = parts.slice(1).map(part =>
         part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
       ).join(' ');
       return `${formattedPrefix} ${restOfName}`;
     }
-    
+
     // If no prefix found, just capitalize each word
-    return parts.map(part => 
+    return parts.map(part =>
       part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
     ).join(' ');
   };
@@ -67,15 +67,48 @@ const AdmAttendanceEntry = () => {
   const classRef = useRef(null);
   const itemsPerPage = 10; // You can change this value
   const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredEmployeeData = useMemo(() => {
+    if (!searchQuery) return employeeData;
+    const lowerQuery = searchQuery.toLowerCase();
+    return employeeData.filter((employee) => {
+      const searchStr = `
+        ${employee.employee_code || ""}
+        ${formatEmployeeName(employee.employee_name) || ""}
+        ${employee.employee_type || ""}
+        ${employee.date_of_birth || ""}
+        ${employee.phone_number || ""}
+        ${employee.email || ""}
+        ${employee.date_of_joining || ""}
+      `.toLowerCase();
+
+      return searchStr.includes(lowerQuery);
+    });
+  }, [employeeData, searchQuery]);
 
   // Calculate total pages
-  const pageCount = Math.ceil(employeeData.length / itemsPerPage);
+  const pageCount = Math.ceil(filteredEmployeeData.length / itemsPerPage);
+
+  // Pagination Safety Guard (0-indexed)
+  useEffect(() => {
+    if (pageCount > 0 && currentPage >= pageCount) {
+      setCurrentPage(pageCount - 1); // Fallback to last valid page
+    } else if (pageCount === 0 && currentPage !== 0) {
+      setCurrentPage(0); // Reset to page 0 if data is completely empty
+    }
+  }, [pageCount, currentPage]);
+
+  // Reset pagination precisely when global user search query changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery]);
 
   // Get current page data
   const getCurrentPageData = () => {
     const start = currentPage * itemsPerPage;
     const end = start + itemsPerPage;
-    return employeeData.slice(start, end);
+    return filteredEmployeeData.slice(start, end);
   };
 
   // Handle page change
@@ -92,7 +125,8 @@ const AdmAttendanceEntry = () => {
       lastName: "",
       employeeType: null,
     });
-    
+    setSearchQuery("");
+
     // Clear the employee data table
     setEmployeeData([]);
     setCurrentPage(0);
@@ -110,7 +144,7 @@ const AdmAttendanceEntry = () => {
     localStorage.removeItem("employeeTypeId");
     sessionStorage.removeItem("tempFormData");
     sessionStorage.removeItem("tempFrontCover");
-    
+
     navigate("/AdmStaffDetails");
   };
 
@@ -379,6 +413,29 @@ const AdmAttendanceEntry = () => {
                           }
                         />
                       </div>
+
+                      {/* Full-width Search Bar inside container */}
+                      <div className="col-12 mt-4 mb-2">
+                        <div className="input-group">
+                          <input
+                            type="text"
+                            className="form-control detail"
+                            placeholder="Search: name, employee code, type, email, phone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                          {searchQuery && (
+                            <button
+                              className="btn btn-outline-secondary"
+                              type="button"
+                              onClick={() => setSearchQuery("")}
+                            >
+                              X
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>

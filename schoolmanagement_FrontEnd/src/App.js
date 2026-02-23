@@ -38,6 +38,7 @@ import AttendanceEntry from "./pages/AdminPanel/AttendanceEntry";
 import AttendanceUpdate from "./pages/AdminPanel/AttendanceUpdate";
 import Registration from "./pages/AdminPanel/Registration";
 import AdmStudentRegistration from "./components/AdminTabs/AdminRegistration/AdmStudentRegistration";
+import StudentLocationStatsPage from "./pages/AdminPanel/StudentLocationStatsPage";
 import BonafideCertificate from "./components/AdminTabs/AdminStudentCertificate/BonafideCertificate";
 import AdmAssignmentEntry from "./components/AdminTabs/AdmAssignmentEntry/AdmAssignmentEntry";
 import StudentPromotion from "./pages/AdminPanel/StudentPromotion";
@@ -350,6 +351,7 @@ function App() {
                 element={<AttendanceUpdate />}
               />
               <Route path="/admin/registration" element={<Registration />} />
+              <Route path="/admin/student-location-stats" element={<StudentLocationStatsPage />} />
               <Route
                 path="/admstudentregistration"
                 element={<AdmStudentRegistration />}

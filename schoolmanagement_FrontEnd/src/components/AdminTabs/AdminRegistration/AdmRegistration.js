@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AdmRegistration.css";
 import { useNavigate } from "react-router-dom";
@@ -92,16 +92,59 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
   const [currentPage, setCurrentPage] = useState(1); // State for current page
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const rowsPerPage = 10;
+
+  const filteredStudentData = useMemo(() => {
+    if (!searchQuery) return studentData;
+    const lowerQuery = searchQuery.toLowerCase();
+    return studentData.filter((student) => {
+      const basic = student?.studentBasicDetails;
+      if (!basic) return false;
+
+      const searchStr = `
+        ${basic.first_name || ""} 
+        ${basic.middle_name || ""} 
+        ${basic.last_name || ""}
+        ${basic.registration_no || ""}
+        ${basic.admission_no || ""}
+        ${basic.batch_description || ""}
+        ${basic.course_name || ""}
+        ${basic.department_description || ""}
+        ${basic.academic_year_description || ""}
+        ${basic.semester_description || ""}
+        ${basic.section_name || ""}
+        ${basic.father_name || ""}
+        ${basic.mother_name || ""}
+        ${basic.barcode || ""}
+        ${basic.category_name || ""}
+      `.toLowerCase();
+
+      return searchStr.includes(lowerQuery);
+    });
+  }, [studentData, searchQuery]);
+
   // Calculate total pages
-  const totalPages = Math.ceil(studentData.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredStudentData.length / rowsPerPage);
+
+  // Pagination Safety Guard
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages); // Fallback to last valid page
+    } else if (totalPages === 0 && currentPage !== 1) {
+      setCurrentPage(1); // Reset to page 1 if data is completely empty
+    }
+  }, [totalPages, currentPage]);
+
+  // Reset pagination precisely when global user search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
   // Get the current rows for the table
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentRows = studentData.slice(indexOfFirstRow, indexOfLastRow);
+  const currentRows = filteredStudentData.slice(indexOfFirstRow, indexOfLastRow);
   console.log("hiiiii");
-
-  console.log(studentData);
 
   const [filters, setFilters] = useState({
     studentName: "",
@@ -369,6 +412,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
     // ✅ Clear dates
     setFromDate("");
     setToDate("");
+    setSearchQuery("");
 
     // ✅ Reset data back to full list
     setStudentData(fullStudentData);
@@ -472,6 +516,15 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                   >
                     Export To Excel
                   </button>
+                  {/*  -- Temporarily Hidden for future use --
+                  <button
+                    type="button"
+                    className="btn btn-info text-white me-2"
+                    onClick={() => navigate("/admin/student-location-stats", { state: { studentData: fullStudentData } })}
+                  >
+                    Location Stats
+                  </button>
+                  */}
                 </div>
               </div>
               <div className="row mt-3 mx-2">
@@ -848,11 +901,35 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           }
                         />
                       </div>
+
+                      {/* Full-width Search Bar inside container */}
+                      <div className="col-12 mt-4 mb-2">
+                        <div className="input-group">
+                          <input
+                            type="text"
+                            className="form-control detail"
+                            placeholder="Search: name, admission no, session, course, barcode, etc..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                          {searchQuery && (
+                            <button
+                              className="btn btn-outline-secondary"
+                              type="button"
+                              onClick={() => setSearchQuery("")}
+                            >
+                              X
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="row mt-3">
+
+              <div className="row mt-2">
                 <div className="col-12">
                   <div className="table-responsive">
                     <table className="table table-bordered table-hover table-sm">
