@@ -1442,7 +1442,7 @@ const AdmAttendanceEntry = ({
                               value: formData.language,
                               label:
                                 languages.find(
-                                  (l) => l.id === formData.language
+                                  (l) => Number(l.id) === Number(formData.language)
                                 )?.mother_tongue_name || "Select Language", // ✅ Correct field name
                             }
                             : null

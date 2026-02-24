@@ -440,6 +440,9 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
     enabled: false,
   });
 
+  // Key used to force-remount the file input (clears stale file name after Add)
+  const [fileInputKey, setFileInputKey] = useState(0);
+
   // Update tableData when documentDetails changes from parent (for edit mode)
   useEffect(() => {
     console.log("DocumentDetails received from parent:", documentDetails);
@@ -500,6 +503,26 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
 
   const handleInputChange = (e) => {
     const { name, type, value, checked, files } = e.target;
+
+    // ✅ Validate file type and size for file inputs
+    if (type === "file" && files[0]) {
+      const file = files[0];
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
+      const maxSize = 500 * 1024; // 500 KB
+
+      if (!allowedTypes.includes(file.type)) {
+        alert("Only JPG, JPEG, PNG, and PDF files are allowed.");
+        e.target.value = ""; // Clear the input
+        return;
+      }
+
+      if (file.size > maxSize) {
+        alert("File size must not exceed 500 KB.");
+        e.target.value = ""; // Clear the input
+        return;
+      }
+    }
+
     const updatedValue =
       type === "checkbox" ? checked : type === "file" ? files[0] : value;
 
@@ -526,6 +549,8 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
       validTo: "",
       enabled: false,
     });
+    // Force remount the file input so it shows empty (file inputs can't be reset via value prop)
+    setFileInputKey((prev) => prev + 1);
   };
 
   const handleRemoveRow = (index) => {
@@ -640,9 +665,11 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
                 </td>
                 <td>
                   <input
+                    key={fileInputKey}
                     type="file"
                     className="form-control"
                     name="documentFile"
+                    accept="image/jpeg, image/jpg, image/png, application/pdf"
                     onChange={handleInputChange}
                   />
                 </td>

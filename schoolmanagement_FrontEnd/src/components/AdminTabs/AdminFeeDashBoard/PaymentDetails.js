@@ -596,6 +596,7 @@ const FeeDetails = () => {
                 <tr>
                   <th style="border: 1px solid black; padding: 8px; background-color: #f0f0f0; text-align: left;">Payment Method</th>
                   <th style="border: 1px solid black; padding: 8px; background-color: #f0f0f0; text-align: left;">Payment Reference</th>
+                  <th style="border: 1px solid black; padding: 8px; background-color: #f0f0f0; text-align: left;">Remark</th>
                   <th style="border: 1px solid black; padding: 8px; background-color: #f0f0f0; text-align: right;">Amount (₹)</th>
                 </tr>
               </thead>
@@ -603,6 +604,7 @@ const FeeDetails = () => {
                 <tr>
                   <td style="border: 1px solid black; padding: 8px;">${result.receipt_data.payment_method || "-"}</td>
                   <td style="border: 1px solid black; padding: 8px;">${result.receipt_data.payment_reference || "-"}</td>
+                  <td style="border: 1px solid black; padding: 8px;">${result.receipt_data.remarks || "-"}</td>
                   <td style="border: 1px solid black; padding: 8px; text-align: right;">${Number(result.receipt_data.amount || 0).toFixed(2)}</td>
                 </tr>
               </tbody>

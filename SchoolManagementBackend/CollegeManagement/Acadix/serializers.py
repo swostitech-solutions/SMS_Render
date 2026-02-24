@@ -2511,7 +2511,7 @@ class StudentFeeReceiptSerializer(serializers.Serializer):
     payment_method_id = serializers.IntegerField(allow_null=False)
     # bank_id = serializers.IntegerField(allow_null=True)
     # account_number = serializers.IntegerField(allow_null=True)
-    # remarks = serializers.CharField(allow_null=True, allow_blank=True)  # payment reference
+    remarks = serializers.CharField(allow_null=True, allow_blank=True, required=False)  # payment remark
     # reference_date = serializers.DateField(allow_null=False)
     student_fee_details_ids = serializers.ListField(allow_null=False)
 

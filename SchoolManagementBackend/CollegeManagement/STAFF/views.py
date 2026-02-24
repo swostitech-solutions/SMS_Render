@@ -468,10 +468,10 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
             branch_id = request.query_params.get('branch_id')
             employee_id = request.query_params.get('employee_id')
 
-            document_files = []
-            for item, item_obj in request.FILES.items():
-                # if item != 'profile_pic':
-                document_files.append(item_obj)
+            # ✅ FIX: Use getlist() to capture ALL files sent with the same key name.
+            # request.FILES.items() behaves like a dict and returns only ONE entry
+            # per key — so multiple files with key "document_files" were silently dropped.
+            document_files = request.FILES.getlist("document_files")
 
             # get employee Instance
             if organization_id and branch_id and employee_id:
@@ -527,104 +527,98 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
             doc_map = {doc.document_type_id: doc for doc in SCH_EMPLOYEE_DOCUMENTS_Records} if SCH_EMPLOYEE_DOCUMENTS_Records else {}
 
             if SCH_EMPLOYEE_DOCUMENTS_Records:
-                for item,document_record,doc_file in zip(parsed_details,SCH_EMPLOYEE_DOCUMENTS_Records,document_files) :
+                # ✅ FIX: Iterate ALL metadata items (not zip which stops at shortest list).
+                # Use has_file flag to consume uploaded files in order for docs that have a new upload.
+                file_index = 0
+                for item in parsed_details:
+                    document_type_id = item.get('document_type_id')
+                    has_file = item.get('has_file', False)
 
-                    # Initialize the file path
-                    full_file_path = ""
-                    # if request.FILES['document_file']:
-                    #     document_file = item.get('document_file')
-                    # else:
-                    #     document_file = None
-                        # try:
-                        #     file_url = item.get('document_file')
-                        #     response = requests.get(file_url)
-                        #     response.raise_for_status()  # Raise error if download fails
-                        #
-                        #     # Extract file name from the URL
-                        #     filename = file_url.split('/')[-1]
-                        #     upload_path = os.path.join('uploads', filename)  # e.g., media/uploads/filename.pdf
-                        #
-                        #     # Save the file to default storage
-                        #     full_file_path = default_storage.save(upload_path, ContentFile(response.content))
-                        # except:
-                        #     full_file_path = save_base64_file(item.get('document_file'))
-                        # print(full_file_path)
-                        # document_file = item.get('document_file')
-                        #
-                        # # Generate a Unique UUID string for upload file & image uniqueness
-                        # # Generate a unique 8-character string using UUID
-                        # unique_string = str(uuid.uuid4())[:8]
-                        #
-                        # # Generate a dynamic folder and file path
-                        # folder_name = "STAFF_DOCUMENTS"
-                        # filename = 'dummpy.pdf'
-                        # file_path = os.path.join(folder_name, filename)  # This is the relative file path
-                        #
-                        # # Get the full path relative to the media directory
-                        # full_file_path = os.path.join(settings.MEDIA_ROOT, file_path)
-                        #
-                        # if "base64," in document_file:
-                        #     file_data = document_file.split("base64,")[1]
-                        #
-                        # # Decode base64
-                        # decoded_file = base64.b64decode(file_data)
-                        #
-                        # # Ensure the directory exists
-                        # if not os.path.exists(os.path.dirname(full_file_path)):
-                        #     os.makedirs(os.path.dirname(full_file_path))
-                        #
-                        # with open(full_file_path, "wb") as f:
-                        #     f.write(decoded_file)
-                    # doc_instance.document_path
-                    # if document_type_id in doc_map:
-                    doc_instance = document_record
-                    # doc_instance.document_path=full_file_path
-                    doc_instance.document_file=doc_file
-                    doc_instance.document_path=request.build_absolute_uri(doc_instance.document_file.url) if doc_instance.document_file else ""
-                    doc_instance.document_number = item.get('document_number')
-                    doc_instance.valid_from = item.get('valid_from')
-                    doc_instance.to_from = item.get('to_from')
-                    doc_instance.updated_by = data['created_by']
-                    doc_instance.save()
+                    # Get the next uploaded file only if this doc has one
+                    doc_file = None
+                    if has_file and file_index < len(document_files):
+                        doc_file = document_files[file_index]
+                        file_index += 1
+
+                    # Try to find existing DB record by document_type_id
+                    doc_instance = doc_map.get(document_type_id)
+
+                    if doc_instance:
+                        # Update existing record
+                        if doc_file:
+                            doc_instance.document_file = doc_file
+                            doc_instance.document_path = request.build_absolute_uri(doc_instance.document_file.url)
+                        doc_instance.document_number = item.get('document_number')
+                        doc_instance.valid_from = item.get('valid_from')
+                        doc_instance.valid_to = item.get('valid_to')
+                        doc_instance.updated_by = data.get('created_by')
+                        doc_instance.save()
+                        debug_logs.append(f"Updated doc type_id={document_type_id}")
+                    else:
+                        # No existing record — create new
+                        try:
+                            new_doc = EmployeeDocument.objects.create(
+                                organization=Organization.objects.get(id=organization_id),
+                                branch=Branch.objects.get(id=branch_id),
+                                employee_id=EmployeeInstance.id,
+                                document_type=Document.objects.get(id=document_type_id),
+                                document_number=item.get('document_number'),
+                                document_file=doc_file,
+                                document_path="",
+                                valid_from=item.get('valid_from'),
+                                valid_to=item.get('valid_to'),
+                                created_by=data.get('created_by')
+                            )
+                            if doc_file:
+                                new_doc.refresh_from_db()
+                                new_doc.document_path = request.build_absolute_uri(new_doc.document_file.url)
+                                new_doc.save()
+                            debug_logs.append(f"Created new doc type_id={document_type_id}")
+                        except Exception as inner_e:
+                            print(f"Error creating new doc: {inner_e}")
+                            debug_logs.append(f"Error creating doc: {str(inner_e)}")
             else:
-                # create document details
+                # ✅ CREATE path: Iterate all metadata items, use has_file flag to pair files in order
                 try:
                     print("DEBUG: Creating Documents")
                     print("DEBUG: document_details raw:", document_details)
-                    print("DEBUG: request.FILES keys:", request.FILES.keys())
-                    print("DEBUG: document_files list:", document_files)
-                    
-                    # parsed_details already parsed above
-                    print("DEBUG: Parsed details length:", len(parsed_details))
-                    print("DEBUG: Files length:", len(document_files))
+                    print("DEBUG: request.FILES keys:", list(request.FILES.keys()))
+                    print("DEBUG: document_files count:", len(document_files))
+                    print("DEBUG: parsed_details count:", len(parsed_details))
 
-                    print("DEBUG: Parsed details length:", len(parsed_details))
-                    print("DEBUG: Files length:", len(document_files))
-
-                    for item, doc_file in zip(parsed_details, document_files):
+                    file_index = 0
+                    for item in parsed_details:
                         debug_logs.append(f"Processing item: {item}")
                         document_type_id = item.get('document_type_id')
+                        has_file = item.get('has_file', False)
+
+                        # Get the next uploaded file only if this doc has one
+                        doc_file = None
+                        if has_file and file_index < len(document_files):
+                            doc_file = document_files[file_index]
+                            file_index += 1
+
                         try:
                             EmployeeDocumentInstance = EmployeeDocument.objects.create(
                                 organization=Organization.objects.get(id=organization_id),
                                 branch=Branch.objects.get(id=branch_id),
-                                employee_id= EmployeeInstance.id, # Ensure we pass ID or Object correctly
-                                document_type= Document.objects.get(id=document_type_id),
-                                document_number = item.get('document_number'),
-                                document_file = doc_file,
-                                document_path = "",
-                                valid_from= item.get('valid_from'),
-                                valid_to = item.get('valid_to'),
-                                created_by= data['created_by']
+                                employee_id=EmployeeInstance.id,
+                                document_type=Document.objects.get(id=document_type_id),
+                                document_number=item.get('document_number'),
+                                document_file=doc_file,
+                                document_path="",
+                                valid_from=item.get('valid_from'),
+                                valid_to=item.get('valid_to'),
+                                created_by=data.get('created_by')
                             )
-                            # Update path after save - Refresh to ensure file name includes upload_to prefix
-                            EmployeeDocumentInstance.refresh_from_db()
-                            EmployeeDocumentInstance.document_path = request.build_absolute_uri(EmployeeDocumentInstance.document_file.url)
-                            EmployeeDocumentInstance.save()
-                            debug_logs.append(f"Saved successfully: {EmployeeDocumentInstance.document_path}")
+                            if doc_file:
+                                EmployeeDocumentInstance.refresh_from_db()
+                                EmployeeDocumentInstance.document_path = request.build_absolute_uri(EmployeeDocumentInstance.document_file.url)
+                                EmployeeDocumentInstance.save()
+                            debug_logs.append(f"Saved doc type_id={document_type_id}, path={EmployeeDocumentInstance.document_path}")
                         except Exception as inner_e:
-                             print(f"Error saving doc: {inner_e}")
-                             debug_logs.append(f"Error: {str(inner_e)}")
+                            print(f"Error saving doc: {inner_e}")
+                            debug_logs.append(f"Error: {str(inner_e)}")
 
                 except Exception as e:
                     print(e)

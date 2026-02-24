@@ -421,7 +421,8 @@ export default function BasicTabs() {
           const formData = new FormData();
           formData.append("created_by", userId);
           const metadata = documentDetails.map((d) => {
-            if (d.documentFile instanceof File) {
+            const hasFile = d.documentFile instanceof File;
+            if (hasFile) {
               formData.append("document_files", d.documentFile);
             }
             // Map frontend camelCase to backend snake_case
@@ -432,6 +433,7 @@ export default function BasicTabs() {
               valid_from: d.validFrom || d.valid_from || null,
               valid_to: d.validTo || d.valid_to || null,
               is_active: d.enabled !== undefined ? d.enabled : (d.is_active !== undefined ? d.is_active : true),
+              has_file: hasFile,  // ✅ tells backend which rows have an uploaded file
               document_file: ""
             };
           });
@@ -826,7 +828,8 @@ export default function BasicTabs() {
           formData.append("created_by", userId);
           formData.append("updated_by", userId);
           const metadata = documentDetails.map((d) => {
-            if (d.documentFile instanceof File) {
+            const hasFile = d.documentFile instanceof File;
+            if (hasFile) {
               formData.append("document_files", d.documentFile);
             }
             // Map frontend camelCase to backend snake_case
@@ -837,6 +840,7 @@ export default function BasicTabs() {
               valid_from: d.validFrom || d.valid_from || null,
               valid_to: d.validTo || d.valid_to || null,
               is_active: d.enabled !== undefined ? d.enabled : (d.is_active !== undefined ? d.is_active : true),
+              has_file: hasFile,  // ✅ tells backend which rows have an uploaded file
               document_file: ""
             };
           });

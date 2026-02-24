@@ -2072,6 +2072,7 @@ const FeeCollection = () => {
   const [paidAmount, setPaidAmount] = useState(totalDues + totalOtherCharges);
   const [isUserInput, setIsUserInput] = useState(false);
   const [remark, setRemark] = useState("");
+  const [paymentRemark, setPaymentRemark] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [elementNameOptions, setElementNameOptions] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
@@ -2174,6 +2175,7 @@ const FeeCollection = () => {
     setShowModal(false);
     setElementNameOptions([]);
     setRemark("");
+    setPaymentRemark("");
 
     // Reset date if needed
     setSelectedDate(new Date());
@@ -2605,8 +2607,8 @@ const FeeCollection = () => {
     const receipt_date = dateRef.current.value;
     const reference_date = selectedDate.toISOString().slice(0, 10);
 
-    const student_fee_details_ids = selectedFeeDetails.map(
-      (x) => x.id ?? x.fee_detail_id
+    const student_fee_details_ids = selectedFeeDetails.flatMap(
+      (x) => x.all_ids || [x.id ?? x.fee_detail_id]
     );
 
     const exact = (key) => {
@@ -2754,6 +2756,7 @@ const FeeCollection = () => {
       readmission_fees: exact("readmission_fees"),
       discount_fee: exact("discount_fee"),
       check_bounce_fee: exact("check_bounce_fee"),
+      remarks: paymentRemark || "",
       payment_detail: payment_detail,
     };
 
@@ -2873,17 +2876,18 @@ const FeeCollection = () => {
     // PAYMENT DETAILS
     doc.autoTable({
       startY: doc.lastAutoTable.finalY + 8,
-      head: [["Payment Method", "Reference", "Amount"]],
+      head: [["Payment Method", "Reference", "Remark", "Amount"]],
       body: [
         [
           safe(data.payment_method),
           safe(data.payment_reference || "-"),
+          safe(data.remarks || "-"),
           Number(data.amount || 0).toFixed(2),
         ],
       ],
       theme: "grid",
       styles: { fontSize: 10 },
-      columnStyles: { 2: { halign: "right" } },
+      columnStyles: { 3: { halign: "right" } },
       margin: { left: 10 },
       tableWidth: 190,
     });
@@ -2938,6 +2942,7 @@ const FeeCollection = () => {
         .filter((d) => d.period === row.period && parseFloat(d.balance) > 0)
         .map((d) => ({
           id: d.id,
+          all_ids: d.all_ids || [d.id],
           period: d.period,
           element_name: d.element_name,
           period_id: d.period_id,
@@ -2984,6 +2989,7 @@ const FeeCollection = () => {
         ...prev,
         {
           id: item.id,
+          all_ids: item.all_ids || [item.id],
           period: row.period,
           element_name: item.element_name,
           period_id: item.period_id,
@@ -3005,6 +3011,7 @@ const FeeCollection = () => {
       if (!map[key]) {
         map[key] = {
           id: item.id,
+          all_ids: [item.id],
           period: item.semester,
           period_id: item.semester_id,
           element_name: item.element_name,
@@ -3012,6 +3019,7 @@ const FeeCollection = () => {
           paid_amount: Number(item.paid_amount) || 0,
         };
       } else {
+        map[key].all_ids.push(item.id);
         map[key].element_amount += Number(item.element_amount) || 0;
         map[key].paid_amount += Number(item.paid_amount) || 0;
       }
@@ -4006,6 +4014,21 @@ const FeeCollection = () => {
                         id="reference"
                         value={remark}
                         onChange={(e) => setRemark(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Remark */}
+                    <div className="col-md-3">
+                      <label htmlFor="paymentRemark" className="form-label">
+                        Remark
+                      </label>
+                      <textarea
+                        className="form-control detail"
+                        id="paymentRemark"
+                        rows="2"
+                        placeholder="Enter remark (optional)"
+                        value={paymentRemark}
+                        onChange={(e) => setPaymentRemark(e.target.value)}
                       />
                     </div>
                   </form>

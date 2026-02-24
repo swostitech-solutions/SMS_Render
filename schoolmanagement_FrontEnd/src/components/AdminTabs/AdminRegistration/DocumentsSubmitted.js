@@ -249,10 +249,10 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // ✅ Allow only image files
-    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    // ✅ Allow only image and PDF files
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
     if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, JPEG, and PNG image files are allowed.");
+      alert("Only JPG, JPEG, PNG, and PDF files are allowed.");
 
       // ❌ Clear file input
       e.target.value = "";
@@ -410,7 +410,7 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
                   <td>
                     <input
                       type="file"
-                      accept="image/png, image/jpeg, image/jpg"
+                      accept="image/png, image/jpeg, image/jpg, application/pdf"
                       // onChange={(e) =>
                       //   handleFileChange(index, e.target.files[0])
                       // }

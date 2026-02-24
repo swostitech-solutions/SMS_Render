@@ -15793,7 +15793,7 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                 payment_method_id = serializer.validated_data.get('payment_method_id')
                 # bank_id = serializer.validated_data.get('bank_id')
                 # account_number = serializer.validated_data.get('account_number')
-                remarks = serializer.validated_data.get('remarks')
+                remarks = serializer.validated_data.get('remarks', '')  # top-level remark field
                 # reference_date = serializer.validated_data.get('reference_date')
                 student_fee_details_ids = serializer.validated_data.get('student_fee_details_ids')
                 semester_ids = serializer.validated_data.get('semester_ids')
@@ -15812,7 +15812,7 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                 cheque_number = payment_detail.get("cheque_number")
                 cheque_bank_name = payment_detail.get("cheque_bank_name")
                 cheque_branch_name = payment_detail.get("cheque_branch_name")
-                remarks = payment_detail.get("remarks")
+                # remarks already extracted from top-level payload (line above)
                 reference_date = payment_detail.get("reference_date")
                 reference = payment_detail.get("reference")
                 total_amount = payment_detail.get("total_amount")
@@ -15900,7 +15900,7 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                     course=studentcourseInstance.course,
                     department=studentcourseInstance.department,
                     academic_year=studentcourseInstance.academic_year,
-                    semester=studentcourseInstance.semester,
+                    semester=semesterInstance,
                     # section = studentcourseInstance.semester,
                     # period_month = periodInstance,
                     receipt_date=receipt_date,
@@ -15913,7 +15913,7 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                     receipt_status="APPROVED",
                     cancellation_remarks="",
                     balance=total_amount,
-
+                    remarks=remarks or "",
                     created_by=login_id
 
                 )
@@ -16316,6 +16316,10 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                                             status=status.HTTP_404_NOT_FOUND)
                         paymentamount = studentFeedetailsInstance.element_amount - studentFeedetailsInstance.paid_amount
 
+                        # Skip items that are already fully paid
+                        if paymentamount <= 0:
+                            continue
+
                         if grand_Paid_Amount >= paymentamount:
                             studentFeedetailsInstance.paid_amount = paymentamount + studentFeedetailsInstance.paid_amount
                             # studentFeedetailsInstance.total_element_period_amount = studentFeedetailsInstance.element_amount
@@ -16336,17 +16340,18 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                             continue
 
                         if grand_Paid_Amount < paymentamount and grand_Paid_Amount != 0:
+                            actual_paid = grand_Paid_Amount  # save before modifying
                             studentFeedetailsInstance.paid_amount = studentFeedetailsInstance.paid_amount + grand_Paid_Amount
                             # studentFeedetailsInstance.total_element_period_amount = grand_Paid_Amount
                             # studentFeelateDetailsInstance.paid = "N"
                             studentFeedetailsInstance.save()
-                            # grand_Paid_Amount = grand_Paid_Amount - grand_Paid_Amount
+                            grand_Paid_Amount = 0
 
                             # Insert Record into StdFeeReceiptDetail
                             stdfeereceiptInstance = StudentFeeReceiptDetail.objects.create(
                                 receipt=StudentFeeReceiptHeaderInstance,
                                 fee_detail=studentFeedetailsInstance,
-                                amount=grand_Paid_Amount,
+                                amount=actual_paid,
                                 discount_amount=0,
                                 created_by=login_id
                             )
@@ -16460,7 +16465,8 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                     'payment_element_list': paid_element,
                     'total_academic_year_fees': total_amount,
                     'total_paid': total_paid_amount,
-                    'remaining_amount': remaining_amount
+                    'remaining_amount': remaining_amount,
+                    'remarks': StudentFeeReceiptHeaderInstance.remarks or '',
                 }
 
                 # print(grand_Paid_Amount)
@@ -17331,13 +17337,17 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                     # print(receiptdetailsrecords)
 
                     # Calculate total amount and discount for the current receipt
-                    if receiptdetailsrecords:
+                    if receiptdetailsrecords.exists():
                         receipt_total_amount = sum(detail.amount for detail in receiptdetailsrecords)
                         receipt_total_discount = sum(detail.discount_amount or 0 for detail in receiptdetailsrecords)
 
                         # Add totals to the overall totals
                         total_amount += receipt_total_amount
                         total_discount += receipt_total_discount
+
+                    # Fallback: if receipt details total is 0 or missing, use header's receipt_amount
+                    if total_amount == 0 and item.receipt_amount:
+                        total_amount = float(item.receipt_amount)
 
                     student_name = filter(None, [
                         # item.student.title,
@@ -17387,13 +17397,14 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                                 receipt_semester_description = first_detail.fee_detail.fee_applied_from.semester_description
                                 print(f"DEBUG: Using fee_applied_from (fallback): {receipt_semester_description}")
 
-                    # Fallback to student's current semester if receipt doesn't have semester info
+                    # Fallback to receipt header's semester, then student's current semester
                     if not receipt_semester_id:
-                        receipt_semester_id = studentcourseInstance.semester.id
-                        receipt_semester_description = studentcourseInstance.semester.semester_description
-                        print(f"DEBUG: Using fallback (student current semester): {receipt_semester_description}")
-                    else:
-                        print(f"DEBUG: Final semester for receipt {item.id}: {receipt_semester_description}")
+                        if item.semester:
+                            receipt_semester_id = item.semester.id
+                            receipt_semester_description = item.semester.semester_description
+                        else:
+                            receipt_semester_id = studentcourseInstance.semester.id
+                            receipt_semester_description = studentcourseInstance.semester.semester_description
 
                     # Make response data
                     responsedata.append({
@@ -17582,6 +17593,7 @@ class GetFeeReceiptBasedOnReceiptNo(ListAPIView):
                 'father_name': RegistrationInstance.father_name,
                 'payment_method': PaymentmethodInstance.payment_method,
                 'payment_reference': StudentPaymentInstance.payment_reference,
+                'remarks': StudentFeeReceiptHeaderInstance.remarks or '',
                 'amount': StudentPaymentInstance.amount,
                 'fee_semesters': sorted(set(fee_semesters)),
                 'payment_element_list': paid_element,

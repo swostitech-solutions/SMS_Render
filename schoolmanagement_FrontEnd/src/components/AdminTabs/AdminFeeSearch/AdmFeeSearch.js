@@ -1075,17 +1075,18 @@ const FeeSearchPage = () => {
           [
             data.payment_method,
             data.payment_reference || "-",
+            data.remarks || "-",
             data.amount.toFixed(2),
           ],
         ];
 
         doc.autoTable({
           startY: doc.lastAutoTable.finalY + 8,
-          head: [["Payment Method", "Payment Reference", "Amount"]],
+          head: [["Payment Method", "Payment Reference", "Remark", "Amount"]],
           body: paymentData,
           theme: "grid",
           styles: { fontSize: 11, fontStyle: "bold" },
-          columnStyles: { 2: { halign: "right" } },
+          columnStyles: { 3: { halign: "right" } },
           margin: { left: 15 },
           tableWidth: 180,
         });
