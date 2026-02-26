@@ -531,6 +531,9 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
                 if item.get('document_details_id') and int(item.get('document_details_id')) != 0
             }
 
+            # Track IDs of documents created during this request so they are never deactivated
+            newly_created_doc_ids = set()
+
             # Map existing docs by document_type_id for fast lookup
             doc_map = {doc.document_type_id: doc for doc in SCH_EMPLOYEE_DOCUMENTS_Records} if SCH_EMPLOYEE_DOCUMENTS_Records else {}
 
@@ -581,6 +584,7 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
                                 new_doc.refresh_from_db()
                                 new_doc.document_path = request.build_absolute_uri(new_doc.document_file.url)
                                 new_doc.save()
+                            newly_created_doc_ids.add(new_doc.document_id)  # protect from deactivation
                             debug_logs.append(f"Created new doc type_id={document_type_id}")
                         except Exception as inner_e:
                             print(f"Error creating new doc: {inner_e}")
@@ -623,6 +627,7 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
                                 EmployeeDocumentInstance.refresh_from_db()
                                 EmployeeDocumentInstance.document_path = request.build_absolute_uri(EmployeeDocumentInstance.document_file.url)
                                 EmployeeDocumentInstance.save()
+                            newly_created_doc_ids.add(EmployeeDocumentInstance.document_id)  # protect from deactivation
                             debug_logs.append(f"Saved doc type_id={document_type_id}, path={EmployeeDocumentInstance.document_path}")
                         except Exception as inner_e:
                             print(f"Error saving doc: {inner_e}")
@@ -634,13 +639,14 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
 
             # ✅ Deactivate any existing DB docs whose ID was NOT in the submitted list
             # (i.e. records the user removed from the UI)
-            # When all docs removed: submitted_doc_ids=set() → deactivates ALL active docs
+            # Exclude both pre-existing kept IDs AND any docs just created this request.
+            safe_ids = submitted_doc_ids | newly_created_doc_ids
             removed_qs = EmployeeDocument.objects.filter(
                 organization=organization_id,
                 branch=branch_id,
                 employee_id=employee_id,
                 is_active=True
-            ).exclude(document_id__in=submitted_doc_ids)
+            ).exclude(document_id__in=safe_ids)
             removed_count = removed_qs.count()
             removed_qs.update(is_active=False, updated_by=int(data.get('created_by') or 0) or None)
             debug_logs.append(f"Deactivated {removed_count} removed document(s)")

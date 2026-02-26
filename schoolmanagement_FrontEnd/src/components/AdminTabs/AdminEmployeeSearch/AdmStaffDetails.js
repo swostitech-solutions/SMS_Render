@@ -1124,7 +1124,11 @@ export default function BasicTabs() {
         </div>
       </div>
 
-      <Tabs value={value} onChange={handleChange}>
+      <Tabs
+        value={value}
+        onChange={() => {}}
+        sx={{ '& .MuiTab-root': { pointerEvents: 'none', cursor: 'default' } }}
+      >
         <Tab label="Staff Basic Info" {...a11yProps(0)} />
         <Tab label="Address" {...a11yProps(1)} />
         <Tab label="Documents" {...a11yProps(2)} />
