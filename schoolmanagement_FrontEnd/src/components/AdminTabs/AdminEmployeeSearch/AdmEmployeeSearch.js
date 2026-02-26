@@ -71,19 +71,29 @@ const AdmAttendanceEntry = () => {
 
   const filteredEmployeeData = useMemo(() => {
     if (!searchQuery) return employeeData;
-    const lowerQuery = searchQuery.toLowerCase();
+    const lowerQuery = searchQuery.toLowerCase().trim();
     return employeeData.filter((employee) => {
       const searchStr = `
         ${employee.employee_code || ""}
         ${formatEmployeeName(employee.employee_name) || ""}
-        ${employee.employee_type || ""}
         ${employee.date_of_birth || ""}
         ${employee.phone_number || ""}
         ${employee.email || ""}
         ${employee.date_of_joining || ""}
       `.toLowerCase();
 
-      return searchStr.includes(lowerQuery);
+      const empType = (employee.employee_type || "").toLowerCase();
+      let typeMatch = false;
+
+      // Handle the specific issue: searching "teaching" returns "non teaching"
+      if (lowerQuery.includes("teach") && !lowerQuery.includes("non")) {
+        // If query relates to 'teach' but not 'non', only match types that START with 'teach'
+        typeMatch = empType.startsWith("teach");
+      } else {
+        typeMatch = empType.includes(lowerQuery);
+      }
+
+      return searchStr.includes(lowerQuery) || typeMatch;
     });
   }, [employeeData, searchQuery]);
 

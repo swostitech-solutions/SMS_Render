@@ -1094,7 +1094,7 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Admission Type"
                         options={[
                           { value: "Regular", label: "Regular" },
-                          { value: "Lateral", label: "Lateral" },
+                          { value: "Irregular", label: "Irregular" },
                         ]}
                         value={
                           formData.admission_type
@@ -1209,7 +1209,7 @@ const AdmAttendanceEntry = ({
                       )}
                     </div>
 
-                    <div className="col-12 col-md-4 mb-2">
+                    {/* <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="house" className="form-label">
                         House
                       </label>
@@ -1258,7 +1258,7 @@ const AdmAttendanceEntry = ({
                           })
                         }
                       />
-                    </div>
+                    </div> */}
 
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="religion" className="form-label">

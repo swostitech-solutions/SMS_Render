@@ -271,7 +271,7 @@ const CreateAdminUser = () => {
                             <th scope="col">Role Name</th>
                             <th scope="col">User Name</th>
                             <th scope="col">Non Teaching Staff</th>
-                            <th scope="col">Modules Access</th>
+                            <th scope="col" style={{ width: "350px", maxWidth: "350px" }}>Modules Access</th>
                             <th scope="col">Actions</th>
                           </tr>
                         </thead>
@@ -287,7 +287,7 @@ const CreateAdminUser = () => {
                                     ? staffMap[role.reference_id] || "N/A"
                                     : "N/A"}
                                 </td>
-                                <td>
+                                <td style={{ maxWidth: "350px", whiteSpace: "normal", wordWrap: "break-word" }}>
                                   {formatModulesDisplay(role.accessible_modules)}
                                 </td>
                                 <td>
