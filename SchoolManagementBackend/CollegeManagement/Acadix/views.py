@@ -19254,10 +19254,12 @@ class AssignmentUpdateAPIView(UpdateAPIView):
                 instance.updated_by = updated_by
                 instance.is_active = True
 
-                instance.assignment_file_url = request.build_absolute_uri(
-                    instance.assignment_file.url) if instance.assignment_file else ''
+                instance.save()  # Save first so upload_to path is applied to assignment_file
 
-                instance.save()
+                # Now compute the absolute URL after save (so the full upload_to path is set)
+                if instance.assignment_file:
+                    instance.assignment_file_url = request.build_absolute_uri(instance.assignment_file.url)
+                    instance.save(update_fields=['assignment_file_url'])
 
             else:
                 return Response({'message': 'Assignment not found!!!'}, status=status.HTTP_400_BAD_REQUEST)
