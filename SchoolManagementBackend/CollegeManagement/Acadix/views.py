@@ -11083,6 +11083,8 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
         try:
             # Start a new atomic transaction
             with transaction.atomic():
+                profile_pic = None  # Initialize before multipart check
+                document_files = []
                 if request.content_type.startswith('multipart/form-data'):
                     data = request.POST.dict()  # Convert QueryDict to a mutable dictionary
                     # data = request.data['data']
@@ -11107,7 +11109,6 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
                     # for i in range(len(request.FILES.getlist('document_pic'))):
                     #     if request.FILES.getlist('document_pic')[i]:
                     #         document_files.append(request.FILES.getlist('document_pic')[i])
-                    document_files = []
                     for item, item_obj in request.FILES.items():
                         if item != 'profile_pic':
                             document_files.append(item_obj)
@@ -11157,7 +11158,9 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
                 first_name = student_basic_detail.get('first_name')
                 last_name = student_basic_detail.get('last_name')
                 date_of_birth = student_basic_detail.get('date_of_birth')
-                profile_pic = student_basic_detail.get('profile_pic')
+                # Only fall back to student_basic_detail if profile_pic wasn't received from FILES
+                if not profile_pic:
+                    profile_pic = student_basic_detail.get('profile_pic')
 
                 # Handle student aadhar no & email & registration_no
                 if registration_no:

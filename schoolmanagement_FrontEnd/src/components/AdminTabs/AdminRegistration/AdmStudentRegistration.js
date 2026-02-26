@@ -581,7 +581,6 @@ export default function BasicTabs() {
         user_name: formData.username,
         remarks: formData.remarks,
         referred_by: formData.referred_by,
-        profile_pic: null,
         father_name: formData.father_name,
         father_profession: formData.father_profession,
         father_contact_number: formData.father_contact_number,
