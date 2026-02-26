@@ -822,7 +822,8 @@ export default function BasicTabs() {
       }
 
       // ========== STEP 3: Update Documents (PUT) ==========
-      if (documentDetails && documentDetails.length > 0) {
+      // Always send the update even if list is empty — backend will deactivate removed docs
+      if (documentDetails !== null && documentDetails !== undefined) {
         try {
           const formData = new FormData();
           formData.append("created_by", userId);

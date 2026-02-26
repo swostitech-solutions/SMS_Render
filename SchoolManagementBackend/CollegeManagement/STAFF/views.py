@@ -523,6 +523,14 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
             else:
                 parsed_details = []
 
+            # Collect submitted document IDs (existing DB records the user wants to KEEP)
+            # New rows have document_details_id=0 so are excluded from this set intentionally
+            submitted_doc_ids = {
+                int(item.get('document_details_id'))
+                for item in parsed_details
+                if item.get('document_details_id') and int(item.get('document_details_id')) != 0
+            }
+
             # Map existing docs by document_type_id for fast lookup
             doc_map = {doc.document_type_id: doc for doc in SCH_EMPLOYEE_DOCUMENTS_Records} if SCH_EMPLOYEE_DOCUMENTS_Records else {}
 
@@ -623,7 +631,20 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
                 except Exception as e:
                     print(e)
                     debug_logs.append(f"Outer Error: {str(e)}")
-            
+
+            # ✅ Deactivate any existing DB docs whose ID was NOT in the submitted list
+            # (i.e. records the user removed from the UI)
+            # When all docs removed: submitted_doc_ids=set() → deactivates ALL active docs
+            removed_qs = EmployeeDocument.objects.filter(
+                organization=organization_id,
+                branch=branch_id,
+                employee_id=employee_id,
+                is_active=True
+            ).exclude(document_id__in=submitted_doc_ids)
+            removed_count = removed_qs.count()
+            removed_qs.update(is_active=False, updated_by=int(data.get('created_by') or 0) or None)
+            debug_logs.append(f"Deactivated {removed_count} removed document(s)")
+
             return Response({'message':'success','employee_id':EmployeeInstance.id, 'debug_logs': debug_logs},status=status.HTTP_200_OK)
         except ValidationError as e:
             # Rollback the transaction on validation error

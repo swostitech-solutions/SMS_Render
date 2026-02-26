@@ -418,6 +418,7 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
       // Otherwise map from API format
       return documentDetails.map((doc, index) => ({
         srNo: index + 1,
+        id: doc.document_id,          // ✅ preserve DB primary key for deletion
         documentType: doc.document_type_id,
         documentNumber: doc.document_number,
         documentFile: doc.document_path,
@@ -455,6 +456,7 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
         // Map from API format
         const mappedData = documentDetails.map((doc, index) => ({
           srNo: index + 1,
+          id: doc.document_id,          // ✅ preserve DB primary key for deletion
           documentType: doc.document_type_id,
           documentNumber: doc.document_number,
           documentFile: doc.document_path,
