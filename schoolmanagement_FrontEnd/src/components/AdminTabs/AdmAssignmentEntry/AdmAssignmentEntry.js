@@ -1812,7 +1812,7 @@ const AdmAttendanceEntry = () => {
                       <tr>
                         <th>Sr.No</th>
                         <th>Date</th>
-                        <th>Batch</th>
+                        <th>Session</th>
                         <th>Course</th>
                         <th>Department</th>
                         <th>Academic Year</th>

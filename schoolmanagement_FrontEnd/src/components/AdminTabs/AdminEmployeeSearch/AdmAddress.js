@@ -13,6 +13,9 @@ const ParentDetailsForm = ({
   addressFormData, // Data from parent to restore on tab return
 }) => {
   // State to store form values - initialize from parent data if available
+  // Validation errors for phone fields
+  const [phoneErrors, setPhoneErrors] = useState({ residencePhone: "", permanentPhone: "" });
+
   const [formValues, setFormValues] = useState(() => {
     if (addressFormData && addressFormData.formValues) {
       return addressFormData.formValues;
@@ -472,6 +475,14 @@ const ParentDetailsForm = ({
       if (!/^\d*$/.test(value)) return; // Block non-numeric characters
     }
 
+    // Show inline error for phone fields if not exactly 10 digits
+    if (id === "residencePhone" || id === "permanentPhone") {
+      setPhoneErrors((prev) => ({
+        ...prev,
+        [id]: value && value.length !== 10 ? "Phone number must be exactly 10 digits." : "",
+      }));
+    }
+
     setFormValues((prevValues) => ({
       ...prevValues,
       [id]: value,
@@ -876,11 +887,16 @@ const ParentDetailsForm = ({
                   <input
                     type="text"
                     id="residencePhone"
-                    className="form-control detail"
+                    className={`form-control detail${phoneErrors.residencePhone ? " is-invalid" : ""}`}
                     placeholder="Enter phone number"
                     value={formValues.residencePhone || ""}
                     onChange={handleInputChange}
                   />
+                  {phoneErrors.residencePhone && (
+                    <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
+                      {phoneErrors.residencePhone}
+                    </div>
+                  )}
                 </div>
                 <div className="col-12 mb-2">
                   <input
@@ -1006,12 +1022,17 @@ const ParentDetailsForm = ({
                   <input
                     type="text"
                     id="permanentPhone"
-                    className="form-control detail"
+                    className={`form-control detail${phoneErrors.permanentPhone ? " is-invalid" : ""}`}
                     placeholder="Enter phone number"
                     value={formValues.permanentPhone || ""}
                     onChange={handleInputChange}
                     disabled={formValues.sameAsResidence}
                   />
+                  {phoneErrors.permanentPhone && (
+                    <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
+                      {phoneErrors.permanentPhone}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

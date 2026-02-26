@@ -59,6 +59,10 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
     };
   });
 
+  // Validation errors for phone fields
+  const [phoneNumberError, setPhoneNumberError] = useState("");
+  const [emergencyContactError, setEmergencyContactError] = useState("");
+
   // Initialize frontCover from basicInfoData if available (must be a valid image URL)
   const [frontCover, setFrontCover] = useState(() => {
     if (
@@ -780,17 +784,26 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                         <input
                           type="text"
                           id="mobile-number"
-                          className="form-control detail"
+                          className={`form-control detail${phoneNumberError ? " is-invalid" : ""}`}
                           placeholder="Enter Mobile Number"
                           value={formData.phoneNumber}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              phoneNumber: e.target.value,
-                            })
-                          }
+                          maxLength={10}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            setFormData({ ...formData, phoneNumber: val });
+                            if (val && val.length !== 10) {
+                              setPhoneNumberError("Mobile number must be exactly 10 digits.");
+                            } else {
+                              setPhoneNumberError("");
+                            }
+                          }}
                         />
                       </div>
+                      {phoneNumberError && (
+                        <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
+                          {phoneNumberError}
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -804,17 +817,26 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                         <input
                           type="text"
                           id="emergency-contact-number"
-                          className="form-control detail"
+                          className={`form-control detail${emergencyContactError ? " is-invalid" : ""}`}
                           placeholder="Enter Emergency Contact Number"
                           value={formData.emergencyContactNumber}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              emergencyContactNumber: e.target.value,
-                            })
-                          }
+                          maxLength={10}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            setFormData({ ...formData, emergencyContactNumber: val });
+                            if (val && val.length !== 10) {
+                              setEmergencyContactError("Emergency contact must be exactly 10 digits.");
+                            } else {
+                              setEmergencyContactError("");
+                            }
+                          }}
                         />
                       </div>
+                      {emergencyContactError && (
+                        <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
+                          {emergencyContactError}
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">

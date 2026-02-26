@@ -965,7 +965,7 @@ const AdmAttendanceEntry = () => {
                   fontWeight: "700",
                 }}
               >
-                STUDENT CLASS
+                STUDENT COURSE
               </p>
 
               <div className="row mb-3 mt-3 mx-0">

@@ -444,6 +444,9 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
   // Key used to force-remount the file input (clears stale file name after Add)
   const [fileInputKey, setFileInputKey] = useState(0);
 
+  // Aadhaar validation error for document number field
+  const [docNumberError, setDocNumberError] = useState("");
+
   // Update tableData when documentDetails changes from parent (for edit mode)
   useEffect(() => {
     console.log("DocumentDetails received from parent:", documentDetails);
@@ -528,13 +531,47 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
     const updatedValue =
       type === "checkbox" ? checked : type === "file" ? files[0] : value;
 
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: updatedValue,
-    }));
+    setFormData((prevData) => {
+      const newData = { ...prevData, [name]: updatedValue };
+
+      // Aadhaar validation: clear error when switching away from Aadhaar or when number changes
+      if (name === "documentType" || name === "documentNumber") {
+        const checkType = name === "documentType" ? value : prevData.documentType;
+        const checkNumber = name === "documentNumber" ? value : prevData.documentNumber;
+        const selectedLabel =
+          documentTypes.find(
+            (d) => (d.value || "").toString() === (checkType || "").toString()
+          )?.label || "";
+        const isAadhaar = selectedLabel.toLowerCase().includes("aadh");
+        if (isAadhaar && name === "documentNumber") {
+          if (checkNumber && !/^\d{12}$/.test(checkNumber)) {
+            setDocNumberError("Aadhaar number must be exactly 12 digits.");
+          } else {
+            setDocNumberError("");
+          }
+        } else if (name === "documentType") {
+          setDocNumberError("");
+        }
+      }
+
+      return newData;
+    });
   };
 
   const handleAddRow = () => {
+    // Aadhaar card 12-digit validation
+    const selectedLabel =
+      documentTypes.find(
+        (d) => (d.value || "").toString() === (formData.documentType || "").toString()
+      )?.label || "";
+    if (selectedLabel.toLowerCase().includes("aadh")) {
+      if (!/^\d{12}$/.test(formData.documentNumber || "")) {
+        setDocNumberError("Aadhaar number must be exactly 12 digits.");
+        return;
+      }
+    }
+    setDocNumberError("");
+
     const newRow = { ...formData, srNo: tableData.length + 1 };
 
     const updatedTable = [...tableData, newRow];
@@ -659,11 +696,16 @@ const App = ({ goToTab, documentDetails, setRelationDetailsInParent, setDocument
                 <td>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control${docNumberError ? " is-invalid" : ""}`}
                     name="documentNumber"
                     value={formData.documentNumber}
                     onChange={handleInputChange}
                   />
+                  {docNumberError && (
+                    <div className="invalid-feedback" style={{ display: "block" }}>
+                      {docNumberError}
+                    </div>
+                  )}
                 </td>
                 <td>
                   <input
