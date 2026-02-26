@@ -1263,7 +1263,18 @@ class StudentTransportDetailsRetriveAPIView(RetrieveAPIView):
                 "route_name": routedetailsInstance.route_master.transport_name if routedetailsInstance else None,
                 "pickup_point_id": routedetailsInstance.pickup_point.id if routedetailsInstance else None,
                 "pickup_point_name": routedetailsInstance.pickup_point.pickup_point_name if routedetailsInstance else None,
-                "amount": routedetailsInstance.pickup_point.amount if routedetailsInstance else None,
+                # Use the actual saved transport fee amount from StudentFeeDetail (custom amount).
+                # Fall back to the pickup point's default only if no fee record exists yet.
+                "amount": (
+                    StudentFeeDetail.objects.filter(
+                        student=studentCourseInstance.student,
+                        element_name="Transport Fees",
+                        organization=studentCourseInstance.organization,
+                        branch=studentCourseInstance.branch,
+                        is_active=True
+                    ).order_by('-id').values_list('element_amount', flat=True).first()
+                    or (routedetailsInstance.pickup_point.amount if routedetailsInstance else None)
+                ),
                 "total_semesters": studentCourseInstance.course.total_semesters,
                 "transport_paid_sems":transport_paid_sems
             }

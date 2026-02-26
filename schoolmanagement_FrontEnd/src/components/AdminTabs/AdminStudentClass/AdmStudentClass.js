@@ -119,6 +119,9 @@ const AdmAttendanceEntry = () => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState("");
   const [selectedPickUpPoint, setSelectedPickUpPoint] = useState("");
+  // Skip auto-filling amount from pickup-point API on initial modal load
+  // (we already have the real saved amount from the transport retrieve API)
+  const skipAmountAutoFill = useRef(false);
 
   const [selectedAction, setSelectedAction] = useState(null);
   const [isTransportEditable, setIsTransportEditable] = useState(false);
@@ -426,6 +429,9 @@ const AdmAttendanceEntry = () => {
         setIsTransportAvailed(Boolean(transportData.transport_avail));
 
         // 🟢 Fee App From + Fee Group + Transport Data
+        // Mark that the NEXT pickup-point useEffect run should be skipped
+        // because we're about to populate the form with the real saved amount
+        skipAmountAutoFill.current = true;
         setFormData((prev) => ({
           ...prev,
           feeappfrom: s.fee_applied_from || "",
@@ -900,6 +906,11 @@ const AdmAttendanceEntry = () => {
 
   useEffect(() => {
     if (formData.routeid && formData.selectedPickUpPoint) {
+      // Skip once on initial form population — we already have the real saved amount
+      if (skipAmountAutoFill.current) {
+        skipAmountAutoFill.current = false;
+        return;
+      }
       const org = sessionStorage.getItem("organization_id");
       const branch = sessionStorage.getItem("branch_id");
       const token = localStorage.getItem("accessToken"); // ✅ Get token
