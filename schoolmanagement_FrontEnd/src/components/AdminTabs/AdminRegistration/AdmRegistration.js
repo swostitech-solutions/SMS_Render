@@ -499,8 +499,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       // Check space for at least the header + 1 row
       if (yPos > pageHeight - 22) {
         doc.addPage();
-        drawPageHeader();
-        yPos = 28;
+        yPos = 10;
       }
 
       // Section header bar
@@ -539,9 +538,6 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         showHead: "never",
         tableLineColor: borderRGB,
         tableLineWidth: 0.2,
-        didDrawPage: () => {
-          drawPageHeader();
-        },
       });
 
       yPos = doc.lastAutoTable.finalY + 3;
@@ -552,11 +548,10 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       const address = (student.addressDetails && student.addressDetails[0]) || {};
       const fee = (student.feeDetails && student.feeDetails[0]) || {};
 
-      // Ensure room for student header bar
-      if (idx > 0 && yPos > pageHeight - 35) {
+      // Every student starts on a fresh page (except the first)
+      if (idx > 0) {
         doc.addPage();
-        drawPageHeader();
-        yPos = 28;
+        yPos = 10;
       }
 
       // Student title bar
@@ -647,14 +642,6 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         ]);
       if (feeFields.length > 0) {
         addSection(doc, "FEE DETAILS", feeFields);
-      }
-
-      // Divider between students
-      if (idx < fullStudentData.length - 1 && yPos < pageHeight - 10) {
-        doc.setDrawColor(...borderRGB);
-        doc.setLineWidth(0.4);
-        doc.line(10, yPos, pageWidth - 10, yPos);
-        yPos += 6;
       }
     });
 

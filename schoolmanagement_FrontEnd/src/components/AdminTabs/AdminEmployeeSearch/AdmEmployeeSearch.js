@@ -241,8 +241,7 @@ const AdmAttendanceEntry = () => {
 
       if (yPos > pageHeight - 22) {
         doc.addPage();
-        drawPageHeader();
-        yPos = 28;
+        yPos = 10;
       }
 
       doc.setFillColor(...sectionBg);
@@ -279,19 +278,16 @@ const AdmAttendanceEntry = () => {
         showHead: "never",
         tableLineColor: borderRGB,
         tableLineWidth: 0.2,
-        didDrawPage: () => {
-          drawPageHeader();
-        },
       });
 
       yPos = doc.lastAutoTable.finalY + 3;
     };
 
     employeeData.forEach((employee, idx) => {
-      if (idx > 0 && yPos > pageHeight - 35) {
+      // Every employee starts on a fresh page (except the first)
+      if (idx > 0) {
         doc.addPage();
-        drawPageHeader();
-        yPos = 28;
+        yPos = 10;
       }
 
       // Employee title bar
@@ -322,14 +318,6 @@ const AdmAttendanceEntry = () => {
 
       if (allRows.length > 0) {
         addSection("EMPLOYEE INFORMATION", allRows);
-      }
-
-      // Divider between employees
-      if (idx < employeeData.length - 1 && yPos < pageHeight - 10) {
-        doc.setDrawColor(...borderRGB);
-        doc.setLineWidth(0.4);
-        doc.line(10, yPos, pageWidth - 10, yPos);
-        yPos += 6;
       }
     });
 

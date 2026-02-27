@@ -5596,6 +5596,16 @@ const BookForm = () => {
                   >
                     Close
                   </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger me-2"
+                    style={{
+                      width: "150px",
+                    }}
+                    onClick={() => navigate("/adm-bulk-book-upload")}
+                  >
+                    Bulk Upload
+                  </button>
                 </div>
               </div>
 

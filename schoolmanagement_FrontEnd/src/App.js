@@ -66,6 +66,7 @@ import StudentTransportFee from "./pages/AdminPanel/StudentTransportFee";
 import BookCategory from "./pages/AdminPanel/BookCategory";
 import BookSearch from "./pages/AdminPanel/BookSearch";
 import AdmBookMaster from "./components/AdminTabs/AdminBookSearch/AdmBookMaster";
+import BulkBookUpload from "./components/AdminTabs/AdminBookSearch/BulkBookUpload";
 import BookMovements from "./pages/AdminPanel/BookMovements";
 import IssuePage from "./components/AdminTabs/AdminBookMovements/IssuePage ";
 import PaymentDetails from "./components/AdminTabs/AdminFeeDashBoard/PaymentDetails";
@@ -419,6 +420,7 @@ function App() {
                 element={<AdmStudentRegistration />}
               />
               <Route path="/admbookMaster" element={<AdmBookMaster />} />
+              <Route path="/adm-bulk-book-upload" element={<BulkBookUpload />} />
               <Route
                 path="/admin/assignment-entry"
                 element={<AdmAssignmentEntry />}
