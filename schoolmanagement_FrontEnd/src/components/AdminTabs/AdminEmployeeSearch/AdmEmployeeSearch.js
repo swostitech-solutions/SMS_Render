@@ -5,6 +5,8 @@ import SelectStudentModal from "../AdminAttendanceEntry/SelectStudentModal";
 import Select from "react-select";
 import { ApiUrl } from "../../../ApiUrl";
 import ReactPaginate from "react-paginate";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AdmAttendanceEntry = () => {
 
@@ -145,6 +147,212 @@ const AdmAttendanceEntry = () => {
   const handleClose = () => {
     // Navigate back to admin dashboard or home
     navigate("/admin/dashboard");
+  };
+
+  const exportToPDF = () => {
+    if (!employeeData || employeeData.length === 0) {
+      alert("No employee data available to export!");
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const primaryRGB = [13, 110, 253];
+    const sectionBg = [33, 45, 62];
+    const labelBg = [232, 240, 255];
+    const borderRGB = [189, 208, 255];
+
+    const drawPageHeader = () => {
+      doc.setFillColor(...primaryRGB);
+      doc.rect(0, 0, pageWidth, 24, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("EMPLOYEE REGISTRATION REPORT", pageWidth / 2, 11, { align: "center" });
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+      doc.text(
+        `Generated: ${dateStr}  |  Total Employees: ${employeeData.length}`,
+        pageWidth / 2,
+        19,
+        { align: "center" }
+      );
+      doc.setDrawColor(...borderRGB);
+      doc.setLineWidth(0.5);
+      doc.line(0, 24, pageWidth, 24);
+    };
+
+    drawPageHeader();
+    let yPos = 28;
+
+    const KNOWN_FIELDS = [
+      ["employee_code", "Employee Code"],
+      ["employee_name", "Employee Name"],
+      ["employee_type", "Employee Type"],
+      ["date_of_birth", "Date of Birth"],
+      ["phone_number", "Mobile No"],
+      ["email", "Email"],
+      ["date_of_joining", "Date of Joining"],
+      ["gender", "Gender"],
+      ["gender_name", "Gender"],
+      ["aadhaar_no", "Aadhaar No"],
+      ["pan_no", "PAN No"],
+      ["blood_group", "Blood Group"],
+      ["nationality", "Nationality"],
+      ["religion", "Religion"],
+      ["caste", "Caste"],
+      ["designation", "Designation"],
+      ["department", "Department"],
+      ["department_name", "Department"],
+      ["qualification", "Qualification"],
+      ["experience", "Experience"],
+      ["salary", "Salary"],
+      ["bank_name", "Bank Name"],
+      ["account_number", "Account Number"],
+      ["ifsc_code", "IFSC Code"],
+      ["address", "Address"],
+      ["city", "City"],
+      ["state", "State"],
+      ["country", "Country"],
+      ["pincode", "Pincode"],
+      ["present_address", "Present Address"],
+      ["permanent_address", "Permanent Address"],
+      ["emergency_contact", "Emergency Contact"],
+      ["emergency_contact_name", "Emergency Contact Name"],
+      ["marital_status", "Marital Status"],
+      ["spouse_name", "Spouse Name"],
+      ["father_name", "Father Name"],
+      ["mother_name", "Mother Name"],
+      ["date_of_leaving", "Date of Leaving"],
+      ["leaving_reason", "Leaving Reason"],
+      ["status", "Status"],
+    ];
+
+    const EXCLUDE_KEYS = new Set(["id", "organization", "branch", "image", "photo", "profile_pic"]);
+    const knownKeySet = new Set(KNOWN_FIELDS.map(([k]) => k));
+
+    const addSection = (title, rows) => {
+      const filtered = rows.filter(([, v]) => v !== undefined && v !== null && v !== "");
+      if (filtered.length === 0) return;
+
+      if (yPos > pageHeight - 22) {
+        doc.addPage();
+        drawPageHeader();
+        yPos = 28;
+      }
+
+      doc.setFillColor(...sectionBg);
+      doc.rect(10, yPos, pageWidth - 20, 6, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, 14, yPos + 4.2);
+      yPos += 6;
+
+      const pairedRows = [];
+      for (let i = 0; i < filtered.length; i += 2) {
+        pairedRows.push([
+          filtered[i][0],
+          String(filtered[i][1] ?? "—"),
+          filtered[i + 1] ? filtered[i + 1][0] : "",
+          filtered[i + 1] ? String(filtered[i + 1][1] ?? "—") : "",
+        ]);
+      }
+
+      autoTable(doc, {
+        startY: yPos,
+        margin: { left: 10, right: 10, top: 28 },
+        body: pairedRows,
+        theme: "grid",
+        styles: { fontSize: 7.5, cellPadding: 1.8, valign: "middle", textColor: [33, 37, 41] },
+        columnStyles: {
+          0: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+          1: { cellWidth: 52 },
+          2: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+          3: { cellWidth: 52 },
+        },
+        tableWidth: pageWidth - 20,
+        showHead: "never",
+        tableLineColor: borderRGB,
+        tableLineWidth: 0.2,
+        didDrawPage: () => {
+          drawPageHeader();
+        },
+      });
+
+      yPos = doc.lastAutoTable.finalY + 3;
+    };
+
+    employeeData.forEach((employee, idx) => {
+      if (idx > 0 && yPos > pageHeight - 35) {
+        doc.addPage();
+        drawPageHeader();
+        yPos = 28;
+      }
+
+      // Employee title bar
+      doc.setFillColor(...primaryRGB);
+      doc.roundedRect(10, yPos, pageWidth - 20, 9, 1.5, 1.5, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      const empName = formatEmployeeName(employee.employee_name);
+      const titleText = `${idx + 1}. ${empName || "N/A"}   |   Code: ${employee.employee_code || "N/A"}   |   Type: ${employee.employee_type || "N/A"}`;
+      doc.text(titleText, 14, yPos + 6);
+      yPos += 12;
+
+      // Build rows from known fields present in this employee record
+      const mainRows = KNOWN_FIELDS
+        .filter(([k]) => k in employee && !EXCLUDE_KEYS.has(k))
+        .map(([k, label]) => [label, employee[k]]);
+
+      // Capture any extra fields not in KNOWN_FIELDS
+      const extraRows = Object.entries(employee)
+        .filter(([k]) => !knownKeySet.has(k) && !EXCLUDE_KEYS.has(k) && k !== "employee_type_id")
+        .map(([k, v]) => [
+          k.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+          v,
+        ]);
+
+      const allRows = [...mainRows, ...extraRows];
+
+      if (allRows.length > 0) {
+        addSection("EMPLOYEE INFORMATION", allRows);
+      }
+
+      // Divider between employees
+      if (idx < employeeData.length - 1 && yPos < pageHeight - 10) {
+        doc.setDrawColor(...borderRGB);
+        doc.setLineWidth(0.4);
+        doc.line(10, yPos, pageWidth - 10, yPos);
+        yPos += 6;
+      }
+    });
+
+    // Page numbers
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.2);
+      doc.line(10, pageHeight - 8, pageWidth - 10, pageHeight - 8);
+      doc.setFontSize(7);
+      doc.setTextColor(128, 128, 128);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Page ${i} of ${totalPages}  •  Acadix School Management System`,
+        pageWidth / 2,
+        pageHeight - 3,
+        { align: "center" }
+      );
+    }
+
+    const fileName = `Employee_Registration_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
   };
 
   const handleNew = () => {
@@ -333,6 +541,16 @@ const AdmAttendanceEntry = () => {
                     onClick={handleClose}
                   >
                     Close
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    style={{
+                      width: "150px",
+                    }}
+                    onClick={exportToPDF}
+                  >
+                    Export To PDF
                   </button>
                 </div>
               </div>
