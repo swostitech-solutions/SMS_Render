@@ -493,7 +493,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
     let yPos = 28;
 
     const addSection = (doc, title, rows) => {
-      const filtered = rows.filter(([, v]) => v !== undefined && v !== null && v !== "");
+      // Always show all fields; missing values display as —
+      const filtered = rows.map(([label, v]) => [label, (v !== undefined && v !== null && v !== "") ? v : "—"]);
       if (filtered.length === 0) return;
 
       // Check space for at least the header + 1 row
@@ -543,15 +544,91 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       yPos = doc.lastAutoTable.finalY + 3;
     };
 
+    // Helper: render a list section where each item is a numbered block of key-value rows
+    const addListSection = (doc, title, items, fieldExtractor) => {
+      if (!items || items.length === 0) {
+        // Still show the section title with "No records" note
+        if (yPos > pageHeight - 22) { doc.addPage(); yPos = 10; }
+        doc.setFillColor(...sectionBg);
+        doc.rect(10, yPos, pageWidth - 20, 6, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.text(title, 14, yPos + 4.2);
+        yPos += 6;
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 100, 100);
+        doc.setFont("helvetica", "italic");
+        doc.text("   No records found.", 14, yPos + 4);
+        yPos += 9;
+        return;
+      }
+      if (yPos > pageHeight - 22) { doc.addPage(); yPos = 10; }
+      doc.setFillColor(...sectionBg);
+      doc.rect(10, yPos, pageWidth - 20, 6, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, 14, yPos + 4.2);
+      yPos += 6;
+
+      items.forEach((item, i) => {
+        const rows = fieldExtractor(item, i);
+        const allRows = rows.map(([label, v]) => [label, (v !== undefined && v !== null && v !== "") ? String(v) : "—"]);
+        const pairedRows = [];
+        for (let r = 0; r < allRows.length; r += 2) {
+          pairedRows.push([
+            allRows[r][0], allRows[r][1],
+            allRows[r + 1] ? allRows[r + 1][0] : "",
+            allRows[r + 1] ? allRows[r + 1][1] : "",
+          ]);
+        }
+        // Sub-item label
+        if (yPos > pageHeight - 14) { doc.addPage(); yPos = 10; }
+        doc.setFillColor(210, 225, 255);
+        doc.rect(10, yPos, pageWidth - 20, 5, "F");
+        doc.setTextColor(13, 71, 161);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.text(`  Record ${i + 1}`, 14, yPos + 3.5);
+        yPos += 5;
+
+        autoTable(doc, {
+          startY: yPos,
+          margin: { left: 10, right: 10, top: 10 },
+          body: pairedRows,
+          theme: "grid",
+          styles: { fontSize: 7.5, cellPadding: 1.8, valign: "middle", textColor: [33, 37, 41] },
+          columnStyles: {
+            0: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+            1: { cellWidth: 52 },
+            2: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+            3: { cellWidth: 52 },
+          },
+          tableWidth: pageWidth - 20,
+          showHead: "never",
+          tableLineColor: borderRGB,
+          tableLineWidth: 0.2,
+        });
+        yPos = doc.lastAutoTable.finalY + 2;
+      });
+      yPos += 2;
+    };
+
     fullStudentData.forEach((student, idx) => {
       const basic = student.studentBasicDetails || {};
       const address = (student.addressDetails && student.addressDetails[0]) || {};
-      const fee = (student.feeDetails && student.feeDetails[0]) || {};
+      const siblings = student.sibilingsDetails || [];
+      const emergencyContacts = student.emegencyContact || [];
+      const authorizedPickups = student.authorizedpickup || [];
+      const documents = student.documentsDetails || [];
+      const prevEducations = student.previousEducationDetails || [];
+      const feeList = student.feeDetails || [];
 
-      // Every student starts on a fresh page (except the first)
+      // Add spacing between records; let content flow naturally
       if (idx > 0) {
-        doc.addPage();
-        yPos = 10;
+        yPos += 8;
+        if (yPos > pageHeight - 22) { doc.addPage(); yPos = 10; }
       }
 
       // Student title bar
@@ -565,27 +642,32 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       doc.text(sInfo, 14, yPos + 6);
       yPos += 12;
 
+      // 1. BASIC INFORMATION
       addSection(doc, "BASIC INFORMATION", [
         ["First Name", basic.first_name],
         ["Middle Name", basic.middle_name],
         ["Last Name", basic.last_name],
-        ["Registration No", basic.registration_no],
-        ["Admission No", basic.admission_no],
-        ["Gender", basic.gender_name],
         ["Date of Birth", basic.date_of_birth],
+        ["Gender", basic.gender_name],
+        ["Blood Group", basic.blood_name],
+        ["Nationality", basic.nationality_name],
+        ["Religion", basic.religion_name],
+        ["Category", basic.category_name],
+        ["Mother Tongue", basic.mother_tongue_name],
+        ["House", basic.house_name],
         ["Email", basic.email],
         ["Aadhaar No", basic.student_aadhaar_no],
-        ["Category", basic.category_name],
         ["Barcode", basic.barcode],
+        ["Enrollment No", basic.enrollment_no],
         ["Status", basic.status],
-        ["Mobile No", basic.mobile_no || basic.phone_number || basic.contact_number],
-        ["Blood Group", basic.blood_group],
-        ["Nationality", basic.nationality],
-        ["Religion", basic.religion],
-        ["Caste", basic.caste],
-        ["Sub Caste", basic.sub_caste],
+        ["Children in Family", basic.children_in_family],
+        ["Primary Guardian", basic.primary_guardian],
+        ["Username", basic.user_name],
+        ["Referred By", basic.referred_by],
+        ["Remarks", basic.remarks],
       ]);
 
+      // 2. ACADEMIC INFORMATION
       addSection(doc, "ACADEMIC INFORMATION", [
         ["Organization", basic.organization_description],
         ["Branch", basic.branch_name],
@@ -595,54 +677,96 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         ["Academic Year", basic.academic_year_description],
         ["Semester", basic.semester_description],
         ["Section", basic.section_name],
-        ["Admission Date", basic.admission_date],
-        ["School Adm No", basic.school_admission_no],
-        ["Previous School", basic.previous_school],
-        ["Previous Class", basic.previous_class],
-        ["Previous Percentage", basic.previous_percentage],
+        ["Admission No", basic.admission_no],
+        ["Registration No", basic.registration_no],
+        ["College Adm No", basic.college_admission_no],
+        ["Date of Admission", basic.date_of_admission],
+        ["Date of Join", basic.date_of_join],
+        ["Admission Type", basic.admission_type],
       ]);
 
+      // 3. PARENT / GUARDIAN INFORMATION
       addSection(doc, "PARENT / GUARDIAN INFORMATION", [
         ["Father Name", basic.father_name],
         ["Father Contact", basic.father_contact_number],
-        ["Father Aadhaar", basic.father_aadhaar_no],
-        ["Father Occupation", basic.father_occupation],
         ["Father Email", basic.father_email],
-        ["Father Income", basic.father_annual_income],
+        ["Father Aadhaar", basic.father_aadhaar_no],
+        ["Father Profession", basic.father_profession],
         ["Mother Name", basic.mother_name],
         ["Mother Contact", basic.mother_contact_number],
+        ["Mother Email", basic.mother_email],
         ["Mother Aadhaar", basic.mother_aadhaar_no],
-        ["Mother Occupation", basic.mother_occupation],
-        ["Guardian Name", basic.guardian_name],
-        ["Guardian Contact", basic.guardian_contact_number],
-        ["Guardian Relation", basic.guardian_relation],
+        ["Mother Profession", basic.mother_profession],
       ]);
 
-      const addrFields = [
+      // 4. ADDRESS INFORMATION
+      addSection(doc, "ADDRESS INFORMATION", [
         ["Present Address", address.present_address],
         ["Present City", address.present_city],
         ["Present State", address.present_state],
         ["Present Country", address.present_country],
         ["Present Pincode", address.present_pincode],
+        ["Present Phone", address.present_phone_number],
         ["Permanent Address", address.permanent_address],
         ["Permanent City", address.permanent_city],
         ["Permanent State", address.permanent_state],
         ["Permanent Country", address.permanent_country],
         ["Permanent Pincode", address.permanent_pincode],
-      ];
-      if (addrFields.some(([, v]) => v)) {
-        addSection(doc, "ADDRESS INFORMATION", addrFields);
-      }
+        ["Permanent Phone", address.permanent_phone_number],
+      ]);
 
-      const feeFields = Object.entries(fee)
-        .filter(([k]) => k !== "id" && k !== "student")
-        .map(([k, v]) => [
-          k.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-          v,
-        ]);
-      if (feeFields.length > 0) {
-        addSection(doc, "FEE DETAILS", feeFields);
-      }
+      // 5. FEE DETAILS (list)
+      addListSection(doc, "FEE DETAILS", feeList, (item) => [
+        ["Fee Group", item.fee_group],
+        ["Applied From Semester", item.semester],
+      ]);
+
+      // 6. SIBLING DETAILS (list)
+      addListSection(doc, "SIBLING DETAILS", siblings, (item) => [
+        ["Sibling Name", `${item.sibling_firstname || ""} ${item.sibling_lastname || ""}`.trim()],
+        ["College Adm No", item.college_admission_no],
+        ["Course", item.course_name],
+        ["Section", item.section_name],
+      ]);
+
+      // 7. EMERGENCY CONTACTS (list)
+      addListSection(doc, "EMERGENCY CONTACTS", emergencyContacts, (item) => [
+        ["Name", item.name],
+        ["Relationship", item.relationship],
+        ["Mobile Number", item.mobile_number],
+        ["Remark", item.remark],
+      ]);
+
+      // 8. AUTHORISED PICKUP (list)
+      addListSection(doc, "AUTHORISED PICKUP", authorizedPickups, (item) => [
+        ["Name", item.name],
+        ["Relationship", item.relationship],
+        ["Mobile Number", item.mobile_number],
+        ["Email", item.email],
+        ["Address", item.address],
+        ["Remark", item.remark],
+      ]);
+
+      // 9. DOCUMENTS SUBMITTED (list)
+      addListSection(doc, "DOCUMENTS SUBMITTED", documents, (item) => [
+        ["Document Type", item.document_type],
+        ["Document No", item.document_no],
+        ["Valid From", item.start_from],
+        ["Valid To", item.end_to],
+        ["Document URL", item.document_url],
+      ]);
+
+      // 10. PREVIOUS EDUCATION DETAILS (list)
+      addListSection(doc, "PREVIOUS EDUCATION DETAILS", prevEducations, (item) => [
+        ["Institution Name", item.name_of_institution],
+        ["Location", item.location],
+        ["Course Completed", item.course_completed],
+        ["Year From", item.year_from],
+        ["Year To", item.year_to],
+        ["Language of Instruction", item.language_of_instruction],
+        ["Transfer Certificate", item.transfer_certificate],
+        ["Result", item.result],
+      ]);
     });
 
     // Page numbers

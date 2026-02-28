@@ -12,6 +12,7 @@ const AdmAttendanceEntry = () => {
 
   const [employeeData, setEmployeeData] = useState([]);
   const [employeeTypeOptions, setEmployeeTypeOptions] = useState([]);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
   const navigate = useNavigate(); // Initialize the navigate function
   const [editData, setEditData] = useState(null);
   const [searchParams, setSearchParams] = useState({
@@ -149,198 +150,317 @@ const AdmAttendanceEntry = () => {
     navigate("/admin/dashboard");
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (!employeeData || employeeData.length === 0) {
       alert("No employee data available to export!");
       return;
     }
 
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+    setIsPdfLoading(true);
 
-    const primaryRGB = [13, 110, 253];
-    const sectionBg = [33, 45, 62];
-    const labelBg = [232, 240, 255];
-    const borderRGB = [189, 208, 255];
+    try {
+      const orgId = localStorage.getItem("orgId");
+      const branchId = localStorage.getItem("branchId");
 
-    const drawPageHeader = () => {
-      doc.setFillColor(...primaryRGB);
-      doc.rect(0, 0, pageWidth, 24, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("EMPLOYEE REGISTRATION REPORT", pageWidth / 2, 11, { align: "center" });
-      doc.setFontSize(7.5);
-      doc.setFont("helvetica", "normal");
-      const now = new Date();
-      const dateStr = now.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
-      doc.text(
-        `Generated: ${dateStr}  |  Total Employees: ${employeeData.length}`,
-        pageWidth / 2,
-        19,
-        { align: "center" }
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const primaryRGB = [13, 110, 253];
+      const sectionBg = [33, 45, 62];
+      const labelBg = [232, 240, 255];
+      const borderRGB = [189, 208, 255];
+
+      const drawPageHeader = () => {
+        doc.setFillColor(...primaryRGB);
+        doc.rect(0, 0, pageWidth, 24, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("EMPLOYEE REGISTRATION REPORT", pageWidth / 2, 11, { align: "center" });
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "normal");
+        const now = new Date();
+        const dateStr = now.toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+        doc.text(
+          `Generated: ${dateStr}  |  Total Employees: ${employeeData.length}`,
+          pageWidth / 2, 19, { align: "center" }
+        );
+        doc.setDrawColor(...borderRGB);
+        doc.setLineWidth(0.5);
+        doc.line(0, 24, pageWidth, 24);
+      };
+
+      let yPos = 28;
+      drawPageHeader();
+
+      // Helper: render key-value section (always show all fields with — for missing)
+      const addSection = (title, rows) => {
+        const allRows = rows.map(([label, v]) => [label, (v !== undefined && v !== null && v !== "") ? String(v) : "—"]);
+        if (allRows.length === 0) return;
+        if (yPos > pageHeight - 22) { doc.addPage(); yPos = 10; }
+        doc.setFillColor(...sectionBg);
+        doc.rect(10, yPos, pageWidth - 20, 6, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.text(title, 14, yPos + 4.2);
+        yPos += 6;
+        const pairedRows = [];
+        for (let i = 0; i < allRows.length; i += 2) {
+          pairedRows.push([
+            allRows[i][0], allRows[i][1],
+            allRows[i + 1] ? allRows[i + 1][0] : "",
+            allRows[i + 1] ? allRows[i + 1][1] : "",
+          ]);
+        }
+        autoTable(doc, {
+          startY: yPos,
+          margin: { left: 10, right: 10, top: 10 },
+          body: pairedRows,
+          theme: "grid",
+          styles: { fontSize: 7.5, cellPadding: 1.8, valign: "middle", textColor: [33, 37, 41] },
+          columnStyles: {
+            0: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+            1: { cellWidth: 52 },
+            2: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+            3: { cellWidth: 52 },
+          },
+          tableWidth: pageWidth - 20,
+          showHead: "never",
+          tableLineColor: borderRGB,
+          tableLineWidth: 0.2,
+        });
+        yPos = doc.lastAutoTable.finalY + 3;
+      };
+
+      // Helper: render a list section where each item = numbered block
+      const addListSection = (title, items, fieldExtractor) => {
+        if (yPos > pageHeight - 22) { doc.addPage(); yPos = 10; }
+        doc.setFillColor(...sectionBg);
+        doc.rect(10, yPos, pageWidth - 20, 6, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "bold");
+        doc.text(title, 14, yPos + 4.2);
+        yPos += 6;
+
+        if (!items || items.length === 0) {
+          doc.setFontSize(7.5);
+          doc.setTextColor(100, 100, 100);
+          doc.setFont("helvetica", "italic");
+          doc.text("   No records found.", 14, yPos + 4);
+          yPos += 9;
+          return;
+        }
+
+        items.forEach((item, i) => {
+          const rows = fieldExtractor(item, i).map(([label, v]) => [label, (v !== undefined && v !== null && v !== "") ? String(v) : "—"]);
+          const pairedRows = [];
+          for (let r = 0; r < rows.length; r += 2) {
+            pairedRows.push([rows[r][0], rows[r][1], rows[r + 1] ? rows[r + 1][0] : "", rows[r + 1] ? rows[r + 1][1] : ""]);
+          }
+          if (yPos > pageHeight - 14) { doc.addPage(); yPos = 10; }
+          doc.setFillColor(210, 225, 255);
+          doc.rect(10, yPos, pageWidth - 20, 5, "F");
+          doc.setTextColor(13, 71, 161);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text(`  Record ${i + 1}`, 14, yPos + 3.5);
+          yPos += 5;
+          autoTable(doc, {
+            startY: yPos,
+            margin: { left: 10, right: 10, top: 10 },
+            body: pairedRows,
+            theme: "grid",
+            styles: { fontSize: 7.5, cellPadding: 1.8, valign: "middle", textColor: [33, 37, 41] },
+            columnStyles: {
+              0: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+              1: { cellWidth: 52 },
+              2: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
+              3: { cellWidth: 52 },
+            },
+            tableWidth: pageWidth - 20,
+            showHead: "never",
+            tableLineColor: borderRGB,
+            tableLineWidth: 0.2,
+          });
+          yPos = doc.lastAutoTable.finalY + 2;
+        });
+        yPos += 2;
+      };
+
+      // ─── Single bulk API call — current filtered employees, all sections ───
+      const empIds = employeeData.map((e) => e.id).join(",");
+      const bulkRes = await fetch(
+        `${ApiUrl.apiurl}STAFF/AllEmployeeDetailsForPDF/?organization_id=${orgId}&branch_id=${branchId}&employee_ids=${empIds}`
       );
-      doc.setDrawColor(...borderRGB);
-      doc.setLineWidth(0.5);
-      doc.line(0, 24, pageWidth, 24);
-    };
+      if (!bulkRes.ok) throw new Error(`Bulk fetch failed: ${bulkRes.status}`);
+      const bulkJson = await bulkRes.json();
+      const allRecords = (bulkJson.message === "Success" && Array.isArray(bulkJson.data))
+        ? bulkJson.data
+        : [];
 
-    drawPageHeader();
-    let yPos = 28;
-
-    const KNOWN_FIELDS = [
-      ["employee_code", "Employee Code"],
-      ["employee_name", "Employee Name"],
-      ["employee_type", "Employee Type"],
-      ["date_of_birth", "Date of Birth"],
-      ["phone_number", "Mobile No"],
-      ["email", "Email"],
-      ["date_of_joining", "Date of Joining"],
-      ["gender", "Gender"],
-      ["gender_name", "Gender"],
-      ["aadhaar_no", "Aadhaar No"],
-      ["pan_no", "PAN No"],
-      ["blood_group", "Blood Group"],
-      ["nationality", "Nationality"],
-      ["religion", "Religion"],
-      ["caste", "Caste"],
-      ["designation", "Designation"],
-      ["department", "Department"],
-      ["department_name", "Department"],
-      ["qualification", "Qualification"],
-      ["experience", "Experience"],
-      ["salary", "Salary"],
-      ["bank_name", "Bank Name"],
-      ["account_number", "Account Number"],
-      ["ifsc_code", "IFSC Code"],
-      ["address", "Address"],
-      ["city", "City"],
-      ["state", "State"],
-      ["country", "Country"],
-      ["pincode", "Pincode"],
-      ["present_address", "Present Address"],
-      ["permanent_address", "Permanent Address"],
-      ["emergency_contact", "Emergency Contact"],
-      ["emergency_contact_name", "Emergency Contact Name"],
-      ["marital_status", "Marital Status"],
-      ["spouse_name", "Spouse Name"],
-      ["father_name", "Father Name"],
-      ["mother_name", "Mother Name"],
-      ["date_of_leaving", "Date of Leaving"],
-      ["leaving_reason", "Leaving Reason"],
-      ["status", "Status"],
-    ];
-
-    const EXCLUDE_KEYS = new Set(["id", "organization", "branch", "image", "photo", "profile_pic"]);
-    const knownKeySet = new Set(KNOWN_FIELDS.map(([k]) => k));
-
-    const addSection = (title, rows) => {
-      const filtered = rows.filter(([, v]) => v !== undefined && v !== null && v !== "");
-      if (filtered.length === 0) return;
-
-      if (yPos > pageHeight - 22) {
-        doc.addPage();
-        yPos = 10;
+      if (allRecords.length === 0) {
+        alert("No employee data returned from server.");
+        return;
       }
 
-      doc.setFillColor(...sectionBg);
-      doc.rect(10, yPos, pageWidth - 20, 6, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(7.5);
-      doc.setFont("helvetica", "bold");
-      doc.text(title, 14, yPos + 4.2);
-      yPos += 6;
+      for (let idx = 0; idx < allRecords.length; idx++) {
+        const record = allRecords[idx];
+        const b = record.basic || {};
+        const addr = record.address || {};
+        const relList = Array.isArray(record.family) ? record.family : [];
+        const eduList = Array.isArray(record.education) ? record.education : [];
+        const courseList = Array.isArray(record.courses) ? record.courses : [];
+        const expList = Array.isArray(record.experience) ? record.experience : [];
+        const docList = Array.isArray(record.documents) ? record.documents : [];
+        const langStr = record.language_code || "—";
 
-      const pairedRows = [];
-      for (let i = 0; i < filtered.length; i += 2) {
-        pairedRows.push([
-          filtered[i][0],
-          String(filtered[i][1] ?? "—"),
-          filtered[i + 1] ? filtered[i + 1][0] : "",
-          filtered[i + 1] ? String(filtered[i + 1][1] ?? "—") : "",
+        // Add spacing between records; let content flow naturally
+        if (idx > 0) {
+          yPos += 8;
+          if (yPos > pageHeight - 22) { doc.addPage(); yPos = 10; }
+        }
+
+        // ── Employee title bar ──
+        doc.setFillColor(...primaryRGB);
+        doc.roundedRect(10, yPos, pageWidth - 20, 9, 1.5, 1.5, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        const empName = formatEmployeeName(b.employee_name || `${b.first_name || ""} ${b.last_name || ""}`.trim());
+        const titleText = `${idx + 1}. ${empName || "N/A"}   |   Code: ${b.employee_code || "N/A"}   |   Type: ${b.employee_type || "N/A"}`;
+        doc.text(titleText, 14, yPos + 6);
+        yPos += 12;
+
+        // 1. BASIC INFORMATION
+        addSection("BASIC INFORMATION", [
+          ["Employee Code", b.employee_code],
+          ["Title", b.title],
+          ["First Name", b.first_name],
+          ["Middle Name", b.middle_name],
+          ["Last Name", b.last_name],
+          ["NUID", b.nuid],
+          ["Date of Birth", b.date_of_birth],
+          ["Place of Birth", b.place_of_birth],
+          ["Gender", b.gender],
+          ["Marital Status", b.marital_status],
+          ["Blood Group", b.blood_group],
+          ["Nationality", b.nationality],
+          ["Religion", b.religion],
+          ["Mother Tongue", b.mother_tongue],
+          ["Employee Type", b.employee_type],
+          ["Designation", b.designation],
+          ["Date of Joining", b.date_of_joining],
+          ["Date of Leaving", b.date_of_leaving],
+          ["Email", b.email],
+          ["Office Email", b.office_email],
+          ["Phone Number", b.phone_number],
+          ["Emergency Contact No", b.emergency_contact_number],
+          ["Highest Qualification", b.highest_qualification],
+          ["Status", b.is_active ? "ACTIVE" : "INACTIVE"],
+        ]);
+
+        // 2. ADDRESS INFORMATION
+        addSection("ADDRESS INFORMATION", [
+          ["Present Address", addr.present_address],
+          ["Present City", addr.present_city],
+          ["Present State", addr.present_state],
+          ["Present Country", addr.present_country],
+          ["Present Pincode", addr.present_pincode],
+          ["Present Phone", addr.present_phone_number],
+          ["Permanent Address", addr.permanent_address],
+          ["Permanent City", addr.permanent_city],
+          ["Permanent State", addr.permanent_state],
+          ["Permanent Country", addr.permanent_country],
+          ["Permanent Pincode", addr.permanent_pincode],
+          ["Permanent Phone", addr.permanent_phone_number],
+        ]);
+
+        // 3. FAMILY / RELATION DETAILS
+        addListSection("FAMILY / RELATION DETAILS", relList, (item) => [
+          ["Name", item.employee_relation_name],
+          ["Relation", item.employee_relation],
+          ["Date of Birth", item.relation_dob],
+          ["Gender", item.relation_gender],
+          ["Marital Status", item.relation_marital_status],
+          ["Employed", item.relation_employed],
+          ["Occupation", item.relation_occupation],
+          ["Dependent", item.relation_dependent === "T" ? "Yes" : item.relation_dependent === "F" ? "No" : item.relation_dependent],
+          ["PF Nominee", item.relation_pf_nominee === "T" ? "Yes" : item.relation_pf_nominee === "F" ? "No" : item.relation_pf_nominee],
+          ["PF Share %", item.relation_pf_share],
+        ]);
+
+        // 4. EDUCATIONAL DETAILS
+        addListSection("EDUCATIONAL DETAILS", eduList, (item) => [
+          ["Qualification", item.qualification],
+          ["Highest Qualification", item.highest_qualification],
+          ["University", item.university],
+          ["Institution", item.institution],
+          ["Year From", item.date_from ? String(item.date_from).split("-")[0] : ""],
+          ["Year To", item.date_to ? String(item.date_to).split("-")[0] : ""],
+          ["Marks / Division", item.marks],
+        ]);
+
+        // 5. COURSES / TRAINING DETAILS
+        addListSection("COURSES / TRAINING DETAILS", courseList, (item) => [
+          ["Course Name", item.course_name],
+          ["Course Place", item.course_place],
+          ["Date From", item.date_from],
+          ["Date To", item.date_to],
+          ["Valid Up To", item.valid_upto],
+          ["Grade / Result", item.course_results],
+        ]);
+
+        // 6. LANGUAGES KNOWN
+        addSection("LANGUAGES KNOWN", [
+          ["Languages", langStr],
+        ]);
+
+        // 7. PREVIOUS EXPERIENCE
+        addListSection("PREVIOUS EXPERIENCE", expList, (item) => [
+          ["Organization", item.previous_company_worked],
+          ["Date From", item.date_from],
+          ["Date To", item.date_to],
+          ["Reason for Leaving", item.reason_for_leaving],
+          ["Experience Letter", item.experience_letter_provided ? "Provided" : "Not Provided"],
+        ]);
+
+        // 8. DOCUMENT DETAILS
+        addListSection("DOCUMENT DETAILS", docList, (item) => [
+          ["Document Type", item.document_name],
+          ["Document Number", item.document_number],
+          ["Valid From", item.valid_from],
+          ["Valid To", item.valid_to],
+          ["Document URL", item.document_path],
         ]);
       }
 
-      autoTable(doc, {
-        startY: yPos,
-        margin: { left: 10, right: 10, top: 28 },
-        body: pairedRows,
-        theme: "grid",
-        styles: { fontSize: 7.5, cellPadding: 1.8, valign: "middle", textColor: [33, 37, 41] },
-        columnStyles: {
-          0: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
-          1: { cellWidth: 52 },
-          2: { fontStyle: "bold", fillColor: labelBg, cellWidth: 38, textColor: [13, 71, 161] },
-          3: { cellWidth: 52 },
-        },
-        tableWidth: pageWidth - 20,
-        showHead: "never",
-        tableLineColor: borderRGB,
-        tableLineWidth: 0.2,
-      });
-
-      yPos = doc.lastAutoTable.finalY + 3;
-    };
-
-    employeeData.forEach((employee, idx) => {
-      // Every employee starts on a fresh page (except the first)
-      if (idx > 0) {
-        doc.addPage();
-        yPos = 10;
+      // ── Footer: page numbers on every page ──
+      const totalPagesCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPagesCount; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.2);
+        doc.line(10, pageHeight - 8, pageWidth - 10, pageHeight - 8);
+        doc.setFontSize(7);
+        doc.setTextColor(128, 128, 128);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+          `Page ${i} of ${totalPagesCount}  •  Acadix School Management System`,
+          pageWidth / 2, pageHeight - 3, { align: "center" }
+        );
       }
 
-      // Employee title bar
-      doc.setFillColor(...primaryRGB);
-      doc.roundedRect(10, yPos, pageWidth - 20, 9, 1.5, 1.5, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "bold");
-      const empName = formatEmployeeName(employee.employee_name);
-      const titleText = `${idx + 1}. ${empName || "N/A"}   |   Code: ${employee.employee_code || "N/A"}   |   Type: ${employee.employee_type || "N/A"}`;
-      doc.text(titleText, 14, yPos + 6);
-      yPos += 12;
-
-      // Build rows from known fields present in this employee record
-      const mainRows = KNOWN_FIELDS
-        .filter(([k]) => k in employee && !EXCLUDE_KEYS.has(k))
-        .map(([k, label]) => [label, employee[k]]);
-
-      // Capture any extra fields not in KNOWN_FIELDS
-      const extraRows = Object.entries(employee)
-        .filter(([k]) => !knownKeySet.has(k) && !EXCLUDE_KEYS.has(k) && k !== "employee_type_id")
-        .map(([k, v]) => [
-          k.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-          v,
-        ]);
-
-      const allRows = [...mainRows, ...extraRows];
-
-      if (allRows.length > 0) {
-        addSection("EMPLOYEE INFORMATION", allRows);
-      }
-    });
-
-    // Page numbers
-    const totalPages = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.2);
-      doc.line(10, pageHeight - 8, pageWidth - 10, pageHeight - 8);
-      doc.setFontSize(7);
-      doc.setTextColor(128, 128, 128);
-      doc.setFont("helvetica", "normal");
-      doc.text(
-        `Page ${i} of ${totalPages}  •  Acadix School Management System`,
-        pageWidth / 2,
-        pageHeight - 3,
-        { align: "center" }
-      );
+      const fileName = `Employee_Registration_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(fileName);
+    } catch (err) {
+      console.error("PDF export error:", err);
+      alert("An error occurred while generating the PDF.");
+    } finally {
+      setIsPdfLoading(false);
     }
-
-    const fileName = `Employee_Registration_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
-    doc.save(fileName);
   };
 
   const handleNew = () => {
@@ -533,12 +653,11 @@ const AdmAttendanceEntry = () => {
                   <button
                     type="button"
                     className="btn btn-primary me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                     onClick={exportToPDF}
+                    disabled={isPdfLoading}
                   >
-                    Export To PDF
+                    {isPdfLoading ? "Generating..." : "Export To PDF"}
                   </button>
                 </div>
               </div>
