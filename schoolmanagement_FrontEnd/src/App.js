@@ -26,6 +26,7 @@ import ViewStudentAttendance from "./pages/StaffPannel/ViewStudentAttendance";
 import UploadAssignment from "./pages/StaffPannel/UploadAssignment";
 import HolidayCalender from "./pages/StaffPannel/HolidayCalender";
 import StaffDocumentUpload from "./pages/StaffPannel/DocumentUpload";
+import StaffCourseCompletionPage from "./pages/StaffPannel/StaffCourseCompletion";
 import HolidayList from "./pages/StudentPannel/HolidayList";
 import Assignment from "./pages/StudentPannel/Assignment";
 import LoginPage from "./pages/Login/LoginPage";
@@ -333,6 +334,10 @@ function App() {
               <Route
                 path="/staff/student-mentor-communication"
                 element={<StaffNewFollowUp />}
+              />
+              <Route
+                path="/staff/course-completion"
+                element={<StaffCourseCompletionPage />}
               />
               <Route
                 path="/staff/change-password"

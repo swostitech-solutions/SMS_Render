@@ -326,6 +326,7 @@ function Sidebar({ state, setState }) {
 
               { path: "/staff/exam-result", text: "Exam Result" },
               { path: "/staff/lesson-plan", text: "Lesson Plan" },
+              { path: "/staff/course-completion", text: "Course Completion" },
               { path: "/staff/change-password", text: "Change Password" },
             ])}
           </>
