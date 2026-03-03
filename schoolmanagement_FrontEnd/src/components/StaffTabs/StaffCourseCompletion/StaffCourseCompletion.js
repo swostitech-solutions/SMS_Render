@@ -90,6 +90,7 @@ const StaffCourseCompletion = () => {
       { header: "Taught Date", dataKey: "taught_date" },
       { header: "% Coverage", dataKey: "percentage_completed" },
       { header: "Remarks", dataKey: "remarks" },
+      { header: "Document", dataKey: "document_file" },
     ];
 
     const tableRows = lessonPlans.map((item, index) => ({
@@ -101,6 +102,7 @@ const StaffCourseCompletion = () => {
       taught_date: item.taught_date || "-",
       percentage_completed: item.percentage_completed != null ? `${item.percentage_completed}%` : "-",
       remarks: item.remarks || "-",
+      document_file: item.document_file ? "Uploaded" : "-",
     }));
 
     autoTable(doc, {
@@ -219,6 +221,7 @@ const StaffCourseCompletion = () => {
                           <th>Taught Date</th>
                           <th>% Course Coverage</th>
                           <th>Remarks</th>
+                          <th>Uploaded Document</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -244,6 +247,20 @@ const StaffCourseCompletion = () => {
                               )}
                             </td>
                             <td>{item.remarks || "-"}</td>
+                            <td className="text-center">
+                              {item.document_file ? (
+                                <a
+                                  href={item.document_file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary"
+                                >
+                                  View
+                                </a>
+                              ) : (
+                                <span className="text-muted">-</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>

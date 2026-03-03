@@ -360,6 +360,12 @@ const AdmTeacherLessonPlan = () => {
       return;
     }
 
+    const pct = parseFloat(percentage_completed);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      alert("% Course Coverage must be a number between 0 and 100.");
+      return;
+    }
+
     const userId = sessionStorage.getItem("userId");
     const orgId = sessionStorage.getItem("organization_id");
     const branchId = sessionStorage.getItem("branch_id");
@@ -721,16 +727,17 @@ const AdmTeacherLessonPlan = () => {
                             </td>
                             <td>
                               <input
-                                type="text"
+                                type="number"
+                                min="0"
+                                max="100"
                                 className="form-control"
                                 value={updatedData[index]?.percentage_completed || ""}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    index,
-                                    "percentage_completed",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 100)) {
+                                    handleInputChange(index, "percentage_completed", val);
+                                  }
+                                }}
                               />
                             </td>
                             <td>

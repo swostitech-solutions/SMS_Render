@@ -791,8 +791,22 @@ class LecturePlanCreateAPIView(CreateAPIView):
             for record in lecture_details_list:
 
                 try:
-                    SubjectTopicinstance = SubjectTopic.objects.get(
-                        topic_id=record['topic_id'], is_active=True)
+                    SubjectTopicinstance, _ = SubjectTopic.objects.get_or_create(
+                        topic_name=record['topic_name'],
+                        organization=organizationInstance,
+                        branch=branchInstance,
+                        batch=batchInstance,
+                        course=courseInstance,
+                        department=departmentInstance,
+                        academic_year=academicYearInstance,
+                        semester=semesterInstance,
+                        section=sectionInstance,
+                        subject=subject_instance,
+                        defaults={
+                            'is_active': True,
+                            'created_by': serializer.validated_data.get('created_by'),
+                        }
+                    )
                 except Exception as e:
                     return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1147,7 +1161,8 @@ class TeacherLessonPlanSearchCriteriaListAPIView(ListAPIView):
                             'proposedDate': item.proposed_date,
                             'taught_date': item.taught_date,
                             'percentage_completed': item.percentage_completed,
-                            'remarks': item.remarks
+                            'remarks': item.remarks,
+                            'document_file': request.build_absolute_uri(item.document_file) if item.document_file else None
                         }
 
                         ResponseData.append(data)

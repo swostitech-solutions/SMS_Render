@@ -399,7 +399,7 @@ const AdmLessonPlan = () => {
       lecture_details: validRows.map((row) => ({
         lecture_no: parseInt(row.lectureNo),
         module_no: parseInt(row.moduleNo),
-        topic_id: parseInt(row.topic),
+        topic_name: row.topic.trim(),
         propose_date: row.proposedDate,
       })),
       created_by: parseInt(userId),
@@ -661,38 +661,16 @@ const AdmLessonPlan = () => {
                               }
                             />
                           </td>
-                          {/* <td>
-                            <select
-                              className="detail"
-                              value={row.topic}
-                              onChange={(e) =>
-                                handleChange(index, "topic", e.target.value)
-                              }
-                              disabled={!selectedSubject}
-                            >
-                              {topicOptions.map((topic, i) => (
-                                <option key={i} value={topic.value}>
-                                  {topic.label}
-                                </option>
-                              ))}
-                            </select>
-                          </td> */}
-
                           <td>
-                            <select
-                              className="detail topic-select"
+                            <input
+                              type="text"
+                              className="form-control detail"
                               value={row.topic}
+                              placeholder="Enter topic"
                               onChange={(e) =>
                                 handleChange(index, "topic", e.target.value)
                               }
-                              disabled={!selectedSubject}
-                            >
-                              {topicOptions.map((topic, i) => (
-                                <option key={i} value={topic.value}>
-                                  {topic.label}
-                                </option>
-                              ))}
-                            </select>
+                            />
                           </td>
 
                           <td>
