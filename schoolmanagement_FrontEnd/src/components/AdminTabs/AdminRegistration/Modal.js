@@ -102,7 +102,7 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
     const semesterId = selectedSemester;
     const sectionId = selectedSectionFiltered;
 
-    // ✅ Validate required fields before calling API
+    // ✅ Validate required fields before calling API (section is optional)
     if (
       !organizationId ||
       !branchId ||
@@ -110,10 +110,10 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
       !courseId ||
       !departmentId ||
       !academicYearId ||
-      !semesterId ||
-      !sectionId
+      !semesterId
     ) {
-      console.warn("⚠️ Missing parameters — cannot fetch students yet.");
+      console.warn("⚠️ Missing required parameters — please select Session, Course, Department, Academic Year, and Semester.");
+      setStudentError("Please select Session, Course, Department, Academic Year, and Semester before searching.");
       return;
     }
 
@@ -124,8 +124,11 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      // ✅ Build dynamic API URL
-      const apiUrl = `${ApiUrl.apiurl}Filter/GetStudentBasedCourseSection/?organization_id=${organizationId}&branch_id=${branchId}&batch_id=${batchId}&course_ids=${courseId}&department_ids=${departmentId}&academic_year_id=${academicYearId}&semester_ids=${semesterId}&section_ids=${sectionId}`;
+      // ✅ Build dynamic API URL (section is optional)
+      let apiUrl = `${ApiUrl.apiurl}Filter/GetStudentBasedCourseSection/?organization_id=${organizationId}&branch_id=${branchId}&batch_id=${batchId}&course_ids=${courseId}&department_ids=${departmentId}&academic_year_id=${academicYearId}&semester_ids=${semesterId}`;
+      if (sectionId) {
+        apiUrl += `&section_ids=${sectionId}`;
+      }
 
       console.log("📡 Fetching Students from:", apiUrl);
 
@@ -155,10 +158,6 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
       setStudentLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchStudents();
-  }, [selectedClass, selectedSection]);
 
   const handleClear = () => {
     // ✅ Reset all dropdown selections
