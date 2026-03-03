@@ -12472,6 +12472,7 @@ class GetFeeStructureBySessionAPIView(ListAPIView):
                         'id': item.id,
                         'fee_structure_code': item.fee_structure_code,
                         'fee_structure_description': item.fee_structure_description,
+                        'batch_description': item.batch.batch_description if item.batch else '',
                         'course_name': item.course.course_name if item.course else '',
                         'department_description': item.department.department_description if item.department else '',
                         'academic_year_code': item.academic_year.academic_year_code if item.academic_year else '',
@@ -12484,6 +12485,33 @@ class GetFeeStructureBySessionAPIView(ListAPIView):
             else:
                 return Response({'message': 'No Record Found', 'data': []}, status=status.HTTP_200_OK)
 
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SoftDeleteFeeStructureMasterAPIView(APIView):
+    """
+    Soft-deletes a FeeStructureMaster by setting is_active=False.
+    Existing StudentCourse and StudentFeeDetail records linked to this fee structure
+    are NOT removed — students retain their fee records and dues history.
+    The fee structure is simply hidden from all future listings/assignments.
+    """
+    def patch(self, request, pk, *args, **kwargs):
+        try:
+            fee_structure = FeeStructureMaster.objects.get(id=pk, is_active=True)
+            fee_structure.is_active = False
+            if request.user and request.user.is_authenticated:
+                fee_structure.updated_by = request.user.id
+            fee_structure.save()
+            return Response(
+                {'message': 'Fee structure soft-deleted successfully.'},
+                status=status.HTTP_200_OK
+            )
+        except FeeStructureMaster.DoesNotExist:
+            return Response(
+                {'error': 'Fee structure not found or already deleted.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

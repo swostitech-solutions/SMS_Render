@@ -44,6 +44,7 @@ const [selectedSemesters, setSelectedSemesters] = useState([]);
   const [feeStructureSearchList, setFeeStructureSearchList] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchDone, setSearchDone] = useState(false);
+  const [deletingId, setDeletingId] = useState(null); // tracks which row is being soft-deleted
 
 
 
@@ -356,7 +357,13 @@ const handleBranchSelection = (id) => {
       );
       const result = await response.json();
       if (response.ok && result.message === "success" && Array.isArray(result.data)) {
-        setFeeStructureSearchList(result.data);
+        // Inject the selected session label so the Session column always displays correctly
+        const sessionLabel = selectedSessionForSearch.label;
+        const enrichedData = result.data.map((item) => ({
+          ...item,
+          batch_description: item.batch_description || sessionLabel,
+        }));
+        setFeeStructureSearchList(enrichedData);
       } else {
         setFeeStructureSearchList([]);
       }
@@ -369,6 +376,41 @@ const handleBranchSelection = (id) => {
     }
   };
 
+  // ===== SOFT DELETE HANDLER =====
+  const handleDeleteFeeStructure = async (id, code) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${code}"? This may cause data integrity issues for students linked to this fee structure.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(id);
+    try {
+      const response = await fetch(
+        `${ApiUrl.apiurl}FeeStructure/SoftDelete/${id}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        alert(`Fee structure "${code}" has been deleted successfully.`);
+        // Remove from local list so UI updates instantly
+        setFeeStructureSearchList((prev) => prev.filter((item) => item.id !== id));
+      } else {
+        alert(result.error || "Failed to delete fee structure. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting fee structure:", error);
+      alert("An error occurred while deleting. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div>
 
@@ -377,13 +419,22 @@ const handleBranchSelection = (id) => {
         <div className="col-12 mb-3 mt-3 d-flex flex-wrap gap-2">
           {/* Save button commented out — replaced by Search */}
           {/* <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave}>Save</button> */}
-          <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }} onClick={handleClear}>Clear</button>
+          {/* <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }} onClick={handleClear}>Clear</button> */}
+          <button
+            type="button"
+            className="btn btn-primary me-2"
+            style={{ width: "150px" }}
+            onClick={handleSearch}
+            disabled={searchLoading}
+          >
+            {searchLoading ? "Searching..." : "Search"}
+          </button>
           <button type="button" className="btn btn-danger me-2" style={{ width: "150px" }} onClick={() => navigate("/admin/dashboard")}>Close</button>
         </div>
       </div>
 
       <div className="row mt-3 mx-2">
-        <div className="card p-3">
+        <div style={{ border: "1px solid #ccc", padding: "20px", borderRadius: "5px", backgroundColor: "#fff", boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)", marginBottom: "20px" }}>
           <div className="row align-items-end g-3">
             <div className="col-md-4">
               <label className="form-label fw-bold">Session</label>
@@ -394,18 +445,6 @@ const handleBranchSelection = (id) => {
                 placeholder="Select Session"
                 classNamePrefix="session-select"
               />
-            </div>
-            <div className="col-md-2">
-              {/* Search button */}
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ width: "100%" }}
-                onClick={handleSearch}
-                disabled={searchLoading}
-              >
-                {searchLoading ? "Searching..." : "Search"}
-              </button>
             </div>
           </div>
         </div>
@@ -419,6 +458,7 @@ const handleBranchSelection = (id) => {
                 <thead className="table-primary">
                   <tr>
                     <th>Sr. No.</th>
+                    <th>Session</th>
                     <th>Fee Structure Code</th>
                     <th>Fee Structure Description</th>
                     <th>Course</th>
@@ -426,12 +466,14 @@ const handleBranchSelection = (id) => {
                     <th>Academic Year</th>
                     <th>Semester</th>
                     <th>Version</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {feeStructureSearchList.map((item, index) => (
                     <tr key={item.id}>
                       <td>{index + 1}</td>
+                      <td>{item.batch_description || item.batch_name || item.session || "-"}</td>
                       <td>{item.fee_structure_code}</td>
                       <td>{item.fee_structure_description}</td>
                       <td>{item.course_name}</td>
@@ -439,6 +481,16 @@ const handleBranchSelection = (id) => {
                       <td>{item.academic_year_code || item.academic_year_description}</td>
                       <td>{item.semester_description}</td>
                       <td>{item.version_no}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteFeeStructure(item.id, item.fee_structure_code)}
+                          disabled={deletingId === item.id}
+                        >
+                          {deletingId === item.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
