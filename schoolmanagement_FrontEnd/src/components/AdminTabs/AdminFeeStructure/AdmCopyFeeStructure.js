@@ -465,7 +465,6 @@ const handleBranchSelection = (id) => {
                     <th>Department</th>
                     <th>Academic Year</th>
                     <th>Semester</th>
-                    <th>Version</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -480,7 +479,6 @@ const handleBranchSelection = (id) => {
                       <td>{item.department_description || "-"}</td>
                       <td>{item.academic_year_code || item.academic_year_description}</td>
                       <td>{item.semester_description}</td>
-                      <td>{item.version_no}</td>
                       <td>
                         <button
                           type="button"
