@@ -427,7 +427,7 @@ export default function BasicTabs() {
             }
             // Map frontend camelCase to backend snake_case
             return {
-              document_details_id: d.id || d.document_details_id || 0,
+              document_details_id: d.id || d.document_id || d.document_details_id || 0,
               document_type_id: d.documentType || d.document_type_id || "",
               document_number: d.documentNumber || d.document_number || "",
               valid_from: d.validFrom || d.valid_from || null,
@@ -835,7 +835,7 @@ export default function BasicTabs() {
             }
             // Map frontend camelCase to backend snake_case
             return {
-              document_details_id: d.id || d.document_details_id || 0,
+              document_details_id: d.id || d.document_id || d.document_details_id || 0,
               document_type_id: d.documentType || d.document_type_id || "",
               document_number: d.documentNumber || d.document_number || "",
               valid_from: d.validFrom || d.valid_from || null,
@@ -1146,7 +1146,7 @@ export default function BasicTabs() {
         <AdmAddress goToTab={goToTab} addressDetails={addressDetails} setDocumentDetailsInParent={setDocumentDetails} setAddressFormDataInParent={setAddressFormData} addressFormData={addressFormData} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        <DocumentDetails goToTab={goToTab} documentDetails={documentDetails} setRelationDetailsInParent={setRelationDetails} setDocumentDetails={setDocumentDetails} />
+        <DocumentDetails goToTab={goToTab} documentDetails={documentDetails} setDocumentDetails={setDocumentDetails} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={3}>
         <FamilyDetails goToTab={goToTab} relationDetails={relationDetails} setEducationDetailsInParent={setEducationData} setRelationDetails={setRelationDetails} />

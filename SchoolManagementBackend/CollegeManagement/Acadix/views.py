@@ -10964,8 +10964,7 @@ class UtilityGroupMixin:
 
     def documentsDetailsProcess(self, request, documentsDetails, instance, document_files):
         try:
-            count = 0
-            for documents in documentsDetails:
+            for idx, documents in enumerate(documentsDetails):
                 document_no = documents.get('document_no')
                 document_type = documents.get('document_type')
 
@@ -10973,10 +10972,10 @@ class UtilityGroupMixin:
                 if not document_no and not document_type:
                     continue
 
-                if count < len(document_files):
-                    document_pic = document_files[count]
-                else:
-                    document_pic = None
+                # Look up file by its exact position index (matches frontend's document_pic[${idx}])
+                # This correctly handles gaps where some rows have no file
+                document_pic = request.FILES.get(f'document_pic[{idx}]')
+
                 start_from = documents.get('start_from')
                 end_to = documents.get('end_to')
 
@@ -11001,7 +11000,6 @@ class UtilityGroupMixin:
                 if document_pic:
                     StudentDocumentData.document_url = request.build_absolute_uri(StudentDocumentData.document_pic.url)
                     StudentDocumentData.save()
-                count = count + 1
                 # if document_files:
                 #     for document_file in document_files:
                 #         i=0
@@ -11432,7 +11430,7 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
                 else:
                     authorizedpickup = []
                 # check if DocumentDetails
-                if document_detail and len(document_detail) > 0 and len(document_files) > 0:
+                if document_detail and len(document_detail) > 0:
                     self.documentsDetailsProcess(request, document_detail, student_instance, document_files)
                 else:
                     documentsDetails = []
@@ -12204,10 +12202,57 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                     AuthorisedPickup.objects.filter(student=instance.id, is_active=True).update(is_active=False)
                     self.authorizedpickupProcess(authorized_pickup, instance)
 
-                # documentsDetails process
-                if document_detail and len(document_detail):
-                    StudentDocument.objects.filter(student=instance.id, is_active=True).update(is_active=False)
-                    self.documentsDetailsProcess(request, document_detail, instance, document_files)
+                # documentsDetails process – smart ID-based diff:
+                # 1) Deactivate any doc NOT in the submitted list (handles remove-all + partial remove)
+                # 2) Keep existing docs (preserves images)
+                # 3) Create only genuinely new docs (those without an id)
+                submitted_doc_ids = [
+                    int(d.get('id')) for d in document_detail
+                    if d.get('id') is not None
+                ]
+                StudentDocument.objects.filter(
+                    student=instance.id, is_active=True
+                ).exclude(id__in=submitted_doc_ids).update(is_active=False)
+
+                for idx, doc in enumerate(document_detail):
+                    doc_no = doc.get('document_no', '')
+                    doc_type = doc.get('document_type', '')
+                    doc_id = doc.get('id')
+
+                    # Skip completely empty rows
+                    if not doc_no and not doc_type:
+                        continue
+
+                    start_from = doc.get('start_from')
+                    end_to = doc.get('end_to')
+
+                    if doc_id:
+                        # Existing doc – just refresh metadata, image is untouched
+                        StudentDocument.objects.filter(
+                            id=doc_id, student=instance, is_active=True
+                        ).update(
+                            document_no=doc_no,
+                            document_type=doc_type,
+                            start_from=start_from,
+                            end_to=end_to,
+                        )
+                    else:
+                        # New doc – look up file by position index (matches frontend's document_pic[${idx}])
+                        doc_pic = request.FILES.get(f'document_pic[{idx}]')
+                        new_doc = StudentDocument.objects.create(
+                            student=instance,
+                            document_no=doc_no,
+                            document_type=doc_type,
+                            document_pic=doc_pic,
+                            document_url="",
+                            start_from=start_from,
+                            end_to=end_to,
+                            created_by=instance.created_by,
+                            updated_by=instance.created_by,
+                        )
+                        if doc_pic:
+                            new_doc.document_url = request.build_absolute_uri(new_doc.document_pic.url)
+                            new_doc.save()
 
                 # previousEducationDetails process
                 if previous_education_detail:

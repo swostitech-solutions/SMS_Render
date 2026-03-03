@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import "./AdmOtherDetails.css";
 import { ApiUrl } from "../../../ApiUrl";
 
-const AdmOtherDetails = ({ formData, setFormData }) => {
-  const { id } = useParams();
+const AdmOtherDetails = ({ formData, setFormData, isDataLoading }) => {
   const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Initialize documentsDetails if not already set
+  // Only initialize an empty row AFTER parent has finished loading AND no docs exist
   useEffect(() => {
+    if (isDataLoading) return; // wait for parent fetch to finish
     if (!formData.documentsDetails || formData.documentsDetails.length === 0) {
       setFormData((prevData) => ({
         ...prevData,
@@ -19,118 +18,15 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
             document_no: "",
             document_type: "",
             document_pic: "",
+            preview_url: "",
             start_from: "",
             end_to: "",
           },
         ],
       }));
     }
-  }, [formData, setFormData]);
-
-  useEffect(() => {
-    const fetchStudentDetails = async () => {
-      try {
-        // ✅ Get organization_id and branch_id from sessionStorage
-        const organization_id = sessionStorage.getItem("organization_id") || 1;
-        const branch_id = sessionStorage.getItem("branch_id") || 1;
-        const token = localStorage.getItem("accessToken"); // ✅ token
-
-        // ✅ Construct the new API URL
-        const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetStudentDetailsBasedOnId/?organization_id=${organization_id}&branch_id=${branch_id}&student_id=${id}`;
-
-        console.log("📡 Fetching Document Details from:", apiUrl);
-
-        // ✅ Main API call with token
-        const response = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (data?.data?.documents_details) {
-          const documentsDetails = await Promise.all(
-            data.data.documents_details.map(async (doc) => {
-              // ✅ Use absolute URL if only relative path provided
-              const previewUrl =
-                doc.document_url || `${ApiUrl.apiurl}${doc.document_pic || ""}`;
-
-              let base64Preview = "";
-
-              if (previewUrl) {
-                try {
-                  // ✅ Fetch document file with token
-                  const fileRes = await fetch(previewUrl, {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  });
-
-                  // ✅ Check if file exists before processing
-                  if (fileRes.ok) {
-                    const blob = await fileRes.blob();
-
-                    // ✅ Convert image blob to base64 for preview
-                    base64Preview = await new Promise((resolve) => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => resolve(reader.result);
-                      reader.readAsDataURL(blob);
-                    });
-
-                    // ✅ Store file info in sessionStorage
-                    sessionStorage.setItem("document_pic_base64", base64Preview);
-                    sessionStorage.setItem(
-                      "document_pic_name",
-                      doc.document_type || "document"
-                    );
-                    sessionStorage.setItem("document_pic_type", blob.type);
-                  } else {
-                    console.warn(
-                      `⚠️ Document file not found (${fileRes.status}): ${previewUrl}`
-                    );
-                  }
-                } catch (err) {
-                  console.warn("⚠️ Failed to load document_pic:", err);
-                }
-              }
-
-              return {
-                document_no: doc.document_no || "",
-                document_type: doc.document_type || "",
-                document_url:
-                  doc.document_url && doc.document_url.startsWith("http")
-                    ? doc.document_url
-                    : doc.document_pic
-                    ? `${ApiUrl.apiurl.replace(/\/$/, "")}${doc.document_pic}`
-                    : "",
-                preview_url:
-                  doc.document_url && doc.document_url.startsWith("http")
-                    ? doc.document_url
-                    : doc.document_pic
-                    ? `${ApiUrl.apiurl.replace(/\/$/, "")}${doc.document_pic}`
-                    : "",
-                start_from: doc.start_from || "",
-                end_to: doc.end_to || "",
-              };
-            })
-          );
-
-          // ✅ Update formData with processed documents
-          setFormData((prev) => ({
-            ...prev,
-            documentsDetails,
-          }));
-        }
-      } catch (err) {
-        console.error("❌ Error fetching student details:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) fetchStudentDetails();
-  }, [id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDataLoading]);
 
   // Fetch document types
   useEffect(() => {
@@ -207,6 +103,13 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
   };
 
   const handleRemoveRow = (index) => {
+    const row = formData.documentsDetails[index];
+    // If the row has a saved doc (has a server-side id), confirm before removing
+    if (row.id) {
+      if (!window.confirm("Remove this document? This will permanently delete it when you click Update.")) {
+        return;
+      }
+    }
     setFormData((prev) => ({
       ...prev,
       documentsDetails: prev.documentsDetails.filter((_, i) => i !== index),
@@ -306,7 +209,7 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
       .catch((error) => console.error("Error:", error));
   };
 
-  if (loading) {
+  if (loading || isDataLoading) {
     return <div>Loading...</div>;
   }
 

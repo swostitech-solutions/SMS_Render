@@ -1891,6 +1891,7 @@ class AuthorisedPickupDetailsSerializer(serializers.ModelSerializer):
 
 class StudentDocumentDetailsSerializer(serializers.ModelSerializer):
     # Make all fields optional
+    id = serializers.IntegerField(required=False, allow_null=True)  # writable so it passes through validated_data
     document_no = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     document_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     

@@ -49,7 +49,7 @@ function a11yProps(index) {
 export default function BasicTabs() {
   const { id } = useParams();
   const location = useLocation();
-  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(!!id);
 
   const [value, setValue] = React.useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -468,6 +468,7 @@ export default function BasicTabs() {
                 }
 
                 return {
+                  id: d.id || null,
                   document_no: d.document_no || "",
                   document_type: d.document_type || "",
                   document_pic: fullUrl || "",
@@ -860,14 +861,13 @@ export default function BasicTabs() {
 
       // ✅ Proper document and education mapping
       const document_detail = JSON.stringify(
-        formData.documentsDetails?.length
-          ? formData.documentsDetails.map((d) => ({
-            document_no: d.document_no || "",
-            document_type: d.document_type || "",
-            start_from: d.start_from || null,
-            end_to: d.end_to || null,
-          }))
-          : []
+        (formData.documentsDetails || []).map((d) => ({
+          id: d.id || null,
+          document_no: d.document_no || "",
+          document_type: d.document_type || "",
+          start_from: d.start_from || null,
+          end_to: d.end_to || null,
+        }))
       );
 
       const previous_education_detail = JSON.stringify(
@@ -1121,7 +1121,7 @@ export default function BasicTabs() {
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 6 : 7}>
-        <DocumentsSubmitted formData={formData} setFormData={setFormData} />
+        <DocumentsSubmitted formData={formData} setFormData={setFormData} isDataLoading={isDataLoading} />
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 7 : 8}>
