@@ -248,6 +248,58 @@ export default function BasicTabs() {
   }, []);
 
   // ============================================
+  // Shared validation for Basic Info required fields
+  // ============================================
+  const validateBasicInfo = () => {
+    if (!basicInfoData) {
+      alert("❌ Please complete the Staff Basic Info tab first!");
+      return false;
+    }
+    const b = basicInfoData;
+    if (!b.employeeCode || !b.employeeCode.trim()) {
+      alert("❌ Employee Code is required.");
+      return false;
+    }
+    if (!b.firstName || !b.firstName.trim()) {
+      alert("❌ Employee First Name is required.");
+      return false;
+    }
+    if (!b.dob) {
+      alert("❌ Date of Birth is required.");
+      return false;
+    }
+    if (!b.gender) {
+      alert("❌ Gender is required.");
+      return false;
+    }
+    if (!b.nationality) {
+      alert("❌ Nationality is required.");
+      return false;
+    }
+    if (!b.religion) {
+      alert("❌ Religion is required.");
+      return false;
+    }
+    if (!b.motherTongue) {
+      alert("❌ Mother Tongue is required.");
+      return false;
+    }
+    if (!b.employeeType) {
+      alert("❌ Employee Type is required.");
+      return false;
+    }
+    if (!b.phoneNumber || !b.phoneNumber.trim()) {
+      alert("❌ Mobile Number is required.");
+      return false;
+    }
+    if (!/^\d{10}$/.test(b.phoneNumber)) {
+      alert("❌ Mobile Number must be exactly 10 digits.");
+      return false;
+    }
+    return true;
+  };
+
+  // ============================================
   // PHASE 1: CREATION (POST) - For NEW Staff
   // ============================================
   const handleSave = async () => {
@@ -257,15 +309,12 @@ export default function BasicTabs() {
       return;
     }
 
+    // Validate required Basic Info fields
+    if (!validateBasicInfo()) return;
+
     const userId = sessionStorage.getItem("userId");
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
-
-    // Validation: Basic Info is required
-    if (!basicInfoData) {
-      alert("❌ Please complete the Staff Basic Info tab first!");
-      return;
-    }
 
     if (!userId) {
       alert("❌ User session expired. Please login again.");
@@ -665,6 +714,9 @@ export default function BasicTabs() {
       alert("⚠️ Cannot use Update for new records. Please use Save button.");
       return;
     }
+
+    // Validate required Basic Info fields
+    if (!validateBasicInfo()) return;
 
     const employeeId = localStorage.getItem("employeeId");
     const employeeTypeId = localStorage.getItem("employeeTypeId");

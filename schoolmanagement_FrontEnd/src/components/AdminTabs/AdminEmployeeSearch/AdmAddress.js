@@ -537,12 +537,6 @@ const ParentDetailsForm = ({
         return;
       }
 
-      // Validate required fields
-      if (!tempFormData.phoneNumber || tempFormData.phoneNumber.trim() === "") {
-        alert("Phone number is required! Please go back to Basic Info and fill it.");
-        return;
-      }
-
       // CHECK IF WE'RE IN EDIT MODE OR CREATE MODE
       let employee_id = localStorage.getItem("employeeId");
       let employee_type_id = tempFormData.employeeType;

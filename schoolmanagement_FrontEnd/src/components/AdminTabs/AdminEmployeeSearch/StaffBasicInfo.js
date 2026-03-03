@@ -63,15 +63,18 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
   const [phoneNumberError, setPhoneNumberError] = useState("");
   const [emergencyContactError, setEmergencyContactError] = useState("");
 
-  // Initialize frontCover from basicInfoData if available (must be a valid image URL)
+  // Initialize frontCover from basicInfoData if available
+  // Priority: preview from new upload > existing DB path
   const [frontCover, setFrontCover] = useState(() => {
-    if (
-      basicInfoData &&
-      basicInfoData.profilePicture &&
-      typeof basicInfoData.profilePicture === 'string' &&
-      (basicInfoData.profilePicture.startsWith('data:') || basicInfoData.profilePicture.startsWith('http'))
-    ) {
-      return basicInfoData.profilePicture;
+    if (basicInfoData) {
+      // profilePicturePreview holds the base64 of a newly uploaded pic
+      if (basicInfoData.profilePicturePreview && typeof basicInfoData.profilePicturePreview === 'string') {
+        return basicInfoData.profilePicturePreview;
+      }
+      const picUrl = basicInfoData.profile_photo_path || basicInfoData.profilePicture;
+      if (picUrl && typeof picUrl === 'string' && picUrl.length > 0) {
+        return picUrl;
+      }
     }
     return null;
   });
@@ -118,9 +121,12 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
       setFormData(basicInfoData);
 
       // Update profile picture preview if available
-      if (basicInfoData.profile_photo_path || basicInfoData.profilePicture) {
+      // Priority: preview from new upload > existing DB path
+      if (basicInfoData.profilePicturePreview && typeof basicInfoData.profilePicturePreview === 'string') {
+        setFrontCover(basicInfoData.profilePicturePreview);
+      } else if (basicInfoData.profile_photo_path || basicInfoData.profilePicture) {
         const picUrl = basicInfoData.profile_photo_path || basicInfoData.profilePicture;
-        if (typeof picUrl === 'string' && (picUrl.startsWith('data:') || picUrl.startsWith('http'))) {
+        if (typeof picUrl === 'string' && picUrl.length > 0) {
           setFrontCover(picUrl);
         }
       }
@@ -247,15 +253,17 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFrontCover(reader.result); // Preview as base64
+        const base64 = reader.result;
+        setFrontCover(base64); // Preview as base64
+        // Also persist the preview in formData so parent stores it
+        // and it can be restored when user navigates back to this tab
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: file,
+          profilePicturePreview: base64,
+        }));
       };
       reader.readAsDataURL(file);
-
-      // If needed, store the actual file to upload later
-      setFormData((prev) => ({
-        ...prev,
-        profilePicture: file,
-      }));
     }
   };
 
@@ -303,6 +311,18 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
 
     if (missingFields.length > 0) {
       alert(`Please fill in: ${missingFields.join(", ")}`);
+      return;
+    }
+
+    // Validate Mobile Number
+    if (!formData.phoneNumber || formData.phoneNumber.trim() === "") {
+      alert("Mobile Number is required.");
+      setPhoneNumberError("Mobile Number is required.");
+      return;
+    }
+    if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      alert("Mobile Number must be exactly 10 digits.");
+      setPhoneNumberError("Mobile Number must be exactly 10 digits.");
       return;
     }
 
@@ -849,7 +869,7 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                         className="form-control detail"
                       />
 
-                      {frontCover && (typeof frontCover === 'string') && (frontCover.startsWith('data:') || frontCover.startsWith('http')) && (
+                      {frontCover && typeof frontCover === 'string' && frontCover.length > 0 && (
                         <Image
                           src={frontCover}
                           alt="Front Cover Preview"

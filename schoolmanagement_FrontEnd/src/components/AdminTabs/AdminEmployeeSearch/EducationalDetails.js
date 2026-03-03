@@ -89,6 +89,31 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
       return;
     }
 
+    if (!formData.university.trim()) {
+      alert("Please enter University.");
+      return;
+    }
+
+    if (!formData.institution.trim()) {
+      alert("Please enter Institution.");
+      return;
+    }
+
+    if (formData.div === "" || formData.div === null || formData.div === undefined) {
+      alert("Please enter Div%.");
+      return;
+    }
+    const divVal = parseFloat(formData.div);
+    if (isNaN(divVal) || divVal < 0 || divVal > 100) {
+      alert("Div% must be a number between 0 and 100.");
+      return;
+    }
+
+    if (!formData.highestQualification) {
+      alert("Please select Highest Qualification.");
+      return;
+    }
+
     // Add the form data to the end of the list
     const updatedList = [...dataList, formData];
     setDataList(updatedList);
@@ -199,11 +224,11 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
             <tr>
               <th>Sr.No</th>
               <th>Qualification</th>
-              <th>Year From</th>
-              <th>Year To</th>
+              <th style={{ minWidth: "100px" }}>Year From</th>
+              <th style={{ minWidth: "100px" }}>Year To</th>
               <th>University</th>
               <th>Institution</th>
-              <th>Div%</th>
+              <th style={{ minWidth: "85px" }}>Div%</th>
               <th>Highest Qualification</th>
               <th></th>
             </tr>
@@ -253,20 +278,38 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
               </td>
               <td>
                 <input
-                  type="text"
+                  type="number"
                   className="form-control"
                   name="yearFrom"
                   value={formData.yearFrom}
-                  onChange={handleChange}
+                  min="1900"
+                  max="9999"
+                  placeholder="e.g. 2020"
+                  style={{ minWidth: "90px" }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || (val.length <= 4 && /^\d+$/.test(val))) {
+                      handleChange(e);
+                    }
+                  }}
                 />
               </td>
               <td>
                 <input
-                  type="text"
+                  type="number"
                   className="form-control"
                   name="yearTo"
                   value={formData.yearTo}
-                  onChange={handleChange}
+                  min="1900"
+                  max="9999"
+                  placeholder="e.g. 2024"
+                  style={{ minWidth: "90px" }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || (val.length <= 4 && /^\d+$/.test(val))) {
+                      handleChange(e);
+                    }
+                  }}
                 />
               </td>
               <td>
@@ -289,11 +332,20 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
               </td>
               <td>
                 <input
-                  type="text"
+                  type="number"
                   className="form-control"
                   name="div"
                   value={formData.div}
-                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                  placeholder="0-100"
+                  style={{ minWidth: "75px" }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 100)) {
+                      handleChange(e);
+                    }
+                  }}
                 />
               </td>
               <td>
