@@ -1526,7 +1526,7 @@ const FeeSearchPage = () => {
                               </a>
                             </td>
 
-                            <td>{receipt.cancellation_remarks}</td>
+                            <td>{receipt.remarks || receipt.cancellation_remarks || "-"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1984,8 +1984,8 @@ const FeeSearchPage = () => {
                             <td>{receipt.amount}</td>
                             <td>{receipt.discount_amount}</td>
                             <td>RC{receipt.receipt_no}</td>
-                            <td>{receipt.cancellation_remarks}</td>
-                            <td>{receipt.payment_reference}</td>
+                            <td>{receipt.cancellation_remarks || "-"}</td>
+                            <td>{receipt.remarks || "-"}</td>
                           </tr>
                         ))}
                       </tbody>

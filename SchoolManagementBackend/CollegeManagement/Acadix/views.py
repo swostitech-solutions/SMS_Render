@@ -12441,6 +12441,53 @@ class GetFeeStructureMasterBasedOnAcademicYear(ListAPIView):
         )
 
 
+class GetFeeStructureBySessionAPIView(ListAPIView):
+    """
+    Returns all fee structures for a given session (batch).
+    Query params: batch_id, organization_id, branch_id
+    """
+    def list(self, request, *args, **kwargs):
+        try:
+            batch_id = request.query_params.get('batch_id')
+            organization_id = request.query_params.get('organization_id')
+            branch_id = request.query_params.get('branch_id')
+
+            if not batch_id or not organization_id or not branch_id:
+                return Response(
+                    {'message': 'batch_id, organization_id and branch_id are required.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            fee_structures = FeeStructureMaster.objects.filter(
+                batch=batch_id,
+                organization=organization_id,
+                branch=branch_id,
+                is_active=True
+            ).select_related('course', 'department', 'academic_year', 'semester')
+
+            if fee_structures.exists():
+                responsedata = []
+                for item in fee_structures:
+                    responsedata.append({
+                        'id': item.id,
+                        'fee_structure_code': item.fee_structure_code,
+                        'fee_structure_description': item.fee_structure_description,
+                        'course_name': item.course.course_name if item.course else '',
+                        'department_description': item.department.department_description if item.department else '',
+                        'academic_year_code': item.academic_year.academic_year_code if item.academic_year else '',
+                        'academic_year_description': item.academic_year.academic_year_description if item.academic_year else '',
+                        'semester_description': item.semester.semester_description if item.semester else '',
+                        'version_no': item.version_no,
+                        'enabled': item.enabled,
+                    })
+                return Response({'message': 'success', 'data': responsedata}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'No Record Found', 'data': []}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # class StudentFilterListAPIView(ListAPIView):
 #     serializer_class = StudentFilterSerializer
 #
@@ -17480,6 +17527,7 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                         # 'payment_reference': item.payment_reference,
 
                         'cancellation_remarks': item.cancellation_remarks,
+                        'remarks': item.remarks or '',
                         'receiptDate': item.receipt_date,
                         'receipt_date': item.receipt_date,  # Frontend looks for 'receipt_date' (lowercase)
                         'amount': total_amount,

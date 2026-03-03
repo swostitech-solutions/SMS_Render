@@ -336,6 +336,7 @@ urlpatterns = [
          name='feestructureDetailsList'),
     path('api/FeeStructure/GetFeeStructureBasedOnAcademicYear/<int:academic_year_id>/',
          views.GetFeeStructureMasterBasedOnAcademicYear.as_view(), name='findfeestructuretlistBasedOnAcademic'),
+    path('api/FeeStructure/GetFeeStructureBySession/', views.GetFeeStructureBySessionAPIView.as_view(), name='GetFeeStructureBySession'),
     # path('api/Filter/GetFilterSTUDENTList/<int:student_id>/<int:school_admission_no>/<str:barcodeno>', views.StudentFilterListAPIView.as_view(), name='studentGetlist'),
 
     path('api/FeeStructureDetails/GetFeeStructureBasedOnStudent/', views.GetStudentFeeDetailListAPIView.as_view(),
