@@ -7,6 +7,7 @@ import { ApiUrl } from "../../../ApiUrl";
 import ReactPaginate from "react-paginate";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const AdmAttendanceEntry = () => {
 
@@ -463,8 +464,92 @@ const AdmAttendanceEntry = () => {
     }
   };
 
+  const exportToExcel = async () => {
+    if (!employeeData || employeeData.length === 0) {
+      alert("No data available to export!");
+      return;
+    }
+
+    try {
+      const orgId = localStorage.getItem("orgId");
+      const branchId = localStorage.getItem("branchId");
+      const empIds = employeeData.map((e) => e.id).join(",");
+
+      const bulkRes = await fetch(
+        `${ApiUrl.apiurl}STAFF/AllEmployeeDetailsForPDF/?organization_id=${orgId}&branch_id=${branchId}&employee_ids=${empIds}`
+      );
+      if (!bulkRes.ok) throw new Error(`Bulk fetch failed: ${bulkRes.status}`);
+      const bulkJson = await bulkRes.json();
+      const allRecords = (bulkJson.message === "Success" && Array.isArray(bulkJson.data))
+        ? bulkJson.data
+        : [];
+
+      if (allRecords.length === 0) {
+        alert("No employee data returned from server.");
+        return;
+      }
+
+      const rows = allRecords.map((record, index) => {
+        const b = record.basic || {};
+        const addr = record.address || {};
+        const relList = Array.isArray(record.family) ? record.family : [];
+        const langStr = record.language_code || "";
+
+        const row = {
+          SerialNo: index + 1,
+          // ── BASIC INFORMATION ──
+          EmployeeCode: b.employee_code || "",
+          Title: b.title || "",
+          FirstName: b.first_name || "",
+          MiddleName: b.middle_name || "",
+          LastName: b.last_name || "",
+          NUID: b.nuid || "",
+          DateOfBirth: b.date_of_birth || "",
+          PlaceOfBirth: b.place_of_birth || "",
+          Gender: b.gender || "",
+          MaritalStatus: b.marital_status || "",
+          BloodGroup: b.blood_group || "",
+          Nationality: b.nationality || "",
+          Religion: b.religion || "",
+          MotherTongue: b.mother_tongue || "",
+          EmployeeType: b.employee_type || "",
+          Designation: b.designation || "",
+          DateOfJoining: b.date_of_joining || "",
+          DateOfLeaving: b.date_of_leaving || "",
+          Email: b.email || "",
+          OfficeEmail: b.office_email || "",
+          PhoneNumber: b.phone_number || "",
+          EmergencyContactNo: b.emergency_contact_number || "",
+          Status: b.is_active ? "ACTIVE" : "INACTIVE",
+          // ── ADDRESS INFORMATION ──
+          PresentAddress: addr.present_address || "",
+          PresentCity: addr.present_city || "",
+          PresentState: addr.present_state || "",
+          PresentCountry: addr.present_country || "",
+          PresentPincode: addr.present_pincode || "",
+          PresentPhone: addr.present_phone_number || "",
+          PermanentAddress: addr.permanent_address || "",
+          PermanentCity: addr.permanent_city || "",
+          PermanentState: addr.permanent_state || "",
+          PermanentCountry: addr.permanent_country || "",
+          PermanentPincode: addr.permanent_pincode || "",
+          PermanentPhone: addr.permanent_phone_number || "",
+        };
+
+        return row;
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "EmployeeData");
+      XLSX.writeFile(workbook, `Employee_Registration_Data_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) {
+      console.error("Excel export error:", err);
+      alert("An error occurred while generating the Excel file.");
+    }
+  };
+
   const handleNew = () => {
-    // Clear any existing employee data from localStorage
     localStorage.removeItem("employeeId");
     localStorage.removeItem("employeeType");
     localStorage.removeItem("employeeTypeId");
@@ -649,6 +734,14 @@ const AdmAttendanceEntry = () => {
                     onClick={handleClose}
                   >
                     Close
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    style={{ width: "150px" }}
+                    onClick={exportToExcel}
+                  >
+                    Export To Excel
                   </button>
                   <button
                     type="button"

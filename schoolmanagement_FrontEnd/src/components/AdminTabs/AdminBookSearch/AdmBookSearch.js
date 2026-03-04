@@ -604,6 +604,11 @@ const AdmBookSearch = () => {
           );
         }
 
+        // Sort by accession no (bookBarcode) descending
+        filteredData = filteredData.sort((a, b) =>
+          String(b.bookBarcode || "").localeCompare(String(a.bookBarcode || ""), undefined, { numeric: true, sensitivity: "base" })
+        );
+
         setTableData(filteredData); // Set filtered data
         setShowTable(true); // Show table
         setError(""); // Clear any previous errors

@@ -118,6 +118,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         ${basic.section_name || ""}
         ${basic.father_name || ""}
         ${basic.mother_name || ""}
+        ${basic.religion_name || ""}
         ${basic.barcode || ""}
         ${basic.category_name || ""}
       `.toLowerCase();
@@ -1300,6 +1301,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           <th scope="col">Section</th>
                           <th scope="col">Father's Name</th>
                           <th scope="col">Mother's Name</th>
+                          <th scope="col">Religion</th>
+                          <th scope="col">Address</th>
                           <th scope="col">Barcode</th>
                           <th scope="col">Category</th>
                           <th scope="col">Action</th>
@@ -1329,6 +1332,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                                 <td>{studentBasicDetails?.section_name || "—"}</td>
                                 <td>{studentBasicDetails?.father_name || "—"}</td>
                                 <td>{studentBasicDetails?.mother_name || "—"}</td>
+                                <td>{studentBasicDetails?.religion_name || "—"}</td>
+                                <td>{student?.addressDetails?.[0]?.present_address || "—"}</td>
                                 <td>{studentBasicDetails?.barcode || "—"}</td>
                                 <td>{studentBasicDetails?.category_name || "—"}</td>
 
@@ -1349,7 +1354,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           })
                         ) : (
                           <tr>
-                            <td colSpan="15" style={{ textAlign: "center" }}>
+                            <td colSpan="17" style={{ textAlign: "center" }}>
                               No Data Available
                             </td>
                           </tr>
