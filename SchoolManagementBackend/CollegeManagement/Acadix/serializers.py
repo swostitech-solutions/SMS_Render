@@ -2600,6 +2600,8 @@ class StudentFeeReceiptCancelSerializer(serializers.Serializer):
     branch_id = serializers.IntegerField(allow_null=False)
     receipt_id = serializers.IntegerField(allow_null=False)
     cancel_remark = serializers.CharField(allow_null=False, allow_blank=False)
+    cancelled_by_name = serializers.CharField(allow_null=True, required=False, allow_blank=True)
+    cancelled_by_role = serializers.CharField(allow_null=True, required=False, allow_blank=True)
 
 
 class EmployeeMasterSerializer(serializers.ModelSerializer):

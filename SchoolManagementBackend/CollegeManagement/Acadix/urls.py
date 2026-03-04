@@ -36,6 +36,8 @@ urlpatterns = [
     path('api/RegisterEmployee/Login/', views.RegisterUserLoginAPIView.as_view(), name='Login'),
     path('api/RegisterEmployee/ChangePassword/', views.RegisterUserChangePasswordAPIView.as_view(),
          name='UserChangePassword'),
+    path('api/RegisterEmployee/GetUserStaffName/', views.GetUserStaffNameAPIView.as_view(),
+         name='GetUserStaffName'),
     path('api/AdminUser/Create/', views.CreateAdminUserAPIView.as_view(), name='CreateAdminUser'),
     path('api/AdminUser/List/', views.ListAdminUserAPIView.as_view(), name='ListAdminUser'),
     path('api/AdminUser/Update/<int:pk>/', views.UpdateAdminUserAPIView.as_view(), name='UpdateAdminUser'),

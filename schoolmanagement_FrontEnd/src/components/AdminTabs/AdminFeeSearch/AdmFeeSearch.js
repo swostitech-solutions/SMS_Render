@@ -65,8 +65,9 @@ const FeeSearchPage = () => {
 
   const [paymentMethodOptions, setPaymentMethodOptions] = useState([]);
   const [showCancelModal, setShowCancelModal] = useState(false);
-
   const [cancelRemark, setCancelRemark] = useState("");
+  const [cancelledByName, setCancelledByName] = useState("");
+  const [cancelledByRole, setCancelledByRole] = useState("");
   const [semesterOptions, setSemesterOptions] = useState([]);
 
   //  const [bankOptions, setBankOptions] = useState([]);
@@ -286,6 +287,8 @@ const FeeSearchPage = () => {
     setShowUpdateModal(false);
     setShowCancelModal(false);
     setCancelRemark("");
+    setCancelledByName("");
+    setCancelledByRole("");
 
     // Fetch today's data after clearing
     setTimeout(() => {
@@ -819,9 +822,46 @@ const FeeSearchPage = () => {
   };
 
   // Function to handle the Cancel link click
-  const handleCancelClick = (e, receipt) => {
+  const handleCancelClick = async (e, receipt) => {
     e.preventDefault();
     setSelectedReceipt(receipt);
+
+    // Fetch role_name and staff name directly from UserLogin table via the backend
+    const userLoginId = localStorage.getItem("user_login_id");
+    if (userLoginId) {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(
+          `${ApiUrl.apiurl}RegisterEmployee/GetUserStaffName/?user_login_id=${userLoginId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // role_name comes from UserLogin.role_name field in DB
+          setCancelledByRole(data.role_name || "");
+          // staff_name resolved from UserLogin.reference_id → EmployeeMaster
+          setCancelledByName(data.staff_name || "");
+        } else {
+          // Fallback to sessionStorage if API fails
+          setCancelledByRole(sessionStorage.getItem("userRole") || "");
+          setCancelledByName(sessionStorage.getItem("username") || "");
+        }
+      } catch {
+        setCancelledByRole(sessionStorage.getItem("userRole") || "");
+        setCancelledByName(sessionStorage.getItem("username") || "");
+      }
+    } else {
+      // No user_login_id stored — fallback to sessionStorage
+      setCancelledByRole(sessionStorage.getItem("userRole") || "");
+      setCancelledByName(sessionStorage.getItem("username") || "");
+    }
+
     setShowCancelModal(true);
   };
 
@@ -914,8 +954,10 @@ const FeeSearchPage = () => {
     const data = {
       organization_id: sessionStorage.getItem("organization_id"),
       branch_id: sessionStorage.getItem("branch_id"),
-      receipt_id: selectedReceipt.receiptId, // API expects 'receipt_id'
-      cancel_remark: cancelRemark, // API expects 'cancel_remark'
+      receipt_id: selectedReceipt.receiptId,
+      cancel_remark: cancelRemark,
+      cancelled_by_name: cancelledByName,
+      cancelled_by_role: cancelledByRole,
     };
 
     try {
@@ -940,6 +982,8 @@ const FeeSearchPage = () => {
         setShowCancelModal(false);
         setSelectedReceipt(null);
         setCancelRemark("");
+        setCancelledByName("");
+        setCancelledByRole("");
       } else {
         alert(result.message || "Failed to cancel receipt.");
       }
@@ -950,7 +994,7 @@ const FeeSearchPage = () => {
   };
 
 
-  // Function to handle clearing fields (optional)
+  // Function to handle clearing fields — only clears the editable remark
   const handleCancelClear = () => {
     setCancelRemark("");
   };
@@ -960,6 +1004,8 @@ const FeeSearchPage = () => {
     setShowCancelModal(false);
     setSelectedReceipt(null);
     setCancelRemark("");
+    setCancelledByName("");
+    setCancelledByRole("");
   };
 
   const handleReceiptLinkClick = async (receiptNo) => {
@@ -1569,11 +1615,11 @@ const FeeSearchPage = () => {
                         <h5 className="modal-title">Cancel Receipt</h5>
                       </div>
                       <div className="modal-body">
-                        {/* Buttons at the top */}
-                        <div className="row mb-2">
+                        {/* Action Buttons — all 3 in a single row */}
+                        <div className="row mb-3">
                           <div
-                            className="col-12"
-                            style={{ border: "1px solid #ccc" }}
+                            className="col-12 d-flex align-items-center"
+                            style={{ border: "1px solid #ccc", padding: "8px" }}
                           >
                             <button
                               type="button"
@@ -1584,7 +1630,7 @@ const FeeSearchPage = () => {
                                 "--bs-btn-font-size": ".75rem",
                                 width: "150px",
                               }}
-                              onClick={handleCancelSave} // Updated function name
+                              onClick={handleCancelSave}
                             >
                               Save
                             </button>
@@ -1616,15 +1662,49 @@ const FeeSearchPage = () => {
                             </button>
                           </div>
                         </div>
-                        {/* Remark Field */}
-                        <div className="form-group mt-3">
-                          <label htmlFor="remark">Remark</label>
+
+                        {/* Role Name — auto-filled, read-only */}
+                        <div className="form-group mb-2">
+                          <label htmlFor="cancelRoleName" className="form-label fw-semibold">
+                            Role Name
+                          </label>
+                          <input
+                            id="cancelRoleName"
+                            type="text"
+                            className="form-control"
+                            value={cancelledByRole}
+                            disabled
+                            style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed" }}
+                          />
+                        </div>
+
+                        {/* Cancelled By — non-teaching staff name, read-only */}
+                        <div className="form-group mb-2">
+                          <label htmlFor="cancelledByName" className="form-label fw-semibold">
+                            Cancelled By
+                          </label>
+                          <input
+                            id="cancelledByName"
+                            type="text"
+                            className="form-control"
+                            value={cancelledByName}
+                            disabled
+                            style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed" }}
+                          />
+                        </div>
+
+                        {/* Cancellation Remark */}
+                        <div className="form-group mt-2">
+                          <label htmlFor="cancelRemark" className="form-label fw-semibold">
+                            Cancellation Remark <span className="text-danger">*</span>
+                          </label>
                           <textarea
-                            id="remark"
+                            id="cancelRemark"
                             className="form-control detail"
                             rows="3"
-                            value={cancelRemark} // Bind remark value to state
-                            onChange={(e) => setCancelRemark(e.target.value)} // Update state on input change
+                            placeholder="Enter reason for cancellation..."
+                            value={cancelRemark}
+                            onChange={(e) => setCancelRemark(e.target.value)}
                           />
                         </div>
                       </div>
@@ -1962,6 +2042,8 @@ const FeeSearchPage = () => {
                           <th>Discount Amount</th>
                           <th>Receipt No</th>
                           <th>Cancellation Remarks</th>
+                          <th>Cancelled By</th>
+                          <th>Role</th>
                           <th>Remarks</th>
                         </tr>
                       </thead>
@@ -1985,6 +2067,8 @@ const FeeSearchPage = () => {
                             <td>{receipt.discount_amount}</td>
                             <td>RC{receipt.receipt_no}</td>
                             <td>{receipt.cancellation_remarks || "-"}</td>
+                            <td>{receipt.cancelled_by_name || "-"}</td>
+                            <td>{receipt.cancelled_by_role || "-"}</td>
                             <td>{receipt.remarks || "-"}</td>
                           </tr>
                         ))}

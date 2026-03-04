@@ -2259,6 +2259,11 @@ class StaffAllDetailsForPDFAPIView(APIView):
             # ── Index related records by employee_id for O(1) lookup ──────────
             addr_map = {a.reference_id: a for a in addresses}
 
+            # ── Build city/state/country lookup dicts ─────────────────────────
+            city_map = {c.id: c.city_name for c in City.objects.all()}
+            state_map = {s.id: s.state_name for s in State.objects.all()}
+            country_map = {co.id: co.country_name for co in Country.objects.all()}
+
             doc_map = {}
             for d in documents:
                 doc_map.setdefault(d.employee_id, []).append(d)
@@ -2326,15 +2331,15 @@ class StaffAllDetailsForPDFAPIView(APIView):
                 # Address
                 address_data = {
                     'present_address': addr.present_address if addr else '',
-                    'present_city': addr.present_city if addr else '',
-                    'present_state': addr.present_state if addr else '',
-                    'present_country': addr.present_country if addr else '',
+                    'present_city': city_map.get(addr.present_city, addr.present_city) if addr and addr.present_city else '',
+                    'present_state': state_map.get(addr.present_state, addr.present_state) if addr and addr.present_state else '',
+                    'present_country': country_map.get(addr.present_country, addr.present_country) if addr and addr.present_country else '',
                     'present_pincode': addr.present_pincode if addr else '',
                     'present_phone_number': addr.present_phone_number if addr else '',
                     'permanent_address': addr.permanent_address if addr else '',
-                    'permanent_city': addr.permanent_city if addr else '',
-                    'permanent_state': addr.permanent_state if addr else '',
-                    'permanent_country': addr.permanent_country if addr else '',
+                    'permanent_city': city_map.get(addr.permanent_city, addr.permanent_city) if addr and addr.permanent_city else '',
+                    'permanent_state': state_map.get(addr.permanent_state, addr.permanent_state) if addr and addr.permanent_state else '',
+                    'permanent_country': country_map.get(addr.permanent_country, addr.permanent_country) if addr and addr.permanent_country else '',
                     'permanent_pincode': addr.permanent_pincode if addr else '',
                     'permanent_phone_number': addr.permanent_phone_number if addr else '',
                 } if addr else {}

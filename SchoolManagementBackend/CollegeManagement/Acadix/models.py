@@ -1510,6 +1510,8 @@ class StudentFeeReceiptHeader(models.Model):
     # payment_date = models.DateTimeField(null=True, blank=True)
     payment_detail = models.JSONField(default=dict, validators=[validate_payment_details])
     cancellation_remarks = models.CharField(max_length=500, null=True, blank=True)
+    cancelled_by_name = models.CharField(max_length=255, null=True, blank=True)
+    cancelled_by_role = models.CharField(max_length=100, null=True, blank=True)
     remarks = models.CharField(max_length=500, null=True, blank=True)
     balance = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
     is_active = models.BooleanField(default=True)

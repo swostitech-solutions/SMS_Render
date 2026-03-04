@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from HOSTEL.models import StudentHostelDetail
+from NON_TEACHING_STAFF.models import NonTeachingStaffMaster
 from Swostitech_Acadix import settings
 from _decimal import InvalidOperation
 from django.contrib.auth import authenticate
@@ -1028,6 +1029,57 @@ class RegisterUserChangePasswordAPIView(CreateAPIView):
             message=error_message,
 
         )
+
+
+class GetUserStaffNameAPIView(APIView):
+    """
+    Returns the staff name linked to a given user_login_id.
+    Checks NonTeachingStaffMaster first (via reference_id), then EmployeeMaster.
+    Used to populate the 'Cancelled By' field in the fee receipt cancel modal.
+    """
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_login_id = request.query_params.get('user_login_id')
+            if not user_login_id:
+                return Response({'error': 'user_login_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = UserLogin.objects.get(id=user_login_id)
+            reference_id = user.reference_id
+            staff_name = ''
+            role_name = user.role_name or (user.user_type.user_type if user.user_type else '')
+
+            if reference_id:
+                # Try Non-Teaching Staff first
+                try:
+                    nts = NonTeachingStaffMaster.objects.get(nts_id=reference_id, is_active=True)
+                    staff_name = nts.full_name
+                except NonTeachingStaffMaster.DoesNotExist:
+                    pass
+
+                # Fallback to Teaching Staff (EmployeeMaster)
+                if not staff_name:
+                    try:
+                        emp = EmployeeMaster.objects.get(id=reference_id, is_active=True)
+                        name_parts = filter(None, [emp.first_name, emp.middle_name, emp.last_name])
+                        staff_name = ' '.join(name_parts)
+                    except EmployeeMaster.DoesNotExist:
+                        pass
+
+            # Final fallback: use username
+            if not staff_name:
+                staff_name = user.user_name
+
+            return Response({
+                'staff_name': staff_name,
+                'role_name': role_name,
+                'username': user.user_name,
+            }, status=status.HTTP_200_OK)
+
+        except UserLogin.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CreateAdminUserAPIView(CreateAPIView):
@@ -17555,6 +17607,8 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                         # 'payment_reference': item.payment_reference,
 
                         'cancellation_remarks': item.cancellation_remarks,
+                        'cancelled_by_name': item.cancelled_by_name or '',
+                        'cancelled_by_role': item.cancelled_by_role or '',
                         'remarks': item.remarks or '',
                         'receiptDate': item.receipt_date,
                         'receipt_date': item.receipt_date,  # Frontend looks for 'receipt_date' (lowercase)
@@ -18262,12 +18316,16 @@ class StudentFeeReceiptCancelCreateAPIView(CreateAPIView):
                 branch_id = serializer.validated_data.get('branch_id')
                 receipt_id = serializer.validated_data.get('receipt_id')
                 cancel_remark = serializer.validated_data.get('cancel_remark')
+                cancelled_by_name = serializer.validated_data.get('cancelled_by_name', '')
+                cancelled_by_role = serializer.validated_data.get('cancelled_by_role', '')
 
                 # Process the StdFeeReceiptHeader and cancel the status
                 StudentFeeReceiptHeaderInstance = StudentFeeReceiptHeader.objects.get(organization=organization_id,
                                                                                       branch=branch_id, id=receipt_id)
                 StudentFeeReceiptHeaderInstance.receipt_status = 'CANCEL'
                 StudentFeeReceiptHeaderInstance.cancellation_remarks = cancel_remark
+                StudentFeeReceiptHeaderInstance.cancelled_by_name = cancelled_by_name
+                StudentFeeReceiptHeaderInstance.cancelled_by_role = cancelled_by_role
                 StudentFeeReceiptHeaderInstance.save()
 
                 # Process the StdPayment and make is_active=False
