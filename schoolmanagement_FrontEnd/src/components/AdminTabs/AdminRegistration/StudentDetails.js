@@ -1144,6 +1144,9 @@ const AdmAttendanceEntry = ({
                           })
                         }
                       />
+                      {requiredErrors.admission_type && (
+                        <small style={{ color: "red" }}>{requiredErrors.admission_type}</small>
+                      )}
                     </div>
 
                     <div className="col-12 col-md-4 mb-2">

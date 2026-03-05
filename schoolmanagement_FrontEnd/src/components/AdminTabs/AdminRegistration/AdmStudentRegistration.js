@@ -299,6 +299,7 @@ export default function BasicTabs() {
     if (!formData.addmitted_section) newErrors.addmitted_section = "Section is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
     if (!formData.date_of_admission) newErrors.date_of_admission = "Date of Admission is required";
+    if (!formData.admission_type) newErrors.admission_type = "Admission Type is required";
     if (!formData.dob) newErrors.dob = "Date Of Join is required";
     if (!formData.father_name?.trim()) newErrors.father_name = "Father Name is required";
     if (!formData.mother_name?.trim()) newErrors.mother_name = "Mother Name is required";
