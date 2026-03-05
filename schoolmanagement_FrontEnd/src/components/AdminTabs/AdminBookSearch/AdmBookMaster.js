@@ -4631,6 +4631,9 @@ const BookForm = () => {
   const [bookJournal, setBookJournal] = useState(null);
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
+  const [saveMsg, setSaveMsg] = useState({ type: "", text: "" });
+  const [purchaseRowErrors, setPurchaseRowErrors] = useState({});
+  const [accessionRowErrors, setAccessionRowErrors] = useState({});
 
 
   const [bookDetails, setBookDetails] = useState({
@@ -4688,6 +4691,9 @@ const BookForm = () => {
     setBackCover(null);
     setErrors({});
     setError("");
+    setSaveMsg({ type: "", text: "" });
+    setPurchaseRowErrors({});
+    setAccessionRowErrors({});
 
     setRows([
       {
@@ -4777,7 +4783,7 @@ const BookForm = () => {
           id: barcode.id,
           barcode: barcode.barcode || "",
           location: barcode.locationId || "",
-          status: barcode.book_barcode_status || "Available",
+          status: barcode.book_barcode_status || "",
           remarks: barcode.remarks || "",
         }));
         setAccessionRows(locationRows); // Update rows with barcode location details
@@ -4921,7 +4927,7 @@ const BookForm = () => {
       id: Date.now() + 1,
       barcode: "",
       location: "",
-      status: "Available",
+      status: "",
       remarks: "",
     };
 
@@ -4957,6 +4963,7 @@ const BookForm = () => {
     // Only update if totalCopies is valid and greater than 0 to prevent clearing rows on temporary empty input
     if (totalCopies > 0) {
       updateAccessionRows(updatedRows, isChecked ? nextBarcode : null);
+      setErrors((prev) => ({ ...prev, accessionRows: "" }));
     }
   };
 
@@ -4996,7 +5003,7 @@ const BookForm = () => {
           id: existingRow.id || Date.now() + i,
           barcode: barcodeToUse,
           location: existingRow.location || "",
-          status: existingRow.status || "Available",
+          status: existingRow.status || "",
           remarks: existingRow.remarks || "",
         });
         existingRowIndex++;
@@ -5013,7 +5020,7 @@ const BookForm = () => {
           id: Date.now() + i,
           barcode: barcodeToUse,
           location: "",
-          status: "Available",
+          status: "",
           remarks: "",
         });
       }
@@ -5346,37 +5353,60 @@ const BookForm = () => {
     const academicYearId = parseInt(localStorage.getItem("academicSessionId"));
     const loginId = parseInt(sessionStorage.getItem("userId"));
 
-    if (!bookDetails?.book_code || !bookDetails?.book_name) {
-      alert("Book Code and Book Name are required.");
-      return;
-    }
-
-    // Check if accession rows exist
-    if (!accessionRows || accessionRows.length === 0) {
-      alert("Please add at least one accession row with barcode details.");
-      return;
-    }
+    const fieldErrors = {};
+    if (!bookDetails?.type) fieldErrors.type = "Book/Journal is required.";
+    if (!bookCategory) fieldErrors.bookCategory = "Category is required.";
+    if (!bookSubCategory) fieldErrors.bookSubCategory = "Sub Category is required.";
+    if (!bookDetails?.book_code) fieldErrors.book_code = "Book Code is required.";
+    if (!bookDetails?.book_name) fieldErrors.book_name = "Book Title is required.";
+    if (!bookStatus?.value) fieldErrors.bookStatus = "Book Status is required.";
 
     const isUpdate = !!bookDetails.id;
 
-    // Check for empty status in barcode rows (with null safety)
-    const hasBlankStatus = accessionRows.some((row) => !row.status || (row.status && row.status.trim() === ""));
-    if (hasBlankStatus) {
-      alert("Please select a status for all barcode rows.");
+    // Per-row purchase validation
+    const newPurchaseRowErrors = {};
+    rows.forEach((row) => {
+      const rowErr = {};
+      if (!row.dateOfPurchase) rowErr.dateOfPurchase = "Required";
+      if (!row.purchasedFrom?.trim()) rowErr.purchasedFrom = "Required";
+      if (!row.billNo?.trim()) rowErr.billNo = "Required";
+      if (!row.noOfCopies || parseInt(row.noOfCopies) <= 0) rowErr.noOfCopies = "Required";
+      if (!row.cost || isNaN(parseFloat(row.cost))) rowErr.cost = "Required";
+      if (Object.keys(rowErr).length) newPurchaseRowErrors[row.id] = rowErr;
+    });
+
+    // Per-row accession validation
+    const newAccessionRowErrors = {};
+    if (!accessionRows || accessionRows.length === 0) {
+      fieldErrors.accessionRows = "Please add at least one accession row with barcode details.";
+    } else {
+      accessionRows.forEach((row) => {
+        const rowErr = {};
+        if (!isChecked && (!row.barcode || String(row.barcode).trim() === "")) rowErr.barcode = "Required";
+        if (!row.status || row.status.trim() === "") rowErr.status = "Required";
+        if (Object.keys(rowErr).length) newAccessionRowErrors[row.id] = rowErr;
+      });
+    }
+
+    if (
+      Object.keys(fieldErrors).length ||
+      Object.keys(newPurchaseRowErrors).length ||
+      Object.keys(newAccessionRowErrors).length
+    ) {
+      setErrors(fieldErrors);
+      setPurchaseRowErrors(newPurchaseRowErrors);
+      setAccessionRowErrors(newAccessionRowErrors);
       return;
     }
+    setErrors({});
+    setPurchaseRowErrors({});
+    setAccessionRowErrors({});
 
     // Validate barcodes if not auto-generated and creating new book
     if (!isChecked && !isUpdate) {
       const barcodeList = accessionRows
         .map((item) => item.barcode)
         .filter((barcode) => barcode && String(barcode).trim() !== "");
-
-      // Check if all barcodes are filled
-      if (barcodeList.length !== accessionRows.length) {
-        alert("Please fill all barcode fields or enable auto-generate.");
-        return;
-      }
 
       try {
         const validationResponse = await fetch(
@@ -5389,16 +5419,16 @@ const BookForm = () => {
         const validationData = await validationResponse.json();
 
         if (validationResponse.ok && validationData.exists) {
-          alert("Some of the entered barcodes already exist. Please check.");
+          setErrors((prev) => ({ ...prev, accessionRows: "Some of the entered barcodes already exist. Please check." }));
           return;
         } else if (!validationResponse.ok) {
-          alert("Failed to validate barcodes.");
+          setErrors((prev) => ({ ...prev, accessionRows: "Failed to validate barcodes." }));
           console.error("Validation Error:", validationData);
           return;
         }
       } catch (error) {
         console.error("Barcode validation error:", error);
-        alert("An error occurred while validating barcodes.");
+        setErrors((prev) => ({ ...prev, accessionRows: "An error occurred while validating barcodes." }));
         return;
       }
     }
@@ -5448,7 +5478,7 @@ const BookForm = () => {
       }));
 
     if (!libraryBookBarcodeDetails.length) {
-      alert("At least one barcode detail with barcode number is required.");
+      setErrors((prev) => ({ ...prev, accessionRows: "At least one barcode detail with barcode number is required." }));
       return;
     }
 
@@ -5474,7 +5504,7 @@ const BookForm = () => {
       }));
 
     if (!librarypurchesDetails.length) {
-      alert("Please add at least one purchase detail with number of copies.");
+      setErrors((prev) => ({ ...prev, purchaseRows: "Please add at least one purchase detail with number of copies." }));
       return;
     }
 
@@ -5517,20 +5547,16 @@ const BookForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert(
-          isUpdate ? "Book updated successfully!" : "Book saved successfully!"
-        );
         // Clear form data after successful save (both create and update)
         handleClear();
+        setSaveMsg({ type: "success", text: isUpdate ? "Book updated successfully!" : "Book saved successfully!" });
       } else {
-        alert(
-          isUpdate ? "Failed to update the book." : "Failed to save the book."
-        );
+        setSaveMsg({ type: "danger", text: isUpdate ? "Failed to update the book." : "Failed to save the book." });
         console.error("Error response from server:", data);
       }
     } catch (error) {
       console.error("Error submitting book:", error);
-      alert("An error occurred while saving the book.");
+      setSaveMsg({ type: "danger", text: "An error occurred while saving the book." });
     }
   };
 
@@ -5608,6 +5634,11 @@ const BookForm = () => {
                   </button>
                 </div>
               </div>
+              {saveMsg.text && (
+                <div className={`alert alert-${saveMsg.type} mx-3 mt-2`} role="alert">
+                  {saveMsg.text}
+                </div>
+              )}
 
               <div className="row mt-3 mx-2">
                 <div className="col-12 custom-section-box">
@@ -6055,14 +6086,12 @@ const BookForm = () => {
                               className="form-control detail"
                               value={row.dateOfPurchase}
                               size="sm"
-                              onChange={(e) =>
-                                handleNoOfCopiesChange(
-                                  row.id,
-                                  "dateOfPurchase",
-                                  e.target.value
-                                )
-                              }
+                              onChange={(e) => {
+                                handleNoOfCopiesChange(row.id, "dateOfPurchase", e.target.value);
+                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], dateOfPurchase: "" } }));
+                              }}
                             />
+                            {purchaseRowErrors[row.id]?.dateOfPurchase && <small className="text-danger">{purchaseRowErrors[row.id].dateOfPurchase}</small>}
                           </td>
                           <td className="d-none d-md-table-cell">
                             <Form.Control
@@ -6070,14 +6099,12 @@ const BookForm = () => {
                               className="form-control detail"
                               value={row.purchasedFrom}
                               size="sm"
-                              onChange={(e) =>
-                                handleNoOfCopiesChange(
-                                  row.id,
-                                  "purchasedFrom",
-                                  e.target.value
-                                )
-                              }
+                              onChange={(e) => {
+                                handleNoOfCopiesChange(row.id, "purchasedFrom", e.target.value);
+                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], purchasedFrom: "" } }));
+                              }}
                             />
+                            {purchaseRowErrors[row.id]?.purchasedFrom && <small className="text-danger">{purchaseRowErrors[row.id].purchasedFrom}</small>}
                           </td>
                           <td className="d-none d-md-table-cell">
                             <Form.Control
@@ -6085,14 +6112,12 @@ const BookForm = () => {
                               className="form-control detail"
                               value={row.billNo}
                               size="sm"
-                              onChange={(e) =>
-                                handleNoOfCopiesChange(
-                                  row.id,
-                                  "billNo",
-                                  e.target.value
-                                )
-                              }
+                              onChange={(e) => {
+                                handleNoOfCopiesChange(row.id, "billNo", e.target.value);
+                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], billNo: "" } }));
+                              }}
                             />
+                            {purchaseRowErrors[row.id]?.billNo && <small className="text-danger">{purchaseRowErrors[row.id].billNo}</small>}
                           </td>
 
                           <td>
@@ -6101,14 +6126,12 @@ const BookForm = () => {
                               className="form-control detail"
                               value={row.noOfCopies}
                               size="sm"
-                              onChange={(e) =>
-                                handleNoOfCopiesChange(
-                                  row.id,
-                                  "noOfCopies",
-                                  e.target.value
-                                )
-                              }
+                              onChange={(e) => {
+                                handleNoOfCopiesChange(row.id, "noOfCopies", e.target.value);
+                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], noOfCopies: "" } }));
+                              }}
                             />
+                            {purchaseRowErrors[row.id]?.noOfCopies && <small className="text-danger">{purchaseRowErrors[row.id].noOfCopies}</small>}
                           </td>
 
                           <td>
@@ -6117,14 +6140,12 @@ const BookForm = () => {
                               className="form-control detail"
                               value={row.cost}
                               size="sm"
-                              onChange={(e) =>
-                                handleNoOfCopiesChange(
-                                  row.id,
-                                  "cost",
-                                  e.target.value
-                                )
-                              }
+                              onChange={(e) => {
+                                handleNoOfCopiesChange(row.id, "cost", e.target.value);
+                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], cost: "" } }));
+                              }}
                             />
+                            {purchaseRowErrors[row.id]?.cost && <small className="text-danger">{purchaseRowErrors[row.id].cost}</small>}
                           </td>
                           <td className="d-none d-lg-table-cell">
                             <Form.Control
@@ -6169,6 +6190,7 @@ const BookForm = () => {
                     </tfoot>
                   </table>
                 </div>
+                {errors.purchaseRows && <small className="text-danger">{errors.purchaseRows}</small>}
               </div>
 
               <div className="col-12">
@@ -6202,14 +6224,17 @@ const BookForm = () => {
                                 if (!isChecked) {
                                   const updatedRows = accessionRows.map((r) =>
                                     r.id === row.id
-                                      ? { ...r, barcode: e.target.value } // Use `barcode` to match updated logic
+                                      ? { ...r, barcode: e.target.value }
                                       : r
                                   );
                                   setAccessionRows(updatedRows);
+                                  setErrors((prev) => ({ ...prev, accessionRows: "" }));
+                                  setAccessionRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], barcode: "" } }));
                                 }
                               }}
                               disabled={isChecked} // Disable manual entry if checkbox is checked
                             />
+                            {accessionRowErrors[row.id]?.barcode && <small className="text-danger">{accessionRowErrors[row.id].barcode}</small>}
                           </td>
                           <td>
                             <Form.Select
@@ -6263,8 +6288,9 @@ const BookForm = () => {
                                     : r
                                 );
                                 setAccessionRows(updatedRows);
+                                setAccessionRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], status: "" } }));
                               }}
-                              className="detail"
+                              className={`detail ${accessionRowErrors[row.id]?.status ? "is-invalid" : ""}`}
                             >
                               <option value="">-- Select Status --</option>
                               <option value="ACTIVE">ACTIVE</option>
@@ -6272,6 +6298,7 @@ const BookForm = () => {
                               <option value="LOST">LOST</option>
                               <option value="DAMAGED">DAMAGED</option>
                             </Form.Select>
+                            {accessionRowErrors[row.id]?.status && <small className="text-danger">{accessionRowErrors[row.id].status}</small>}
                           </td>
 
                           <td>
@@ -6296,6 +6323,7 @@ const BookForm = () => {
                     </tbody>
                   </table>
                 </div>
+                {errors.accessionRows && <small className="text-danger">{errors.accessionRows}</small>}
               </div>
             </div>
           </div>

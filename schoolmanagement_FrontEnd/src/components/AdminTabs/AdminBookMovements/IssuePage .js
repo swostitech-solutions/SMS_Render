@@ -15,9 +15,14 @@ const IssuePage = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const navigate = useNavigate();
   const [isStudentModalVisible, setStudentModalVisible] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [saveMsg, setSaveMsg] = useState({ type: "", text: "" });
+  const [rowErrors, setRowErrors] = useState({});
 
   // Issue Book
   const handleIssueBook = async () => {
+    setErrors({});
+    setSaveMsg({ type: "", text: "" });
     const token = sessionStorage.getItem("accessToken");
     // Get the academic year ID from:
     // 1. Selected student's data (most accurate)
@@ -32,7 +37,7 @@ const IssuePage = () => {
     const storedStudentId = sessionStorage.getItem("studentId");
 
     if (!token) {
-      alert("Unauthorized: Missing access token.");
+      setErrors((prev) => ({ ...prev, general: "Unauthorized: Missing access token." }));
       return;
     }
 
@@ -48,15 +53,13 @@ const IssuePage = () => {
     const issuingToStudent = hasStudent;
     const issuingToStaff = hasStaff;
 
-    if (!academicYearId || !createdBy || !issueDateValue || bookBarcodeIds.length === 0) {
+    const fieldErrors = {};
+    if (!hasStudent && !hasStaff) fieldErrors.studentTeacher = "Please select either a student or a teacher to issue books.";
+    if (!issueDateValue) fieldErrors.issueDate = "Issue Date is required.";
+    if (bookBarcodeIds.length === 0) fieldErrors.books = "Please select at least one book with an accession number.";
+    if (Object.keys(fieldErrors).length > 0) {
       console.log("academicYearId", academicYearId, "createdBy", createdBy, "issueDateValue", issueDateValue, "bookBarcodeIds", bookBarcodeIds);
-      alert("Please fill all required fields before issuing books."
-      );
-      return;
-    }
-
-    if (!hasStudent && !hasStaff) {
-      alert("Please select either a student or a teacher to issue books.");
+      setErrors((prev) => ({ ...prev, ...fieldErrors }));
       return;
     }
 
@@ -67,7 +70,7 @@ const IssuePage = () => {
 
     if (booksWithNoAvailability.length > 0) {
       const bookNames = booksWithNoAvailability.map((row) => row.bookName).join(", ");
-      alert(`Cannot issue books with no available copies: ${bookNames}`);
+      setErrors((prev) => ({ ...prev, general: `Cannot issue books with no available copies: ${bookNames}` }));
       return;
     }
 
@@ -97,17 +100,17 @@ const IssuePage = () => {
 
       const data = await response.json();
       if (data.message === "success") {
-        alert("Books issued successfully!");
+        setSaveMsg({ type: "success", text: "Books issued successfully!" });
         handleCloseModals();
         sessionStorage.removeItem("studentId");
       } else {
         // Display detailed error message from backend
         const errorMsg = data.error || data.message || "Failed to issue books";
-        alert(`Error: ${errorMsg}`);
+        setSaveMsg({ type: "danger", text: `Error: ${errorMsg}` });
       }
     } catch (error) {
       console.error("Error issuing books:", error);
-      alert("An error occurred while issuing books. Please try again.");
+      setSaveMsg({ type: "danger", text: "An error occurred while issuing books. Please try again." });
     }
   };
 
@@ -197,6 +200,9 @@ const IssuePage = () => {
     if (dateRef.current) {
       dateRef.current.value = today;
     }
+    setErrors({});
+    setSaveMsg({ type: "", text: "" });
+    setRowErrors({});
   };
   const handleOpenModal = () => {
     setShowModal(true);
@@ -246,6 +252,7 @@ const IssuePage = () => {
           : row
       )
     );
+    setErrors((prev) => ({ ...prev, books: "" }));
     setShowBookModal(false); // Close modal after selection
   };
   const handleBarcodeChange = async (e, rowId) => {
@@ -293,7 +300,7 @@ const IssuePage = () => {
           console.log("includes check:", validStatuses.includes(matchedBook.bookBarcodeStatus));
 
           if (!validStatuses.includes(matchedBook.bookBarcodeStatus)) {
-            alert(`Book "${matchedBook.bookName}" (Barcode: ${matchedBook.barcode}) is not available for issue.`);
+            setRowErrors((prev) => ({ ...prev, [rowId]: `Book "${matchedBook.bookName}" (Barcode: ${matchedBook.barcode}) is not available for issue.` }));
             // Clear the row
             setRows((prevRows) =>
               prevRows.map((row) =>
@@ -315,7 +322,7 @@ const IssuePage = () => {
 
           // Check if available copies exist
           if (matchedBook.availableCopies === 0) {
-            alert(`No available copies for book "${matchedBook.bookName}". All ${matchedBook.totalCopies} copies are currently issued.`);
+            setRowErrors((prev) => ({ ...prev, [rowId]: `No available copies for book "${matchedBook.bookName}". All ${matchedBook.totalCopies} copies are currently issued.` }));
             // Clear the row
             setRows((prevRows) =>
               prevRows.map((row) =>
@@ -352,12 +359,14 @@ const IssuePage = () => {
                 : row
             )
           );
+          setErrors((prev) => ({ ...prev, books: "" }));
+          setRowErrors((prev) => { const n = { ...prev }; delete n[rowId]; return n; });
         }
       } else {
         console.log("=== No book found or API error ===");
         console.log("Message:", data.message);
         console.log("Data length:", data.data ? data.data.length : "No data");
-        alert(`Book with barcode ${enteredBarcode} not found.`);
+        setRowErrors((prev) => ({ ...prev, [rowId]: `Book with barcode ${enteredBarcode} not found.` }));
         // Clear the row
         setRows((prevRows) =>
           prevRows.map((row) =>
@@ -377,7 +386,7 @@ const IssuePage = () => {
       }
     } catch (error) {
       console.error("Error fetching book data:", error);
-      alert("Error fetching book data. Please try again.");
+      setRowErrors((prev) => ({ ...prev, [rowId]: "Error fetching book data. Please try again." }));
     }
   };
   const handleOpenBookModal = (rowId) => {
@@ -894,13 +903,21 @@ const IssuePage = () => {
                   </button>
                 </div>
               </div>
+              {errors.general && (
+                <small className="text-danger mx-2">{errors.general}</small>
+              )}
+              {saveMsg.text && (
+                <div className={`alert alert-${saveMsg.type} mx-0 mt-2`} role="alert">
+                  {saveMsg.text}
+                </div>
+              )}
               <div className="row mt-3 mx-2">
                 <div className="col-12 custom-section-box">
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
                     <div className="row flex-grow-1 mb-3 ">
                       <div className="col-12 col-md-3 mb-3 ">
                         <label htmlFor="student-name" className="form-label">
-                          Student Name
+                          Student Name <span style={{ color: "red" }}>*</span>
                         </label>
                         <div className="d-flex align-items-center">
                           <input
@@ -908,7 +925,10 @@ const IssuePage = () => {
                             className="form-control detail"
                             placeholder="Enter student name"
                             value={studentName}
-                            onChange={(e) => setStudentName(e.target.value)}
+                            onChange={(e) => {
+                              setStudentName(e.target.value);
+                              setErrors((prev) => ({ ...prev, studentTeacher: "" }));
+                            }}
                           />
                           <button
                             type="button"
@@ -919,6 +939,9 @@ const IssuePage = () => {
                             ...
                           </button>
                         </div>
+                        {errors.studentTeacher && (
+                          <small className="text-danger">{errors.studentTeacher}</small>
+                        )}
                       </div>
                       <SelectStudentModal
                         show={showModal}
@@ -927,7 +950,7 @@ const IssuePage = () => {
                       />
                       <div className="col-12 col-md-3 mb-1">
                         <label htmlFor="teacher-name" className="form-label">
-                          Teacher Name
+                          Teacher Name <span style={{ color: "red" }}>*</span>
                         </label>
                         <div className="d-flex align-items-center">
                           <input
@@ -992,7 +1015,6 @@ const IssuePage = () => {
                           value={selectedSession}
                           onChange={(selectedOption) => {
                             setSelectedSession(selectedOption);
-                            // Reset dependent dropdowns
                             setSelectedCourse(null);
                             setSelectedDepartment(null);
                             setSelectedAcademicYear(null);
@@ -1014,7 +1036,6 @@ const IssuePage = () => {
                           isDisabled={!selectedSession}
                           onChange={(selectedOption) => {
                             setSelectedCourse(selectedOption);
-                            // Reset dependent dropdowns
                             setSelectedDepartment(null);
                             setSelectedAcademicYear(null);
                             setSelectedSemester(null);
@@ -1055,7 +1076,6 @@ const IssuePage = () => {
                           isDisabled={!selectedDepartment}
                           onChange={(selectedOption) => {
                             setSelectedAcademicYear(selectedOption);
-                            // Reset dependent dropdowns
                             setSelectedSemester(null);
                             setSelectedSection(null);
                           }}
@@ -1098,20 +1118,27 @@ const IssuePage = () => {
                       </div>
                       <div className="col-12 col-md-3 mb-2">
                         <label htmlFor="issue-date" className="form-label">
-                          Issue Date
+                          Issue Date <span style={{ color: "red" }}>*</span>
                         </label>
                         <input
                           type="date"
                           id="issue-date"
                           className="form-control detail"
                           ref={dateRef}
+                          onChange={() => setErrors((prev) => ({ ...prev, issueDate: "" }))}
                         />
+                        {errors.issueDate && (
+                          <small className="text-danger">{errors.issueDate}</small>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {errors.books && (
+                <small className="text-danger mx-2 mt-1 d-block">{errors.books}</small>
+              )}
               <div className="col-12">
                 <div className="table-responsive">
                   <table className="table table-bordered">
@@ -1177,6 +1204,9 @@ const IssuePage = () => {
                               value={row.barcode}
                               onChange={(e) => handleBarcodeChange(e, row.id)}
                             />
+                            {rowErrors[row.id] && (
+                              <small className="text-danger">{rowErrors[row.id]}</small>
+                            )}
                           </td>
                           <td>
                             <Form.Control
