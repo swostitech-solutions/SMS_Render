@@ -10484,7 +10484,7 @@ class StudentPromotionCreateAPI(CreateAPIView):
                         return Response({
                                             "message": f"Student - {RegisterstudentInstance.first_name + RegisterstudentInstance.middle_name + RegisterstudentInstance.last_name} with student_id - {stu} is failed in current semester. !!!  "})
 
-                    # Check if a similar record already exists
+                    # Check if a similar record already exists (active OR already pending promotion)
                     existing_record = StudentCourse.objects.filter(
                         organization=organizationInstance,
                         student=RegisterstudentInstance,
@@ -10494,24 +10494,22 @@ class StudentPromotionCreateAPI(CreateAPIView):
                         department=departmentInstance,
                         semester=nextSemesterInstance,
                         section=nextSectionInstance,
-                        is_active=True
-                    ).exists()
+                    ).filter(Q(is_active=True) | Q(student_status__iexact='PROMOTED')).exists()
 
                     if existing_record:
                         return Response(
                             {'message': f'this student already promoted!!.'},
                             status=status.HTTP_400_BAD_REQUEST
                         )
-                    # Get all active student course instances for the student
-                    try:
-                        student_instances = StudentCourse.objects.get(student=RegisterstudentInstance, is_active=True)
-                        if not student_instances:
-                            return Response({
-                                                "message": f"student course record not found with student_id - {RegisterstudentInstance.id}  !!!"},
-                                            status=status.HTTP_400_BAD_REQUEST)
-                    except StudentCourse.DoesNotExist:
-                        return Response({"message": "student course record not found !!!"},
-                                        status=status.HTTP_204_NO_CONTENT)
+                    # Get the current active student course instance for this student
+                    student_instances = StudentCourse.objects.filter(
+                        student=RegisterstudentInstance, is_active=True
+                    ).order_by('-id').first()
+                    if not student_instances:
+                        return Response(
+                            {"message": f"student course record not found with student_id - {RegisterstudentInstance.id}  !!!"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                     enrollment_no = student_instances.enrollment_no
                     house_instance = student_instances.house
 
@@ -10533,10 +10531,10 @@ class StudentPromotionCreateAPI(CreateAPIView):
                         hostel_availed = False
                         hostel_choice_semester = ""
 
-                    # Deactivate all active student class records
-                    student_instances.is_active = False
-                    student_instances.student_status = "Inactive"
-                    student_instances.save()
+                    # Deactivate only the specific active StudentCourse record we read data from
+                    StudentCourse.objects.filter(
+                        pk=student_instances.pk
+                    ).update(is_active=False, student_status='Inactive')
                     # last_student = StudentRegistration.objects.filter(organization=organizationInstance.id,batch=batchInstance.id).last()
                     # enrollment_no = int(last_student.enrollment_no) + 1 if last_student else 1001
                     StudentCourse.objects.create(
@@ -20539,7 +20537,8 @@ class SearchStudentCourseListAPIView(ListAPIView):
                 try:
                     studentCourseList = StudentCourse.objects.filter(organization=organization_id,
                                                                      branch=branch_id,
-                                                                     is_active=True).order_by('-updated_at')
+                                                                     is_active=True,
+                                                                     student__is_active=True).order_by('-updated_at')
                 except StudentCourse.DoesNotExist:
                     return Response({"message": "student course record not found !!!"},
                                     status=status.HTTP_404_NOT_FOUND)
