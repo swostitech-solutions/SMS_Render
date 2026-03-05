@@ -1097,7 +1097,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date_of_admission" className="form-label">
-                        Date Of Admission{" "}
+                        Date Of Admission <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -1651,7 +1651,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date-of-birth" className="form-label">
-                        Date Of Birth
+                        Date Of Join
                       </label>
                       <input
                         type="date"

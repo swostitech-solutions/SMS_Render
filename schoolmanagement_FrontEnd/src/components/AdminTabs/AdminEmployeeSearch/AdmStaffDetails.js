@@ -256,31 +256,31 @@ export default function BasicTabs() {
     const errors = {};
 
     if (!b.employeeCode || !String(b.employeeCode).trim()) {
-      errors.employeeCode = "This field is required.";
+      errors.employeeCode = "Employee Code is required.";
     }
     if (!b.firstName || !String(b.firstName).trim()) {
-      errors.firstName = "This field is required.";
+      errors.firstName = "Employee First Name is required.";
     }
     if (!b.dob) {
-      errors.dob = "This field is required.";
+      errors.dob = "Date Of Join is required.";
     }
     if (!b.gender) {
-      errors.gender = "This field is required.";
+      errors.gender = "Gender is required.";
     }
     if (!b.nationality) {
-      errors.nationality = "This field is required.";
+      errors.nationality = "Nationality is required.";
     }
     if (!b.religion) {
-      errors.religion = "This field is required.";
+      errors.religion = "Religion is required.";
     }
     if (!b.motherTongue) {
-      errors.motherTongue = "This field is required.";
+      errors.motherTongue = "Mother Tongue is required.";
     }
     if (!b.employeeType) {
-      errors.employeeType = "This field is required.";
+      errors.employeeType = "Employee Type is required.";
     }
     if (!b.phoneNumber || !String(b.phoneNumber).trim()) {
-      errors.phoneNumber = "This field is required.";
+      errors.phoneNumber = "Mobile Number is required.";
     } else if (!/^\d{10}$/.test(String(b.phoneNumber))) {
       errors.phoneNumber = "Mobile Number must be exactly 10 digits.";
     }

@@ -525,7 +525,7 @@ const StaffInfo = ({
 
                     <div className="col-md-3 mb-3">
                       <label htmlFor="birth-date" className="form-label">
-                        Date of Birth
+                        Date Of Join
                         <span style={{ color: "red" }}>*</span>
                       </label>
                       <div className="d-flex align-items-center">
