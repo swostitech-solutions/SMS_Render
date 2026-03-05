@@ -976,7 +976,6 @@ const handleSave = async () => {
     }
 
     // Validation
-    if (!selectedCategory) return alert("Please select a category.");
     if (!selectedSession) return alert("Please select a Session.");
     if (!selectedCourse) return alert("Please select a Course.");
     if (!selectedDepartment) return alert("Please select a Department.");
@@ -1017,7 +1016,7 @@ const handleSave = async () => {
         section: Number(selectedSection.value),
         version_no: version.trim(),
         new_existing: selectedNewExisting.value,
-        category: Number(selectedCategory.value),
+        category: selectedCategory ? Number(selectedCategory.value) : null,
         created_by: Number(user_id),
       },
       fee_structure_detail: feeStructure.map((item, index) => ({

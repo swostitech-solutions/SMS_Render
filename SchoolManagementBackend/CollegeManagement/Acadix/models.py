@@ -728,7 +728,7 @@ class FeeStructureMaster(models.Model):   # done
     enabled = models.CharField(max_length=1, null=False, blank=False)
     version_no = models.PositiveIntegerField(null=False,blank=False)
 
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     new_existing= models.CharField(max_length=1,blank=True,null=True)
 
     is_active = models.BooleanField(default=True)

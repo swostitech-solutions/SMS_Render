@@ -11672,7 +11672,7 @@ class FeeStructureDetailCreateAPI(CreateAPIView, FeeStructureMixin):
                     semester=fee_master_structure_detail['semester'],
                     enabled=fee_master_structure_detail['enabled'],
                     version_no=int(fee_master_structure_detail['version_no']),
-                    category=fee_master_structure_detail['category'],
+                    category=fee_master_structure_detail.get('category'),
                     new_existing=fee_master_structure_detail['new_existing'],
                     created_by=fee_master_structure_detail['created_by'],
                     updated_by=fee_master_structure_detail['created_by']
@@ -12515,7 +12515,7 @@ class GetFeeStructureBySessionAPIView(ListAPIView):
                 organization=organization_id,
                 branch=branch_id,
                 is_active=True
-            ).select_related('course', 'department', 'academic_year', 'semester')
+            ).select_related('course', 'department', 'academic_year', 'semester').order_by('-created_at')
 
             if fee_structures.exists():
                 responsedata = []

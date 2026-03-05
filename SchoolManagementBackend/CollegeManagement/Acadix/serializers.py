@@ -1023,6 +1023,9 @@ class FeeStructureMasterSerializer(serializers.ModelSerializer):
         fields = ['id', 'fee_structure_code', 'fee_structure_description', 'enabled', 'organization', 'branch', 'batch',
                   'course', 'department', 'academic_year', 'semester', 'version_no',
                   'category', 'new_existing', 'created_by']
+        extra_kwargs = {
+            'category': {'required': False, 'allow_null': True},
+        }
 
     # def get_organization(self, obj):
     #     if obj.organization:
