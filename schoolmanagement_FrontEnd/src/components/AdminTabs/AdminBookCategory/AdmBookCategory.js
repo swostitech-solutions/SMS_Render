@@ -22,6 +22,8 @@ const BookCategoryMaster = () => {
   const [filteredSubCategories, setFilteredSubCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [categoryErrors, setCategoryErrors] = useState({});
+  const [subCategoryErrors, setSubCategoryErrors] = useState({});
   const itemsPerPage = 10;
 
   const offset = currentPage * itemsPerPage;
@@ -114,16 +116,21 @@ const BookCategoryMaster = () => {
   const handleCheckboxChange = (event) => {
     setIsEnabled(event.target.checked);
   };
+  const validateSubCategoryFields = () => {
+    const newErrors = {};
+    if (!selectedCategoryId) newErrors.selectedCategoryId = "Please select a category";
+    if (!subCategory.trim()) newErrors.subCategory = "Sub-category name is required";
+    setSubCategoryErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSaveSubCategory = async () => {
+    if (!validateSubCategoryFields()) return;
     const orgId = sessionStorage.getItem("organization_id");
     const branchId = sessionStorage.getItem("branch_id");
     const token = sessionStorage.getItem("accessToken");
     if (!token) {
       setMessage("Error: Unauthorized - Missing access token.");
-      return;
-    }
-    if (!subCategory) {
-      setMessage("Error: Sub-category name cannot be empty.");
       return;
     }
     const data = {
@@ -174,6 +181,7 @@ const BookCategoryMaster = () => {
       if (response.ok) {
         setMessage(result.message);
         setSubCategory("");
+        setSubCategoryErrors({});
         setEditingSubCategoryId(null); // Clear edit mode after saving
         // Refresh all categories and subcategories to show complete list
         await fetchAllCategoriesWithSubCategories();
@@ -211,7 +219,16 @@ const BookCategoryMaster = () => {
   };
 
 
+  const validateCategoryFields = () => {
+    const newErrors = {};
+    if (!categoryName.trim()) newErrors.categoryName = "Category name is required";
+    setCategoryErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateCategoryFields()) return;
+
     // Get and validate token first
     let token = sessionStorage.getItem("accessToken");
     if (!token) {
@@ -228,11 +245,6 @@ const BookCategoryMaster = () => {
 
     if (!orgId || !branchId) {
       setMessage("Error: Organization ID or Branch ID not found.");
-      return;
-    }
-
-    if (!categoryName || categoryName.trim() === "") {
-      setMessage("Error: Category name cannot be empty.");
       return;
     }
 
@@ -281,6 +293,7 @@ const BookCategoryMaster = () => {
         // Refresh all categories and subcategories to show complete list in table
         await fetchAllCategoriesWithSubCategories();
         setCategoryName("");
+        setCategoryErrors({});
         setMessage("");
       } else {
         setMessage("Error: " + (result.message || "Failed to create category"));
@@ -323,13 +336,16 @@ const BookCategoryMaster = () => {
         </h2>
         <div className="row align-items-center">
           <div className="col-md-3 mb-0">
-            <label style={{ fontWeight: "bold" }}>Enter Category</label>
+            <label style={{ fontWeight: "bold" }}>Enter Category <span style={{ color: "red" }}>*</span></label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${categoryErrors.categoryName ? "is-invalid" : ""}`}
               value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
+              onChange={(e) => { setCategoryName(e.target.value); if (categoryErrors.categoryName) setCategoryErrors({}); }}
             />
+            {categoryErrors.categoryName && (
+              <small className="text-danger">{categoryErrors.categoryName}</small>
+            )}
           </div>
           <div className="col-md-2 mb-0">
             <button className="btn btn-primary mt-3" onClick={handleSave}>
@@ -342,9 +358,8 @@ const BookCategoryMaster = () => {
             Add BookSub-Category
           </h2>
           <div className="col-md-3 mb-0">
-            <label style={{ fontWeight: "bold" }}>Select Category</label>
+            <label style={{ fontWeight: "bold" }}>Select Category <span style={{ color: "red" }}>*</span></label>
             <Select
-
               options={[
                 { value: "", label: "Select Categories" },
                 ...(categories || []).map((cat) => ({
@@ -357,6 +372,7 @@ const BookCategoryMaster = () => {
                   target: { value: selectedOption?.value || "" },
                 };
                 handleCategoryChange(event);
+                if (subCategoryErrors.selectedCategoryId) setSubCategoryErrors((prev) => ({ ...prev, selectedCategoryId: "" }));
               }}
               value={
                 selectedCategoryId
@@ -369,19 +385,24 @@ const BookCategoryMaster = () => {
                   }
                   : { value: "", label: "Select Categories" }
               }
-
             />
+            {subCategoryErrors.selectedCategoryId && (
+              <small className="text-danger">{subCategoryErrors.selectedCategoryId}</small>
+            )}
           </div>
         </div>
         <div className="row mt-3">
           <div className="col-md-3 mb-0">
-            <label style={{ fontWeight: "bold" }}>Sub-Category</label>
+            <label style={{ fontWeight: "bold" }}>Sub-Category <span style={{ color: "red" }}>*</span></label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${subCategoryErrors.subCategory ? "is-invalid" : ""}`}
               value={subCategory}
-              onChange={(e) => setSubCategory(e.target.value)}
+              onChange={(e) => { setSubCategory(e.target.value); if (subCategoryErrors.subCategory) setSubCategoryErrors((prev) => ({ ...prev, subCategory: "" })); }}
             />
+            {subCategoryErrors.subCategory && (
+              <small className="text-danger">{subCategoryErrors.subCategory}</small>
+            )}
           </div>
           <div className="col-md-2 mb-0">
             <button
