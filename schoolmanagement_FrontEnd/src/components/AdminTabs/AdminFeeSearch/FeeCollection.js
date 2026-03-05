@@ -1,4 +1,6 @@
+
 // import React, { useRef, useState, useEffect } from "react";
+
 // import "bootstrap/dist/css/bootstrap.min.css";
 // import SelectStudentModal from "../AdminAttendanceEntry/SelectStudentModal";
 // import SelectStudentFeeModal from "../FeeStudentModal/SelectStudentFeeModal";
@@ -41,6 +43,20 @@
 //   const [chequeBounceEnabled, setChequeBounceEnabled] = useState(false);
 //   const [paymentMethodOptions, setPaymentMethodOptions] = useState([]);
 //   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(null);
+
+//   // Payment method specific fields
+//   const [chequeNumber, setChequeNumber] = useState("");
+//   const [chequeBankName, setChequeBankName] = useState("");
+//   const [chequeBranchName, setChequeBranchName] = useState("");
+
+//   const [ddNumber, setDdNumber] = useState("");
+//   const [ddIssuingBank, setDdIssuingBank] = useState("");
+
+//   const [upiUtrNo, setUpiUtrNo] = useState("");
+
+//   const [rtgsUtrNo, setRtgsUtrNo] = useState("");
+//   const [rtgsSenderBank, setRtgsSenderBank] = useState("");
+//   const [rtgsAccountNo, setRtgsAccountNo] = useState("");
 //   const [studentBarcode, setStudentBarcode] = useState("");
 //   const [schoolAdmissionNo, setSchoolAdmissionNo] = useState("");
 //   const [studentName, setStudentName] = useState("");
@@ -71,29 +87,29 @@
 //     setTotalDues(computedTotalDues);
 //   }, [selectedFeeDetails]);
 
-// useEffect(() => {
-//   const computedTotalOtherCharges = Object.entries(charges).reduce(
-//     (acc, [key, val]) => {
-//       const value = parseFloat(val || 0);
+//   useEffect(() => {
+//     const computedTotalOtherCharges = Object.entries(charges).reduce(
+//       (acc, [key, val]) => {
+//         const value = parseFloat(val || 0);
 
-//       // ✅ ONLY discount should subtract
-//       if (key === "discount_fee") {
-//         return acc - value;
-//       }
+//         //  ONLY discount should subtract
+//         if (key === "discount_fee") {
+//           return acc - value;
+//         }
 
-//       // ✅ All others add
-//       return acc + value;
-//     },
-//     0
-//   );
+//         //All others add
+//         return acc + value;
+//       },
+//       0
+//     );
 
-//   setTotalOtherCharges(computedTotalOtherCharges);
-// }, [charges]);
-
+//     setTotalOtherCharges(computedTotalOtherCharges);
+//   }, [charges]);
 
 //   const [paidAmount, setPaidAmount] = useState(totalDues + totalOtherCharges);
 //   const [isUserInput, setIsUserInput] = useState(false);
 //   const [remark, setRemark] = useState("");
+//   const [paymentRemark, setPaymentRemark] = useState("");
 //   const [showModal, setShowModal] = useState(false);
 //   const [elementNameOptions, setElementNameOptions] = useState([]);
 //   const [expandedRow, setExpandedRow] = useState(null);
@@ -150,6 +166,17 @@
 //     setSelectedPaymentMethodId(null);
 //     setBank(null);
 
+//     // Clear payment method specific fields
+//     setChequeNumber("");
+//     setChequeBankName("");
+//     setChequeBranchName("");
+//     setDdNumber("");
+//     setDdIssuingBank("");
+//     setUpiUtrNo("");
+//     setRtgsUtrNo("");
+//     setRtgsSenderBank("");
+//     setRtgsAccountNo("");
+
 //     // STUDENT DETAILS
 //     setSelectedStudent({
 //       studentId: "",
@@ -185,6 +212,7 @@
 //     setShowModal(false);
 //     setElementNameOptions([]);
 //     setRemark("");
+//     setPaymentRemark("");
 
 //     // Reset date if needed
 //     setSelectedDate(new Date());
@@ -404,9 +432,6 @@
 //     fetchAccountDetails();
 //   }, [selectedBankId]);
 
-
-
-
 //   const fetchStudentData = async ({ id, barcode, admissionNo } = {}) => {
 //     // Validate that at least one identifier is provided
 //     if (!id && !barcode && !admissionNo) {
@@ -421,7 +446,7 @@
 //     queryParams.append("barcode", barcode || "");
 //     queryParams.append("college_admission_no", admissionNo || "");
 
-//     const url = `http://31.97.63.174:9000/api/Filter/GetFilterStudentFilterdataBasedOnCondition/?${queryParams.toString()}`;
+//     const url = `${ApiUrl.apiurl}Filter/GetFilterStudentFilterdataBasedOnCondition/?${queryParams.toString()}`;
 
 //     try {
 //       const response = await fetch(url, {
@@ -493,19 +518,7 @@
 //   };
 
 //   // Trigger the API call if any identifier is available in selectedStudent
-//   useEffect(() => {
-//     if (
-//       selectedStudent.id ||
-//       selectedStudent.barcode ||
-//       selectedStudent.admissionNo
-//     ) {
-//       fetchStudentData({
-//         id: selectedStudent.id,
-//         barcode: selectedStudent.barcode,
-//         admissionNo: selectedStudent.admissionNo,
-//       });
-//     }
-//   }, [selectedStudent]);
+
 //   // const handleSave = async () => {
 //   //   const apiUrl = `${ApiUrl.apiurl}FeeReceipt/FeeReceiptCreate/`;
 
@@ -631,22 +644,137 @@
 //     const receipt_date = dateRef.current.value;
 //     const reference_date = selectedDate.toISOString().slice(0, 10);
 
-//     let bank_id = null;
-//     let account_number = null;
-
-//     if (selectedPaymentMethodId === 1) {
-//       bank_id = Number(selectedBankId);
-//       const accObj = accountNumberOptions.find(
-//         (x) => x.value === selectedAccountId
-//       );
-//       account_number = accObj?.label || null;
-//     }
-
-//     const student_fee_details_ids = selectedFeeDetails.map(
-//       (x) => x.id ?? x.fee_detail_id
+//     const student_fee_details_ids = selectedFeeDetails.flatMap(
+//       (x) => x.all_ids || [x.id ?? x.fee_detail_id]
 //     );
 
-//     const exact = (key) => (charges[key] ? Number(charges[key]) : 0);
+//     const exact = (key) => {
+//       const value = charges[key];
+//       if (value === undefined || value === null || value === "") {
+//         return 0;
+//       }
+//       return Number(value);
+//     };
+
+//     // Get payment method label
+//     const selectedPaymentLabel = paymentMethodOptions.find(
+//       (o) => o.value === selectedPaymentMethodId
+//     )?.label?.toLowerCase() || "";
+
+//     // ✅ PAYMENT METHOD VALIDATION & PAYMENT DETAIL OBJECT CONSTRUCTION
+//     let payment_detail = {
+//       payment_type: selectedPaymentLabel || "cash",
+//       reference_date: reference_date,
+//       total_amount: Number(paidAmount) || 0,
+//       reference: remark || "",
+//     };
+
+//     // Cheque Payment
+//     if (selectedPaymentLabel === "cheque") {
+//       if (!chequeNumber || !chequeBankName || !chequeBranchName) {
+//         alert("Please enter Cheque Number, Bank Name and Branch Name.");
+//         return;
+//       }
+//       if (!/^\d{6}$/.test(chequeNumber)) {
+//         alert("Cheque Number must be exactly 6 digits.");
+//         return;
+//       }
+//       payment_detail = {
+//         payment_type: "Cheque",
+//         cheque_number: Number(chequeNumber),
+//         cheque_bank_name: chequeBankName,
+//         cheque_branch_name: chequeBranchName,
+//         remarks: remark || "",
+//         reference_date: reference_date,
+//         reference: remark || "",
+//         total_amount: Number(paidAmount) || 0,
+//         ...(selectedBankId && { beneficiary_bank_id: Number(selectedBankId) }),
+//         ...(selectedAccountId && { beneficiary_account_id: Number(selectedAccountId) }),
+//       };
+//     }
+//     // Bank Transfer
+//     else if (selectedPaymentLabel === "bank") {
+//       payment_detail = {
+//         payment_type: "Bank",
+//         ...(selectedBankId && { beneficiary_bank_id: Number(selectedBankId) }),
+//         ...(selectedAccountId && { beneficiary_account_id: Number(selectedAccountId) }),
+//         reference_date: reference_date,
+//         total_amount: Number(paidAmount) || 0,
+//         reference: remark || "",
+//       };
+//     }
+//     // Cash Payment
+//     else if (selectedPaymentLabel === "cash") {
+//       payment_detail = {
+//         payment_type: "Cash",
+//         reference_date: reference_date,
+//         total_amount: Number(paidAmount) || 0,
+//         reference: remark || "",
+//       };
+//     }
+//     // Demand Draft (DD)
+//     else if (selectedPaymentLabel === "dd" || selectedPaymentLabel === "demand draft") {
+//       if (!ddNumber || !ddIssuingBank) {
+//         alert("Please enter DD Number and Issuing Bank.");
+//         return;
+//       }
+//       if (!/^\d{6}$/.test(ddNumber)) {
+//         alert("DD Number must be exactly 6 digits.");
+//         return;
+//       }
+//       payment_detail = {
+//         payment_type: "dd",
+//         dd_number: ddNumber,
+//         issuing_bank_name: ddIssuingBank,
+//         ...(selectedBankId && { beneficiary_bank_id: Number(selectedBankId) }),
+//         ...(selectedAccountId && { beneficiary_account_id: Number(selectedAccountId) }),
+//         reference_date: reference_date,
+//         total_amount: Number(paidAmount) || 0,
+//         reference: remark || "",
+//       };
+//     }
+//     // RTGS/NEFT
+//     else if (selectedPaymentLabel.includes("rtgs") || selectedPaymentLabel.includes("neft")) {
+//       if (!rtgsUtrNo || !rtgsSenderBank || !rtgsAccountNo) {
+//         alert("Please enter UTR No, Sender Bank and Account No for RTGS/NEFT.");
+//         return;
+//       }
+//       if (!/^\d{22}$/.test(rtgsUtrNo)) {
+//         alert("UTR Number must be exactly 22 digits.");
+//         return;
+//       }
+//       payment_detail = {
+//         payment_type: "rtgs_neft",
+//         utr_number: rtgsUtrNo,
+//         sender_bank_name: rtgsSenderBank,
+//         account_number: rtgsAccountNo,
+//         ...(selectedBankId && { beneficiary_bank_id: Number(selectedBankId) }),
+//         ...(selectedAccountId && { beneficiary_account_id: Number(selectedAccountId) }),
+//         reference_date: reference_date,
+//         total_amount: Number(paidAmount) || 0,
+//         reference: remark || "",
+//       };
+//     }
+//     // UPI
+//     else if (selectedPaymentLabel.includes("upi")) {
+//       if (!upiUtrNo) {
+//         alert("Please enter UTR No for UPI payment.");
+//         return;
+//       }
+//       if (!/^\d{22}$/.test(upiUtrNo)) {
+//         alert("UTR Number must be exactly 22 digits.");
+//         return;
+//       }
+//       payment_detail = {
+//         payment_type: "upi",
+//         utr_number: upiUtrNo,
+//         ...(selectedBankId && { beneficiary_bank_id: Number(selectedBankId) }),
+//         ...(selectedAccountId && { beneficiary_account_id: Number(selectedAccountId) }),
+//         reference_date: reference_date,
+//         total_amount: Number(paidAmount) || 0,
+//         reference: remark || "",
+//       };
+//     }
 
 //     const payload = {
 //       organization_id,
@@ -655,25 +783,22 @@
 //       course_id,
 //       department_id,
 //       academic_year_id,
-//       semester_ids, // ✅ FIXED IDs FROM SELECTED FEE DETAILS
+//       semester_ids,
 //       login_id,
 //       student_id,
 //       receipt_date,
 //       payment_method_id: selectedPaymentMethodId,
-//       bank_id,
-//       account_number,
-//       remarks: remark || "",
-//       reference_date,
 //       student_fee_details_ids,
-
 //       late_fee: exact("late_fee"),
 //       readmission_fees: exact("readmission_fees"),
 //       discount_fee: exact("discount_fee"),
 //       check_bounce_fee: exact("check_bounce_fee"),
-
-//       total_amount: Number(paidAmount) || 0,
+//       remarks: paymentRemark || "",
+//       payment_detail: payment_detail,
 //     };
 
+//     console.log("DEBUG - Charges object:", charges);
+//     console.log("DEBUG - exact('discount_fee'):", exact("discount_fee"));
 //     console.log("Payload sent →", payload);
 
 //     const confirmed = window.confirm(
@@ -788,17 +913,18 @@
 //     // PAYMENT DETAILS
 //     doc.autoTable({
 //       startY: doc.lastAutoTable.finalY + 8,
-//       head: [["Payment Method", "Reference", "Amount"]],
+//       head: [["Payment Method", "Reference", "Remark", "Amount"]],
 //       body: [
 //         [
 //           safe(data.payment_method),
 //           safe(data.payment_reference || "-"),
+//           safe(data.remarks || "-"),
 //           Number(data.amount || 0).toFixed(2),
 //         ],
 //       ],
 //       theme: "grid",
 //       styles: { fontSize: 10 },
-//       columnStyles: { 2: { halign: "right" } },
+//       columnStyles: { 3: { halign: "right" } },
 //       margin: { left: 10 },
 //       tableWidth: 190,
 //     });
@@ -853,6 +979,7 @@
 //         .filter((d) => d.period === row.period && parseFloat(d.balance) > 0)
 //         .map((d) => ({
 //           id: d.id,
+//           all_ids: d.all_ids || [d.id],
 //           period: d.period,
 //           element_name: d.element_name,
 //           period_id: d.period_id,
@@ -899,6 +1026,7 @@
 //         ...prev,
 //         {
 //           id: item.id,
+//           all_ids: item.all_ids || [item.id],
 //           period: row.period,
 //           element_name: item.element_name,
 //           period_id: item.period_id,
@@ -911,77 +1039,77 @@
 //   };
 
 //   // Helper function to group and sum fee details by element_name and period_month
-//  const aggregateFeeDetails = (feeDetails) => {
-//    const map = {};
+//   const aggregateFeeDetails = (feeDetails) => {
+//     const map = {};
 
-//    feeDetails.forEach((item) => {
-//      const key = `${item.semester}-${item.element_name}`;
+//     feeDetails.forEach((item) => {
+//       const key = `${item.semester}-${item.element_name}`;
 
-//      if (!map[key]) {
-//        map[key] = {
-//          id: item.id,
-//          period: item.semester,
-//          period_id: item.semester_id,
-//          element_name: item.element_name,
-//          element_amount: Number(item.element_amount) || 0,
-//          paid_amount: Number(item.paid_amount) || 0,
-//        };
-//      } else {
-//        map[key].element_amount += Number(item.element_amount) || 0;
-//        map[key].paid_amount += Number(item.paid_amount) || 0;
-//      }
+//       if (!map[key]) {
+//         map[key] = {
+//           id: item.id,
+//           all_ids: [item.id],
+//           period: item.semester,
+//           period_id: item.semester_id,
+//           element_name: item.element_name,
+//           element_amount: Number(item.element_amount) || 0,
+//           paid_amount: Number(item.paid_amount) || 0,
+//         };
+//       } else {
+//         map[key].all_ids.push(item.id);
+//         map[key].element_amount += Number(item.element_amount) || 0;
+//         map[key].paid_amount += Number(item.paid_amount) || 0;
+//       }
 
-//      map[key].balance = map[key].element_amount - map[key].paid_amount;
-//    });
+//       map[key].balance = map[key].element_amount - map[key].paid_amount;
+//     });
 
-//    return Object.values(map);
-//  };
+//     return Object.values(map);
+//   };
 
-// useEffect(() => {
-//   if (feeDetails.length > 0) {
-//     setAggregatedFeeDetails(aggregateFeeDetails(feeDetails));
-//     setUniquePeriods(getUniquePeriods(feeDetails));
-//   }
-// }, [feeDetails]);
-
+//   useEffect(() => {
+//     if (feeDetails.length > 0) {
+//       setAggregatedFeeDetails(aggregateFeeDetails(feeDetails));
+//       setUniquePeriods(getUniquePeriods(feeDetails));
+//     }
+//   }, [feeDetails]);
 
 //   useEffect(() => {
 //     fetchStudentData();
 //   }, []);
 
 //   // Helper to get unique periods with summed total and balance amounts
-//  const getUniquePeriods = (feeDetails) => {
-//    if (!Array.isArray(feeDetails) || feeDetails.length === 0) return [];
+//   const getUniquePeriods = (feeDetails) => {
+//     if (!Array.isArray(feeDetails) || feeDetails.length === 0) return [];
 
-//    const periodMap = new Map();
+//     const periodMap = new Map();
 
-//    feeDetails.forEach((detail) => {
-//      const period = detail.semester;
-//      const elementAmount = Number(detail.element_amount) || 0;
-//      const paidAmount = Number(detail.paid_amount) || 0;
+//     feeDetails.forEach((detail) => {
+//       const period = detail.semester;
+//       const elementAmount = Number(detail.element_amount) || 0;
+//       const paidAmount = Number(detail.paid_amount) || 0;
 
-//      if (!periodMap.has(period)) {
-//        periodMap.set(period, {
-//          period,
-//          totalAmount: elementAmount,
-//          paidAmount: paidAmount,
-//          discount: 0,
-//        });
-//      } else {
-//        const existing = periodMap.get(period);
-//        existing.totalAmount += elementAmount;
-//        existing.paidAmount += paidAmount;
-//      }
-//    });
+//       if (!periodMap.has(period)) {
+//         periodMap.set(period, {
+//           period,
+//           totalAmount: elementAmount,
+//           paidAmount: paidAmount,
+//           discount: 0,
+//         });
+//       } else {
+//         const existing = periodMap.get(period);
+//         existing.totalAmount += elementAmount;
+//         existing.paidAmount += paidAmount;
+//       }
+//     });
 
-//    return Array.from(periodMap.values()).map((p) => ({
-//      ...p,
-//      totalAmount: Number(p.totalAmount),
-//      paidAmount: Number(p.paidAmount),
-//      balanceAmount: Number(p.totalAmount - p.paidAmount),
-//    }));
-//  };
-
+//     return Array.from(periodMap.values()).map((p) => ({
+//       ...p,
+//       totalAmount: Number(p.totalAmount),
+//       paidAmount: Number(p.paidAmount),
+//       balanceAmount: Number(p.totalAmount - p.paidAmount),
+//     }));
+//   };
 
 //   // const uniquePeriods = getUniquePeriods(feeDetails);
 
@@ -1063,6 +1191,7 @@
 //         setStudentName(student.student_name || "");
 
 //         setSelectedStudent({
+//           id: student.id,
 //           name: student.student_name || "",
 //           barcode: student.barcode || "",
 //           admissionNo: student.college_admission_no || "",
@@ -1137,7 +1266,7 @@
 
 //   useEffect(() => {
 //     if (
-//       selectedStudent.studentId ||
+//       selectedStudent.id ||
 //       selectedStudent.barcode ||
 //       selectedStudent.admissionNo
 //     ) {
@@ -1146,7 +1275,7 @@
 //       setSelectedFeeDetails([]);
 
 //       fetchStudentData({
-//         studentId: selectedStudent.studentId,
+//         id: selectedStudent.id,
 //         barcode: selectedStudent.barcode,
 //         admissionNo: selectedStudent.admissionNo,
 //       });
@@ -1189,6 +1318,11 @@
 //     const newPaidAmount = parseFloat(e.target.value) || 0;
 //     setPaidAmount(newPaidAmount);
 //   };
+
+//   const selectedPaymentMethodLabel = paymentMethodOptions.find(
+//     (o) => o.value === selectedPaymentMethodId
+//   )?.label?.toLowerCase() || "";
+
 //   return (
 //     <div className="container-fluid ">
 //       <div className="row">
@@ -1526,15 +1660,15 @@
 //                                               <td>{item.balance}</td>
 //                                               <td>
 //                                                 {parseFloat(item.balance) >
-//                                                 0 ? (
+//                                                   0 ? (
 //                                                   <input
 //                                                     type="checkbox"
 //                                                     checked={selectedFeeDetails.some(
 //                                                       (detail) =>
 //                                                         detail.period ===
-//                                                           row.period &&
+//                                                         row.period &&
 //                                                         detail.element_name ===
-//                                                           item.element_name
+//                                                         item.element_name
 //                                                     )}
 //                                                     onChange={() =>
 //                                                       handleNestedCheckboxChange(
@@ -1614,16 +1748,13 @@
 //                       <tbody>
 //                         {uniquePeriods
 //                           .filter((row) => {
-//                             const total = Number(row.totalAmount);
-//                             const paid = Number(row.paidAmount);
-
-//                             return paid >= total / 2; // FULL or HALF paid
+//                             return Number(row.totalAmount) > 0; // Show all periods with fees
 //                           })
 //                           .map((row, index) => (
 //                             <React.Fragment key={index}>
 //                               {aggregatedFeeDetails
 //                                 .filter(
-//                                   (detail) => detail.period === row.period
+//                                   (detail) => detail.period === row.period && detail.paid_amount > 0
 //                                 )
 //                                 .map((item, subIndex) => (
 //                                   <tr key={subIndex}>
@@ -1668,14 +1799,161 @@
 //                             : null;
 //                           setSelectedPaymentMethodId(newValue);
 
-//                           // Clear when Cash selected
-//                           if (newValue === 2) {
+//                           // Clear bank/account when Cash selected (ID 2) OR if label is 'Cash'
+//                           const label = selectedOption ? selectedOption.label : "";
+//                           if (newValue === 2 || label.toLowerCase() === "cash") {
 //                             setSelectedBankId(null);
 //                             setSelectedAccountId(null);
 //                           }
+
+//                           // Clear all method-specific fields when payment method changes
+//                           setChequeNumber("");
+//                           setChequeBankName("");
+//                           setChequeBranchName("");
+//                           setDdNumber("");
+//                           setDdIssuingBank("");
+//                           setUpiUtrNo("");
+//                           setRtgsUtrNo("");
+//                           setRtgsSenderBank("");
+//                           setRtgsAccountNo("");
 //                         }}
 //                       />
 //                     </div>
+
+//                     {/* Cheque Fields */}
+//                     {selectedPaymentMethodLabel === "cheque" && (
+//                       <>
+//                         <div className="col-md-3">
+//                           <label className="form-label">Cheque Number</label>
+//                           <input
+//                             type="text"
+//                             className="form-control detail"
+//                             value={chequeNumber}
+//                             onChange={(e) => {
+//                               const value = e.target.value.replace(/\D/g, '');
+//                               if (value.length <= 6) setChequeNumber(value);
+//                             }}
+//                             maxLength="6"
+//                             placeholder="Enter Cheque Number (6 digits)"
+//                           />
+//                         </div>
+
+//                         <div className="col-md-3">
+//                           <label className="form-label"> Cheque Bank Name</label>
+//                           <input
+//                             type="text"
+//                             className="form-control detail"
+//                             value={chequeBankName}
+//                             onChange={(e) => setChequeBankName(e.target.value)}
+//                             placeholder="Cheque Bank Name"
+//                           />
+//                         </div>
+
+//                         <div className="col-md-3">
+//                           <label className="form-label">  Cheque Branch Name</label>
+//                           <input
+//                             type="text"
+//                             className="form-control detail"
+//                             value={chequeBranchName}
+//                             onChange={(e) => setChequeBranchName(e.target.value)}
+//                             placeholder="Cheque Branch Name"
+//                           />
+//                         </div>
+//                       </>
+//                     )}
+
+//                     {/* DD Fields */}
+//                     {selectedPaymentMethodLabel === "dd" && (
+//                       <>
+//                         <div className="col-md-3">
+//                           <label className="form-label">DD Number</label>
+//                           <input
+//                             type="text"
+//                             className="form-control detail"
+//                             value={ddNumber}
+//                             onChange={(e) => {
+//                               const value = e.target.value.replace(/\D/g, '');
+//                               if (value.length <= 6) setDdNumber(value);
+//                             }}
+//                             maxLength="6"
+//                             placeholder="Enter DD Number (6 digits)"
+//                           />
+//                         </div>
+
+//                         <div className="col-md-3">
+//                           <label className="form-label">Issuing Bank</label>
+//                           <input
+//                             type="text"
+//                             className="form-control detail"
+//                             value={ddIssuingBank}
+//                             onChange={(e) => setDdIssuingBank(e.target.value)}
+//                             placeholder="Issuing Bank"
+//                           />
+//                         </div>
+//                       </>
+//                     )}
+
+//                     {/* UPI Fields */}
+//                     {selectedPaymentMethodLabel.includes("upi") && (
+//                       <div className="col-md-3">
+//                         <label className="form-label">UTR No</label>
+//                         <input
+//                           type="text"
+//                           className="form-control detail"
+//                           value={upiUtrNo}
+//                           onChange={(e) => {
+//                             const value = e.target.value.replace(/\D/g, '');
+//                             if (value.length <= 22) setUpiUtrNo(value);
+//                           }}
+//                           maxLength="22"
+//                           placeholder="Enter UTR No (22 digits)"
+//                         />
+//                       </div>
+//                     )}
+
+//                     {/* RTGS/NEFT Fields */}
+//                     {(selectedPaymentMethodLabel.includes("rtgs") ||
+//                       selectedPaymentMethodLabel.includes("neft")) && (
+//                         <>
+//                           <div className="col-md-3">
+//                             <label className="form-label">UTR No</label>
+//                             <input
+//                               type="text"
+//                               className="form-control detail"
+//                               value={rtgsUtrNo}
+//                               onChange={(e) => {
+//                                 const value = e.target.value.replace(/\D/g, '');
+//                                 if (value.length <= 22) setRtgsUtrNo(value);
+//                               }}
+//                               maxLength="22"
+//                               placeholder="Enter UTR No (22 digits)"
+//                             />
+//                           </div>
+
+//                           <div className="col-md-3">
+//                             <label className="form-label">Sender Bank</label>
+//                             <input
+//                               type="text"
+//                               className="form-control detail"
+//                               value={rtgsSenderBank}
+//                               onChange={(e) => setRtgsSenderBank(e.target.value)}
+//                               placeholder="Sender Bank"
+//                             />
+//                           </div>
+
+
+//                           <div className="col-md-3">
+//                             <label className="form-label">Account No</label>
+//                             <input
+//                               type="text"
+//                               className="form-control detail"
+//                               value={rtgsAccountNo}
+//                               onChange={(e) => setRtgsAccountNo(e.target.value)}
+//                               placeholder="Account No"
+//                             />
+//                           </div>
+//                         </>
+//                       )}
 
 //                     {/* Bank Name */}
 //                     <div className="col-md-3">
@@ -1690,8 +1968,8 @@
 //                         value={
 //                           selectedBankId
 //                             ? bankOptions.find(
-//                                 (option) => option.value === selectedBankId
-//                               )
+//                               (option) => option.value === selectedBankId
+//                             )
 //                             : null
 //                         }
 //                         onChange={(selectedOption) =>
@@ -1699,7 +1977,7 @@
 //                             selectedOption ? selectedOption.value : null
 //                           )
 //                         }
-//                         isDisabled={selectedPaymentMethodId === 2}
+//                         isDisabled={selectedPaymentMethodLabel === "cash"}
 //                       />
 //                     </div>
 
@@ -1715,12 +1993,12 @@
 //                         classNamePrefix="react-select"
 //                         placeholder="Select Account"
 //                         isClearable={false}
-//                         isDisabled={selectedPaymentMethodId === 2}
+//                         isDisabled={selectedPaymentMethodLabel === "cash"}
 //                         value={
 //                           selectedAccountId
 //                             ? accountNumberOptions.find(
-//                                 (option) => option.value === selectedAccountId
-//                               )
+//                               (option) => option.value === selectedAccountId
+//                             )
 //                             : null
 //                         }
 //                         onChange={(selectedOption) =>
@@ -1730,6 +2008,7 @@
 //                         }
 //                       />
 //                     </div>
+
 
 //                     {/* Reference Date */}
 //                     <div className="col-md-3">
@@ -1772,6 +2051,21 @@
 //                         id="reference"
 //                         value={remark}
 //                         onChange={(e) => setRemark(e.target.value)}
+//                       />
+//                     </div>
+
+//                     {/* Remark */}
+//                     <div className="col-md-3">
+//                       <label htmlFor="paymentRemark" className="form-label">
+//                         Remark
+//                       </label>
+//                       <textarea
+//                         className="form-control detail"
+//                         id="paymentRemark"
+//                         rows="2"
+//                         placeholder="Enter remark (optional)"
+//                         value={paymentRemark}
+//                         onChange={(e) => setPaymentRemark(e.target.value)}
 //                       />
 //                     </div>
 //                   </form>
@@ -1838,7 +2132,7 @@
 //                     </table>
 //                   </div>
 
-//                   <h6 style={{ fontWeight: 700 }}>Send SMS</h6>
+//                   {/* <h6 style={{ fontWeight: 700 }}>Send SMS</h6>
 //                   <div
 //                     className="form-check d-flex justify-content-center align-items-center"
 //                     style={{ border: "1px solid #ccc", padding: "10px" }}
@@ -1851,7 +2145,7 @@
 //                     <label className="form-check-label" htmlFor="sendSMS">
 //                       Send SMS
 //                     </label>
-//                   </div>
+//                   </div> */}
 //                 </div>
 
 //                 {/* <!-- Totals --> */}
@@ -1934,7 +2228,7 @@
 //                 </div>
 //               </div>
 
-//               <div class="row">
+//               {/* <div class="row">
 //                 <div class="col-md-6"></div>
 //                 <div class="col-md-6" style={{ border: "1px solid #ccc" }}>
 //                   <div class="mb-3">
@@ -1948,7 +2242,7 @@
 //                     ></textarea>
 //                   </div>
 //                 </div>
-//               </div>
+//               </div> */}
 //             </div>
 //           </div>
 //         </div>
@@ -1958,6 +2252,9 @@
 // };
 
 // export default FeeCollection;
+
+
+
 
 
 
@@ -2604,6 +2901,23 @@ const FeeCollection = () => {
     const login_id = Number(sessionStorage.getItem("userId"));
     const student_id = Number(selectedStudentId);
 
+    // student must be selected before attempting save
+    if (!selectedStudentId) {
+      alert("Please select a student first.");
+      return;
+    }
+
+    const payableAmount = Number(paidAmount);
+    if (!payableAmount || payableAmount <= 0) {
+      alert("Please choose the amount. Amount field is required.");
+      return;
+    }
+
+    if (!selectedPaymentMethodId) {
+      alert("Please select a payment method.");
+      return;
+    }
+
     const receipt_date = dateRef.current.value;
     const reference_date = selectedDate.toISOString().slice(0, 10);
 
@@ -2623,6 +2937,11 @@ const FeeCollection = () => {
     const selectedPaymentLabel = paymentMethodOptions.find(
       (o) => o.value === selectedPaymentMethodId
     )?.label?.toLowerCase() || "";
+
+    if (!selectedPaymentLabel) {
+      alert("Please select a valid payment method.");
+      return;
+    }
 
     // ✅ PAYMENT METHOD VALIDATION & PAYMENT DETAIL OBJECT CONSTRUCTION
     let payment_detail = {
