@@ -144,13 +144,13 @@ const AdmAttendanceEntry = () => {
   ];
 
   const reportOptions = [
-    { value: "A", label: "Fee Due Receipt" },
-    { value: "B", label: "Month wise Fee" },
+    // { value: "A", label: "Fee Due Receipt" },
+    // { value: "B", label: "Month wise Fee" },
     { value: "C", label: "Fee Balance" },
-    { value: "D", label: "Fee Collection(Student Wise)" },
-    { value: "E", label: "Fee Collection (Payment Type Wise)" },
-    { value: "F", label: "Export To Excel" },
-    { value: "G", label: "Fee Receipt Details" },
+    // { value: "D", label: "Fee Collection(Student Wise)" },
+    // { value: "E", label: "Fee Collection (Payment Type Wise)" },
+    // { value: "F", label: "Export To Excel" },
+    // { value: "G", label: "Fee Receipt Details" },
     // { value: "H", label: "Fee Details" },
   ];
 
@@ -1406,51 +1406,7 @@ const AdmAttendanceEntry = () => {
                         }}
                       />
                     </div>
-                    <div className="col-12 col-md-3 mb-3">
-                      <label
-                        htmlFor="fee-due-period-from"
-                        className="form-label"
-                      >
-                        Fee Due Period From
-                      </label>
-                      <Select
-                        classNamePrefix="react-select"
-                        className="detail"
-                        options={periodOptions}
-                        placeholder="Select Period"
-                        value={
-                          periodOptions.find(
-                            (opt) => opt.value === fromPeriod
-                          ) || null
-                        }
-                        onChange={(selectedOption) =>
-                          setFromPeriod(
-                            selectedOption ? selectedOption.value : null
-                          )
-                        }
-                      />
-                    </div>
-
-                    <div className="col-12 col-md-3 mb-2">
-                      <label htmlFor="fee-due-period-to" className="form-label">
-                        Fee Due Period To
-                      </label>
-                      <Select
-                        classNamePrefix="react-select"
-                        className="detail"
-                        options={periodOptions}
-                        placeholder="Select Period"
-                        value={
-                          periodOptions.find((opt) => opt.value === toPeriod) ||
-                          null
-                        }
-                        onChange={(selectedOption) =>
-                          setToPeriod(
-                            selectedOption ? selectedOption.value : null
-                          )
-                        }
-                      />
-                    </div>
+                   
 
                     <div className="col-12 col-md-3 mb-2">
                       <label htmlFor="report" className="form-label">
@@ -1569,8 +1525,8 @@ const AdmAttendanceEntry = () => {
                       <thead>
                         <tr>
                           <th>Student Name</th>
-                          <th>Admission No</th>
-                          <th>BarCode</th>
+                          {/* <th>Admission No</th>
+                          <th>BarCode</th> */}
                           <th>Course</th>
                           <th>Section</th>
                           <th>Father Name</th>
@@ -1597,8 +1553,8 @@ const AdmAttendanceEntry = () => {
                           currentItems.map((item, index) => (
                             <tr key={offset + index}>
                               <td>{item.student_name}</td>
-                              <td>{item.college_admission_no}</td>
-                              <td>{item.barcode}</td>
+                              {/* <td>{item.college_admission_no}</td>
+                              <td>{item.barcode}</td> */}
                               <td>{item.course_name}</td>
                               <td>{item.section_name}</td>
                               <td>{item.fatherName}</td>

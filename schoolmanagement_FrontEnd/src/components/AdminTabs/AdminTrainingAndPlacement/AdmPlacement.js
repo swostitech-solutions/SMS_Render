@@ -1,11 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import SelectSearchParty from "../AdminSearchExpense/SelectSearchParty";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./AdmPlacement.css";
 import Select from "react-select";
 import { ApiUrl } from "../../../ApiUrl";
-import { Container, Row, Col, Form } from "react-bootstrap";
+import { Row, Col, Form } from "react-bootstrap";
 import useFetchSessionList from "../../hooks/fetchSessionList";
 import useFetchCourseByFilter from "../../hooks/useFetchCourses";
 import useFetchBranch from "../../hooks/useFetchBranch";
@@ -26,6 +25,11 @@ const AdmAttendanceEntry = () => {
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [submitMessage, setSubmitMessage] = useState({
+    type: "",
+    text: "",
+  });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [formData, setFormData] = useState({
     organizationName: "",
@@ -74,6 +78,8 @@ const AdmAttendanceEntry = () => {
     setSelectedDepartment(null);
     setSelectedAcademicYear(null);
     setSelectedSemester(null);
+    setSubmitMessage({ type: "", text: "" });
+    setFieldErrors({});
 
     // Clear uncontrolled input refs if used elsewhere
     if (fromClassRef.current) fromClassRef.current.value = "";
@@ -154,6 +160,7 @@ const AdmAttendanceEntry = () => {
           ...prev,
           [name]: value,
         }));
+        setFieldErrors((prev) => ({ ...prev, [name]: "" }));
       }
       return;
     }
@@ -162,6 +169,12 @@ const AdmAttendanceEntry = () => {
       ...prev,
       [name]: value,
     }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleSelectChange = (setter, fieldName) => (selectedValue) => {
+    setter(selectedValue);
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: "" }));
   };
 
   const formatLocalDate = (date) => {
@@ -170,9 +183,137 @@ const AdmAttendanceEntry = () => {
     return new Date(date.getTime() - offset).toISOString().split("T")[0]; // Adjust for timezone
   };
 
+  const getErrorMessage = (errorData) => {
+    if (!errorData) return "Error saving placement. Please try again.";
+    if (typeof errorData === "string") return errorData;
+    if (errorData.detail) return errorData.detail;
+
+    const firstKey = Object.keys(errorData)[0];
+    if (!firstKey) return "Error saving placement. Please try again.";
+
+    const fieldError = errorData[firstKey];
+    if (Array.isArray(fieldError) && fieldError.length > 0) {
+      return `${firstKey}: ${fieldError[0]}`;
+    }
+    if (typeof fieldError === "string") {
+      return `${firstKey}: ${fieldError}`;
+    }
+
+    return "Error saving placement. Please try again.";
+  };
+
+  const getFieldErrorText = (value) => {
+    if (Array.isArray(value)) return value[0] || "Invalid value.";
+    if (typeof value === "string") return value;
+    return "Invalid value.";
+  };
+
+  const mapApiErrorsToFields = (errorData) => {
+    if (!errorData || typeof errorData !== "object") {
+      return { mappedErrors: {}, message: "" };
+    }
+
+    const apiToUiFieldMap = {
+      company_name: "organizationName",
+      module: "trainingModule",
+      duration: "duration",
+      from_date: "fromDate",
+      to_date: "toDate",
+      participants: "numParticipants",
+      hr_name: "hrName",
+      batch: "batch",
+      course: "course",
+      department: "department",
+      academic_year: "academicYear",
+      semester: "semester",
+    };
+
+    const mappedErrors = {};
+    const nonFieldMessages = [];
+
+    Object.entries(errorData).forEach(([key, value]) => {
+      const text = getFieldErrorText(value);
+      const uiField = apiToUiFieldMap[key];
+
+      if (uiField) {
+        mappedErrors[uiField] = text;
+      } else if (key === "detail" || key === "non_field_errors") {
+        nonFieldMessages.push(text);
+      } else {
+        nonFieldMessages.push(`${key}: ${text}`);
+      }
+    });
+
+    return {
+      mappedErrors,
+      message: nonFieldMessages.join(" "),
+    };
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.organizationName.trim()) {
+      errors.organizationName = "Organization/Company name is required";
+    }
+    if (!formData.trainingModule.trim()) {
+      errors.trainingModule = "Training module is required";
+    }
+    if (!formData.duration || Number(formData.duration) <= 0) {
+      errors.duration = "Duration is required";
+    }
+    if (!fromDate) {
+      errors.fromDate = "From date is required";
+    }
+    if (!toDate) {
+      errors.toDate = "To date is required";
+    }
+    if (!selectedBatch) {
+      errors.batch = "Session is required";
+    }
+    if (!selectedCourse) {
+      errors.course = "Course is required";
+    }
+    if (!selectedDepartment) {
+      errors.department = "Department is required";
+    }
+    if (!selectedAcademicYear) {
+      errors.academicYear = "Academic year is required";
+    }
+    if (!formData.numParticipants || Number(formData.numParticipants) <= 0) {
+      errors.numParticipants = "Number of participants is required";
+    }
+
+    if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(toDate);
+      end.setHours(0, 0, 0, 0);
+
+      if (end < start) {
+        errors.toDate = "To date cannot be earlier than from date";
+      }
+
+      if (formData.duration && Number(formData.duration) > 0 && end >= start) {
+        const durationDays = parseInt(formData.duration, 10);
+        const diffTime = end - start;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        if (diffDays !== durationDays) {
+          errors.duration = `Duration must match selected date range (${diffDays} days)`;
+        }
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async () => {
-    if (!fromDate || !toDate) {
-      alert("Please select both From Date and To Date");
+    setSubmitMessage({ type: "", text: "" });
+    setFieldErrors({});
+
+    if (!validateForm()) {
       return;
     }
 
@@ -219,28 +360,6 @@ const AdmAttendanceEntry = () => {
       payload.semester = selectedSemester.value;
     }
 
-    // Validate Duration vs Date Range
-    if (formData.duration && fromDate && toDate) {
-      const durationDays = parseInt(formData.duration, 10);
-
-      // Normalize dates to midnight to ensure accurate day calculation
-      const start = new Date(fromDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(toDate);
-      end.setHours(0, 0, 0, 0);
-
-      const diffTime = end - start;
-      // Calculate difference in days (inclusive of start date)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-      if (diffDays !== durationDays) {
-        alert(
-          `Date range mismatch! You selected a range of ${diffDays} days, but the Duration is set to ${durationDays} days. Please adjust the dates or the duration.`
-        );
-        return; // Stop submission
-      }
-    }
-
     try {
       const token = localStorage.getItem("accessToken");
       const headers = {
@@ -275,11 +394,12 @@ const AdmAttendanceEntry = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(
-          placementData?.id
+        setSubmitMessage({
+          type: "success",
+          text: placementData?.id
             ? "Placement updated successfully!"
-            : "Placement created successfully!"
-        );
+            : "Placement created successfully!",
+        });
         console.log(
           placementData?.id
             ? "Placement updated successfully:"
@@ -288,13 +408,21 @@ const AdmAttendanceEntry = () => {
         );
       } else {
         const errorData = await response.json();
-        alert("Error saving placement. Please try again.");
+        const { mappedErrors, message } = mapApiErrorsToFields(errorData);
+        if (Object.keys(mappedErrors).length > 0) {
+          setFieldErrors(mappedErrors);
+        }
+        setSubmitMessage({
+          type: "danger",
+          text: message || getErrorMessage(errorData),
+        });
         console.error("Error saving placement:", errorData);
       }
     } catch (error) {
-      alert(
-        "Something went wrong. Please check your internet connection and try again."
-      );
+      setSubmitMessage({
+        type: "danger",
+        text: "Something went wrong. Please check your internet connection and try again.",
+      });
       console.error("Error saving placement:", error);
     }
   };
@@ -342,6 +470,12 @@ const AdmAttendanceEntry = () => {
                   </button>
                 </div>
               </div>
+
+              {submitMessage.text && (
+                <div className={`alert alert-${submitMessage.type}`} role="alert">
+                  {submitMessage.text}
+                </div>
+              )}
 
               {/* <div
                 className="col-12"
@@ -490,6 +624,9 @@ const AdmAttendanceEntry = () => {
                           value={formData.organizationName}
                           onChange={handleChange}
                         />
+                        {fieldErrors.organizationName && (
+                          <small className="text-danger">{fieldErrors.organizationName}</small>
+                        )}
                       </Col>
                     </Row>
 
@@ -508,6 +645,9 @@ const AdmAttendanceEntry = () => {
                           value={formData.trainingModule}
                           onChange={handleChange}
                         />
+                        {fieldErrors.trainingModule && (
+                          <small className="text-danger">{fieldErrors.trainingModule}</small>
+                        )}
                       </Col>
                     </Row>
 
@@ -527,6 +667,9 @@ const AdmAttendanceEntry = () => {
                           min="1"
                           placeholder="Enter days"
                         />
+                        {fieldErrors.duration && (
+                          <small className="text-danger">{fieldErrors.duration}</small>
+                        )}
                       </Col>
                     </Row>
 
@@ -541,8 +684,14 @@ const AdmAttendanceEntry = () => {
                           type="date"
                           className="form-control detail"
                           value={fromDate || ""}
-                          onChange={(e) => setFromDate(e.target.value)}
+                          onChange={(e) => {
+                            setFromDate(e.target.value);
+                            setFieldErrors((prev) => ({ ...prev, fromDate: "" }));
+                          }}
                         />
+                        {fieldErrors.fromDate && (
+                          <small className="text-danger">{fieldErrors.fromDate}</small>
+                        )}
                       </Col>
                     </Row>
 
@@ -557,8 +706,14 @@ const AdmAttendanceEntry = () => {
                           type="date"
                           className="form-control detail"
                           value={toDate || ""}
-                          onChange={(e) => setToDate(e.target.value)}
+                          onChange={(e) => {
+                            setToDate(e.target.value);
+                            setFieldErrors((prev) => ({ ...prev, toDate: "" }));
+                          }}
                         />
+                        {fieldErrors.toDate && (
+                          <small className="text-danger">{fieldErrors.toDate}</small>
+                        )}
                       </Col>
                     </Row>
 
@@ -578,15 +733,21 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedBatch}
-                          onChange={setSelectedBatch}
+                          onChange={handleSelectChange(setSelectedBatch, "batch")}
                           placeholder="Select Session"
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
+                              borderColor: fieldErrors.batch ? "#dc3545" : provided.borderColor,
                             }),
                           }}
                         />
+                        {fieldErrors.batch && (
+                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                            {fieldErrors.batch}
+                          </div>
+                        )}
                       </Col>
                     </Row>
 
@@ -607,16 +768,22 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedCourse}
-                          onChange={setSelectedCourse}
+                          onChange={handleSelectChange(setSelectedCourse, "course")}
                           placeholder="Select Course"
                           isDisabled={!selectedBatch}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
+                              borderColor: fieldErrors.course ? "#dc3545" : provided.borderColor,
                             }),
                           }}
                         />
+                        {fieldErrors.course && (
+                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                            {fieldErrors.course}
+                          </div>
+                        )}
                       </Col>
                     </Row>
 
@@ -637,16 +804,22 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedDepartment}
-                          onChange={setSelectedDepartment}
+                          onChange={handleSelectChange(setSelectedDepartment, "department")}
                           placeholder="Select Department"
                           isDisabled={!selectedCourse}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
+                              borderColor: fieldErrors.department ? "#dc3545" : provided.borderColor,
                             }),
                           }}
                         />
+                        {fieldErrors.department && (
+                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                            {fieldErrors.department}
+                          </div>
+                        )}
                       </Col>
                     </Row>
 
@@ -667,16 +840,22 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedAcademicYear}
-                          onChange={setSelectedAcademicYear}
+                          onChange={handleSelectChange(setSelectedAcademicYear, "academicYear")}
                           placeholder="Select Academic Year"
                           isDisabled={!selectedDepartment}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
+                              borderColor: fieldErrors.academicYear ? "#dc3545" : provided.borderColor,
                             }),
                           }}
                         />
+                        {fieldErrors.academicYear && (
+                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                            {fieldErrors.academicYear}
+                          </div>
+                        )}
                       </Col>
                     </Row>
 
@@ -695,16 +874,22 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedSemester}
-                          onChange={setSelectedSemester}
+                          onChange={handleSelectChange(setSelectedSemester, "semester")}
                           placeholder="Select Semester"
                           isDisabled={!selectedAcademicYear}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
+                              borderColor: fieldErrors.semester ? "#dc3545" : provided.borderColor,
                             }),
                           }}
                         />
+                        {fieldErrors.semester && (
+                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                            {fieldErrors.semester}
+                          </div>
+                        )}
                       </Col>
                     </Row>
 
@@ -723,6 +908,9 @@ const AdmAttendanceEntry = () => {
                           value={formData.numParticipants}
                           onChange={handleChange}
                         />
+                        {fieldErrors.numParticipants && (
+                          <small className="text-danger">{fieldErrors.numParticipants}</small>
+                        )}
                       </Col>
                     </Row>
 
@@ -738,6 +926,9 @@ const AdmAttendanceEntry = () => {
                           value={formData.hrName}
                           onChange={handleChange}
                         />
+                        {fieldErrors.hrName && (
+                          <small className="text-danger">{fieldErrors.hrName}</small>
+                        )}
                       </Col>
                     </Row>
                   </Form>
