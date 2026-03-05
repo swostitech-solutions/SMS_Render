@@ -33,7 +33,7 @@ const AdmAttendanceEntry = ({
   setFormData,
   frontCover,
   setFrontCover,
-  parentErrors = {},
+  requiredErrors = {},
 }) => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
@@ -719,10 +719,13 @@ const AdmAttendanceEntry = ({
                           onChange={handleInputChange}
                           required
                         />
-                        {(errors.first_name || parentErrors.first_name) && (
+                        {errors.first_name && (
                           <small style={{ color: "red" }}>
-                            {errors.first_name || parentErrors.first_name}
+                            {errors.first_name}
                           </small>
+                        )}
+                        {!errors.first_name && requiredErrors.first_name && (
+                          <small style={{ color: "red" }}>{requiredErrors.first_name}</small>
                         )}
                         <input
                           type="text"
@@ -747,17 +750,20 @@ const AdmAttendanceEntry = ({
                           value={formData.last_name}
                           onChange={handleInputChange}
                         />
-                        {(errors.last_name || parentErrors.last_name) && (
+                        {errors.last_name && (
                           <small style={{ color: "red" }}>
-                            {errors.last_name || parentErrors.last_name}
+                            {errors.last_name}
                           </small>
+                        )}
+                        {!errors.last_name && requiredErrors.last_name && (
+                          <small style={{ color: "red" }}>{requiredErrors.last_name}</small>
                         )}
                       </div>
                     </div>
 
                     <div className="col-12 col-sm-6 col-md-3 mb-2">
                       <label htmlFor="gender" className="form-label">
-                        Gender <span style={{ color: "red" }}>*</span>
+                        Gender
                       </label>
                       <Select
                         id="gender"
@@ -804,8 +810,8 @@ const AdmAttendanceEntry = ({
                           })
                         }
                       />
-                      {parentErrors.gender && (
-                        <small className="text-danger">{parentErrors.gender}</small>
+                      {requiredErrors.gender && (
+                        <small style={{ color: "red" }}>{requiredErrors.gender}</small>
                       )}
                     </div>
 
@@ -882,12 +888,12 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Session"
                       />
-                      {parentErrors.batch && (
-                        <small className="text-danger">{parentErrors.batch}</small>
+                      {requiredErrors.batch && (
+                        <small style={{ color: "red" }}>{requiredErrors.batch}</small>
                       )}
                     </div>
 
-                    {/* Course */}}
+                    {/* Course */}
                     <div className="col-12 col-md-4 mb-4">
                       <label className="form-label">
                         Course<span style={{ color: "red" }}>*</span>
@@ -922,12 +928,12 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Course"
                       />
-                      {parentErrors.course && (
-                        <small className="text-danger">{parentErrors.course}</small>
+                      {requiredErrors.course && (
+                        <small style={{ color: "red" }}>{requiredErrors.course}</small>
                       )}
                     </div>
 
-                    {/* Department */}}
+                    {/* Department */}
                     <div className="col-12 col-md-4 mb-4">
                       <label className="form-label">
                         Department<span style={{ color: "red" }}>*</span>
@@ -962,12 +968,12 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Department"
                       />
-                      {parentErrors.department && (
-                        <small className="text-danger">{parentErrors.department}</small>
+                      {requiredErrors.department && (
+                        <small style={{ color: "red" }}>{requiredErrors.department}</small>
                       )}
                     </div>
 
-                    {/* Academic Year */}}
+                    {/* Academic Year */}
                     <div className="col-12 col-md-4 mb-4">
                       <label className="form-label">
                         Academic Year<span style={{ color: "red" }}>*</span>
@@ -1004,12 +1010,12 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Academic Year"
                       />
-                      {parentErrors.academic_year && (
-                        <small className="text-danger">{parentErrors.academic_year}</small>
+                      {requiredErrors.academic_year && (
+                        <small style={{ color: "red" }}>{requiredErrors.academic_year}</small>
                       )}
                     </div>
 
-                    {/* Semester */}}
+                    {/* Semester */}
                     <div className="col-12 col-md-4 mb-4">
                       <label className="form-label">
                         Semester<span style={{ color: "red" }}>*</span>
@@ -1044,12 +1050,12 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Semester"
                       />
-                      {parentErrors.semester && (
-                        <small className="text-danger">{parentErrors.semester}</small>
+                      {requiredErrors.semester && (
+                        <small style={{ color: "red" }}>{requiredErrors.semester}</small>
                       )}
                     </div>
 
-                    {/* Section */}}
+                    {/* Section */}
                     <div className="col-12 col-md-4 mb-4">
                       <label className="form-label">
                         Section<span style={{ color: "red" }}>*</span>
@@ -1084,15 +1090,14 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Section"
                       />
-                      {parentErrors.addmitted_section && (
-                        <small className="text-danger">{parentErrors.addmitted_section}</small>
+                      {requiredErrors.addmitted_section && (
+                        <small style={{ color: "red" }}>{requiredErrors.addmitted_section}</small>
                       )}
                     </div>
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date_of_admission" className="form-label">
-                        Date Of Admission{" "}
-                        <span style={{ color: "red" }}>*</span>
+                        Date Of Admission <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -1103,8 +1108,8 @@ const AdmAttendanceEntry = ({
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />
-                      {parentErrors.date_of_admission && (
-                        <small className="text-danger">{parentErrors.date_of_admission}</small>
+                      {requiredErrors.date_of_admission && (
+                        <small style={{ color: "red" }}>{requiredErrors.date_of_admission}</small>
                       )}
                     </div>
 
@@ -1139,8 +1144,8 @@ const AdmAttendanceEntry = ({
                           })
                         }
                       />
-                      {parentErrors.admission_type && (
-                        <small className="text-danger">{parentErrors.admission_type}</small>
+                      {requiredErrors.admission_type && (
+                        <small style={{ color: "red" }}>{requiredErrors.admission_type}</small>
                       )}
                     </div>
 
@@ -1157,6 +1162,9 @@ const AdmAttendanceEntry = ({
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />
+                      {requiredErrors.dob && (
+                        <small style={{ color: "red" }}>{requiredErrors.dob}</small>
+                      )}
                     </div>
 
                     {/* <div className="col-12 col-md-4 mb-2">
@@ -1646,7 +1654,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date-of-birth" className="form-label">
-                        Date Of Birth <span style={{ color: "red" }}>*</span>
+                        Date Of Join
                       </label>
                       <input
                         type="date"
@@ -1657,9 +1665,6 @@ const AdmAttendanceEntry = ({
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />
-                      {parentErrors.dob && (
-                        <small className="text-danger">{parentErrors.dob}</small>
-                      )}
                     </div>
 
                     <div className="col-12 col-md-4 mb-2">

@@ -241,7 +241,6 @@ const StfAttendance = () => {
       }
 
       if (!validateAttendanceFilters()) {
-        setSubmitMessage({ type: "danger", text: "Please correct the highlighted fields." });
         return;
       }
 
@@ -502,7 +501,6 @@ const StfAttendance = () => {
     setSubmitMessage({ type: "", text: "" });
 
     if (!validateAttendanceFilters()) {
-      setSubmitMessage({ type: "danger", text: "Please correct the highlighted fields." });
       return;
     }
 

@@ -6,7 +6,7 @@ import {
   validateEmail,
 } from "../../utils/validation";
 import { ApiUrl } from "../../../ApiUrl"
-const ParentDetailsForm = ({ formData, setFormData }) => {
+const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
   const {
     profession,
     loading: loadingProfession,
@@ -216,6 +216,9 @@ const ParentDetailsForm = ({ formData, setFormData }) => {
             value={formData.father_name}
             onChange={handleInputChange}
           />
+          {requiredErrors.father_name && (
+            <small style={{ color: "red" }}>{requiredErrors.father_name}</small>
+          )}
         </div>
 
         <div className="col-12 col-md-2 mb-2">
@@ -327,6 +330,9 @@ const ParentDetailsForm = ({ formData, setFormData }) => {
             value={formData.mother_name}
             onChange={handleInputChange}
           />
+          {requiredErrors.mother_name && (
+            <small style={{ color: "red" }}>{requiredErrors.mother_name}</small>
+          )}
         </div>
         <div className="col-12 col-md-2 mb-2">
           <label htmlFor="mother-profession" className="form-label">
