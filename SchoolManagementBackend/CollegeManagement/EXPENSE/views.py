@@ -791,11 +791,11 @@ class PartyMasterSearchListAPIView(ListAPIView):
 
                 if party_type:
                     if party_type.upper() == "C":
-                        filterdata = filterdata.filter(party_flag__iexact="C") | filterdata.filter(
-                            party_flag__iexact="B")
+                        filterdata = filterdata.filter(customer_supplier__iexact="Customer")
                     elif party_type.upper() == "S":
-                        filterdata = filterdata.filter(party_flag__iexact="S") | filterdata.filter(
-                            party_flag__iexact="B")
+                        filterdata = filterdata.filter(customer_supplier__iexact="Supplier")
+                    elif party_type.upper() == "B":
+                        filterdata = filterdata.filter(customer_supplier__iexact="Both")
 
                 if gst_no:
                     filterdata = filterdata.filter(gst_no=gst_no)
@@ -1360,12 +1360,25 @@ class ExpenseSearchListAPIView(ListAPIView):
                                 if record.payment_method not in paymentMethods:
                                     paymentMethods.add(record.payment_method)
 
+                        # Get category names from associated expense details
+                        try:
+                            category_names = list(
+                                ExpenseDetail.objects.filter(
+                                    expense_header=item.expense_header_id,
+                                    is_active=True
+                                ).values_list('expense_category__expense_category', flat=True).distinct()
+                            )
+                            expense_category_str = ", ".join(filter(None, category_names))
+                        except Exception:
+                            expense_category_str = ""
+
                         data = {
                             'expense_header_id': item.expense_header_id,
                             'expense_no': item.expense_no,
                             'date': item.date,
                             'party_name': item.party.party_name,
                             'party_reference': item.party_reference,
+                            'expense_category': expense_category_str,
                             'total_amount': item.total_amount,
                             'paid_amount': item.paid_amount,
                             'balance_amount': item.balance_amount,

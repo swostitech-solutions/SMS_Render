@@ -44,6 +44,7 @@ const AdmAttendanceEntry = () => {
     if (toClassRef.current) toClassRef.current.value = "";
     if (admissionNoRef.current) admissionNoRef.current.value = "";
     setPartyName("");
+    setSelectedCategory(null);
     setExpenseData([]);
     setCurrentPage(0);
   };
@@ -103,7 +104,6 @@ const AdmAttendanceEntry = () => {
   const handleSearch = async () => {
     const fromDate = dateRef.current?.value;
     const toDate = toClassRef.current?.value;
-    const expenseCategoryValue = fromClassRef.current?.value;
     const reference = admissionNoRef.current?.value;
 
     try {
@@ -112,11 +112,11 @@ const AdmAttendanceEntry = () => {
         batch_id: academicSessionId,
         from_date: fromDate || '',
         to_date: toDate || '',
-        expense_category: expenseCategoryValue || '',
-        reference: reference || '',
+        PartyReference: reference || '',
       };
 
       if (partyId) params.party_id = partyId;
+      if (selectedCategory) params.ExpenseCategoryId = selectedCategory.value;
 
       const response = await api.get('EXPENSE/EXPENSE_HEADER/ExpenseSearchList/', { params });
       const data = response.data;
@@ -519,21 +519,12 @@ const AdmAttendanceEntry = () => {
                           id="expense-category"
                           classNamePrefix="react-select"
                           options={expenseCategory.map((category) => ({
-                            value: category.expense_category,
+                            value: category.expense_category_id,
                             label: category.expense_category,
                           }))}
-                          value={
-                            selectedCategory
-                              ? {
-                                value: selectedCategory,
-                                label: selectedCategory,
-                              }
-                              : null
-                          }
+                          value={selectedCategory}
                           onChange={(selectedOption) =>
-                            setSelectedCategory(
-                              selectedOption ? selectedOption.value : ""
-                            )
+                            setSelectedCategory(selectedOption || null)
                           }
                           placeholder="Select"
                         />
@@ -567,6 +558,7 @@ const AdmAttendanceEntry = () => {
                           <th>Expense No</th>
                           <th>Expense Date</th>
                           <th>Party Name</th>
+                          <th>Expense Category</th>
                           <th>Reference</th>
                           <th>Payment Method</th>
                           <th>Total</th>
@@ -583,6 +575,7 @@ const AdmAttendanceEntry = () => {
                               <td>{expense.expense_no}</td>
                               <td>{expense.date}</td>
                               <td>{expense.party_name}</td>
+                              <td>{expense.expense_category}</td>
                               <td>{expense.party_reference}</td>
                               <td>
                                 {Array.isArray(expense.payment_method)
@@ -627,7 +620,7 @@ const AdmAttendanceEntry = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="10" className="text-center">
+                            <td colSpan="11" className="text-center">
                               No records found
                             </td>
                           </tr>
