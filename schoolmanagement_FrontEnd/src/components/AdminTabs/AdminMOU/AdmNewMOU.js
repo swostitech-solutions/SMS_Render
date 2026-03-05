@@ -38,7 +38,7 @@ const AdmNewMOU = () => {
 
   const handleSave = async () => {
     if (!validateFields()) {
-      alert("Please fill all required fields.");
+      // field-specific errors are shown inline; no generic alert needed
       return;
     }
 

@@ -33,6 +33,7 @@ const AdmNewInventory = () => {
     status: "",  // Used for Asset Code No
     description: "",
   });
+  const [errors, setErrors] = useState({});
 
   // Dropdown options
   const [categories, setCategories] = useState([]);
@@ -164,39 +165,27 @@ const AdmNewInventory = () => {
 
   // Handle Save
   const handleSave = async () => {
-    // Validation
-    if (!formData.purchase_date) {
-      toast.error("Please select a purchase date");
+    // Validation - build object of errors
+    const newErrors = {};
+    if (!formData.purchase_date) newErrors.purchase_date = "Purchase date is required";
+    if (!formData.category) newErrors.category = "Category is required";
+    if (!formData.sub_category) newErrors.sub_category = "Sub-category is required";
+    if (!formData.item_name.trim()) newErrors.item_name = "Item name is required";
+    if (!formData.item_value || parseFloat(formData.item_value) < 0)
+      newErrors.item_value = "Valid item value is required";
+    if (!formData.quantity || parseInt(formData.quantity) < 0)
+      newErrors.quantity = "Valid quantity is required";
+    if (!formData.inventory_type)
+      newErrors.inventory_type = "Inventory type is required";
+    if (!formData.status) newErrors.status = "Asset code is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-    if (!formData.category) {
-      toast.error("Please select a category");
-      return;
-    }
-    if (!formData.sub_category) {
-      toast.error("Please select a sub-category");
-      return;
-    }
-    if (!formData.item_name.trim()) {
-      toast.error("Please enter item name");
-      return;
-    }
-    if (!formData.item_value || parseFloat(formData.item_value) < 0) {
-      toast.error("Please enter a valid item value");
-      return;
-    }
-    if (!formData.quantity || parseInt(formData.quantity) < 0) {
-      toast.error("Please enter a valid quantity");
-      return;
-    }
-    if (!formData.inventory_type) {
-      toast.error("Please select inventory type");
-      return;
-    }
-    if (!formData.status) {
-      toast.error("Please enter asset code");
-      return;
-    }
+
+    // clear any previous errors prior to submitting
+    setErrors({});
 
     // Validate required IDs
     if (!orgId || !branchId) {
@@ -400,6 +389,11 @@ const AdmNewInventory = () => {
                             handleInputChange("purchase_date", e.target.value)
                           }
                         />
+                        {errors.purchase_date && (
+                          <small className="text-danger">
+                            {errors.purchase_date}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -433,6 +427,11 @@ const AdmNewInventory = () => {
                           onChange={handleCategoryChange}
                           placeholder="Select"
                         />
+                        {errors.category && (
+                          <small className="text-danger">
+                            {errors.category}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -471,6 +470,11 @@ const AdmNewInventory = () => {
                           }
                           placeholder="Select"
                         />
+                        {errors.sub_category && (
+                          <small className="text-danger">
+                            {errors.sub_category}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -487,6 +491,11 @@ const AdmNewInventory = () => {
                             handleInputChange("item_name", e.target.value)
                           }
                         />
+                        {errors.item_name && (
+                          <small className="text-danger">
+                            {errors.item_name}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -505,6 +514,11 @@ const AdmNewInventory = () => {
                           min="0"
                           step="0.01"
                         />
+                        {errors.item_value && (
+                          <small className="text-danger">
+                            {errors.item_value}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -522,6 +536,11 @@ const AdmNewInventory = () => {
                           }
                           min="0"
                         />
+                        {errors.quantity && (
+                          <small className="text-danger">
+                            {errors.quantity}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -548,6 +567,11 @@ const AdmNewInventory = () => {
                           }
                           placeholder="Select"
                         />
+                        {errors.inventory_type && (
+                          <small className="text-danger">
+                            {errors.inventory_type}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -564,6 +588,11 @@ const AdmNewInventory = () => {
                             handleInputChange("status", e.target.value)
                           }
                         />
+                        {errors.status && (
+                          <small className="text-danger">
+                            {errors.status}
+                          </small>
+                        )}
                       </div>
                     </div>
                   </div>
