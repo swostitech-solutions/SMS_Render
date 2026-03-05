@@ -12,6 +12,8 @@ const LibrarySettings = () => {
     maxBooksStudent: " ",
     maxBooksTeacher: " ",
   });
+  const [saveMsg, setSaveMsg] = useState({ type: "", text: "" });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchLibrarySettings();
@@ -47,12 +49,30 @@ const LibrarySettings = () => {
     }
   };
 
+  const validateFields = () => {
+    const newErrors = {};
+    if (!settings.daysToReturn || String(settings.daysToReturn).trim() === "") newErrors.daysToReturn = "Number of days to return is required.";
+    else if (Number(settings.daysToReturn) <= 0) newErrors.daysToReturn = "Must be greater than 0.";
+    if (!settings.penaltyPerDay || String(settings.penaltyPerDay).trim() === "") newErrors.penaltyPerDay = "Penalty per day is required.";
+    else if (Number(settings.penaltyPerDay) < 0) newErrors.penaltyPerDay = "Cannot be negative.";
+    if (!settings.daysPriorMessage || String(settings.daysPriorMessage).trim() === "") newErrors.daysPriorMessage = "Number of days prior is required.";
+    else if (Number(settings.daysPriorMessage) <= 0) newErrors.daysPriorMessage = "Must be greater than 0.";
+    if (!settings.maxBooksStudent || String(settings.maxBooksStudent).trim() === "") newErrors.maxBooksStudent = "Max books for student is required.";
+    else if (Number(settings.maxBooksStudent) <= 0) newErrors.maxBooksStudent = "Must be greater than 0.";
+    if (!settings.maxBooksTeacher || String(settings.maxBooksTeacher).trim() === "") newErrors.maxBooksTeacher = "Max books for teacher is required.";
+    else if (Number(settings.maxBooksTeacher) <= 0) newErrors.maxBooksTeacher = "Must be greater than 0.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setSettings({ ...settings, [name]: value });
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSave = async () => {
+    if (!validateFields()) return;
     try {
       const orgId = localStorage.getItem("orgId") || "";
       const branchId = localStorage.getItem("branchId") || "";
@@ -85,10 +105,10 @@ const LibrarySettings = () => {
       const result = await response.json();
 
       if (result.message === "success") {
-        alert("Library settings updated successfully!");
+        setSaveMsg({ type: "success", text: "Library settings updated successfully!" });
         fetchLibrarySettings(); // Refresh settings after update
       } else {
-        alert("Failed to update settings. Please try again.");
+        setSaveMsg({ type: "danger", text: "Failed to update settings. Please try again." });
       }
     } catch (error) {
       console.error("Error updating library settings:", error);
@@ -105,6 +125,8 @@ const LibrarySettings = () => {
       maxBooksStudent: "",
       maxBooksTeacher: "",
     });
+    setSaveMsg({ type: "", text: "" });
+    setErrors({});
   };
 
   // return (
@@ -307,19 +329,20 @@ const LibrarySettings = () => {
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
                       <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Number of Days to Return Book
+                        Number of Days to Return Book <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
                       <input
                         type="number"
-                        className="form-control detail"
+                        className={`form-control detail${errors.daysToReturn ? " is-invalid" : ""}`}
                         name="daysToReturn"
                         value={settings.daysToReturn}
                         onChange={handleChange}
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
+                      {errors.daysToReturn && <small className="text-danger">{errors.daysToReturn}</small>}
                     </div>
                   </div>
 
@@ -327,19 +350,20 @@ const LibrarySettings = () => {
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
                       <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Penalty per day
+                        Penalty per day <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
                       <input
                         type="number"
-                        className="form-control detail"
+                        className={`form-control detail${errors.penaltyPerDay ? " is-invalid" : ""}`}
                         name="penaltyPerDay"
                         value={settings.penaltyPerDay}
                         onChange={handleChange}
                         min="0"
                         style={{ maxWidth: "300px" }}
                       />
+                      {errors.penaltyPerDay && <small className="text-danger">{errors.penaltyPerDay}</small>}
                     </div>
                   </div>
 
@@ -388,19 +412,20 @@ const LibrarySettings = () => {
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
                       <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Number Of Days prior to Send Message
+                        Number Of Days prior to Send Message <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
                       <input
                         type="number"
-                        className="form-control detail"
+                        className={`form-control detail${errors.daysPriorMessage ? " is-invalid" : ""}`}
                         name="daysPriorMessage"
                         value={settings.daysPriorMessage}
                         onChange={handleChange}
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
+                      {errors.daysPriorMessage && <small className="text-danger">{errors.daysPriorMessage}</small>}
                     </div>
                   </div>
 
@@ -408,19 +433,20 @@ const LibrarySettings = () => {
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
                       <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Max. Books Allowed to be Issued to Student
+                        Max. Books Allowed to be Issued to Student <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
                       <input
                         type="number"
-                        className="form-control detail"
+                        className={`form-control detail${errors.maxBooksStudent ? " is-invalid" : ""}`}
                         name="maxBooksStudent"
                         value={settings.maxBooksStudent}
                         onChange={handleChange}
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
+                      {errors.maxBooksStudent && <small className="text-danger">{errors.maxBooksStudent}</small>}
                     </div>
                   </div>
 
@@ -428,19 +454,20 @@ const LibrarySettings = () => {
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
                       <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Max. Books Allowed to be Issued to Teacher
+                        Max. Books Allowed to be Issued to Teacher <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
                       <input
                         type="number"
-                        className="form-control detail"
+                        className={`form-control detail${errors.maxBooksTeacher ? " is-invalid" : ""}`}
                         name="maxBooksTeacher"
                         value={settings.maxBooksTeacher}
                         onChange={handleChange}
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
+                      {errors.maxBooksTeacher && <small className="text-danger">{errors.maxBooksTeacher}</small>}
                     </div>
                   </div>
 
@@ -457,6 +484,11 @@ const LibrarySettings = () => {
                       </button>
                     </div>
                   </div>
+                  {saveMsg.text && (
+                    <div className={`alert alert-${saveMsg.type} mt-3`} role="alert">
+                      {saveMsg.text}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
