@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 import Select from "react-select";
 const PreviousEducationDetails = ({ formData, setFormData }) => {
+  const [yearErrors, setYearErrors] = useState({});
   const previousEducation = formData.previousEducationDetails?.length
     ? formData.previousEducationDetails
     : [
@@ -134,6 +135,8 @@ const PreviousEducationDetails = ({ formData, setFormData }) => {
                         const year = value.split("-")[0];
                         if (year.length > 4) return;
                         handleInputChange(index, "year_from", value);
+                        // Clear year_to error when year_from changes
+                        setYearErrors((prev) => ({ ...prev, [index]: "" }));
                       }}
                     />
                   </td>
@@ -144,25 +147,23 @@ const PreviousEducationDetails = ({ formData, setFormData }) => {
                       onChange={(e) => {
                         const value = e.target.value;
                         const year = value.split("-")[0];
-                        if (year.length > 4) return; // Restrict year typing
+                        if (year.length > 4) return;
+                        const fromDate = row?.year_from;
+                        if (fromDate && value && value < fromDate) {
+                          setYearErrors((prev) => ({
+                            ...prev,
+                            [index]: "Year Attended To must be ≥ Year Attended From.",
+                          }));
+                          handleInputChange(index, "year_to", "");
+                          return;
+                        }
+                        setYearErrors((prev) => ({ ...prev, [index]: "" }));
                         handleInputChange(index, "year_to", value);
                       }}
-                      onBlur={(e) => {
-                        const value = e.target.value;
-                        if (!value) return;
-                        const yearTo = value.split("-")[0];
-                        const fromDate = row?.year_from;
-                        if (!fromDate) return; // no comparison if from date not selected
-                        const yearFrom = fromDate.split("-")[0];
-                        // :no_entry_sign: Show message ONLY AFTER full date entered & field completed
-                        if (Number(yearTo) < Number(yearFrom)) {
-                          alert(
-                            "Year Attended To must be greater than or equal to Year Attended From"
-                          );
-                          handleInputChange(index, "year_to", "");
-                        }
-                      }}
                     />
+                    {yearErrors[index] && (
+                      <small className="text-danger d-block">{yearErrors[index]}</small>
+                    )}
                   </td>
                   {/* :white_check_mark: Language of Instruction - Only letters and spaces */}
                   <td>

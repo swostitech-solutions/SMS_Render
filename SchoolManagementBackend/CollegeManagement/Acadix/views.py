@@ -7304,18 +7304,25 @@ class StudentCourseListAPIView(ListAPIView):
             # Step 1: Retrieve all students
             # studentList = StudentRegistration.objects.filter(academic_year=academicyearId)
             if course_id and section_id is not None:
-                # student_list = StudentCourse.objects.filter(
-                student_list = StudentRegistration.objects.filter(
-                    academic_year_id=academicyearId,
+                student_list = StudentCourse.objects.filter(
+                    academic_year=academicyearId,
                     is_active=True,
                     course=course_instance,
                     section=section_instance).order_by('-updated_at')
+                if not student_list.exists():
+                    student_list = StudentCourse.objects.filter(
+                        is_active=True,
+                        course=course_instance,
+                        section=section_instance).order_by('-updated_at')
             elif course_id is not None:
-                # student_list = StudentCourse.objects.filter(
-                student_list = StudentRegistration.objects.filter(
-                    academic_year_id=academicyearId,
+                student_list = StudentCourse.objects.filter(
+                    academic_year=academicyearId,
                     is_active=True,
                     course=course_instance).order_by('-updated_at')
+                if not student_list.exists():
+                    student_list = StudentCourse.objects.filter(
+                        is_active=True,
+                        course=course_instance).order_by('-updated_at')
             elif query_params.get('studentName'):
                 studentName = query_params.get('studentName')
                 name_parts = studentName.strip().split()

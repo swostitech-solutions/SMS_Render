@@ -311,6 +311,7 @@ const SelectStudentModal = ({ show, handleClose, onSelect }) => {
     let partyTypeValue = "";
     if (formData.party_type === "Customer") partyTypeValue = "C";
     else if (formData.party_type === "Supplier") partyTypeValue = "S";
+    else if (formData.party_type === "Both") partyTypeValue = "B";
     if (orgId) queryParams.push(`org_id=${orgId}`);
     if (branchId) queryParams.push(`branch_id=${branchId}`);
     if (formData.party_name)
@@ -397,7 +398,7 @@ const SelectStudentModal = ({ show, handleClose, onSelect }) => {
                       </button>
                       <button
                         type="button"
-                        className="btn btn-primary me-2"
+                        className="btn btn-secondary me-2"
                         style={{
                           width: "150px",
                         }}
@@ -453,6 +454,7 @@ const SelectStudentModal = ({ show, handleClose, onSelect }) => {
                         <option value="">Select party type</option>
                         <option value="Customer">Customer</option>
                         <option value="Supplier">Supplier</option>
+                        <option value="Both">Both</option>
                       </select>
                     </div>
                     <div className="col-md-4 mb-2">

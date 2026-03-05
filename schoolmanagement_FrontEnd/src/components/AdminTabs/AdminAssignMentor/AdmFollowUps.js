@@ -135,7 +135,6 @@ const AdmAttendanceEntry = () => {
 
     if (selectedMentor?.value) {
       params.append("teacher_id", selectedMentor.value);
-      params.append("mentor_id", selectedMentor.value);
     }
 
     if (dateFromRef.current?.value) {
