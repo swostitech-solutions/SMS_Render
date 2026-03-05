@@ -951,6 +951,7 @@ if (feeElement.amount === "") {
 
   setFeeElement({
     element_type_id: "",
+    name: "",
     frequency: "",
     amount: "",
     semesters: Array(visibleSemesters).fill(""), // ⬅ Correct reset
@@ -1315,7 +1316,7 @@ if (!response.ok) {
                     <select
                       className="detail"
                       style={{ width: "200px" }}
-                      value={feeElement.element_type_id || null}
+                      value={feeElement.element_type_id}
                       onChange={(e) => {
                         const selectedOption = elementNameOptions.find(
                           (o) => o.value.toString() === e.target.value
