@@ -12216,25 +12216,31 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
 
                     instance.save()
 
-                    student_course_instance = StudentCourse.objects.get(student_id=student_id)
+                    student_course_instance = StudentCourse.objects.filter(
+                        student_id=student_id, is_active=True
+                    ).order_by('-id').first()
+                    if not student_course_instance:
+                        student_course_instance = StudentCourse.objects.filter(
+                            student_id=student_id
+                        ).order_by('-id').first()
 
+                    if student_course_instance:
+                        student_course_instance.batch = student_basic_detail.get('batch', student_course_instance.batch)
+                        student_course_instance.course = student_basic_detail.get('course', student_course_instance.course)
+                        student_course_instance.department = student_basic_detail.get('department',
+                                                                                       student_course_instance.department)
+                        student_course_instance.academic_year = student_basic_detail.get('academic_year',
+                                                                                         student_course_instance.academic_year)
+                        student_course_instance.semester = student_basic_detail.get('semester',
+                                                                                    student_course_instance.semester)
+                        student_course_instance.section = student_basic_detail.get('section',
+                                                                                   student_course_instance.section)
 
-                    student_course_instance.batch = student_basic_detail.get('batch', student_course_instance.batch)
-                    student_course_instance.course = student_basic_detail.get('course', student_course_instance.course)
-                    student_course_instance.department = student_basic_detail.get('department',
-                                                                                   student_course_instance.department)
-                    student_course_instance.academic_year = student_basic_detail.get('academic_year',
-                                                                                     student_course_instance.academic_year)
-                    student_course_instance.semester = student_basic_detail.get('semester',
-                                                                                student_course_instance.semester)
-                    student_course_instance.section = student_basic_detail.get('section',
-                                                                               student_course_instance.section)
+                        # if student_basic_detail.get('student_status'):
+                        #     instance.student_status = student_basic_detail.get('student_status', instance.student_status)
+                        #     student_course_instance.student
 
-                    # if student_basic_detail.get('student_status'):
-                    #     instance.student_status = student_basic_detail.get('student_status', instance.student_status)
-                    #     student_course_instance.student
-
-                    student_course_instance.save()
+                        student_course_instance.save()
 
                 if profile_pic:
                     instance.profile_pic.save(profile_pic.name, profile_pic)
