@@ -11764,7 +11764,7 @@ class StudentRegistrationListAPIView(ListAPIView):
                 try:
                     studentRegistrationList = StudentRegistration.objects.filter(organization=organization_id,
                                                                                  branch=branch_id,
-                                                                                 is_active=True).order_by('-updated_at')
+                                                                                 is_active=True).order_by('-created_at')
                 except StudentRegistration.DoesNotExist:
                     return Response({"message": "student registration record not found !!!"},
                                     status=status.HTTP_404_NOT_FOUND)
@@ -11773,24 +11773,24 @@ class StudentRegistrationListAPIView(ListAPIView):
                                 status=status.HTTP_404_NOT_FOUND)
 
             if batch_id:
-                studentRegistrationList = studentRegistrationList.filter(batch=batch_id).order_by('-updated_at')
+                studentRegistrationList = studentRegistrationList.filter(batch=batch_id).order_by('-created_at')
 
             if course_id:
-                studentRegistrationList = studentRegistrationList.filter(course=course_id).order_by('-updated_at')
+                studentRegistrationList = studentRegistrationList.filter(course=course_id).order_by('-created_at')
 
             if department_id:
                 studentRegistrationList = studentRegistrationList.filter(department=department_id).order_by(
-                    '-updated_at')
+                    '-created_at')
 
             if academic_year_id:
                 studentRegistrationList = studentRegistrationList.filter(academic_year=academic_year_id).order_by(
-                    '-updated_at')
+                    '-created_at')
 
             if semester_id:
-                studentRegistrationList = studentRegistrationList.filter(semester=semester_id).order_by('-updated_at')
+                studentRegistrationList = studentRegistrationList.filter(semester=semester_id).order_by('-created_at')
 
             if section_id:
-                studentRegistrationList = studentRegistrationList.filter(section=section_id).order_by('-updated_at')
+                studentRegistrationList = studentRegistrationList.filter(section=section_id).order_by('-created_at')
 
             # try:
             #     academic_year_id = request.query_params.get('academic_year_id')
@@ -11838,7 +11838,7 @@ class StudentRegistrationListAPIView(ListAPIView):
                     studentRegistrationList = studentRegistrationList.filter(
                         Q(first_name__icontains=first) | Q(middle_name__icontains=first) | Q(last_name__icontains=first)
                         , is_active=True
-                        ).order_by('-updated_at')
+                        ).order_by('-created_at')
 
                 elif len(name_parts) == 2:  # First + Last
                     first, last = name_parts
@@ -11846,7 +11846,7 @@ class StudentRegistrationListAPIView(ListAPIView):
                         Q(first_name__iexact=first, last_name__iexact=last) |
                         Q(first_name__iexact=first, middle_name__isnull=False, last_name__iexact=last)
                         , is_active=True
-                    ).order_by('-updated_at')
+                    ).order_by('-created_at')
 
                 elif len(name_parts) == 3:  # First + Middle + Last
                     first, middle, last = name_parts
@@ -11855,7 +11855,7 @@ class StudentRegistrationListAPIView(ListAPIView):
                         middle_name__iexact=middle,
                         last_name__iexact=last,
                         is_active=True
-                    ).order_by('-updated_at')
+                    ).order_by('-created_at')
                 # studentNameSplit = studentName.split()
                 # student_list = StudentRegistration.objects.filter(first_name__istartswith=studentName,
                 #                                                     academic_year_id=academicyearId).order_by('-updated_at')
@@ -11866,25 +11866,25 @@ class StudentRegistrationListAPIView(ListAPIView):
                 #     student_list = StudentRegistration.objects.filter(first_name__istartswith = studentName[0],middle_name__istartswith=studentName[1] if len(studentNameSplit) > 1 else '',last_name__istartswith=studentName[2] if len(studentNameSplit) > 2 else '',academic_year_id=academicyearId).order_by('-updated_at')
             if gender:
                 # gender = request.query_params.get('gender')
-                studentRegistrationList = studentRegistrationList.filter(gender=gender).order_by('-updated_at')
+                studentRegistrationList = studentRegistrationList.filter(gender=gender).order_by('-created_at')
 
             if admission_no:
                 # admission_no = request.query_params.get('admission_no')
                 studentRegistrationList = studentRegistrationList.filter(admission_no=admission_no).order_by(
-                    '-updated_at')
+                    '-created_at')
             if from_date and to_date:
                 # from_date = request.query_params.get('from_date')
                 # to_date = request.query_params.get('to_date')
                 studentRegistrationList = studentRegistrationList.filter(
-                    created_at__range=(from_date, to_date)).order_by('-updated_at')
+                    created_at__range=(from_date, to_date)).order_by('-created_at')
             if student_status:
                 # student_status = request.query_params.get('student_status')
-                studentRegistrationList = studentRegistrationList.filter(status=student_status).order_by('-updated_at')
+                studentRegistrationList = studentRegistrationList.filter(status=student_status).order_by('-created_at')
             if barcode:
                 # barcode = request.query_params.get('barcode')
                 studentRegistrationList = studentRegistrationList.filter(barcode=barcode,
                                                                          ).order_by(
-                    '-updated_at')
+                    '-created_at')
             # if admission_no:
             #     # admissionNo = request.query_params.get('admissionNo')
             #     studentRegistrationList = studentRegistrationList.filter(admission_no=admission_no,
@@ -11894,7 +11894,7 @@ class StudentRegistrationListAPIView(ListAPIView):
                 # schoolAdmissionNo = request.query_params.get('college_admission_no')
                 studentRegistrationList = studentRegistrationList.filter(
                     college_admission_no=college_admission_no, ).order_by(
-                    '-updated_at')
+                    '-created_at')
             if father_name:
                 # fatherName = request.query_params.get('fatherName')
                 studentRegistrationList = studentRegistrationList.filter(father_name__icontains=father_name,

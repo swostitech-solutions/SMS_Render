@@ -386,7 +386,10 @@ class GrievanceCreateAPIView(CreateAPIView):
 
             )
 
-            GrievanceCreateInstance.doc_path = request.build_absolute_uri(GrievanceCreateInstance.doc_file.url)
+            if upload_file and GrievanceCreateInstance.doc_file:
+                GrievanceCreateInstance.doc_path = request.build_absolute_uri(GrievanceCreateInstance.doc_file.url)
+            else:
+                GrievanceCreateInstance.doc_path = ''
             GrievanceCreateInstance.save()
 
             return Response({'message':'success'},status=status.HTTP_200_OK)

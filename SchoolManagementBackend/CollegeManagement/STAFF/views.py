@@ -2036,7 +2036,7 @@ class EmployeeDetailsListAPIView(ListAPIView):
             try:
                 filterdata = EmployeeMaster.objects.filter(organization=organization_id,
                                                                branch_id=branch_id,
-                                                               is_active=True)
+                                                               is_active=True).order_by('-created_at')
             except:
                 filterdata=None
 

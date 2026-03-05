@@ -599,10 +599,22 @@ const StudentFee = () => {
 
         // Extract fee details from same response
         const feeData = studentData.feedetails || [];
-        setFeeStructure(feeData);
+
+        // Sort by semester number extracted from name (e.g. "1st Semester" → 1, "Default Semester 3" → 3)
+        const semesterOrder = (sem) => {
+          const match = (sem || "").match(/\d+/);
+          return match ? parseInt(match[0], 10) : 9999;
+        };
+        const sortedFeeData = [...feeData].sort((a, b) => {
+          const diff = semesterOrder(a.semester) - semesterOrder(b.semester);
+          if (diff !== 0) return diff;
+          return (a.element_name || "").localeCompare(b.element_name || "");
+        });
+
+        setFeeStructure(sortedFeeData);
 
         // Unique unpaid elements
-        const unpaid = feeData
+        const unpaid = sortedFeeData
           .filter((item) => parseFloat(item.paid_amount) === 0)
           .reduce((unique, item) => {
             const isDuplicate = unique.some(
