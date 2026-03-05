@@ -37,6 +37,7 @@ const AdmTeacherLessonPlan = () => {
   const [lessonPlanData, setLessonPlanData] = useState([]);
   const [updatedData, setUpdatedData] = useState([]);
   const [uploadedFiles, setUploadedFiles] = useState({});  // Track files by row index
+  const [rowValidationErrors, setRowValidationErrors] = useState({});  // Per-row inline errors
 
   // Custom Hooks with dependencies (matching Lesson Plan page exactly)
   const { BatchList, loading: loadingBatch } = useFetchSessionList(organizationId, branchId);
@@ -337,6 +338,13 @@ const AdmTeacherLessonPlan = () => {
     setUpdatedData((prevData) =>
       prevData.map((row, i) => (i === index ? { ...row, [field]: value } : row))
     );
+    // Clear that field's error when user types
+    if (rowValidationErrors[index]?.[field]) {
+      setRowValidationErrors((prev) => ({
+        ...prev,
+        [index]: { ...prev[index], [field]: "" },
+      }));
+    }
   };
 
   // Handle file selection
@@ -355,16 +363,21 @@ const AdmTeacherLessonPlan = () => {
 
     const { lecture_plan_id, taught_date, percentage_completed, remarks } = rowData;
 
-    if (!taught_date || !percentage_completed || !remarks) {
-      alert("Please fill in all fields (Taught Date, % Course Coverage, Remarks) before updating.");
-      return;
+    // Inline validation
+    const newErrors = {};
+    if (!taught_date) newErrors.taught_date = "Taught Date is required.";
+    if (!percentage_completed && percentage_completed !== 0) newErrors.percentage_completed = "% Course Coverage is required.";
+    else if (percentage_completed !== "" && (isNaN(parseFloat(percentage_completed)) || parseFloat(percentage_completed) < 0 || parseFloat(percentage_completed) > 100)) {
+      newErrors.percentage_completed = "Must be between 0 and 100.";
     }
+    if (!remarks || !remarks.trim()) newErrors.remarks = "Remarks are required.";
 
-    const pct = parseFloat(percentage_completed);
-    if (isNaN(pct) || pct < 0 || pct > 100) {
-      alert("% Course Coverage must be a number between 0 and 100.");
+    if (Object.keys(newErrors).length > 0) {
+      setRowValidationErrors((prev) => ({ ...prev, [index]: newErrors }));
       return;
     }
+    // Clear errors for this row
+    setRowValidationErrors((prev) => { const updated = { ...prev }; delete updated[index]; return updated; });
 
     const userId = sessionStorage.getItem("userId");
     const orgId = sessionStorage.getItem("organization_id");
@@ -469,6 +482,7 @@ const AdmTeacherLessonPlan = () => {
     setSelectedMentor(null);
     setLessonPlanData([]);
     setUpdatedData([]);
+    setRowValidationErrors({});
   };
 
   // Handle Close button - navigate to dashboard
@@ -714,7 +728,7 @@ const AdmTeacherLessonPlan = () => {
                             <td>
                               <input
                                 type="date"
-                                className="form-control"
+                                className={`form-control${rowValidationErrors[index]?.taught_date ? " is-invalid" : ""}`}
                                 value={updatedData[index]?.taught_date || ""}
                                 onChange={(e) =>
                                   handleInputChange(
@@ -724,13 +738,16 @@ const AdmTeacherLessonPlan = () => {
                                   )
                                 }
                               />
+                              {rowValidationErrors[index]?.taught_date && (
+                                <small className="text-danger">{rowValidationErrors[index].taught_date}</small>
+                              )}
                             </td>
                             <td>
                               <input
                                 type="number"
                                 min="0"
                                 max="100"
-                                className="form-control"
+                                className={`form-control${rowValidationErrors[index]?.percentage_completed ? " is-invalid" : ""}`}
                                 value={updatedData[index]?.percentage_completed || ""}
                                 onChange={(e) => {
                                   const val = e.target.value;
@@ -739,11 +756,14 @@ const AdmTeacherLessonPlan = () => {
                                   }
                                 }}
                               />
+                              {rowValidationErrors[index]?.percentage_completed && (
+                                <small className="text-danger">{rowValidationErrors[index].percentage_completed}</small>
+                              )}
                             </td>
                             <td>
                               <input
                                 type="text"
-                                className="form-control"
+                                className={`form-control${rowValidationErrors[index]?.remarks ? " is-invalid" : ""}`}
                                 value={updatedData[index]?.remarks || ""}
                                 onChange={(e) =>
                                   handleInputChange(
@@ -753,6 +773,9 @@ const AdmTeacherLessonPlan = () => {
                                   )
                                 }
                               />
+                              {rowValidationErrors[index]?.remarks && (
+                                <small className="text-danger">{rowValidationErrors[index].remarks}</small>
+                              )}
                             </td>
                             <td>
                               <input

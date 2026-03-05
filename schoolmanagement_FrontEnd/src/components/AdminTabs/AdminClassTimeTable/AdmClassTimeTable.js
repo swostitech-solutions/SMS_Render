@@ -119,6 +119,7 @@ const AdmAttendanceEntry = () => {
   const navigate = useNavigate();
   // const [totalLectures, setTotalLectures] = useState("");
   const [selectedDays, setSelectedDays] = useState([]);
+  const [errors, setErrors] = useState({});
 
   // Debug: Log selected values
   useEffect(() => {
@@ -140,9 +141,9 @@ const AdmAttendanceEntry = () => {
         value: batch.id,
         label: batch.batch_description || batch.batch_code || batch.batch_name || batch.name,
       }));
-      setSessionOptions([{ value: "", label: "Select Session" }, ...options]);
+      setSessionOptions(options);
     } else {
-      setSessionOptions([{ value: "", label: "Select Session" }]);
+      setSessionOptions([]);
     }
   }, [BatchList]);
 
@@ -154,9 +155,9 @@ const AdmAttendanceEntry = () => {
         value: course.id,
         label: course.coursename || course.course_name || course.name,
       }));
-      setCourseOptions([{ value: "", label: "Select Course" }, ...options]);
+      setCourseOptions(options);
     } else {
-      setCourseOptions([{ value: "", label: "Select Course" }]);
+      setCourseOptions([]);
     }
   }, [CourseList]);
 
@@ -168,11 +169,11 @@ const AdmAttendanceEntry = () => {
         value: branch.id,
         label: branch.department_description || branch.department_code || branch.department_name || branch.name,
       }));
-      setBranchOptions([{ value: "", label: "Select Branch" }, ...options]);
+      setBranchOptions(options);
       console.log("Branch options set:", options);
     } else {
       console.log("No Branch data available");
-      setBranchOptions([{ value: "", label: "Select Branch" }]);
+      setBranchOptions([]);
     }
   }, [BranchList]);
 
@@ -184,13 +185,29 @@ const AdmAttendanceEntry = () => {
         value: year.id,
         label: year.academic_year_description || year.academic_year_code || year.academic_year_name || year.name,
       }));
-      setAcademicYearOptions([{ value: "", label: "Select Academic Year" }, ...options]);
+      setAcademicYearOptions(options);
       console.log("Academic Year options set:", options);
     } else {
       console.log("No Academic Year data available, waiting for dependencies");
-      setAcademicYearOptions([{ value: "", label: "Select Academic Year" }]);
+      setAcademicYearOptions([]);
     }
   }, [AcademicYearList]);
+
+  const validateFields = () => {
+    const newErrors = {};
+    if (!selectedMentor) newErrors.selectedMentor = "Please select a Teacher.";
+    if (!selectedSession) newErrors.selectedSession = "Please select a Session.";
+    if (!selectedCourse) newErrors.selectedCourse = "Please select a Course.";
+    if (!selectedBranch) newErrors.selectedBranch = "Please select a Department.";
+    if (!selectedAcademicYear) newErrors.selectedAcademicYear = "Please select an Academic Year.";
+    if (!selectedSemester) newErrors.selectedSemester = "Please select a Semester.";
+    if (!selectedSection) newErrors.selectedSection = "Please select a Section.";
+    if (!selectedSubject) newErrors.selectedSubject = "Please select a Subject.";
+    if (!selectedPeriod) newErrors.selectedPeriod = "Please select a Period.";
+    if (selectedDays.length === 0) newErrors.selectedDays = "Please select at least one Day.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleClear = () => {
     // Clear dropdowns (Select)
@@ -213,6 +230,9 @@ const AdmAttendanceEntry = () => {
 
     // Hide Table if needed
     setShowTable(false);
+
+    // Clear errors
+    setErrors({});
   };
 
 
@@ -236,11 +256,11 @@ const AdmAttendanceEntry = () => {
         value: sem.id,
         label: sem.semester_description || sem.semester_code || sem.semester_name || sem.name || sem.term_desc,
       }));
-      setSemesterOptions([{ value: "", label: "Select Semester" }, ...options]);
+      setSemesterOptions(options);
       console.log("Semester options set:", options);
     } else {
       console.log("No Semester data available yet");
-      setSemesterOptions([{ value: "", label: "Select Semester" }]);
+      setSemesterOptions([]);
     }
   }, [SemesterList]);
   // Populate Section dropdown from hook
@@ -251,11 +271,11 @@ const AdmAttendanceEntry = () => {
         value: section.id,
         label: section.section_description || section.section_code || section.section_name || section.sectionname || section.name,
       }));
-      setSectionOptions([{ value: "", label: "Select Section" }, ...options]);
+      setSectionOptions(options);
       console.log("Section options set:", options);
     } else {
       console.log("No Section data available yet");
-      setSectionOptions([{ value: "", label: "Select Section" }]);
+      setSectionOptions([]);
     }
   }, [SectionList]);
 
@@ -298,7 +318,7 @@ const AdmAttendanceEntry = () => {
 
       if (!orgId || !branchId) {
         console.error("❌ Missing organization_id or branch_id in sessionStorage");
-        setPeriodOptions([{ value: "", label: "Select Period" }]);
+        setPeriodOptions([]);
         return;
       }
 
@@ -309,7 +329,7 @@ const AdmAttendanceEntry = () => {
 
         if (!response.ok) {
           console.error(`❌ Period API Error ${response.status}`);
-          setPeriodOptions([{ value: "", label: "Period API Error" }]);
+          setPeriodOptions([]);
           return;
         }
 
@@ -317,7 +337,7 @@ const AdmAttendanceEntry = () => {
         const text = await response.text();
         if (!text || text.trim() === '') {
           console.error("❌ Empty response from Period API");
-          setPeriodOptions([{ value: "", label: "No Periods Found" }]);
+          setPeriodOptions([]);
           return;
         }
 
@@ -326,7 +346,7 @@ const AdmAttendanceEntry = () => {
           data = JSON.parse(text);
         } catch (parseError) {
           console.error("❌ Failed to parse period response:", text);
-          setPeriodOptions([{ value: "", label: "⚠️ Invalid API Response" }]);
+          setPeriodOptions([]);
           return;
         }
 
@@ -338,10 +358,7 @@ const AdmAttendanceEntry = () => {
             value: period.id || period.period_id || period.lecture_period_id,
             label: `${period.period_name || period.lecture_period_name || period.name || `Period ${period.period_no || period.id}`} (${period.time_from || ''} - ${period.time_to || ''})`,
           }));
-          setPeriodOptions([
-            { value: "", label: "Select Period" },
-            ...options,
-          ]);
+          setPeriodOptions(options);
           console.log("✅ Period options set:", options);
         } else if (data && Array.isArray(data) && data.length > 0) {
           // Handle if API returns array directly
@@ -349,18 +366,15 @@ const AdmAttendanceEntry = () => {
             value: period.id || period.period_id || period.lecture_period_id,
             label: `${period.period_name || period.lecture_period_name || period.name || `Period ${period.period_no || period.id}`} (${period.time_from || ''} - ${period.time_to || ''})`,
           }));
-          setPeriodOptions([
-            { value: "", label: "Select Period" },
-            ...options,
-          ]);
+          setPeriodOptions(options);
           console.log("✅ Period options set:", options);
         } else {
           console.error("❌ API returned empty data - No periods configured");
-          setPeriodOptions([{ value: "", label: "No Periods Found" }]);
+          setPeriodOptions([]);
         }
       } catch (error) {
         console.error("❌ Error fetching periods:", error);
-        setPeriodOptions([{ value: "", label: "⚠️ Failed to Load Periods" }]);
+        setPeriodOptions([]);
       }
     };
 
@@ -375,7 +389,7 @@ const AdmAttendanceEntry = () => {
 
       if (!selectedSession || !selectedCourse || !selectedBranch || !selectedAcademicYear || !selectedSemester) {
         console.log("Subject fetch waiting for dependencies");
-        setSubjectOptions([{ value: "", label: "Select Subject" }]);
+        setSubjectOptions([]);
         return;
       }
 
@@ -407,28 +421,22 @@ const AdmAttendanceEntry = () => {
             value: subject.id,
             label: subject.subject_name || subject.subjectcode || subject.name,
           }));
-          setSubjectOptions([
-            { value: "", label: "Select Subject" },
-            ...options,
-          ]);
+          setSubjectOptions(options);
           console.log("Subject options set:", options);
         } else if (Array.isArray(data)) {
           const options = data.map((subject) => ({
             value: subject.id,
             label: subject.subject_name || subject.subjectcode || subject.name,
           }));
-          setSubjectOptions([
-            { value: "", label: "Select Subject" },
-            ...options,
-          ]);
+          setSubjectOptions(options);
           console.log("Subject options set:", options);
         } else {
           console.log("No subjects found in response");
-          setSubjectOptions([{ value: "", label: "Select Subject" }]);
+          setSubjectOptions([]);
         }
       } catch (error) {
         console.error("Error fetching subject data:", error);
-        setSubjectOptions([{ value: "", label: "Select Subject" }]);
+        setSubjectOptions([]);
       }
     };
 
@@ -512,21 +520,7 @@ const AdmAttendanceEntry = () => {
     const createdBy = sessionStorage.getItem("userId");
 
     //  Validation
-    if (
-      !selectedMentor ||
-      !selectedSession ||
-      !selectedCourse ||
-      !selectedBranch ||
-      !selectedAcademicYear ||
-      !selectedSemester ||
-      !selectedSection ||
-      !selectedSubject ||
-      !selectedPeriod ||
-      selectedDays.length === 0
-    ) {
-      alert("Please fill all required fields including Period/Lecture.");
-      return;
-    }
+    if (!validateFields()) return;
 
     //  Request Body
     const requestBody = {
@@ -756,13 +750,14 @@ const AdmAttendanceEntry = () => {
                       {
                         label: "Teacher",
                         id: "teacher",
+                        errorKey: "selectedMentor",
                         component: (
                           <Select
                             id="mentor"
                             options={mentors}
                             className="detail"
                             value={selectedMentor}
-                            onChange={setSelectedMentor}
+                            onChange={(val) => { setSelectedMentor(val); if (errors.selectedMentor) setErrors((prev) => ({ ...prev, selectedMentor: "" })); }}
                             placeholder="Select Mentor"
                             classNamePrefix="mentor-dropdown"
                           />
@@ -771,6 +766,7 @@ const AdmAttendanceEntry = () => {
                       {
                         label: "Session",
                         id: "session",
+                        errorKey: "selectedSession",
                         component: (
                           <Select
                             options={sessionOptions}
@@ -778,13 +774,14 @@ const AdmAttendanceEntry = () => {
                             classNamePrefix="session-dropdown"
                             placeholder="Select Session"
                             value={selectedSession}
-                            onChange={setSelectedSession}
+                            onChange={(val) => { setSelectedSession(val); if (errors.selectedSession) setErrors((prev) => ({ ...prev, selectedSession: "" })); }}
                           />
                         ),
                       },
                       {
                         label: "Course",
                         id: "course",
+                        errorKey: "selectedCourse",
                         component: (
                           <Select
                             options={courseOptions}
@@ -792,13 +789,14 @@ const AdmAttendanceEntry = () => {
                             classNamePrefix="course-dropdown"
                             placeholder="Select Course"
                             value={selectedCourse}
-                            onChange={setSelectedCourse}
+                            onChange={(val) => { setSelectedCourse(val); if (errors.selectedCourse) setErrors((prev) => ({ ...prev, selectedCourse: "" })); }}
                           />
                         ),
                       },
                       {
                         label: "Department",
                         id: "branch",
+                        errorKey: "selectedBranch",
                         component: (
                           <Select
                             options={branchOptions}
@@ -806,13 +804,14 @@ const AdmAttendanceEntry = () => {
                             classNamePrefix="branch-dropdown"
                             placeholder="Select Branch"
                             value={selectedBranch}
-                            onChange={setSelectedBranch}
+                            onChange={(val) => { setSelectedBranch(val); if (errors.selectedBranch) setErrors((prev) => ({ ...prev, selectedBranch: "" })); }}
                           />
                         ),
                       },
                       {
                         label: "Academic Year",
                         id: "academicYear",
+                        errorKey: "selectedAcademicYear",
                         component: (
                           <Select
                             options={academicYearOptions}
@@ -820,13 +819,14 @@ const AdmAttendanceEntry = () => {
                             classNamePrefix="academic-year-dropdown"
                             placeholder="Select Academic Year"
                             value={selectedAcademicYear}
-                            onChange={setSelectedAcademicYear}
+                            onChange={(val) => { setSelectedAcademicYear(val); if (errors.selectedAcademicYear) setErrors((prev) => ({ ...prev, selectedAcademicYear: "" })); }}
                           />
                         ),
                       },
                       {
                         label: "Semester",
                         id: "semester",
+                        errorKey: "selectedSemester",
                         component: (
                           <Select
                             options={semesterOptions}
@@ -835,7 +835,7 @@ const AdmAttendanceEntry = () => {
                             placeholder="Select Semester"
                             isDisabled={!selectedAcademicYear}
                             value={selectedSemester}
-                            onChange={setSelectedSemester}
+                            onChange={(val) => { setSelectedSemester(val); if (errors.selectedSemester) setErrors((prev) => ({ ...prev, selectedSemester: "" })); }}
                           />
                         ),
                       },
@@ -843,6 +843,7 @@ const AdmAttendanceEntry = () => {
                       {
                         label: "Section",
                         id: "section",
+                        errorKey: "selectedSection",
                         component: (
                           <Select
                             options={sectionOptions}
@@ -851,13 +852,14 @@ const AdmAttendanceEntry = () => {
                             placeholder="Select Section"
                             isDisabled={!selectedSemester}
                             value={selectedSection}
-                            onChange={setSelectedSection}
+                            onChange={(val) => { setSelectedSection(val); if (errors.selectedSection) setErrors((prev) => ({ ...prev, selectedSection: "" })); }}
                           />
                         ),
                       },
                       {
                         label: "Subject",
                         id: "subject",
+                        errorKey: "selectedSubject",
                         component: (
                           <Select
                             options={subjectOptions}
@@ -866,13 +868,14 @@ const AdmAttendanceEntry = () => {
                             placeholder="Select Subject"
                             isDisabled={!selectedSection}
                             value={selectedSubject}
-                            onChange={setSelectedSubject}
+                            onChange={(val) => { setSelectedSubject(val); if (errors.selectedSubject) setErrors((prev) => ({ ...prev, selectedSubject: "" })); }}
                           />
                         ),
                       },
                       {
                         label: "Period",
                         id: "period",
+                        errorKey: "selectedPeriod",
                         component: (
                           <Select
                             options={periodOptions}
@@ -880,7 +883,7 @@ const AdmAttendanceEntry = () => {
                             classNamePrefix="period-dropdown"
                             placeholder="Select Period"
                             value={selectedPeriod}
-                            onChange={setSelectedPeriod}
+                            onChange={(val) => { setSelectedPeriod(val); if (errors.selectedPeriod) setErrors((prev) => ({ ...prev, selectedPeriod: "" })); }}
                           />
                         ),
                       },
@@ -901,6 +904,9 @@ const AdmAttendanceEntry = () => {
                               ))}
                             </Form.Select>
                           )}
+                          {field.errorKey && errors[field.errorKey] && (
+                            <small className="text-danger">{errors[field.errorKey]}</small>
+                          )}
                         </Form.Group>
                       </Col>
                     ))}
@@ -917,10 +923,16 @@ const AdmAttendanceEntry = () => {
                               type="checkbox"
                               label={day}
                               checked={selectedDays.includes(day)}
-                              onChange={() => handleDayChange(day)}
+                              onChange={() => {
+                                handleDayChange(day);
+                                if (errors.selectedDays) setErrors((prev) => ({ ...prev, selectedDays: "" }));
+                              }}
                             />
                           ))}
                         </div>
+                        {errors.selectedDays && (
+                          <small className="text-danger">{errors.selectedDays}</small>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
