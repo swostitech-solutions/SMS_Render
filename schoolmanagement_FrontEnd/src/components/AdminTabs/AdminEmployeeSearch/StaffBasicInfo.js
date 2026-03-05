@@ -9,7 +9,14 @@ import useFetchLanguages from "../../hooks/useFetchLanguages";
 import { ApiUrl } from "../../../ApiUrl";
 import { useLocation } from "react-router-dom";
 
-const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basicInfoData }) => {
+const StaffInfo = ({
+  goToTab,
+  setAddressDetails,
+  setBasicInfoDataInParent,
+  basicInfoData,
+  requiredErrors = {},
+  setRequiredErrors,
+}) => {
   // const [frontCover, setFrontCover] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -267,6 +274,15 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
     }
   };
 
+  const clearRequiredError = (fieldName) => {
+    if (!setRequiredErrors || !requiredErrors[fieldName]) return;
+    setRequiredErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[fieldName];
+      return updated;
+    });
+  };
+
   useEffect(() => {
     fetch(`${ApiUrl.apiurl}Staff/EmployeeTypeList/`)
       .then((res) => res.json())
@@ -400,14 +416,18 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           className="form-control detail"
                           placeholder="Enter employee code"
                           value={formData.employeeCode}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               employeeCode: e.target.value,
-                            })
-                          }
+                            });
+                            clearRequiredError("employeeCode");
+                          }}
                         />
                       </div>
+                      {requiredErrors.employeeCode && (
+                        <small className="text-danger">{requiredErrors.employeeCode}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -465,12 +485,13 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           className="form-control detail"
                           placeholder="Enter First name"
                           value={formData.firstName}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               firstName: e.target.value,
-                            })
-                          }
+                            });
+                            clearRequiredError("firstName");
+                          }}
                         />
                         <input
                           type="text"
@@ -497,6 +518,9 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           }
                         />
                       </div>
+                      {requiredErrors.firstName && (
+                        <small className="text-danger">{requiredErrors.firstName}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -510,14 +534,18 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           id="employee-code"
                           className="form-control detail"
                           value={formData.dob}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               dob: e.target.value,
-                            })
-                          }
+                            });
+                            clearRequiredError("dob");
+                          }}
                         />
                       </div>
+                      {requiredErrors.dob && (
+                        <small className="text-danger">{requiredErrors.dob}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -613,13 +641,17 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           .find(
                             (option) => option.value === formData.nationality
                           )}
-                        onChange={(selectedOption) =>
+                        onChange={(selectedOption) => {
                           setFormData({
                             ...formData,
                             nationality: selectedOption.value, // store ID
-                          })
-                        }
+                          });
+                          clearRequiredError("nationality");
+                        }}
                       />
+                      {requiredErrors.nationality && (
+                        <small className="text-danger">{requiredErrors.nationality}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -641,13 +673,17 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                             label: item.religion_name,
                           }))
                           .find((option) => option.value === formData.religion)}
-                        onChange={(selectedOption) =>
+                        onChange={(selectedOption) => {
                           setFormData({
                             ...formData,
                             religion: selectedOption.value,
-                          })
-                        }
+                          });
+                          clearRequiredError("religion");
+                        }}
                       />
+                      {requiredErrors.religion && (
+                        <small className="text-danger">{requiredErrors.religion}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -669,13 +705,17 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                             label: item.gender_name,
                           }))
                           .find((option) => option.value === formData.gender)}
-                        onChange={(selectedOption) =>
+                        onChange={(selectedOption) => {
                           setFormData({
                             ...formData,
                             gender: selectedOption.value,
-                          })
-                        }
+                          });
+                          clearRequiredError("gender");
+                        }}
                       />
+                      {requiredErrors.gender && (
+                        <small className="text-danger">{requiredErrors.gender}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -699,13 +739,17 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           .find(
                             (option) => option.value === formData.motherTongue
                           )}
-                        onChange={(selectedOption) =>
+                        onChange={(selectedOption) => {
                           setFormData({
                             ...formData,
                             motherTongue: selectedOption.value,
-                          })
-                        }
+                          });
+                          clearRequiredError("motherTongue");
+                        }}
                       />
+                      {requiredErrors.motherTongue && (
+                        <small className="text-danger">{requiredErrors.motherTongue}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -721,13 +765,17 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                         value={employeeTypeOptions.find(
                           (option) => option.value === formData.employeeType
                         )}
-                        onChange={(selectedOption) =>
+                        onChange={(selectedOption) => {
                           setFormData({
                             ...formData,
                             employeeType: selectedOption.value, // store ID (value)
-                          })
-                        }
+                          });
+                          clearRequiredError("employeeType");
+                        }}
                       />
+                      {requiredErrors.employeeType && (
+                        <small className="text-danger">{requiredErrors.employeeType}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
@@ -804,13 +852,14 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                         <input
                           type="text"
                           id="mobile-number"
-                          className={`form-control detail${phoneNumberError ? " is-invalid" : ""}`}
+                          className={`form-control detail${phoneNumberError || requiredErrors.phoneNumber ? " is-invalid" : ""}`}
                           placeholder="Enter Mobile Number"
                           value={formData.phoneNumber}
                           maxLength={10}
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "");
                             setFormData({ ...formData, phoneNumber: val });
+                            clearRequiredError("phoneNumber");
                             if (val && val.length !== 10) {
                               setPhoneNumberError("Mobile number must be exactly 10 digits.");
                             } else {
@@ -819,9 +868,9 @@ const StaffInfo = ({ goToTab, setAddressDetails, setBasicInfoDataInParent, basic
                           }}
                         />
                       </div>
-                      {phoneNumberError && (
+                      {(requiredErrors.phoneNumber || phoneNumberError) && (
                         <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
-                          {phoneNumberError}
+                          {requiredErrors.phoneNumber || phoneNumberError}
                         </div>
                       )}
                     </div>

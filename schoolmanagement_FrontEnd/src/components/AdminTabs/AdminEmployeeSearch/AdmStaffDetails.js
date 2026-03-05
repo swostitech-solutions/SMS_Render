@@ -44,6 +44,7 @@ export default function BasicTabs() {
   const [languageData, setLanguageData] = useState(null);
   const [addressFormData, setAddressFormData] = useState(null);
   const [basicInfoData, setBasicInfoData] = useState(null);
+  const [basicInfoFieldErrors, setBasicInfoFieldErrors] = useState({});
   const [isEditMode, setIsEditMode] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -251,51 +252,46 @@ export default function BasicTabs() {
   // Shared validation for Basic Info required fields
   // ============================================
   const validateBasicInfo = () => {
-    if (!basicInfoData) {
-      alert("❌ Please complete the Staff Basic Info tab first!");
-      return false;
+    const b = basicInfoData || {};
+    const errors = {};
+
+    if (!b.employeeCode || !String(b.employeeCode).trim()) {
+      errors.employeeCode = "This field is required.";
     }
-    const b = basicInfoData;
-    if (!b.employeeCode || !b.employeeCode.trim()) {
-      alert("❌ Employee Code is required.");
-      return false;
-    }
-    if (!b.firstName || !b.firstName.trim()) {
-      alert("❌ Employee First Name is required.");
-      return false;
+    if (!b.firstName || !String(b.firstName).trim()) {
+      errors.firstName = "This field is required.";
     }
     if (!b.dob) {
-      alert("❌ Date of Birth is required.");
-      return false;
+      errors.dob = "This field is required.";
     }
     if (!b.gender) {
-      alert("❌ Gender is required.");
-      return false;
+      errors.gender = "This field is required.";
     }
     if (!b.nationality) {
-      alert("❌ Nationality is required.");
-      return false;
+      errors.nationality = "This field is required.";
     }
     if (!b.religion) {
-      alert("❌ Religion is required.");
-      return false;
+      errors.religion = "This field is required.";
     }
     if (!b.motherTongue) {
-      alert("❌ Mother Tongue is required.");
-      return false;
+      errors.motherTongue = "This field is required.";
     }
     if (!b.employeeType) {
-      alert("❌ Employee Type is required.");
+      errors.employeeType = "This field is required.";
+    }
+    if (!b.phoneNumber || !String(b.phoneNumber).trim()) {
+      errors.phoneNumber = "This field is required.";
+    } else if (!/^\d{10}$/.test(String(b.phoneNumber))) {
+      errors.phoneNumber = "Mobile Number must be exactly 10 digits.";
+    }
+
+    setBasicInfoFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setValue(0);
       return false;
     }
-    if (!b.phoneNumber || !b.phoneNumber.trim()) {
-      alert("❌ Mobile Number is required.");
-      return false;
-    }
-    if (!/^\d{10}$/.test(b.phoneNumber)) {
-      alert("❌ Mobile Number must be exactly 10 digits.");
-      return false;
-    }
+
     return true;
   };
 
@@ -1135,6 +1131,7 @@ export default function BasicTabs() {
     setEducationData([]);
     setCourseDetails([]);
     setLanguageData(null);
+    setBasicInfoFieldErrors({});
     localStorage.removeItem("employeeId");
     localStorage.removeItem("employeeTypeId");
     sessionStorage.removeItem("tempFormData");
@@ -1192,7 +1189,14 @@ export default function BasicTabs() {
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
-        <StaffBasicInfo goToTab={goToTab} setAddressDetails={setAddressDetails} setBasicInfoDataInParent={setBasicInfoData} basicInfoData={basicInfoData} />
+        <StaffBasicInfo
+          goToTab={goToTab}
+          setAddressDetails={setAddressDetails}
+          setBasicInfoDataInParent={setBasicInfoData}
+          basicInfoData={basicInfoData}
+          requiredErrors={basicInfoFieldErrors}
+          setRequiredErrors={setBasicInfoFieldErrors}
+        />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
         <AdmAddress goToTab={goToTab} addressDetails={addressDetails} setDocumentDetailsInParent={setDocumentDetails} setAddressFormDataInParent={setAddressFormData} addressFormData={addressFormData} />

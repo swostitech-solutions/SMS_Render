@@ -33,6 +33,7 @@ const AdmAttendanceEntry = ({
   setFormData,
   frontCover,
   setFrontCover,
+  requiredErrors = {},
 }) => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
@@ -723,6 +724,9 @@ const AdmAttendanceEntry = ({
                             {errors.first_name}
                           </small>
                         )}
+                        {!errors.first_name && requiredErrors.first_name && (
+                          <small style={{ color: "red" }}>{requiredErrors.first_name}</small>
+                        )}
                         <input
                           type="text"
                           id="student-name"
@@ -750,6 +754,9 @@ const AdmAttendanceEntry = ({
                           <small style={{ color: "red" }}>
                             {errors.last_name}
                           </small>
+                        )}
+                        {!errors.last_name && requiredErrors.last_name && (
+                          <small style={{ color: "red" }}>{requiredErrors.last_name}</small>
                         )}
                       </div>
                     </div>
@@ -803,6 +810,9 @@ const AdmAttendanceEntry = ({
                           })
                         }
                       />
+                      {requiredErrors.gender && (
+                        <small style={{ color: "red" }}>{requiredErrors.gender}</small>
+                      )}
                     </div>
 
                     {/* Organization */}
@@ -878,6 +888,9 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Session"
                       />
+                      {requiredErrors.batch && (
+                        <small style={{ color: "red" }}>{requiredErrors.batch}</small>
+                      )}
                     </div>
 
                     {/* Course */}
@@ -915,6 +928,9 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Course"
                       />
+                      {requiredErrors.course && (
+                        <small style={{ color: "red" }}>{requiredErrors.course}</small>
+                      )}
                     </div>
 
                     {/* Department */}
@@ -952,6 +968,9 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Department"
                       />
+                      {requiredErrors.department && (
+                        <small style={{ color: "red" }}>{requiredErrors.department}</small>
+                      )}
                     </div>
 
                     {/* Academic Year */}
@@ -991,6 +1010,9 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Academic Year"
                       />
+                      {requiredErrors.academic_year && (
+                        <small style={{ color: "red" }}>{requiredErrors.academic_year}</small>
+                      )}
                     </div>
 
                     {/* Semester */}
@@ -1028,6 +1050,9 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Semester"
                       />
+                      {requiredErrors.semester && (
+                        <small style={{ color: "red" }}>{requiredErrors.semester}</small>
+                      )}
                     </div>
 
                     {/* Section */}
@@ -1065,6 +1090,9 @@ const AdmAttendanceEntry = ({
                         }
                         placeholder="Select Section"
                       />
+                      {requiredErrors.addmitted_section && (
+                        <small style={{ color: "red" }}>{requiredErrors.addmitted_section}</small>
+                      )}
                     </div>
 
                     <div className="col-12 col-md-4 mb-4">
@@ -1080,6 +1108,9 @@ const AdmAttendanceEntry = ({
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />
+                      {requiredErrors.date_of_admission && (
+                        <small style={{ color: "red" }}>{requiredErrors.date_of_admission}</small>
+                      )}
                     </div>
 
                     <div className="col-12 col-sm-6 col-md-4 mb-2">
@@ -1128,6 +1159,9 @@ const AdmAttendanceEntry = ({
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />
+                      {requiredErrors.dob && (
+                        <small style={{ color: "red" }}>{requiredErrors.dob}</small>
+                      )}
                     </div>
 
                     {/* <div className="col-12 col-md-4 mb-2">

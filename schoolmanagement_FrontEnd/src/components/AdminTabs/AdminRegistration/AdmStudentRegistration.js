@@ -283,6 +283,28 @@ export default function BasicTabs() {
     window.scrollTo({ top: 0, behavior: "smooth" });
     // Notify StudentDetails to reset dropdowns
     window.dispatchEvent(new Event("clearAllStudentFields"));
+    setErrors({});
+  };
+
+  const validateRequiredFields = () => {
+    const newErrors = {};
+
+    if (!formData.first_name?.trim()) newErrors.first_name = "First Name is required";
+    if (!formData.last_name?.trim()) newErrors.last_name = "Last Name is required";
+    if (!formData.batch) newErrors.batch = "Session is required";
+    if (!formData.course) newErrors.course = "Course is required";
+    if (!formData.department) newErrors.department = "Department is required";
+    if (!formData.academic_year) newErrors.academic_year = "Academic Year is required";
+    if (!formData.semester) newErrors.semester = "Semester is required";
+    if (!formData.addmitted_section) newErrors.addmitted_section = "Section is required";
+    if (!formData.gender) newErrors.gender = "Gender is required";
+    if (!formData.date_of_admission) newErrors.date_of_admission = "Date of Admission is required";
+    if (!formData.dob) newErrors.dob = "Date of Birth is required";
+    if (!formData.father_name?.trim()) newErrors.father_name = "Father Name is required";
+    if (!formData.mother_name?.trim()) newErrors.mother_name = "Mother Name is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const formatToISODate = (dateString) => {
@@ -533,6 +555,9 @@ export default function BasicTabs() {
   }, [id]);
 
   const handleSave = async () => {
+    if (!validateRequiredFields()) {
+      return;
+    }
     const organization_id = sessionStorage.getItem("organization_id");
     const branch_id = sessionStorage.getItem("branch_id");
     const academicYearId =
@@ -761,6 +786,9 @@ export default function BasicTabs() {
   };
 
   const handleUpdate = async () => {
+    if (!validateRequiredFields()) {
+      return;
+    }
     const token = localStorage.getItem("accessToken");
     const userId = sessionStorage.getItem("userId");
     const studentId = id || formData.id; // from URL params
@@ -1084,6 +1112,7 @@ export default function BasicTabs() {
           frontCover={frontCover}
           setFrontCover={setFrontCover}
           fileInputRef={fileInputRef}
+          requiredErrors={errors}
         />
       </CustomTabPanel>
 
@@ -1105,7 +1134,11 @@ export default function BasicTabs() {
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 2 : 3}>
-        <GuardianDetails formData={formData} setFormData={setFormData} />
+        <GuardianDetails
+          formData={formData}
+          setFormData={setFormData}
+          requiredErrors={errors}
+        />
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 3 : 4}>
