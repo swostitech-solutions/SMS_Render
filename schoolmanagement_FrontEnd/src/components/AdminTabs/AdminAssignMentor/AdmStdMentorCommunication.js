@@ -17,6 +17,7 @@ const AdmAttendanceEntry = () => {
   const [selectedCommunicatedWith, setSelectedCommunicatedWith] =
     useState(null);
   const [selectedCommunicatedVia, setSelectedCommunicatedVia] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleClear = () => {
     setSelectedDate("");
@@ -26,6 +27,23 @@ const AdmAttendanceEntry = () => {
     setSelectedCommunicatedVia(null);
     setCommunicationDetails("");
     setRemarks("");
+    setFieldErrors({});
+  };
+
+  const validateRequiredFields = () => {
+    const errors = {};
+    if (!selectedDate) errors.selectedDate = "Date is required";
+    if (!selectedMentor) errors.selectedMentor = "Mentor is required";
+    if (!selectedStudent) errors.selectedStudent = "Student is required";
+    if (!selectedCommunicatedWith) {
+      errors.selectedCommunicatedWith = "Communicated with is required";
+    }
+    if (!selectedCommunicatedVia) {
+      errors.selectedCommunicatedVia = "Communicated via is required";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   useEffect(() => {
@@ -127,15 +145,7 @@ const AdmAttendanceEntry = () => {
   ];
 
   const handleSave = async () => {
-    // Validation
-    if (
-      !selectedDate ||
-      !selectedMentor ||
-      !selectedStudent ||
-      !selectedCommunicatedWith ||
-      !selectedCommunicatedVia
-    ) {
-      alert("Please fill all required fields.");
+    if (!validateRequiredFields()) {
       return;
     }
 
@@ -316,9 +326,15 @@ const AdmAttendanceEntry = () => {
                           id="date"
                           className="form-control detail"
                           value={selectedDate}
-                          onChange={(e) => setSelectedDate(e.target.value)}
+                          onChange={(e) => {
+                            setSelectedDate(e.target.value);
+                            setFieldErrors((prev) => ({ ...prev, selectedDate: "" }));
+                          }}
                           placeholder="Select date"
                         />
+                        {fieldErrors.selectedDate && (
+                          <small className="text-danger">{fieldErrors.selectedDate}</small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-4">
@@ -330,10 +346,16 @@ const AdmAttendanceEntry = () => {
                           options={mentors}
                           className="detail"
                           value={selectedMentor}
-                          onChange={setSelectedMentor}
+                          onChange={(option) => {
+                            setSelectedMentor(option);
+                            setFieldErrors((prev) => ({ ...prev, selectedMentor: "" }));
+                          }}
                           placeholder="Select Mentor"
                           classNamePrefix="mentor-dropdown"
                         />
+                        {fieldErrors.selectedMentor && (
+                          <small className="text-danger">{fieldErrors.selectedMentor}</small>
+                        )}
                       </div>
                       {/* Student Dropdown (Appears only if mentor is selected) */}
                       <div className="col-12 col-md-3 mb-4">
@@ -348,8 +370,14 @@ const AdmAttendanceEntry = () => {
                           placeholder="Select Student"
                           isDisabled={!selectedMentor} // Disables dropdown until a mentor is selected
                           value={selectedStudent}
-                          onChange={setSelectedStudent}
+                          onChange={(option) => {
+                            setSelectedStudent(option);
+                            setFieldErrors((prev) => ({ ...prev, selectedStudent: "" }));
+                          }}
                         />
+                        {fieldErrors.selectedStudent && (
+                          <small className="text-danger">{fieldErrors.selectedStudent}</small>
+                        )}
                       </div>
                       {/* Communicated With Dropdown */}
                       <div className="col-12 col-md-3 mb-4 ">
@@ -365,9 +393,15 @@ const AdmAttendanceEntry = () => {
                           className="flex-grow-1 detail"
                           options={communicatedWithOptions}
                           value={selectedCommunicatedWith}
-                          onChange={setSelectedCommunicatedWith}
+                          onChange={(option) => {
+                            setSelectedCommunicatedWith(option);
+                            setFieldErrors((prev) => ({ ...prev, selectedCommunicatedWith: "" }));
+                          }}
                           placeholder="Select "
                         />
+                        {fieldErrors.selectedCommunicatedWith && (
+                          <small className="text-danger">{fieldErrors.selectedCommunicatedWith}</small>
+                        )}
                       </div>
 
                       {/* Communicated Via Dropdown */}
@@ -385,8 +419,14 @@ const AdmAttendanceEntry = () => {
                           options={communicatedViaOptions}
                           placeholder="Select"
                           value={selectedCommunicatedVia}
-                          onChange={setSelectedCommunicatedVia}
+                          onChange={(option) => {
+                            setSelectedCommunicatedVia(option);
+                            setFieldErrors((prev) => ({ ...prev, selectedCommunicatedVia: "" }));
+                          }}
                         />
+                        {fieldErrors.selectedCommunicatedVia && (
+                          <small className="text-danger">{fieldErrors.selectedCommunicatedVia}</small>
+                        )}
                       </div>
                       {/* Communication Details Input Field */}
                       <div className="col-12 col-md-6 mb-4 ">

@@ -35,6 +35,8 @@ const StudentSearch = () => {
   const [studentData, setStudentData] = useState([]);
   const [termOptions, setTermOptions] = useState([]);
   const [selectedTerms, setSelectedTerms] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [termErrors, setTermErrors] = useState({});
 
   const [isViewClicked, setIsViewClicked] = useState(false);
   const navigate = useNavigate();
@@ -440,11 +442,21 @@ const StudentSearch = () => {
     const orgId = sessionStorage.getItem("organization_id") || localStorage.getItem("orgId");
     const branchId = sessionStorage.getItem("branch_id") || localStorage.getItem("branchId");
 
-    const classId = selectedCourse?.value;
-    if (!classId) {
-      alert("Please select a Course.");
+    const sessionId = selectedSession?.value;
+    if (!sessionId) {
+      setFieldErrors((prev) => ({ ...prev, selectedSession: "Session is required" }));
       return;
     }
+
+    setFieldErrors((prev) => ({ ...prev, selectedSession: "" }));
+
+    const classId = selectedCourse?.value;
+    if (!classId) {
+      setFieldErrors((prev) => ({ ...prev, selectedCourse: "Course is required" }));
+      return;
+    }
+
+    setFieldErrors((prev) => ({ ...prev, selectedCourse: "" }));
 
     const queryParams = new URLSearchParams({
       academic_year_id: academicSessionId,
@@ -499,6 +511,8 @@ const StudentSearch = () => {
     setSelectedSection(null);
     setStudentData([]);
     setSelectedTerms({});
+    setFieldErrors({});
+    setTermErrors({});
     setIsViewClicked(false);
   };
 
@@ -511,12 +525,16 @@ const StudentSearch = () => {
       ...prev,
       [studentId]: termValue,
     }));
+    setTermErrors((prev) => ({ ...prev, [studentId]: "" }));
   };
 
   const handleAddDataClick = (student) => {
     const selectedTermId = selectedTerms[student.student_course_id];
     if (!selectedTermId) {
-      alert("Please select a Term first.");
+      setTermErrors((prev) => ({
+        ...prev,
+        [student.student_course_id]: "Term is required",
+      }));
       return;
     }
     const selectedTermOption = termOptions.find((t) => t.value === parseInt(selectedTermId));
@@ -534,7 +552,10 @@ const StudentSearch = () => {
   const handleViewReport = (student) => {
     const selectedTermId = selectedTerms[student.student_course_id];
     if (!selectedTermId) {
-      alert("Please select a Term first.");
+      setTermErrors((prev) => ({
+        ...prev,
+        [student.student_course_id]: "Term is required",
+      }));
       return;
     }
     const selectedTermOption = termOptions.find((t) => t.value === parseInt(selectedTermId));
@@ -652,6 +673,7 @@ const StudentSearch = () => {
                           placeholder="Select Session"
                           onChange={(option) => {
                             setSelectedSession(option);
+                            setFieldErrors((prev) => ({ ...prev, selectedSession: "" }));
                             setSelectedCourse(null);
                             setSelectedDepartment(null);
                             setSelectedAcademicYear(null);
@@ -660,6 +682,9 @@ const StudentSearch = () => {
                           }}
                           isClearable
                         />
+                        {fieldErrors.selectedSession && (
+                          <small className="text-danger">{fieldErrors.selectedSession}</small>
+                        )}
                       </div>
 
                       {/* Course Dropdown */}
@@ -675,6 +700,7 @@ const StudentSearch = () => {
                           placeholder="Select Course"
                           onChange={(option) => {
                             setSelectedCourse(option);
+                            setFieldErrors((prev) => ({ ...prev, selectedCourse: "" }));
                             setSelectedDepartment(null);
                             setSelectedAcademicYear(null);
                             setSelectedSemester(null);
@@ -683,6 +709,9 @@ const StudentSearch = () => {
                           isDisabled={!selectedSession}
                           isClearable
                         />
+                        {fieldErrors.selectedCourse && (
+                          <small className="text-danger">{fieldErrors.selectedCourse}</small>
+                        )}
                       </div>
 
                       {/* Department Dropdown */}
@@ -884,6 +913,9 @@ const StudentSearch = () => {
                                   </option>
                                 ))}
                               </select>
+                              {termErrors[student.student_course_id] && (
+                                <small className="text-danger">{termErrors[student.student_course_id]}</small>
+                              )}
                             </td>
 
                             <td>
