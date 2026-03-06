@@ -8,8 +8,8 @@ services:
     branch: main
     rootDir: SchoolManagementBackend/CollegeManagement
     buildCommand: "chmod +x build.sh && ./build.sh"
-    startCommand: "gunicorn Swostitech_Acadix.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
-    healthCheckPath: /admin/
+    startCommand: "gunicorn Swostitech_Acadix.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60"
+    healthCheckPath: /health/
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
