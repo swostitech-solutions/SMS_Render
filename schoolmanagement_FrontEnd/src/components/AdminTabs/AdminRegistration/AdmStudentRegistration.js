@@ -300,9 +300,92 @@ export default function BasicTabs() {
     if (!formData.gender) newErrors.gender = "Gender is required";
     if (!formData.date_of_admission) newErrors.date_of_admission = "Date of Admission is required";
     if (!formData.admission_type) newErrors.admission_type = "Admission Type is required";
-    if (!formData.dob) newErrors.dob = "Date Of Join is required";
+    if (!isEditMode && !formData.feeappfrom) {
+      newErrors.feeappfrom = "Fee App From is required";
+    }
+    if (!isEditMode && !formData.feegroup) {
+      newErrors.feegroup = "Fee Group is required";
+    }
     if (!formData.father_name?.trim()) newErrors.father_name = "Father Name is required";
     if (!formData.mother_name?.trim()) newErrors.mother_name = "Mother Name is required";
+    if (!formData.fatherTitle?.trim()) newErrors.fatherTitle = "Father Title is required";
+    if (!formData.motherTitle?.trim()) newErrors.motherTitle = "Mother Title is required";
+    if (!formData.father_profession) newErrors.father_profession = "Father Profession is required";
+    if (!formData.mother_profession) newErrors.mother_profession = "Mother Profession is required";
+    if (!formData.father_contact_number?.trim()) {
+      newErrors.father_contact_number = "Father Contact Number is required";
+    }
+    if (!formData.mother_contact_number?.trim()) {
+      newErrors.mother_contact_number = "Mother Contact Number is required";
+    }
+    if (!formData.present_address?.trim()) {
+      newErrors.present_address = "Present Address is required";
+    }
+    if (!formData.present_country) {
+      newErrors.present_country = "Present Country is required";
+    }
+    if (!formData.present_state) {
+      newErrors.present_state = "Present State is required";
+    }
+    if (!formData.present_city) {
+      newErrors.present_city = "Present City / District is required";
+    }
+    if (!formData.present_pincode?.trim()) {
+      newErrors.present_pincode = "Present Pincode is required";
+    }
+    if (!formData.permanent_address?.trim()) {
+      newErrors.permanent_address = "Permanent Address is required";
+    }
+    if (!formData.permanent_country) {
+      newErrors.permanent_country = "Permanent Country is required";
+    }
+    if (!formData.permanent_state) {
+      newErrors.permanent_state = "Permanent State is required";
+    }
+    if (!formData.permanent_city) {
+      newErrors.permanent_city = "Permanent City / District is required";
+    }
+    if (!formData.permanent_pincode?.trim()) {
+      newErrors.permanent_pincode = "Permanent Pincode is required";
+    }
+
+    const emergencyContacts = Array.isArray(formData.emegencyContact)
+      ? formData.emegencyContact
+      : [];
+    const emergencyRequiredErrors = emergencyContacts.map((contact) => {
+      const rowError = {};
+      if (!contact?.name?.trim()) rowError.name = "Name is required";
+      if (!contact?.relationship?.trim()) {
+        rowError.relationship = "Relationship is required";
+      }
+      if (!contact?.Mobile_Number?.trim()) {
+        rowError.Mobile_Number = "Phone No is required";
+      }
+      return rowError;
+    });
+    if (emergencyRequiredErrors.some((row) => Object.keys(row).length > 0)) {
+      newErrors.emegencyContact = emergencyRequiredErrors;
+    }
+
+    const localGuardians = Array.isArray(formData.authorizedpickup)
+      ? formData.authorizedpickup
+      : [];
+    const localGuardianRequiredErrors = localGuardians.map((guardian) => {
+      const rowError = {};
+      if (!guardian?.name?.trim()) rowError.name = "Name is required";
+      if (!guardian?.relationship?.trim()) {
+        rowError.relationship = "Relationship is required";
+      }
+      if (!guardian?.Mobile_Number?.trim()) {
+        rowError.Mobile_Number = "Mobile No is required";
+      }
+      if (!guardian?.address?.trim()) rowError.address = "Address is required";
+      if (!guardian?.email?.trim()) rowError.email = "EmailId is required";
+      return rowError;
+    });
+    if (localGuardianRequiredErrors.some((row) => Object.keys(row).length > 0)) {
+      newErrors.authorizedpickup = localGuardianRequiredErrors;
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -1126,12 +1209,17 @@ export default function BasicTabs() {
             batch_id={formData.batch}
             course_id={formData.course}
             department_id={formData.department}
+            requiredErrors={errors}
           />
         </CustomTabPanel>
       )}
 
       <CustomTabPanel value={value} index={isEditMode ? 1 : 2}>
-        <AdmPersonalDetails formData={formData} setFormData={setFormData} />
+        <AdmPersonalDetails
+          formData={formData}
+          setFormData={setFormData}
+          requiredErrors={errors}
+        />
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 2 : 3}>
@@ -1147,11 +1235,19 @@ export default function BasicTabs() {
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 4 : 5}>
-        <EmergencyContact formData={formData} setFormData={setFormData} />
+        <EmergencyContact
+          formData={formData}
+          setFormData={setFormData}
+          requiredErrors={errors}
+        />
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 5 : 6}>
-        <AuthorisedPickUp formData={formData} setFormData={setFormData} />
+        <AuthorisedPickUp
+          formData={formData}
+          setFormData={setFormData}
+          requiredErrors={errors}
+        />
       </CustomTabPanel>
 
       <CustomTabPanel value={value} index={isEditMode ? 6 : 7}>

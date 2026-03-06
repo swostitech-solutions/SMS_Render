@@ -253,6 +253,7 @@ export default function BasicTabs() {
   // ============================================
   const validateBasicInfo = () => {
     const b = basicInfoData || {};
+    const a = addressFormData?.formValues || {};
     const errors = {};
 
     if (!b.employeeCode || !String(b.employeeCode).trim()) {
@@ -285,10 +286,62 @@ export default function BasicTabs() {
       errors.phoneNumber = "Mobile Number must be exactly 10 digits.";
     }
 
+    if (!b.email || !String(b.email).trim()) {
+      errors.email = "Email ID is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(b.email).trim())) {
+      errors.email = "Please enter a valid Email ID.";
+    }
+
+    if (!a.residenceAddress || !String(a.residenceAddress).trim()) {
+      errors.residenceAddress = "Address is required.";
+    }
+    if (!addressFormData?.selectedCountry?.value) {
+      errors.residenceCountry = "Country is required.";
+    }
+    if (!addressFormData?.selectedState?.value) {
+      errors.residenceState = "State is required.";
+    }
+    if (!addressFormData?.selectedResidenceDistrict?.value) {
+      errors.residenceCity = "City/District is required.";
+    }
+    if (!a.residencePincode || !String(a.residencePincode).trim()) {
+      errors.residencePincode = "Pincode is required.";
+    }
+    if (!a.permanentAddress || !String(a.permanentAddress).trim()) {
+      errors.permanentAddress = "Address is required.";
+    }
+    if (!addressFormData?.selectedPermanentCountry?.value) {
+      errors.permanentCountry = "Country is required.";
+    }
+    if (!addressFormData?.selectedPermanentState?.value) {
+      errors.permanentState = "State is required.";
+    }
+    if (!addressFormData?.selectedPermanentDistrict?.value) {
+      errors.permanentCity = "City/District is required.";
+    }
+    if (!a.permanentPincode || !String(a.permanentPincode).trim()) {
+      errors.permanentPincode = "Pincode is required.";
+    }
+
     setBasicInfoFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      setValue(0);
+      if (
+        errors.residenceAddress ||
+        errors.residenceCountry ||
+        errors.residenceState ||
+        errors.residenceCity ||
+        errors.residencePincode ||
+        errors.permanentAddress ||
+        errors.permanentCountry ||
+        errors.permanentState ||
+        errors.permanentCity ||
+        errors.permanentPincode
+      ) {
+        setValue(1);
+      } else {
+        setValue(0);
+      }
       return false;
     }
 
@@ -1199,7 +1252,14 @@ export default function BasicTabs() {
         />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        <AdmAddress goToTab={goToTab} addressDetails={addressDetails} setDocumentDetailsInParent={setDocumentDetails} setAddressFormDataInParent={setAddressFormData} addressFormData={addressFormData} />
+        <AdmAddress
+          goToTab={goToTab}
+          addressDetails={addressDetails}
+          setDocumentDetailsInParent={setDocumentDetails}
+          setAddressFormDataInParent={setAddressFormData}
+          addressFormData={addressFormData}
+          requiredErrors={basicInfoFieldErrors}
+        />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
         <DocumentDetails goToTab={goToTab} documentDetails={documentDetails} setDocumentDetails={setDocumentDetails} />

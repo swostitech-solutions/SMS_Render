@@ -7,7 +7,7 @@ import {
   validateEmail,
 } from "../../utils/validation";
 
-const AuthorisedPickUp = ({ formData, setFormData }) => {
+const AuthorisedPickUp = ({ formData, setFormData, requiredErrors = {} }) => {
   const { id } = useParams(); // Get student ID from the URL
   const [errors, setErrors] = useState([]);
 
@@ -240,6 +240,11 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                   }}
                   required
                 />
+                {requiredErrors.authorizedpickup?.[index]?.name && (
+                  <small style={{ color: "red" }}>
+                    {requiredErrors.authorizedpickup[index].name}
+                  </small>
+                )}
               </td>
 
               {/* ✅ Relationship - Only alphabets and spaces */}
@@ -253,6 +258,11 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                   }}
                   required
                 />
+                {requiredErrors.authorizedpickup?.[index]?.relationship && (
+                  <small style={{ color: "red" }}>
+                    {requiredErrors.authorizedpickup[index].relationship}
+                  </small>
+                )}
               </td>
 
               {/* ✅ Mobile Number - Only digits, 10 max */}
@@ -279,6 +289,12 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                     {errors[index].mobile}
                   </span>
                 )}
+                {!errors[index]?.mobile &&
+                  requiredErrors.authorizedpickup?.[index]?.Mobile_Number && (
+                    <small style={{ color: "red" }}>
+                      {requiredErrors.authorizedpickup[index].Mobile_Number}
+                    </small>
+                  )}
               </td>
 
               <td>
@@ -290,6 +306,11 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                   }
                   required
                 />
+                {requiredErrors.authorizedpickup?.[index]?.address && (
+                  <small style={{ color: "red" }}>
+                    {requiredErrors.authorizedpickup[index].address}
+                  </small>
+                )}
               </td>
 
               <td>
@@ -312,6 +333,11 @@ const AuthorisedPickUp = ({ formData, setFormData }) => {
                   >
                     {errors[index].email}
                   </span>
+                )}
+                {!errors[index]?.email && requiredErrors.authorizedpickup?.[index]?.email && (
+                  <small style={{ color: "red" }}>
+                    {requiredErrors.authorizedpickup[index].email}
+                  </small>
                 )}
               </td>
 

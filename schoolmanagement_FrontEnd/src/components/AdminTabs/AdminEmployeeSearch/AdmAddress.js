@@ -11,6 +11,7 @@ const ParentDetailsForm = ({
   setDocumentDetailsInParent,
   setAddressFormDataInParent,
   addressFormData, // Data from parent to restore on tab return
+  requiredErrors = {},
 }) => {
   // State to store form values - initialize from parent data if available
   // Validation errors for phone fields
@@ -794,11 +795,14 @@ const ParentDetailsForm = ({
                   <input
                     type="text"
                     id="residenceAddress"
-                    className="form-control detail"
+                    className={`form-control detail${requiredErrors.residenceAddress ? " is-invalid" : ""}`}
                     placeholder="Enter address"
                     value={formValues.residenceAddress}
                     onChange={handleInputChange}
                   />
+                  {requiredErrors.residenceAddress && (
+                    <small className="text-danger">{requiredErrors.residenceAddress}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
@@ -818,6 +822,9 @@ const ParentDetailsForm = ({
                       setSelectedCountry(selectedOption)
                     }
                   />
+                  {requiredErrors.residenceCountry && (
+                    <small className="text-danger">{requiredErrors.residenceCountry}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
@@ -838,6 +845,9 @@ const ParentDetailsForm = ({
                     value={selectedState}
                     isDisabled={!selectedCountry} // Disable if no country is selected
                   />
+                  {requiredErrors.residenceState && (
+                    <small className="text-danger">{requiredErrors.residenceState}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
@@ -858,20 +868,26 @@ const ParentDetailsForm = ({
                     value={selectedResidenceDistrict}
                     isDisabled={!selectedState}
                   />
+                  {requiredErrors.residenceCity && (
+                    <small className="text-danger">{requiredErrors.residenceCity}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
                   <label htmlFor="residencePincode" className="form-label">
-                    Pincode<span style={{ color: "red" }}>*</span>
+                    Pincode
                   </label>
                   <input
                     type="text"
                     id="residencePincode"
-                    className="form-control detail"
+                    className={`form-control detail${requiredErrors.residencePincode ? " is-invalid" : ""}`}
                     placeholder="Enter pincode"
                     value={formValues.residencePincode}
                     onChange={handleInputChange}
                   />
+                  {requiredErrors.residencePincode && (
+                    <small className="text-danger">{requiredErrors.residencePincode}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
@@ -928,16 +944,19 @@ const ParentDetailsForm = ({
                   <input
                     type="text"
                     id="permanentAddress"
-                    className="form-control detail"
+                    className={`form-control detail${requiredErrors.permanentAddress ? " is-invalid" : ""}`}
                     placeholder="Enter address"
                     value={formValues.permanentAddress}
                     onChange={handleInputChange}
                     disabled={formValues.sameAsResidence}
                   />
+                  {requiredErrors.permanentAddress && (
+                    <small className="text-danger">{requiredErrors.permanentAddress}</small>
+                  )}
                 </div>
                 <div className="col-6 mb-2">
                   <label htmlFor="country" className="form-label">
-                    Country
+                    Country <span style={{ color: "red" }}>*</span>
                   </label>
                   <Select
                     inputId="country"
@@ -953,11 +972,14 @@ const ParentDetailsForm = ({
                     }
                     isDisabled={formValues.sameAsResidence}
                   />
+                  {requiredErrors.permanentCountry && (
+                    <small className="text-danger">{requiredErrors.permanentCountry}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
                   <label htmlFor="state" className="form-label">
-                    State
+                    State <span style={{ color: "red" }}>*</span>
                   </label>
                   <Select
                     inputId="permanentState"
@@ -973,11 +995,14 @@ const ParentDetailsForm = ({
                     value={selectedPermanentState}
                     isDisabled={!selectedPermanentCountry || formValues.sameAsResidence}
                   />
+                  {requiredErrors.permanentState && (
+                    <small className="text-danger">{requiredErrors.permanentState}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
                   <label htmlFor="residenceCity" className="form-label">
-                    City/District
+                    City/District <span style={{ color: "red" }}>*</span>
                   </label>
                   <Select
                     inputId="permanentCity"
@@ -993,6 +1018,9 @@ const ParentDetailsForm = ({
                     value={selectedPermanentDistrict}
                     isDisabled={!selectedPermanentState || formValues.sameAsResidence}
                   />
+                  {requiredErrors.permanentCity && (
+                    <small className="text-danger">{requiredErrors.permanentCity}</small>
+                  )}
                 </div>
 
                 <div className="col-6 mb-2">
@@ -1002,12 +1030,15 @@ const ParentDetailsForm = ({
                   <input
                     type="text"
                     id="permanentPincode"
-                    className="form-control detail"
+                    className={`form-control detail${requiredErrors.permanentPincode ? " is-invalid" : ""}`}
                     placeholder="Enter pincode"
                     value={formValues.permanentPincode}
                     onChange={handleInputChange}
                     disabled={formValues.sameAsResidence}
                   />
+                  {requiredErrors.permanentPincode && (
+                    <small className="text-danger">{requiredErrors.permanentPincode}</small>
+                  )}
                 </div>
                 <div className="col-6 mb-2">
                   <label htmlFor="permanentPhone" className="form-label">

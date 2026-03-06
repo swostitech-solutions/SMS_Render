@@ -8,7 +8,7 @@ import {
   validateEmail,
 } from "../../utils/validation";
 
-const AdmOtherDetails = ({ formData, setFormData }) => {
+const AdmOtherDetails = ({ formData, setFormData, requiredErrors = {} }) => {
   const { id } = useParams();
   const [errors, setErrors] = useState([]);
 
@@ -238,6 +238,11 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
                       }}
                       required
                     />
+                    {requiredErrors.emegencyContact?.[index]?.name && (
+                      <small style={{ color: "red" }}>
+                        {requiredErrors.emegencyContact[index].name}
+                      </small>
+                    )}
                   </td>
 
                   {/* ✅ Relationship (only alphabets & spaces allowed) */}
@@ -254,6 +259,11 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
                       }}
                       required
                     />
+                    {requiredErrors.emegencyContact?.[index]?.relationship && (
+                      <small style={{ color: "red" }}>
+                        {requiredErrors.emegencyContact[index].relationship}
+                      </small>
+                    )}
                   </td>
 
                   {/* ✅ Phone Number (only digits, 10 characters max) */}
@@ -280,6 +290,12 @@ const AdmOtherDetails = ({ formData, setFormData }) => {
                         {errors[index]}
                       </span>
                     )}
+                    {!errors[index] &&
+                      requiredErrors.emegencyContact?.[index]?.Mobile_Number && (
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.emegencyContact[index].Mobile_Number}
+                        </small>
+                      )}
                   </td>
 
                   <td>

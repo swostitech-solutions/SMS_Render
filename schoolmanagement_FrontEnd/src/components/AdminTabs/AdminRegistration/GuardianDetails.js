@@ -201,6 +201,9 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
             <option value="Dr.">Dr.</option>
             <option value="Prof.">Prof.</option>
           </select>
+          {requiredErrors.fatherTitle && (
+            <small style={{ color: "red" }}>{requiredErrors.fatherTitle}</small>
+          )}
         </div>
 
         <div className="col-12 col-md-3 mb-2">
@@ -244,6 +247,9 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
                 </option>
               ))}
           </select>
+          {requiredErrors.father_profession && (
+            <small style={{ color: "red" }}>{requiredErrors.father_profession}</small>
+          )}
         </div>
 
         {/* Father's Contact Number */}
@@ -272,6 +278,9 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
             <small style={{ color: "red" }}>
               {errors.father_contact_number}
             </small>
+          )}
+          {!errors.father_contact_number && requiredErrors.father_contact_number && (
+            <small style={{ color: "red" }}>{requiredErrors.father_contact_number}</small>
           )}
         </div>
         <div className="col-12 col-md-3 mb-2">
@@ -316,6 +325,9 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
             <option value="Dr.">Dr.</option>
             <option value="Prof.">Prof.</option>
           </select>
+          {requiredErrors.motherTitle && (
+            <small style={{ color: "red" }}>{requiredErrors.motherTitle}</small>
+          )}
         </div>
         <div className="col-12 col-md-3 mb-2">
           <label htmlFor="mother_name" className="form-label">
@@ -357,6 +369,9 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
                 </option>
               ))}
           </select>
+          {requiredErrors.mother_profession && (
+            <small style={{ color: "red" }}>{requiredErrors.mother_profession}</small>
+          )}
         </div>
 
         <div className="col-12 col-md-3 mb-2">
@@ -384,6 +399,9 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
             <small style={{ color: "red" }}>
               {errors.mother_contact_number}
             </small>
+          )}
+          {!errors.mother_contact_number && requiredErrors.mother_contact_number && (
+            <small style={{ color: "red" }}>{requiredErrors.mother_contact_number}</small>
           )}
         </div>
         {/* Mother's Email */}

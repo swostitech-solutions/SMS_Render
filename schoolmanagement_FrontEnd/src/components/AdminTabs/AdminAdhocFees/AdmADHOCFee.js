@@ -3736,7 +3736,7 @@ const AdmADHOCFee = () => {
                   </th>
                   <th>Element Name</th>
                   <th>Amount</th>
-                  {/* <th>Remark</th> */}
+                  <th>Remark</th>
                 </tr>
               </thead>
               <tbody>
@@ -3753,19 +3753,25 @@ const AdmADHOCFee = () => {
                     <td>
                       <input
                         type="number"
+                        className="adhoc-element-input"
                         value={amounts[element.id] || ""}
                         onChange={(e) => handleAmountChange(e, element.id)}
+                        disabled={!selectedElements[element.id]}
+                        required={selectedElements[element.id] || false}
                         style={{ width: "100%" }}
                       />
                     </td>
-                    {/* <td>
+                    <td>
                       <input
                         type="text"
+                        className="adhoc-element-input"
                         value={remarks[element.id] || ""}
                         onChange={(e) => handleRemarkChange(e, element.id)}
+                        disabled={!selectedElements[element.id]}
+                        required={selectedElements[element.id] || false}
                         style={{ width: "100%" }}
                       />
-                    </td> */}
+                    </td>
                   </tr>
                 ))}
               </tbody>

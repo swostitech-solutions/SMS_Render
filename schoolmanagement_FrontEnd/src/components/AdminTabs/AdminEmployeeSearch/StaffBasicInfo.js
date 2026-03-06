@@ -342,6 +342,16 @@ const StaffInfo = ({
       return;
     }
 
+    // Validate Email ID
+    if (!formData.email || formData.email.trim() === "") {
+      alert("Email ID is required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      alert("Please enter a valid Email ID.");
+      return;
+    }
+
     try {
       // Data is already synced to parent via useEffect - no need for sessionStorage
       // (sessionStorage has size limits and fails with large base64 images)
@@ -812,14 +822,18 @@ const StaffInfo = ({
                         <input
                           type="email"
                           id="email-id"
-                          className="form-control detail"
+                          className={`form-control detail${requiredErrors.email ? " is-invalid" : ""}`}
                           placeholder="Enter email id"
                           value={formData.email}
-                          onChange={(e) =>
-                            setFormData({ ...formData, email: e.target.value })
-                          }
+                          onChange={(e) => {
+                            setFormData({ ...formData, email: e.target.value });
+                            clearRequiredError("email");
+                          }}
                         />
                       </div>
+                      {requiredErrors.email && (
+                        <small className="text-danger">{requiredErrors.email}</small>
+                      )}
                     </div>
 
                     <div className="col-md-3 mb-3">
