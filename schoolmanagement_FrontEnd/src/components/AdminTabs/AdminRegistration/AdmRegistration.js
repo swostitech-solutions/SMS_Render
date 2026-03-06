@@ -184,6 +184,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
 
   useEffect(() => {
     const fetchFullStudentData = async () => {
+      setIsSearching(true);
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
@@ -236,6 +237,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         }
       } catch (error) {
         console.error("Fetch error:", error);
+      } finally {
+        setIsSearching(false);
       }
     };
 
@@ -345,10 +348,6 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       setIsSearching(false);
     }
   };
-
-  useEffect(() => {
-    handleSearch();
-  }, []);
 
   const flattenStudentData = (data) => {
     return data.map((student, index) => {
