@@ -102,6 +102,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
     const lowerQuery = searchQuery.toLowerCase();
     return studentData.filter((student) => {
       const basic = student?.studentBasicDetails;
+      const address = student?.addressDetails?.[0] || {};
       if (!basic) return false;
 
       const searchStr = `
@@ -121,6 +122,16 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         ${basic.religion_name || ""}
         ${basic.barcode || ""}
         ${basic.category_name || ""}
+        ${address.present_address || ""}
+        ${address.present_city || ""}
+        ${address.present_state || ""}
+        ${address.present_country || ""}
+        ${address.present_pincode || ""}
+        ${address.permanent_address || ""}
+        ${address.permanent_city || ""}
+        ${address.permanent_state || ""}
+        ${address.permanent_country || ""}
+        ${address.permanent_pincode || ""}
       `.toLowerCase();
 
       return searchStr.includes(lowerQuery);
