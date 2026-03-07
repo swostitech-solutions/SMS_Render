@@ -6699,7 +6699,7 @@ class ProcessFeeGroupMixin:
                                 element_amount=element['amount'],
                                 total_element_period_amount=element['amount'],
                                 paid_amount=0,
-                                remarks=element['remarks'],
+                                remarks=element.get('remarks', ''),
                                 created_by=created_by,
                                 updated_by=created_by
                             )

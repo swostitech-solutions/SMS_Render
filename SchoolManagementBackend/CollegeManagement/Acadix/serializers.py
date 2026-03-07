@@ -1348,7 +1348,7 @@ class StudentGetBasedOnCourseSectionSerializer(serializers.Serializer):
 class FeeElementSerializer(serializers.Serializer):
     element_id = serializers.IntegerField()
     amount = serializers.DecimalField(max_digits=10, decimal_places=2)
-    remarks = serializers.CharField(max_length=255)
+    remarks = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=True)
 
 
 class InsertFeesForSelectedStudent(serializers.Serializer):

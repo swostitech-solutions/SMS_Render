@@ -161,6 +161,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
     middle_name: "",
     last_name: "",
     gender: "",
+    status: "ACTIVE",
   });
   const [reportType, setReportType] = useState("");
   const [error, setError] = useState(null);
@@ -207,7 +208,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         }
 
         // const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?organization_id=${organizationId}&branch_id=${branchId}&academic_year_id=${academicYearId}`;
-        const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?organization_id=${organizationId}&branch_id=${branchId}`;
+        const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?organization_id=${organizationId}&branch_id=${branchId}&student_status=ACTIVE`;
 
         console.log("Fetch Full Student API URL:", apiUrl);
 
@@ -309,6 +310,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       appendIfValid("father_name", filters.fatherName);
       appendIfValid("mother_name", filters.motherName);
       appendIfValid("school_admission_no", filters.schoolAdmissionNo);
+      appendIfValid("student_status", filters.status);
 
       const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?${params.toString()}`;
       console.log("Search API URL:", apiUrl);
@@ -403,7 +405,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       fatherName: "",
       motherName: "",
       gender: "",
-      status: "",
+      status: "ACTIVE",
       courseId: "",
       branchId: "",
       academicYearId: "",
