@@ -974,15 +974,7 @@ const AdmAttendanceEntry = () => {
     const fee_due_from = fromPeriod || "";
     const fee_due_to = toPeriod || "";
 
-    // Validation: Ensure valid periods are selected for reports that require them
-    if (["A", "B", "C", "G"].includes(report.value)) {
-      if (!fee_due_from || !fee_due_to) {
-        alert(
-          "Please select both 'Fee Due Period From' and 'Fee Due Period To' to generate this report."
-        );
-        return;
-      }
-    }
+
 
     try {
       let url = "";

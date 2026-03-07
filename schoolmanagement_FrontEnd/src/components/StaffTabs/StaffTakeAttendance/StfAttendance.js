@@ -521,6 +521,12 @@ const StfAttendance = () => {
         },
       });
 
+      if (response.status === 204 || response.status === 404) {
+        setAttendanceData([]);
+        setSubmitMessage({ type: "danger", text: "No records found for the selected criteria." });
+        return;
+      }
+
       const result = await response.json();
       console.log("Attendance API Response:", result);
 
@@ -529,7 +535,7 @@ const StfAttendance = () => {
         setSubmitMessage({ type: "", text: "" });
       } else {
         setAttendanceData([]);
-        setSubmitMessage({ type: "danger", text: "No records found for the selected criteria." });
+        setSubmitMessage({ type: "danger", text: result.message || "No records found for the selected criteria." });
       }
     } catch (error) {
       console.error("Error fetching attendance data:", error);

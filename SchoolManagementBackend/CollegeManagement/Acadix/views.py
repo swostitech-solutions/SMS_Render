@@ -25877,7 +25877,7 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
                             ResponseData.append(data)
 
                 else:
-                    return Response({'message': 'No Record Found'}, status=status.HTTP_204_NO_CONTENT)
+                    return Response({'message': 'No Record Found'}, status=status.HTTP_404_NOT_FOUND)
 
             return Response({'message': 'success', 'data': ResponseData}, status=status.HTTP_200_OK)
 
