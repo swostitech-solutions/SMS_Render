@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AdmRegistration.css";
 import { useNavigate } from "react-router-dom";
@@ -172,9 +172,12 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
     middle_name: "",
     last_name: "",
     gender: "",
+    status: "ACTIVE",
   });
   const [reportType, setReportType] = useState("");
   const [error, setError] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchAbortRef = useRef(null);
 
   // 03-12-2025
   useEffect(() => {
@@ -193,6 +196,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
 
   useEffect(() => {
     const fetchFullStudentData = async () => {
+      setIsSearching(true);
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
@@ -215,7 +219,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         }
 
         // const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?organization_id=${organizationId}&branch_id=${branchId}&academic_year_id=${academicYearId}`;
-        const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?organization_id=${organizationId}&branch_id=${branchId}`;
+        const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?organization_id=${organizationId}&branch_id=${branchId}&student_status=ACTIVE`;
 
         console.log("Fetch Full Student API URL:", apiUrl);
 
@@ -245,6 +249,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         }
       } catch (error) {
         console.error("Fetch error:", error);
+      } finally {
+        setIsSearching(false);
       }
     };
 
@@ -270,6 +276,14 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
   };
 
   const handleSearch = async () => {
+    // Cancel any previous in-flight request
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
+    setIsSearching(true);
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
@@ -307,6 +321,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       appendIfValid("father_name", filters.fatherName);
       appendIfValid("mother_name", filters.motherName);
       appendIfValid("school_admission_no", filters.schoolAdmissionNo);
+      appendIfValid("student_status", filters.status);
 
       const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?${params.toString()}`;
       console.log("Search API URL:", apiUrl);
@@ -317,6 +332,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -334,15 +350,17 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       }
 
     } catch (error) {
+      if (error.name === 'AbortError') {
+        // Previous request was cancelled — not an error
+        return;
+      }
       console.error("Search API Error:", error);
       setStudentData([]);
       setFullStudentData([]);
+    } finally {
+      setIsSearching(false);
     }
   };
-
-  useEffect(() => {
-    handleSearch();
-  }, []);
 
   const flattenStudentData = (data) => {
     return data.map((student, index) => {
@@ -398,7 +416,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       fatherName: "",
       motherName: "",
       gender: "",
-      status: "",
+      status: "ACTIVE",
       courseId: "",
       branchId: "",
       academicYearId: "",
@@ -850,8 +868,9 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                     type="button"
                     className="btn btn-primary me-2"
                     onClick={handleSearch}
+                    disabled={isSearching}
                   >
-                    Search
+                    {isSearching ? "Searching..." : "Search"}
                   </button>
                   <button
                     type="button"

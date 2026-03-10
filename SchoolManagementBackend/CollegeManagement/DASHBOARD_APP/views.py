@@ -144,6 +144,7 @@ class AttendanceCourseSemesterSectionWiseListAPIView(ListAPIView):
                     branch=branch_id,
                     is_active=True
                 ).values(
+                    'batch', 'batch__batch_description',
                     'course', 'course__course_name',
                     'department', 'department__department_description',
                     'academic_year', 'academic_year__academic_year_code',
@@ -152,6 +153,7 @@ class AttendanceCourseSemesterSectionWiseListAPIView(ListAPIView):
                 ).annotate(
                     total_enrolled=Count('id')
                 ).order_by(
+                    'batch',
                     'course',
                     'department',
                     'academic_year',
@@ -200,6 +202,7 @@ class AttendanceCourseSemesterSectionWiseListAPIView(ListAPIView):
                     not_marked = max(0, total_enrolled - (section_present + section_absent + section_leave))
 
                     data = {
+                        'session': item.get('batch__batch_description'),
                         'course_name': item.get('course__course_name'),
                         'department': item.get('department__department_description'),
                         'academic_year': item.get('academic_year__academic_year_code'),

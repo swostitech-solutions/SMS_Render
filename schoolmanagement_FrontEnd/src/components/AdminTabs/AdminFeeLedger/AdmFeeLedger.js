@@ -847,6 +847,30 @@ const AdmAttendanceEntry = () => {
     fetchPeriods();
   }, [selectedSession, selectedCourse, selectedDepartment]);
 
+  // Export to Excel function
+  const exportToExcel = () => {
+    if (tableData && tableData.length > 0) {
+      // Create a clean version of the data for export
+      const exportData = tableData.map((item) => ({
+        "Student Name": item.student_name || "",
+        "Course": item.course_name || "",
+        "Section": item.section_name || "",
+        "Father Name": item.fatherName || "",
+        "Mother Name": item.motherName || "",
+        "Total Fees": item.total_fees || 0,
+        "Fees Paid": item.total_paid || 0,
+        "Discount": item.discount_fees || 0,
+        "Balance": item.remaining_fees || 0,
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "FeeLedger");
+      XLSX.writeFile(workbook, "Fee_Ledger_Data.xlsx");
+    } else {
+      alert("No data available to export!");
+    }
+  };
+
   const handleSearch = async () => {
     const token = localStorage.getItem("accessToken");
     const organization_id = sessionStorage.getItem("organization_id");
@@ -950,15 +974,7 @@ const AdmAttendanceEntry = () => {
     const fee_due_from = fromPeriod || "";
     const fee_due_to = toPeriod || "";
 
-    // Validation: Ensure valid periods are selected for reports that require them
-    if (["A", "B", "C", "G"].includes(report.value)) {
-      if (!fee_due_from || !fee_due_to) {
-        alert(
-          "Please select both 'Fee Due Period From' and 'Fee Due Period To' to generate this report."
-        );
-        return;
-      }
-    }
+
 
     try {
       let url = "";
@@ -1293,6 +1309,16 @@ const AdmAttendanceEntry = () => {
                     onClick={() => navigate("/admin/dashboard")}
                   >
                     Close
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    style={{
+                      width: "150px",
+                    }}
+                    onClick={exportToExcel}
+                  >
+                    Export To Excel
                   </button>
                 </div>
               </div>

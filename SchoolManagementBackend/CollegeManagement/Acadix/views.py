@@ -6699,7 +6699,7 @@ class ProcessFeeGroupMixin:
                                 element_amount=element['amount'],
                                 total_element_period_amount=element['amount'],
                                 paid_amount=0,
-                                remarks=element['remarks'],
+                                remarks=element.get('remarks', ''),
                                 created_by=created_by,
                                 updated_by=created_by
                             )
@@ -11769,7 +11769,11 @@ class StudentRegistrationListAPIView(ListAPIView):
                 try:
                     studentRegistrationList = StudentRegistration.objects.filter(organization=organization_id,
                                                                                  branch=branch_id,
-                                                                                 is_active=True).order_by('-created_at')
+                                                                                 is_active=True).select_related(
+                        'organization', 'branch', 'batch', 'batch__branch',
+                        'course', 'department', 'academic_year', 'semester', 'section',
+                        'gender', 'house', 'religion', 'category', 'mother_tongue', 'blood', 'nationality'
+                    ).order_by('-created_at')
                 except StudentRegistration.DoesNotExist:
                     return Response({"message": "student registration record not found !!!"},
                                     status=status.HTTP_404_NOT_FOUND)
@@ -11950,8 +11954,7 @@ class StudentRegistrationListAPIView(ListAPIView):
                 #     RegistrationInstance = None
                 if student is not None:
                     # Step 2: Retrieve related data
-                    feeDetails = StudentCourse.objects.filter(student=student, is_active=True)
-                    transportDetails = StudentCourse.objects.filter(student=student, is_active=True)
+                    feeDetails = StudentCourse.objects.filter(student=student, is_active=True).select_related('fee_group', 'fee_applied_from')
                     addressDetails = Address.objects.filter(reference_id=student.id)
                     sibilingsDetails = SiblingDetail.objects.filter(student=student)
                     studentEmergencyContacts = StudentEmergencyContact.objects.filter(student=student)
@@ -11967,14 +11970,11 @@ class StudentRegistrationListAPIView(ListAPIView):
                             if item.fee_group.id == None or item.fee_applied_from.id == None:
                                 continue
                             else:
-                                feemasterInstance = FeeStructureMaster.objects.get(id=item.fee_group.id)
-                                semesterInstance = Semester.objects.get(id=item.fee_applied_from.id)
-
                                 feedata = {
                                     'fee_group_id': item.fee_group.id,
-                                    'fee_group': feemasterInstance.fee_structure_code,
+                                    'fee_group': item.fee_group.fee_structure_code,
                                     'fee_applied_from_id': item.fee_applied_from.id,
-                                    'semester': semesterInstance.semester_description
+                                    'semester': item.fee_applied_from.semester_description
                                 }
 
                                 feeDetailslist.append(feedata)
@@ -11983,23 +11983,16 @@ class StudentRegistrationListAPIView(ListAPIView):
                     sibilinglist = []
                     if sibilingsDetails.exists():
                         for sibiling in sibilingsDetails:
-                            studentInstance = StudentRegistration.objects.get(id=sibiling.sibling.id)
-                            courseInstance = Course.objects.get(id=studentInstance.course.id)
-                            sectionInstance = Section.objects.get(id=studentInstance.section.id)
+                            studentInstance = StudentRegistration.objects.select_related('course', 'section').get(id=sibiling.sibling.id)
                             sibilingsdata = {
                                 'sibling_id': sibiling.sibling.id,
                                 'sibling_firstname': studentInstance.first_name,
                                 'sibling_lastname': studentInstance.last_name,
                                 'college_admission_no': studentInstance.college_admission_no,
-                                'course_name': courseInstance.course_name,
-                                'section_name': sectionInstance.section_name
-
+                                'course_name': studentInstance.course.course_name,
+                                'section_name': studentInstance.section.section_name
                             }
                             sibilinglist.append(sibilingsdata)
-                    # Fetch class and section details for student
-                    courseInstance = Course.objects.get(id=student.course.id)
-                    sectionInstance = Section.objects.get(id=student.section.id)
-
                     # Step 3: Serialize the data using respective serializers
                     student_data = {
                         'studentBasicDetails': {
@@ -25884,7 +25877,7 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
                             ResponseData.append(data)
 
                 else:
-                    return Response({'message': 'No Record Found'}, status=status.HTTP_204_NO_CONTENT)
+                    return Response({'message': 'No Record Found'}, status=status.HTTP_404_NOT_FOUND)
 
             return Response({'message': 'success', 'data': ResponseData}, status=status.HTTP_200_OK)
 

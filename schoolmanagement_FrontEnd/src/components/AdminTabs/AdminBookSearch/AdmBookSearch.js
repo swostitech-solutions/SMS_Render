@@ -277,6 +277,7 @@ const AdmBookSearch = () => {
   const [tableData, setTableData] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [error, setError] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   // const { categories } = useFetchBookCategories();
   const [categoryId, setCategoryId] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -568,6 +569,8 @@ const AdmBookSearch = () => {
       return;
     }
 
+    setIsSearching(true);
+
     // Log all filter values
     console.log("=== SEARCH FILTERS ===");
     console.log("Branch:", branch, "Location:", location);
@@ -622,6 +625,8 @@ const AdmBookSearch = () => {
       setError("Error fetching data: " + error.message);
       setTableData([]); // Clear table data on error
       setShowTable(false); // Hide table on error
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -637,6 +642,45 @@ const AdmBookSearch = () => {
     setCurrentPage(selected);
   };
 
+
+  // Initial page load — fetch all books
+  useEffect(() => {
+    const loadInitialBooks = async () => {
+      const academicYearId = localStorage.getItem("academicSessionId");
+      if (!academicYearId) {
+        console.error("Academic Year ID is not available for initial load");
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const apiUrl = `${ApiUrl.apiurl}LIBRARYBOOK/GetBooksearchList/?academic_year_id=${academicYearId}`;
+        console.log("Initial Book Load API URL:", apiUrl);
+
+        const response = await fetch(apiUrl);
+        const result = await response.json();
+
+        if (response.ok && result.message === "success" && result.data.length > 0) {
+          // Sort by accession no (bookBarcode) descending
+          const sortedData = result.data.sort((a, b) =>
+            String(b.bookBarcode || "").localeCompare(String(a.bookBarcode || ""), undefined, { numeric: true, sensitivity: "base" })
+          );
+          setTableData(sortedData);
+          setShowTable(true);
+          console.log("Initial load successful, found", sortedData.length, "books");
+        } else {
+          setTableData([]);
+          setShowTable(true);
+        }
+      } catch (error) {
+        console.error("Error fetching initial book data:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    loadInitialBooks();
+  }, []);
 
   useEffect(() => {
     console.log("Author state:", author);
@@ -680,8 +724,9 @@ const AdmBookSearch = () => {
                       width: "150px",
                     }}
                     onClick={handleSearch}
+                    disabled={isSearching}
                   >
-                    Search
+                    {isSearching ? "Searching..." : "Search"}
                   </button>
                   <button
                     type="button"

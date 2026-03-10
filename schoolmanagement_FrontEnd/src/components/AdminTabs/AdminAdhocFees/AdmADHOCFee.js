@@ -3044,7 +3044,7 @@ const AdmADHOCFee = () => {
       .map((elementId) => ({
         element_id: parseInt(elementId, 10),
         amount: amounts[elementId] || "",
-        remarks: remarks[elementId] || "",
+        // remarks: remarks[elementId] || "",
       }))
       .filter((element) => !isNaN(element.element_id));
 
@@ -3069,10 +3069,10 @@ const AdmADHOCFee = () => {
         alert("Amount is missing or invalid for one of the fee elements.");
         return;
       }
-      if (feeElement.remarks.trim() === "") {
-        alert("Remarks are missing for one of the fee elements.");
-        return;
-      }
+      // if (feeElement.remarks.trim() === "") {
+      //   alert("Remarks are missing for one of the fee elements.");
+      //   return;
+      // }
     }
 
     //  Get created_by from session storage
@@ -3736,7 +3736,7 @@ const AdmADHOCFee = () => {
                   </th>
                   <th>Element Name</th>
                   <th>Amount</th>
-                  <th>Remark</th>
+                  {/* <th>Remark</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -3761,7 +3761,7 @@ const AdmADHOCFee = () => {
                         style={{ width: "100%" }}
                       />
                     </td>
-                    <td>
+                    {/* <td>
                       <input
                         type="text"
                         className="adhoc-element-input"
@@ -3771,7 +3771,7 @@ const AdmADHOCFee = () => {
                         required={selectedElements[element.id] || false}
                         style={{ width: "100%" }}
                       />
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

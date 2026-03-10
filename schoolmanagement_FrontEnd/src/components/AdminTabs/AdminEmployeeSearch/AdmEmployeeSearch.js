@@ -14,6 +14,8 @@ const AdmAttendanceEntry = () => {
   const [employeeData, setEmployeeData] = useState([]);
   const [employeeTypeOptions, setEmployeeTypeOptions] = useState([]);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchAbortRef = useRef(null);
   const navigate = useNavigate(); // Initialize the navigate function
   const [editData, setEditData] = useState(null);
   const [searchParams, setSearchParams] = useState({
@@ -587,6 +589,14 @@ const AdmAttendanceEntry = () => {
 
 
   const fetchEmployeeData = async () => {
+    // Cancel any previous in-flight request
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
+    setIsSearching(true);
     try {
       const orgId = localStorage.getItem("orgId");
       const branchId = localStorage.getItem("branchId");
@@ -609,7 +619,8 @@ const AdmAttendanceEntry = () => {
         params.append("employee_type", searchParams.employeeType.value);
 
       const response = await fetch(
-        `${ApiUrl.apiurl}STAFF/RegistrationstaffList/?${params.toString()}`
+        `${ApiUrl.apiurl}STAFF/RegistrationstaffList/?${params.toString()}`,
+        { signal: controller.signal }
       );
 
       const result = await response.json();
@@ -620,12 +631,48 @@ const AdmAttendanceEntry = () => {
         console.error("Failed to fetch employee data:", result);
       }
     } catch (error) {
+      if (error.name === 'AbortError') {
+        // Previous request was cancelled — not an error
+        return;
+      }
       console.error("Error fetching employee data:", error);
+    } finally {
+      setIsSearching(false);
     }
   };
 
+  // Initial page load — no abort logic so it always completes
   useEffect(() => {
-    fetchEmployeeData(); // Load all data when page opens
+    const loadInitialData = async () => {
+      setIsSearching(true);
+      try {
+        const orgId = localStorage.getItem("orgId");
+        const branchId = localStorage.getItem("branchId");
+
+        const params = new URLSearchParams({
+          organization_id: orgId,
+          branch_id: branchId,
+        });
+
+        const response = await fetch(
+          `${ApiUrl.apiurl}STAFF/RegistrationstaffList/?${params.toString()}`
+        );
+
+        const result = await response.json();
+        if (response.ok && result.data) {
+          console.log("Employee Data (initial load):", result.data);
+          setEmployeeData(result.data);
+        } else {
+          console.error("Failed to fetch employee data:", result);
+        }
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    loadInitialData();
   }, []);
 
 
@@ -712,8 +759,9 @@ const AdmAttendanceEntry = () => {
                       width: "150px",
                     }}
                     onClick={fetchEmployeeData}
+                    disabled={isSearching}
                   >
-                    Search
+                    {isSearching ? "Searching..." : "Search"}
                   </button>
                   <button
                     type="button"
