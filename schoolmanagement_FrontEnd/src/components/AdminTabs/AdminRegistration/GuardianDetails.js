@@ -5,8 +5,10 @@ import {
   validatePhoneNumber,
   validateEmail,
 } from "../../utils/validation";
-import { ApiUrl } from "../../../ApiUrl"
 const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
+  const fatherTitleOptions = ["Mr.", "Dr.", "Prof."];
+  const motherTitleOptions = ["Mrs.", "Dr.", "Prof."];
+
   const {
     profession,
     loading: loadingProfession,
@@ -188,18 +190,25 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
         </div>
         <div className="col-12 col-md-1 mb-2">
           <label htmlFor="father-title" className="form-label">
-            Title<span style={{ color: "red" }}>*</span>
+            Title
           </label>
           <select
-            className="form-select"
+            className="form-select detail"
             id="father-title"
             name="fatherTitle"
             value={formData.fatherTitle}
             onChange={handleInputChange}
           >
-            <option value="Mr.">Mr.</option>
-            <option value="Dr.">Dr.</option>
-            <option value="Prof.">Prof.</option>
+            <option value="">Select</option>
+            {!!formData.fatherTitle &&
+              !fatherTitleOptions.includes(formData.fatherTitle) && (
+                <option value={formData.fatherTitle}>{formData.fatherTitle}</option>
+              )}
+            {fatherTitleOptions.map((title) => (
+              <option key={title} value={title}>
+                {title}
+              </option>
+            ))}
           </select>
           {requiredErrors.fatherTitle && (
             <small style={{ color: "red" }}>{requiredErrors.fatherTitle}</small>
@@ -229,7 +238,7 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
             Profession<span style={{ color: "red" }}>*</span>
           </label>
           <select
-            className="form-select"
+            className="form-select detail"
             id="father-profession"
             name="father_profession"
             value={formData.father_profession}
@@ -312,18 +321,25 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
         </div>
         <div className="col-12 col-md-1 mb-2">
           <label htmlFor="mother-title" className="form-label">
-            Title<span style={{ color: "red" }}>*</span>
+            Title
           </label>
           <select
-            className="form-select"
+            className="form-select detail"
             id="mother-title"
             name="motherTitle"
             value={formData.motherTitle}
             onChange={handleInputChange}
           >
-            <option value="Mr.">Mrs.</option>
-            <option value="Dr.">Dr.</option>
-            <option value="Prof.">Prof.</option>
+            <option value="">Select</option>
+            {!!formData.motherTitle &&
+              !motherTitleOptions.includes(formData.motherTitle) && (
+                <option value={formData.motherTitle}>{formData.motherTitle}</option>
+              )}
+            {motherTitleOptions.map((title) => (
+              <option key={title} value={title}>
+                {title}
+              </option>
+            ))}
           </select>
           {requiredErrors.motherTitle && (
             <small style={{ color: "red" }}>{requiredErrors.motherTitle}</small>
@@ -351,7 +367,7 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
             Profession<span style={{ color: "red" }}>*</span>
           </label>
           <select
-            className="form-select"
+            className="form-select detail"
             id="mother-profession"
             name="mother_profession"
             value={formData.mother_profession}

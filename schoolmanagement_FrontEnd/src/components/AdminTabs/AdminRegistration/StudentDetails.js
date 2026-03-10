@@ -1150,15 +1150,15 @@ const AdmAttendanceEntry = ({
                     </div>
 
                     <div className="col-12 col-md-4 mb-2">
-                      <label htmlFor="doj" className="form-label">
-                        Date Of Join
+                      <label htmlFor="dob" className="form-label">
+                        Date Of Birth <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
-                        id="doj"
+                        id="dob"
                         className="form-control detail"
-                        name="doj"
-                        value={formData.doj || ""}
+                        name="dob"
+                        value={formData.dob || ""}
                         onChange={handleInputChange}
                         disabled={isDisabled}
                       />

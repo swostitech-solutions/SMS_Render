@@ -535,13 +535,13 @@ const StaffInfo = ({
 
                     <div className="col-md-3 mb-3">
                       <label htmlFor="birth-date" className="form-label">
-                        Date Of Join
+                        Date Of Birth
                         <span style={{ color: "red" }}>*</span>
                       </label>
                       <div className="d-flex align-items-center">
                         <input
                           type="date"
-                          id="employee-code"
+                          id="dob"
                           className="form-control detail"
                           value={formData.dob}
                           onChange={(e) => {

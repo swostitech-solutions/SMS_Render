@@ -95,8 +95,8 @@ export default function BasicTabs() {
     father_aadharno: "",
     mother_aadharno: "",
     barcode: "",
-    fatherTitle: "",
-    motherTitle: "",
+    father_title: "",
+    mother_title: "",
     father_profession: "",
     mother_profession: "",
     father_contact_number: "",
@@ -205,8 +205,8 @@ export default function BasicTabs() {
       father_aadharno: "",
       mother_aadharno: "",
       barcode: "",
-      fatherTitle: "",
-      motherTitle: "",
+      father_title: "",
+      mother_title: "",
       father_profession: "",
       mother_profession: "",
       father_contact_number: "",
@@ -308,8 +308,6 @@ export default function BasicTabs() {
     }
     if (!formData.father_name?.trim()) newErrors.father_name = "Father Name is required";
     if (!formData.mother_name?.trim()) newErrors.mother_name = "Mother Name is required";
-    if (!formData.fatherTitle?.trim()) newErrors.fatherTitle = "Father Title is required";
-    if (!formData.motherTitle?.trim()) newErrors.motherTitle = "Mother Title is required";
     if (!formData.father_profession) newErrors.father_profession = "Father Profession is required";
     if (!formData.mother_profession) newErrors.mother_profession = "Mother Profession is required";
     if (!formData.father_contact_number?.trim()) {
@@ -317,6 +315,9 @@ export default function BasicTabs() {
     }
     if (!formData.mother_contact_number?.trim()) {
       newErrors.mother_contact_number = "Mother Contact Number is required";
+        if (!formData.dob) {
+          newErrors.dob = "Date Of Birth is required";
+        }
     }
     if (!formData.present_address?.trim()) {
       newErrors.present_address = "Present Address is required";
@@ -395,6 +396,20 @@ export default function BasicTabs() {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toISOString();
+  };
+
+  const normalizeTitle = (value, role) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    const key = raw.replace(/\./g, "").toUpperCase();
+    if (key === "MR") return "Mr.";
+    if (key === "MRS") return "Mrs.";
+    if (key === "DR") return "Dr.";
+    if (key === "PROF") return "Prof.";
+
+    if (role === "mother" && raw === "Mr.") return "Mrs.";
+    return raw;
   };
 
   useEffect(() => {
@@ -494,6 +509,18 @@ export default function BasicTabs() {
               primary_guardian: student.primary_guardian || "",
               student_status: student.status || "",
               profile_pic: student.profile_pic || "",
+              father_title: (() => {
+                const raw = student.father_title || student.fatherTitle;
+                const normalized = normalizeTitle(raw, "father");
+                console.log("🔍 Father Title - Raw:", raw, "→ Normalized:", normalized);
+                return normalized;
+              })(),
+              mother_title: (() => {
+                const raw = student.mother_title || student.motherTitle;
+                const normalized = normalizeTitle(raw, "mother");
+                console.log("🔍 Mother Title - Raw:", raw, "→ Normalized:", normalized);
+                return normalized;
+              })(),
 
               // ✅ Address Details Fix
               present_address: address.present_address || "",
@@ -628,6 +655,11 @@ export default function BasicTabs() {
               ),
             };
 
+            console.log("📋 Setting formData with titles:", {
+              father_title: formatted.father_title,
+              mother_title: formatted.mother_title,
+            });
+
             setFormData((prev) => ({ ...prev, ...formatted }));
           } else {
             console.error("❌ Failed to fetch student details.");
@@ -692,11 +724,13 @@ export default function BasicTabs() {
         remarks: formData.remarks,
         referred_by: formData.referred_by,
         father_name: formData.father_name,
+        father_title: formData.father_title || "",
         father_profession: formData.father_profession,
         father_contact_number: formData.father_contact_number,
         father_email: formData.father_email || "",
         father_aadhaar_no: formData.father_aadharno,
         mother_name: formData.mother_name,
+        mother_title: formData.mother_title || "",
         mother_profession: formData.mother_profession,
         mother_contact_number: formData.mother_contact_number,
         mother_email: formData.mother_email || "",
@@ -917,11 +951,13 @@ export default function BasicTabs() {
         referred_by: formData.referred_by || "",
         profile_pic: null,
         father_name: formData.father_name || "",
+        father_title: formData.father_title || "",
         father_profession: formData.father_profession || "",
         father_contact_number: formData.father_contact_number || "",
         father_email: formData.father_email || "",
         father_aadhaar_no: formData.father_aadharno || "",
         mother_name: formData.mother_name || "",
+        mother_title: formData.mother_title || "",
         mother_profession: formData.mother_profession || "",
         mother_contact_number: formData.mother_contact_number || "",
         mother_email: formData.mother_email || "",

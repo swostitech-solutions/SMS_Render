@@ -1041,6 +1041,31 @@ const AdmAttendanceEntry = () => {
     }
   };
 
+  const handleExportToExcel = () => {
+    if (!showTable || !Array.isArray(tableData) || tableData.length === 0) {
+      alert("No table data available to export!");
+      return;
+    }
+
+    const exportRows = tableData.map((item, index) => ({
+      "Sl No": index + 1,
+      "Student Name": item.student_name || "",
+      Course: item.course_name || "",
+      Section: item.section_name || "",
+      "Father Name": item.fatherName || "",
+      "Mother Name": item.motherName || "",
+      "Total Fees": item.total_fees || 0,
+      "Fees Paid": item.total_paid || 0,
+      Discount: item.discount_fees || 0,
+      Balance: item.remaining_fees || 0,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "FeeLedger");
+    XLSX.writeFile(workbook, "Fee_Ledger_Data.xlsx");
+  };
+
   const handleViewClick = async (academicYearId, studentId) => {
     const organization_id = sessionStorage.getItem("organization_id");
     const branch_id = sessionStorage.getItem("branch_id");
@@ -1248,6 +1273,16 @@ const AdmAttendanceEntry = () => {
                     onClick={handleClear}
                   >
                     Clear
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    style={{
+                      width: "150px",
+                    }}
+                    onClick={handleExportToExcel}
+                  >
+                    Export To Excel
                   </button>
                   <button
                     type="button"

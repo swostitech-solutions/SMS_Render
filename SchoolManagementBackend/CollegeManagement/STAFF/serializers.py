@@ -27,6 +27,10 @@ class staffRegistrationserializer(serializers.ModelSerializer):
     #         return request.build_absolute_uri(obj.image.url)
     #     return None
 
+    def validate_date_of_birth(self, value):
+        if not value:
+            raise serializers.ValidationError("Date of Birth is required.")
+        return value
 
 class staffRegistrationserializer1(serializers.ModelSerializer):
     # upload_image = serializers.ImageField(write_only=True, required=False)
@@ -58,6 +62,11 @@ class staffRegistrationserializer1(serializers.ModelSerializer):
             'created_by',
             'nuid',
         ]
+
+    def validate_dob(self, value):
+        if not value:
+            raise serializers.ValidationError("Date of Birth is required.")
+        return value
 
 class staffRegistrationAddressSerializer(serializers.ModelSerializer):
     class Meta:
