@@ -1310,7 +1310,7 @@ const AdmAttendanceEntry = () => {
                   >
                     Close
                   </button>
-                  <button
+                  {/* <button
                     type="button"
                     className="btn btn-primary me-2"
                     style={{
@@ -1319,7 +1319,7 @@ const AdmAttendanceEntry = () => {
                     onClick={exportToExcel}
                   >
                     Export To Excel
-                  </button>
+                  </button> */}
                 </div>
               </div>
 

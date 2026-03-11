@@ -30,6 +30,7 @@ const AdmNewInventory = () => {
     item_value: "",
     quantity: "",
     inventory_type: "",
+    inventory_location: "",
     status: "",  // Used for Asset Code No
     description: "",
   });
@@ -44,6 +45,12 @@ const AdmNewInventory = () => {
     { value: "Consumable", label: "Consumable" },
     { value: "Non-Consumable", label: "Non-Consumable" },
     { value: "Asset", label: "Asset" },
+  ];
+
+  const inventoryLocationOptions = [
+    { value: "Medical", label: "Medical" },
+    { value: "Hostel", label: "Hostel" },
+    { value: "Nursing College", label: "Nursing College" },
   ];
 
   const statusOptions = [
@@ -135,6 +142,7 @@ const AdmNewInventory = () => {
         item_value: itemData.item_value || "",
         quantity: itemData.quantity || "",
         inventory_type: itemData.inventory_type || "",
+        inventory_location: itemData.inventory_location || "",
         status: itemData.status || "",
         description: itemData.description || "",
       });
@@ -177,6 +185,8 @@ const AdmNewInventory = () => {
       newErrors.quantity = "Valid quantity is required";
     if (!formData.inventory_type)
       newErrors.inventory_type = "Inventory type is required";
+    if (!formData.inventory_location)
+      newErrors.inventory_location = "Inventory location is required";
     if (!formData.status) newErrors.status = "Asset code is required";
 
     if (Object.keys(newErrors).length > 0) {
@@ -223,6 +233,7 @@ const AdmNewInventory = () => {
             item_value: parseFloat(formData.item_value),
             quantity: parseInt(formData.quantity),
             inventory_type: formData.inventory_type,
+            inventory_location: formData.inventory_location,
             status: formData.status,
             purchase_date: formData.purchase_date,
             description: formData.description || "",
@@ -245,6 +256,7 @@ const AdmNewInventory = () => {
             item_value: parseFloat(formData.item_value),
             quantity: parseInt(formData.quantity),
             inventory_type: formData.inventory_type,
+            inventory_location: formData.inventory_location,
             status: formData.status,
             purchase_date: formData.purchase_date,
             description: formData.description || "",
@@ -314,6 +326,7 @@ const AdmNewInventory = () => {
       item_value: "",
       quantity: "",
       inventory_type: "",
+      inventory_location: "",
       status: "",  // Asset Code No
     });
     setFilteredSubCategories(subCategories);
@@ -570,6 +583,37 @@ const AdmNewInventory = () => {
                         {errors.inventory_type && (
                           <small className="text-danger">
                             {errors.inventory_type}
+                          </small>
+                        )}
+                      </div>
+
+                      <div className="col-12 col-md-3 mb-3">
+                        <label htmlFor="inventory-location" className="form-label">
+                          Inventory Location
+                        </label>
+                        <Select
+                          className="detail"
+                          id="inventory-location"
+                          classNamePrefix="react-select"
+                          options={inventoryLocationOptions}
+                          value={
+                            formData.inventory_location
+                              ? inventoryLocationOptions.find(
+                                (opt) => opt.value === formData.inventory_location
+                              )
+                              : null
+                          }
+                          onChange={(selectedOption) =>
+                            handleInputChange(
+                              "inventory_location",
+                              selectedOption?.value || ""
+                            )
+                          }
+                          placeholder="Select"
+                        />
+                        {errors.inventory_location && (
+                          <small className="text-danger">
+                            {errors.inventory_location}
                           </small>
                         )}
                       </div>

@@ -186,6 +186,24 @@ const StudentPromotion = () => {
   const [errorStudents, setErrorStudents] = useState(null);
   const [studentLoading, setStudentLoading] = useState(false);
   const [studentError, setStudentError] = useState("");
+  const [leftSearchTerm, setLeftSearchTerm] = useState("");
+  const [rightSearchTerm, setRightSearchTerm] = useState("");
+
+  const filteredStudents = students.filter((student) => {
+    const term = leftSearchTerm.toLowerCase();
+    const regNo = student.registration_no ? String(student.registration_no).toLowerCase() : "";
+    const name = student.student_name ? String(student.student_name).toLowerCase() : "";
+    const adminNo = student.college_admission_no ? String(student.college_admission_no).toLowerCase() : "";
+    return regNo.includes(term) || name.includes(term) || adminNo.includes(term);
+  });
+
+  const filteredPromotedStudents = promotedStudents.filter((student) => {
+    const term = rightSearchTerm.toLowerCase();
+    const regNo = student.registration_no ? String(student.registration_no).toLowerCase() : "";
+    const name = student.student_name ? String(student.student_name).toLowerCase() : "";
+    const adminNo = student.college_admission_no ? String(student.college_admission_no).toLowerCase() : "";
+    return regNo.includes(term) || name.includes(term) || adminNo.includes(term);
+  });
 
   useEffect(() => {
     const handleSessionChange = () => {
@@ -302,10 +320,11 @@ const StudentPromotion = () => {
   const handleSelectAll = (e) => {
     const isChecked = e.target.checked;
     if (isChecked) {
-      const allStudentIds = students.map((student) => student.student_id);
-      setSelectedStudents(allStudentIds);
+      const allStudentIds = filteredStudents.map((student) => student.student_id);
+      setSelectedStudents(Array.from(new Set([...selectedStudents, ...allStudentIds])));
     } else {
-      setSelectedStudents([]);
+      const filteredStudentIds = filteredStudents.map((student) => student.student_id);
+      setSelectedStudents(selectedStudents.filter(id => !filteredStudentIds.includes(id)));
     }
   };
 
@@ -333,12 +352,15 @@ const StudentPromotion = () => {
 
   const handleSelectAllPromoted = (event) => {
     if (event.target.checked) {
-      const allPromotedIds = promotedStudents.map(
+      const allPromotedIds = filteredPromotedStudents.map(
         (student) => student.student_id
       );
-      setSelectedStudents(allPromotedIds);
+      setSelectedStudents(Array.from(new Set([...selectedStudents, ...allPromotedIds])));
     } else {
-      setSelectedStudents([]);
+      const filteredPromotedIds = filteredPromotedStudents.map(
+        (student) => student.student_id
+      );
+      setSelectedStudents(selectedStudents.filter(id => !filteredPromotedIds.includes(id)));
     }
   };
 
@@ -452,6 +474,8 @@ const StudentPromotion = () => {
 
     // 🔹 Reset other form data if present
     setFormData({});
+    setLeftSearchTerm("");
+    setRightSearchTerm("");
 
     // 🔹 Optional: also clear localStorage/sessionStorage if you store selection
     localStorage.removeItem("selectedFromBatch");
@@ -932,6 +956,13 @@ const StudentPromotion = () => {
 
               <Row className="mx-2" style={{ border: "1px solid #ccc" }}>
                 <Col xs={12} md={5} className="mb-3 mt-3  ">
+                  <Input 
+                    type="text" 
+                    placeholder="Search students..." 
+                    value={leftSearchTerm}
+                    onChange={(e) => setLeftSearchTerm(e.target.value)}
+                    className="mb-3"
+                  />
                   <div
                     style={{
                       maxHeight: "340px",
@@ -950,9 +981,8 @@ const StudentPromotion = () => {
                                     type="checkbox"
                                     onChange={handleSelectAll}
                                     checked={
-                                      students.length > 0 &&
-                                      selectedStudents.length ===
-                                        students.length
+                                      filteredStudents.length > 0 &&
+                                      filteredStudents.every(student => selectedStudents.includes(student.student_id))
                                     }
                                   />
                                 </th>
@@ -981,8 +1011,8 @@ const StudentPromotion = () => {
                                       {studentError}
                                     </td>
                                   </tr>
-                                ) : students.length > 0 ? (
-                                  students.map((student) => (
+                                ) : filteredStudents.length > 0 ? (
+                                  filteredStudents.map((student) => (
                                     <tr key={student.student_id}>
                                       <td>
                                         <Input
@@ -1107,6 +1137,13 @@ const StudentPromotion = () => {
                 </Col>
 
                 <Col xs={12} md={5} className="mt-3">
+                  <Input 
+                    type="text" 
+                    placeholder="Search promoted students..." 
+                    value={rightSearchTerm}
+                    onChange={(e) => setRightSearchTerm(e.target.value)}
+                    className="mb-3"
+                  />
                   <div
                     style={{
                       maxHeight: "340px",
@@ -1125,9 +1162,8 @@ const StudentPromotion = () => {
                                     type="checkbox"
                                     onChange={handleSelectAllPromoted}
                                     checked={
-                                      selectedStudents.length ===
-                                        promotedStudents.length &&
-                                      promotedStudents.length > 0
+                                      filteredPromotedStudents.length > 0 && 
+                                      filteredPromotedStudents.every(student => selectedStudents.includes(student.student_id))
                                     }
                                   />
                                 </th>
@@ -1137,8 +1173,8 @@ const StudentPromotion = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {promotedStudents.length > 0 ? (
-                                promotedStudents.map((student) => (
+                              {filteredPromotedStudents.length > 0 ? (
+                                filteredPromotedStudents.map((student) => (
                                   <tr key={student.student_id}>
                                     <td>
                                       <Input
