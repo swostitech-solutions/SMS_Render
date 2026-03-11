@@ -24,6 +24,7 @@ const AdmAttendanceEntry = () => {
     middleName: "",
     lastName: "",
     employeeType: null, // for react-select
+    status: "ACTIVE", // default to ACTIVE like student page
   });
 
   // Function to properly format name with correct prefix capitalization
@@ -140,6 +141,7 @@ const AdmAttendanceEntry = () => {
       middleName: "",
       lastName: "",
       employeeType: null,
+      status: "ACTIVE",
     });
     setSearchQuery("");
 
@@ -617,6 +619,8 @@ const AdmAttendanceEntry = () => {
         params.append("last_name", searchParams.lastName);
       if (searchParams.employeeType?.value)
         params.append("employee_type", searchParams.employeeType.value);
+      if (searchParams.status)
+        params.append("is_active", searchParams.status === "ACTIVE" ? "true" : "false");
 
       const response = await fetch(
         `${ApiUrl.apiurl}STAFF/RegistrationstaffList/?${params.toString()}`,
@@ -652,6 +656,7 @@ const AdmAttendanceEntry = () => {
         const params = new URLSearchParams({
           organization_id: orgId,
           branch_id: branchId,
+          is_active: "true",
         });
 
         const response = await fetch(
@@ -807,7 +812,7 @@ const AdmAttendanceEntry = () => {
                 <div className="col-12 custom-section-box">
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
                     <div className="row flex-grow-1 mt-3  mb-3">
-                      <div className="col-md-3 mb-3">
+                      <div className="col-md-2 mb-3">
                         <label htmlFor="employee-code" className="form-label">
                           Employee Code
                         </label>
@@ -828,15 +833,15 @@ const AdmAttendanceEntry = () => {
                         </div>
                       </div>
 
-                      <div className="col-12 col-md-5 mb-3 ">
+                      <div className="col-12 col-md-5 mb-3">
                         <label htmlFor="student-name" className="form-label">
                           Employee Name
                         </label>
-                        <div className="d-flex align-items-center">
+                        <div className="d-flex align-items-center gap-2">
                           <input
                             type="text"
-                            className="form-control detail ms-2"
-                            placeholder="Enter First name"
+                            className="form-control detail"
+                            placeholder="First name"
                             value={searchParams.firstName}
                             onChange={(e) =>
                               setSearchParams({
@@ -847,8 +852,8 @@ const AdmAttendanceEntry = () => {
                           />
                           <input
                             type="text"
-                            className="form-control detail ms-2"
-                            placeholder="Enter Middle name"
+                            className="form-control detail"
+                            placeholder="Middle name"
                             value={searchParams.middleName}
                             onChange={(e) =>
                               setSearchParams({
@@ -859,8 +864,8 @@ const AdmAttendanceEntry = () => {
                           />
                           <input
                             type="text"
-                            className="form-control detail ms-2"
-                            placeholder="Enter Last name"
+                            className="form-control detail"
+                            placeholder="Last name"
                             value={searchParams.lastName}
                             onChange={(e) =>
                               setSearchParams({
@@ -886,6 +891,32 @@ const AdmAttendanceEntry = () => {
                               ...searchParams,
                               employeeType: selectedOption,
                             })
+                          }
+                        />
+                      </div>
+                      <div className="col-12 col-md-2 mb-3">
+                        <label htmlFor="employee-status" className="form-label">
+                          Status
+                        </label>
+                        <Select
+                          inputId="employee-status"
+                          className="detail"
+                          classNamePrefix="status-select"
+                          options={[
+                            { value: "", label: "Select Status" },
+                            { value: "ACTIVE", label: "ACTIVE" },
+                            { value: "INACTIVE", label: "INACTIVE" },
+                          ]}
+                          value={[
+                            { value: "", label: "Select Status" },
+                            { value: "ACTIVE", label: "ACTIVE" },
+                            { value: "INACTIVE", label: "INACTIVE" },
+                          ].find((option) => option.value === searchParams.status) || null}
+                          onChange={(selectedOption) =>
+                            setSearchParams((prev) => ({
+                              ...prev,
+                              status: selectedOption ? selectedOption.value : "",
+                            }))
                           }
                         />
                       </div>

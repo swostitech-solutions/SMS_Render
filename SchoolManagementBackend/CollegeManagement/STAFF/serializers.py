@@ -146,6 +146,7 @@ class staffDetailsFilterSerializer(serializers.Serializer):
     middle_name = serializers.CharField(max_length=50,required=False)
     last_name = serializers.CharField(max_length=50, required=False)
     employee_type = serializers.IntegerField(required=False)
+    is_active = serializers.CharField(max_length=10, required=False)  # accepts "true" / "false"
 
 
 # class staffEmployeeTypeSerializer(serializers.ModelSerializer):

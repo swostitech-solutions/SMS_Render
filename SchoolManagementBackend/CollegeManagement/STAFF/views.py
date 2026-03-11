@@ -2033,10 +2033,17 @@ class EmployeeDetailsListAPIView(ListAPIView):
             last_name= serializer.validated_data.get('last_name')
             employee_type = serializer.validated_data.get('employee_type')
 
+            # is_active filter: "true" → True, "false" → False, not provided → default True
+            is_active_param = serializer.validated_data.get('is_active', None)
+            if is_active_param is not None:
+                is_active_filter = is_active_param.lower() == 'true'
+            else:
+                is_active_filter = True  # default: show active staff
+
             try:
                 filterdata = EmployeeMaster.objects.filter(organization=organization_id,
                                                                branch_id=branch_id,
-                                                               is_active=True).order_by('-created_at')
+                                                               is_active=is_active_filter).order_by('-created_at')
             except:
                 filterdata=None
 
