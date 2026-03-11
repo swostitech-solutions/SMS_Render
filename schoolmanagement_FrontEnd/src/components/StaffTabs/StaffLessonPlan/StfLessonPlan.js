@@ -772,7 +772,6 @@ const StfLessonPlan = () => {
                               <input
                                 type="file"
                                 className="form-control"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                                 onChange={(e) => handleFileChange(index, e.target.files[0])}
                               />
                             </td>
