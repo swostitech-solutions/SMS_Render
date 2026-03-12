@@ -18,10 +18,23 @@ const getTodayISO = () => {
 const ConductCertificate = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const studentData = location.state || {};
-  const [formData, setFormData] = useState({
-    ...studentData,
-    ...studentData.studentcertificatedetails,
+
+  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly
+  const certificate = location.state?.certificate;
+  const isEditMode = !!certificate;
+
+  const studentData = isEditMode ? {} : (location.state || {});
+  const [formData, setFormData] = useState(() => {
+    if (isEditMode) {
+      return {
+        ...certificate,
+        studentname: certificate.student_name || "",
+      };
+    }
+    return {
+      ...studentData,
+      ...studentData.studentcertificatedetails,
+    };
   });
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
   const apiStudentData = useRef({});
@@ -34,6 +47,7 @@ const ConductCertificate = () => {
   }, []);
 
   useEffect(() => {
+    if (isEditMode) return; // In edit mode, data is already pre-filled from certificate
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
     const studentId = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id;
@@ -116,6 +130,8 @@ const ConductCertificate = () => {
         cancelled_on: null,
         cancelled_remarks: "",
         cancelled_by: "",
+        father_name: formData.father_name || "",
+        student_behaviour: "Good",
       };
 
       const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
@@ -153,6 +169,53 @@ const ConductCertificate = () => {
     }
   };
 
+  const handleUpdate = async () => {
+    try {
+      const org_id = localStorage.getItem("orgId");
+      const branch_id = localStorage.getItem("branchId");
+      const student_certificate_id = certificate.id;
+      const document_type = "CC";
+
+      const payload = {
+        issue_date: getTodayISO(),
+        certificate_status: certificate.certificate_status || "Pending",
+        father_name: formData.father_name || "",
+        from_month: formData.from_month || "",
+        to_month: formData.to_month || "",
+        student_behaviour: "Good",
+      };
+
+      const response = await fetch(
+        `${ApiUrl.apiurl}StudentCertificate/update/?organization_id=${org_id}&branch_id=${branch_id}&student_certificate_id=${student_certificate_id}&document_type=${document_type}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        alert("Conduct Certificate updated successfully!");
+        const academicSessionId = localStorage.getItem("academicSessionId");
+        const branchId = localStorage.getItem("branchId");
+        const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
+        const orgId = localStorage.getItem("orgId");
+        localStorage.clear();
+        localStorage.setItem("academicSessionId", academicSessionId);
+        localStorage.setItem("branchId", branchId);
+        localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
+        localStorage.setItem("orgId", orgId);
+        navigate("/admin/student-certificate");
+      } else {
+        const error = await response.json();
+        alert(`Error updating Conduct Certificate: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Error while updating:", error);
+      alert("An error occurred while updating the Conduct Certificate.");
+    }
+  };
+
   return (
     <div className="container-fluid">
       <div className="row">
@@ -169,22 +232,39 @@ const ConductCertificate = () => {
                     className="btn btn-primary me-2"
                     style={{ width: "150px" }}
                     onClick={handleSave}
+                    disabled={isEditMode}
                   >
                     Save
                   </button>
                   <button
                     type="button"
+                    className="btn btn-primary me-2"
+                    style={{ width: "150px" }}
+                    onClick={handleUpdate}
+                    disabled={!isEditMode}
+                  >
+                    Update
+                  </button>
+                  <button
+                    type="button"
                     className="btn btn-secondary me-2"
                     style={{ width: "150px" }}
-                    onClick={() =>
+                    onClick={() => {
+                      if (isEditMode) {
+                        setFormData({
+                          ...certificate,
+                          studentname: certificate.student_name || "",
+                        });
+                        return;
+                      }
                       setFormData((prev) => ({
                         ...prev,
                         ...apiStudentData.current,
                         document_no: "",
                         from_month: "",
                         to_month: "",
-                      }))
-                    }
+                      }));
+                    }}
                   >
                     Clear
                   </button>

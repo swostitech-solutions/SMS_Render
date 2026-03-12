@@ -25035,6 +25035,7 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
             branch_id = request.query_params.get('branch_id')
             student_id = request.query_params.get('student_id')
             document_type = request.query_params.get('document_type')
+            transfer_certificate_id = request.query_params.get('transfer_certificate_id')
 
             if not (organization_id and branch_id):
                 return Response({'message': 'organization_id and branch_id is  required!'},
@@ -25049,7 +25050,7 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
             if document_type.upper() == 'TC':
                 if student_id:
                     try:
-                        if transfer_certificate_id:
+                        if transfer_certificate_id and transfer_certificate_id != '0':
                             instance = StudentTransferCertificate.objects.get(id=transfer_certificate_id, student_id=student_id)
                         else:
                             instance = StudentTransferCertificate.objects.filter(student_id=student_id).latest('created_at')
@@ -25102,7 +25103,7 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
             elif document_type.upper() == 'CC':
                 if student_id:
                     try:
-                        if transfer_certificate_id:
+                        if transfer_certificate_id and transfer_certificate_id != '0':
                             instance = StudentCharacterCertificate.objects.get(id=transfer_certificate_id, student_id=student_id)
                         else:
                             instance = StudentCharacterCertificate.objects.filter(student_id=student_id).latest('created_at')
@@ -25142,7 +25143,7 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
             elif document_type.upper() == 'BC':
                 if student_id:
                     try:
-                        if transfer_certificate_id:
+                        if transfer_certificate_id and transfer_certificate_id != '0':
                             instance = StudentBonafideCertificate.objects.get(id=transfer_certificate_id, student_id=student_id)
                         else:
                             instance = StudentBonafideCertificate.objects.filter(student_id=student_id).latest('created_at')

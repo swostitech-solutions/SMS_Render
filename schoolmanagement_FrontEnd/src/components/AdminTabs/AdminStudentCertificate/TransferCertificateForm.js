@@ -35,18 +35,34 @@ const Row = ({ label, children }) => (
 const TransferCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const studentData = location.state || {};
-  const merged = { ...studentData, ...studentData.studentcertificatedetails };
-  const [formData, setFormData] = useState({
-    ...merged,
-    permanent_address: merged.permanent_address || merged.address || "",
-    registration_number: merged.registration_number || merged.registration_no || "",
+
+  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly
+  const certificate = location.state?.certificate;
+  const isEditMode = !!certificate;
+
+  const studentData = isEditMode ? {} : (location.state || {});
+  const merged = isEditMode ? {} : { ...studentData, ...studentData.studentcertificatedetails };
+  const [formData, setFormData] = useState(() => {
+    if (isEditMode) {
+      return {
+        ...certificate,
+        studentname: certificate.student_name || "",
+        permanent_address: certificate.permanent_address || "",
+        registration_number: certificate.registration_number || "",
+      };
+    }
+    return {
+      ...merged,
+      permanent_address: merged.permanent_address || merged.address || "",
+      registration_number: merged.registration_number || merged.registration_no || "",
+    };
   });
 
   const set = (field) => (e) =>
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
 
   useEffect(() => {
+    if (isEditMode) return; // In edit mode, data is already pre-filled from certificate
     const studentId = localStorage.getItem("selectedCertificateStudentId");
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
@@ -60,8 +76,12 @@ const TransferCertificateForm = () => {
         if (res?.data?.student_basic_details) {
           const s = res.data.student_basic_details;
           const addr = res.data?.address_details?.[0];
+          const fullName = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
           setFormData((prev) => ({
             ...prev,
+            studentname: prev.studentname || fullName || s.student_name || "",
+            father_name: prev.father_name || s.father_name || "",
+            mother_name: prev.mother_name || s.mother_name || "",
             dob: prev.dob || s.date_of_birth || "",
             date_of_admission: prev.date_of_admission || s.date_of_admission || "",
             registration_number: prev.registration_number || s.registration_no || "",
@@ -123,6 +143,15 @@ const TransferCertificateForm = () => {
         permanent_address: formData.permanent_address || formData.address || "",
         registration_number: formData.registration_number || "",
         date_of_leaving: formData.date_of_leaving || "",
+        dob: formData.dob || "",
+        date_of_admission: formData.date_of_admission || "",
+        nationality: formData.nationality || "",
+        from_month: formData.from_month || "",
+        to_month: formData.to_month || "",
+        student_behaviour: formData.student_behaviour || "",
+        readmission_eligibility: formData.readmission_eligibility || "",
+        father_name: formData.father_name || "",
+        mother_name: formData.mother_name || "",
       };
 
       const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
@@ -153,6 +182,62 @@ const TransferCertificateForm = () => {
     }
   };
 
+  const handleUpdate = async () => {
+    try {
+      const org_id = localStorage.getItem("orgId");
+      const branch_id = localStorage.getItem("branchId");
+      const student_certificate_id = certificate.id;
+      const document_type = "TC";
+
+      const payload = {
+        issue_date: getTodayISO(),
+        certificate_status: certificate.certificate_status || "Pending",
+        date_of_leaving: formData.date_of_leaving || "",
+        general_conduct: formData.general_conduct || "",
+        qualified_for_promotion: formData.qualified_for_promotion || "",
+        reason_for_tc: formData.reason_for_tc || "",
+        class_last_studied: formData.class_last_studied || "",
+        religion_caste: formData.religion_caste || "",
+        permanent_address: formData.permanent_address || "",
+        registration_number: formData.registration_number || "",
+        dob: formData.dob || "",
+        date_of_admission: formData.date_of_admission || "",
+        nationality: formData.nationality || "",
+        from_month: formData.from_month || "",
+        to_month: formData.to_month || "",
+      };
+
+      const response = await fetch(
+        `${ApiUrl.apiurl}StudentCertificate/update/?organization_id=${org_id}&branch_id=${branch_id}&student_certificate_id=${student_certificate_id}&document_type=${document_type}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        alert("Transfer Certificate updated successfully!");
+        const academicSessionId = localStorage.getItem("academicSessionId");
+        const branchId = localStorage.getItem("branchId");
+        const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
+        const orgId = localStorage.getItem("orgId");
+        localStorage.clear();
+        localStorage.setItem("academicSessionId", academicSessionId);
+        localStorage.setItem("branchId", branchId);
+        localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
+        localStorage.setItem("orgId", orgId);
+        navigate("/admin/student-certificate");
+      } else {
+        const error = await response.json();
+        alert(`Error updating Transfer Certificate: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Error while updating:", error);
+      alert("An error occurred while updating the Transfer Certificate.");
+    }
+  };
+
   const textInput = (field) => (
     <input
       type="text"
@@ -173,9 +258,19 @@ const TransferCertificateForm = () => {
               {/* Action Buttons */}
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
-                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave}>Save</button>
+                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave} disabled={isEditMode}>Save</button>
+                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleUpdate} disabled={!isEditMode}>Update</button>
                   <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }}
                     onClick={() => {
+                      if (isEditMode) {
+                        setFormData({
+                          ...certificate,
+                          studentname: certificate.student_name || "",
+                          permanent_address: certificate.permanent_address || "",
+                          registration_number: certificate.registration_number || "",
+                        });
+                        return;
+                      }
                       const m = { ...studentData, ...studentData.studentcertificatedetails };
                       setFormData({ ...m, permanent_address: m.permanent_address || m.address || "", registration_number: m.registration_number || m.registration_no || "" });
                     }}>

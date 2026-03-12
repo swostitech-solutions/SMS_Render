@@ -36,7 +36,6 @@ const AdmAttendanceEntry = () => {
   });
   const [showModal, setShowModal] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState(null);
   const [selectedStudentData, setSelectedStudentData] = useState(null);
 
@@ -90,10 +89,9 @@ const AdmAttendanceEntry = () => {
     selectedSemester
   );
 
-  const dateToRef = useRef(null);
-  const dateFromRef = useRef(null);
+  // const dateToRef = useRef(null);
+  // const dateFromRef = useRef(null);
   const fromClassRef = useRef(null);
-  const toStatusRef = useRef(null);
   const toDocumentRef = useRef(null);
   const studentNameRef = useRef(null);
   const admissionNoRef = useRef(null);
@@ -106,8 +104,8 @@ const AdmAttendanceEntry = () => {
 
   const handleClear = () => {
     // Reset input refs
-    if (dateToRef.current) dateToRef.current.value = "";
-    if (dateFromRef.current) dateFromRef.current.value = "";
+    // if (dateToRef.current) dateToRef.current.value = "";
+    // if (dateFromRef.current) dateFromRef.current.value = "";
     if (admissionNoRef.current) admissionNoRef.current.value = "";
     if (barcodeRef.current) barcodeRef.current.value = "";
     if (studentNameRef.current) studentNameRef.current.value = "";
@@ -134,7 +132,6 @@ const AdmAttendanceEntry = () => {
     });
 
     // Reset React Selects
-    setSelectedStatus(null);
     setSelectedDocumentType(null);
 
     // Clear localStorage (except critical keys)
@@ -428,7 +425,19 @@ const AdmAttendanceEntry = () => {
 
     try {
       const response = await fetch(apiUrl);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        alert("Failed to fetch certificate details. Please try again.");
+        return;
+      }
       const result = await response.json();
+      
+      if (!result.data) {
+        console.error("No data returned from API:", result);
+        alert(result.message || "No certificate data found.");
+        return;
+      }
 
       switch (documentType) {
         case "TC":
@@ -437,7 +446,7 @@ const AdmAttendanceEntry = () => {
               state: { certificate: result.data },
             });
           } else {
-            navigate("/transfercertificateformedit", {
+            navigate("/transfercertificateform", {
               state: { certificate: result.data },
             });
           }
@@ -448,7 +457,7 @@ const AdmAttendanceEntry = () => {
               state: { certificate: result.data },
             });
           } else {
-            navigate("/charactercertificateedit", {
+            navigate("/charactercertificate", {
               state: { certificate: result.data },
             });
           }
@@ -459,7 +468,7 @@ const AdmAttendanceEntry = () => {
               state: { certificate: result.data },
             });
           } else {
-            navigate("/bonafidecertificateedit", {
+            navigate("/bonafidecertificate", {
               state: { certificate: result.data },
             });
           }
@@ -470,6 +479,7 @@ const AdmAttendanceEntry = () => {
       }
     } catch (error) {
       console.error("Error fetching student details:", error);
+      alert("An error occurred while fetching certificate details.");
     }
   };
 
@@ -520,17 +530,11 @@ const AdmAttendanceEntry = () => {
 
       const data = result.data;
 
-      // Map documentType and status codes
+      // Map documentType codes
       const documentTypeMap = {
         TC: "Transfer Certificate",
         BC: "Bonafide Certificate",
         CC: "Conduct Certificate",
-      };
-
-      const statusMap = {
-        C: "Canceled",
-        A: "Approved",
-        N: "New",
       };
 
       // Prepare data for Excel
@@ -544,7 +548,6 @@ const AdmAttendanceEntry = () => {
         "School Admission No": item.school_admission_no,
         Section: item.sectionname,
         Reason: item.reason_for_tc || "N/A",
-        Status: statusMap[item.status] || "Unknown",
       }));
 
       // Create a new workbook and worksheet
@@ -872,44 +875,6 @@ const AdmAttendanceEntry = () => {
                         />
                       </div>
 
-                      {/* Status */}
-                      <div className="col-12 col-md-3 mb-2">
-                        <label htmlFor="status" className="form-label">
-                          Status
-                        </label>
-                        <Select
-                          id="status"
-                          className="detail"
-                          classNamePrefix="react-select"
-                          options={[
-                            { value: "New", label: "New" },
-                            { value: "Approved", label: "Approved" },
-                            { value: "Cancelled", label: "Cancelled" },
-                          ]}
-                          value={selectedStatus}
-                          onChange={(selectedOption) => {
-                            setSelectedStatus(selectedOption);
-
-                            const statusValue = selectedOption?.value || "";
-                            const statusMapping = {
-                              New: "N",
-                              Approved: "A",
-                              Cancelled: "C",
-                            };
-
-                            if (statusValue) {
-                              localStorage.setItem(
-                                "status",
-                                statusMapping[statusValue] || ""
-                              );
-                            } else {
-                              localStorage.removeItem("status");
-                            }
-                          }}
-                          placeholder="Select"
-                        />
-                      </div>
-
                       {/* Document Type */}
                       <div className="col-12 col-md-3 mb-2">
                         <label htmlFor="document-type" className="form-label">
@@ -936,7 +901,7 @@ const AdmAttendanceEntry = () => {
                       </div>
 
                       {/* Date From */}
-                      <div
+                      {/* <div
                         className="mb-2 me-md-2"
                         style={{ width: "100%", maxWidth: "150px" }}
                       >
@@ -949,9 +914,9 @@ const AdmAttendanceEntry = () => {
                           className="form-control detail"
                           ref={dateFromRef}
                         />
-                      </div>
+                      </div> */}
                       {/* Date To */}
-                      <div
+                      {/* <div
                         className="mb-3 me-md-2"
                         style={{ width: "100%", maxWidth: "150px" }}
                       >
@@ -964,7 +929,7 @@ const AdmAttendanceEntry = () => {
                           className="form-control detail"
                           ref={dateToRef}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -980,15 +945,14 @@ const AdmAttendanceEntry = () => {
                         <th>School Admission No</th>
                         <th>Course</th>
                         <th>Section</th>
-                        <th>Status</th>
-                        <th>View/Edit</th>
+                        <th>Edit</th>
                         <th>View PDF</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan="9" className="text-center">Loading...</td>
+                          <td colSpan="8" className="text-center">Loading...</td>
                         </tr>
                       ) : certificates.length > 0 ? (
                         currentPageData.map((certificate, index) => (
@@ -1012,47 +976,34 @@ const AdmAttendanceEntry = () => {
                             {/* Section */}
                             <td>{certificate.section || ""}</td>
 
-                            {/* Status */}
-                            <td>{certificate.certificate_status || "N/A"}</td>
-
                             {/* View/Edit Button */}
                             <td>
-                              {certificate.certificate_status === "Cancelled" ? (
-                                <button
-                                  className="btn btn-sm btn-primary d-flex align-items-center"
-                                  onClick={() => handleButtonClick(certificate, "view")}
-                                >
-                                  <i className="fas fa-eye me-2"></i>
-                                  View
-                                </button>
-                              ) : (
-                                <button
-                                  className="btn btn-sm btn-primary d-flex align-items-center"
-                                  onClick={() => handleButtonClick(certificate, "edit")}
-                                >
-                                  <i className="fas fa-edit me-2"></i>
-                                  Edit
-                                </button>
-                              )}
+                              <button
+                                className="btn btn-sm btn-primary d-flex align-items-center"
+                                onClick={() => handleButtonClick(certificate, "edit")}
+                              >
+                                <i className="fas fa-edit me-2"></i>
+                                Edit
+                              </button>
                             </td>
 
                             {/* View PDF */}
                             <td>
-                              {certificate.certificate_status === "Approved" && (
-                                <button
-                                  className="btn btn-sm btn-secondary d-flex align-items-center"
-                                  onClick={() => handleViewPDFClick(certificate)}
-                                >
-                                  <i className="fas fa-file-pdf me-2"></i>
-                                  View PDF
-                                </button>
-                              )}
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleViewPDFClick(certificate);
+                                }}
+                              >
+                                View
+                              </a>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="9" className="text-center text-muted">
+                          <td colSpan="8" className="text-center text-muted">
                             {message || "No records found."}
                           </td>
                         </tr>

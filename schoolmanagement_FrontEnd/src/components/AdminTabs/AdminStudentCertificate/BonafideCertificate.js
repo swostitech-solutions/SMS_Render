@@ -29,11 +29,26 @@ const inputInline = (extraStyle = {}) => ({
 const BonafideCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const studentData = location.state || {};
-  const [formData, setFormData] = useState({
-    ...studentData,
-    ...studentData.studentcertificatedetails,
-    purpose: (studentData.studentcertificatedetails?.purpose) || "Educational Loan Purpose",
+
+  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly
+  const certificate = location.state?.certificate;
+  const isEditMode = !!certificate;
+
+  const studentData = isEditMode ? {} : (location.state || {});
+  const [formData, setFormData] = useState(() => {
+    if (isEditMode) {
+      return {
+        ...certificate,
+        studentname: certificate.student_name || "",
+        academic_year: certificate.academic_year_str || certificate.academic_year || "",
+        purpose: certificate.purpose || "Educational Loan Purpose",
+      };
+    }
+    return {
+      ...studentData,
+      ...studentData.studentcertificatedetails,
+      purpose: (studentData.studentcertificatedetails?.purpose) || "Educational Loan Purpose",
+    };
   });
 
   const set = (field) => (e) => setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -69,6 +84,7 @@ const BonafideCertificateForm = () => {
   };
 
   useEffect(() => {
+    if (isEditMode) return; // In edit mode, data is already pre-filled from certificate
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
     const studentId = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id;
@@ -137,7 +153,8 @@ const BonafideCertificateForm = () => {
         academic_year: formData.academic_year || "",
         admission_quota: formData.admission_quota || "",
         current_year: formData.current_year || "",
-        session: formData.session || formData.academic_year || "",
+        year_from: formData.session || formData.academic_year || "",
+        year_to: formData.session || formData.academic_year || "",
         purpose: formData.purpose || "Educational Loan Purpose",
         course_fee_y1: formData.course_fee_y1 || "",
         course_fee_y2: formData.course_fee_y2 || "",
@@ -187,6 +204,73 @@ const BonafideCertificateForm = () => {
     }
   };
 
+  const handleUpdate = async () => {
+    if (!validateFields()) return;
+    try {
+      const org_id = localStorage.getItem("orgId");
+      const branch_id = localStorage.getItem("branchId");
+      const student_certificate_id = certificate.id;
+      const document_type = "BC";
+
+      const payload = {
+        issue_date: getTodayISO(),
+        purpose: formData.purpose || "Educational Loan Purpose",
+        certificate_status: certificate.certificate_status || "Pending",
+        course_name: formData.course_name || "",
+        academic_year: formData.academic_year || "",
+        admission_quota: formData.admission_quota || "",
+        current_year: formData.current_year || "",
+        year_from: formData.session || "",
+        year_to: formData.session || "",
+        course_fee_y1: formData.course_fee_y1 || "",
+        course_fee_y2: formData.course_fee_y2 || "",
+        course_fee_y3: formData.course_fee_y3 || "",
+        course_fee_y4: formData.course_fee_y4 || "",
+        hostel_fee_y1: formData.hostel_fee_y1 || "",
+        hostel_fee_y2: formData.hostel_fee_y2 || "",
+        hostel_fee_y3: formData.hostel_fee_y3 || "",
+        hostel_fee_y4: formData.hostel_fee_y4 || "",
+        misc_fee_y1: formData.misc_fee_y1 || "",
+        misc_fee_y2: formData.misc_fee_y2 || "",
+        misc_fee_y3: formData.misc_fee_y3 || "",
+        misc_fee_y4: formData.misc_fee_y4 || "",
+        grand_total_y1: formData.grand_total_y1 || "",
+        grand_total_y2: formData.grand_total_y2 || "",
+        grand_total_y3: formData.grand_total_y3 || "",
+        grand_total_y4: formData.grand_total_y4 || "",
+      };
+
+      const response = await fetch(
+        `${ApiUrl.apiurl}StudentCertificate/update/?organization_id=${org_id}&branch_id=${branch_id}&student_certificate_id=${student_certificate_id}&document_type=${document_type}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        alert("Bonafide Certificate updated successfully!");
+        const academicSessionId = localStorage.getItem("academicSessionId");
+        const branchId = localStorage.getItem("branchId");
+        const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
+        const orgId = localStorage.getItem("orgId");
+        localStorage.clear();
+        localStorage.setItem("academicSessionId", academicSessionId);
+        localStorage.setItem("branchId", branchId);
+        localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
+        localStorage.setItem("orgId", orgId);
+        navigate("/admin/student-certificate");
+      } else {
+        const error = await response.json();
+        alert(`Error updating Bonafide Certificate: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("Error while updating:", error);
+      alert("An error occurred while updating the Bonafide Certificate.");
+    }
+  };
+
   const feeInput = (field) => (
     <div>
       <input
@@ -210,9 +294,21 @@ const BonafideCertificateForm = () => {
               {/* Action Buttons */}
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
-                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave}>Save</button>
+                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave} disabled={isEditMode}>Save</button>
+                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleUpdate} disabled={!isEditMode}>Update</button>
                   <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }}
-                    onClick={() => setFormData({ ...studentData, ...studentData.studentcertificatedetails, purpose: studentData.studentcertificatedetails?.purpose || "Educational Loan Purpose" })}>
+                    onClick={() => {
+                      if (isEditMode) {
+                        setFormData({
+                          ...certificate,
+                          studentname: certificate.student_name || "",
+                          academic_year: certificate.academic_year_str || certificate.academic_year || "",
+                          purpose: certificate.purpose || "Educational Loan Purpose",
+                        });
+                        return;
+                      }
+                      setFormData({ ...studentData, ...studentData.studentcertificatedetails, purpose: studentData.studentcertificatedetails?.purpose || "Educational Loan Purpose" });
+                    }}>
                     Clear
                   </button>
                   <button type="button" className="btn btn-danger me-2" style={{ width: "150px" }} onClick={handleClose}>Close</button>
