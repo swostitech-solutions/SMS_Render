@@ -1,36 +1,31 @@
-
-
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import  useCourses from "../../hooks/useFetchClasses";
-import { ApiUrl } from "../../../ApiUrl"
-const TransferCertificateForm = () => {
+import useCourses from "../../hooks/useFetchClasses";
+import { ApiUrl } from "../../../ApiUrl";
+
+const BonafideCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedClassId, setSelectedClassId] = useState("");
-  const studentData = location.state || {}; // Retrieve the state (student data) passed from HomePage
+  const studentData = location.state || {};
   const {
     classes,
     loading: classLoading,
     error: classError,
-  } =  useCourses();
+  } = useCourses();
   const [formData, setFormData] = useState({
     ...studentData,
     ...studentData.studentcertificatedetails,
   });
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
+
   useEffect(() => {
     const documentType = localStorage.getItem("selectedDocumentType");
     if (documentType === "BC") {
       setIsFieldsDisabled(true);
     }
   }, []);
+
   const handleClose = () => {
     const keysToRetain = [
       "academicSessionId",
@@ -51,48 +46,39 @@ const TransferCertificateForm = () => {
     });
     navigate("/admin/student-certificate");
   };
+
   const handleClassChange = (e) => {
     const classId = e.target.value;
-
     if (classId) {
       localStorage.setItem("selectedStudentClassId", classId);
     } else {
       localStorage.removeItem("selectedStudentClassId");
     }
-
-    // Update formData with the new classId and reset sectionId
     setFormData((prev) => ({
       ...prev,
       classId,
-      sectionId: "", // Reset section when class changes
+      sectionId: "",
     }));
-
-    setSelectedClassId(classId); // Trigger sections fetch with the selected class ID
+    setSelectedClassId(classId);
   };
-
-
 
   const handleSave = async () => {
     try {
-      // Validate from_month
       if (!formData.tc_applied_date) {
-        alert("Date of Application for Certificate");
-        return; // Stop execution if validation fails
+        alert("Date of Application for Certificate is required.");
+        return;
+      }
+      if (!formData.tc_issued_date) {
+        alert("Date of Issue of Certificate is required.");
+        return;
       }
 
-      // Validate to_month
-      if (!formData.tc_issued_date) {
-        alert("Date of Issue of Certificate");
-        return; // Stop execution if validation fails
-      }
-      // Retrieve values from local storage
       const student = localStorage.getItem("selectedCertificateStudentId");
       const session = localStorage.getItem("academicSessionId");
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
       const document_type = localStorage.getItem("selectedDocumentType");
 
-      // Ensure the Document No. is split and validated
       const [prefix, ...rest] = (formData.document_no || "").split("/");
       const postfix = rest.join("/");
 
@@ -101,11 +87,8 @@ const TransferCertificateForm = () => {
         return;
       }
 
-
-      // Default value for transfer_certificate_no
       const transferCertificateNo = formData.transfer_certificate_no || "";
 
-      // Prepare the payload
       const payload = {
         student,
         session,
@@ -117,35 +100,27 @@ const TransferCertificateForm = () => {
         transfer_certificate_no: transferCertificateNo,
         transfer_certificate_id: 0,
         tc_applied_date: formData.tc_applied_date || null,
-        reason_for_tc: formData.reason_for_tc || "",
         tc_issued_date: formData.tc_issued_date || null,
-        ncc_cadet_details: formData.ncc_cadet_details || "",
-        games_played_details: formData.games_played_details || "",
-        general_conduct: formData.general_conduct || "",
         other_remarks: formData.other_remarks || "",
         status: formData.status || "N",
-        school_board_last_taken: formData.school_board_last_taken || "",
-        whether_failed: formData.whether_failed || "",
-        subjects_studied: formData.subjects_studied || "",
-        qualified_for_promotion: formData.qualified_for_promotion || "",
-        month_fee_paid: formData.month_fee_paid || "",
-        fee_concession_availed: formData.fee_concession_availed || "",
-        total_no_working_days: formData.total_no_working_days || "",
-        total_no_working_days_present: formData.total_no_working_days_present || "",
+        class_last_studied: formData.classId || "",
         cancelled_on: formData.cancelled_on || null,
         cancelled_remarks: formData.cancelled_remarks || "",
         cancelled_by: formData.cancelled_by || "",
-        rollno: formData.rollno || "",
-        cultural_activities: formData.cultural_activities || "",
-        other_activities: formData.other_activities || "",
-        marks_obtained: formData.marks_obtained || "",
-        from_month: formData.from_month || "",
-        to_month: formData.to_month || "",
-        class_last_studied: formData.classId || "",
+        // Bonafide specific fields
+        course_name: formData.course_name || "",
+        academic_year: formData.academic_year || "",
+        admission_quota: formData.admission_quota || "",
+        current_year: formData.current_year || "",
+        purpose: formData.purpose || "Educational Loan Purpose",
+        // Fee structure fields
+        course_fee: formData.course_fee || "",
+        hostel_fee: formData.hostel_fee || "",
+        miscellaneous_fee: formData.miscellaneous_fee || "",
+        grand_total: formData.grand_total || "",
       };
 
-      // API Call
-      const response = await fetch(`${ApiUrl.apiurl}transfer-certificate/`, {
+      const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,10 +137,7 @@ const TransferCertificateForm = () => {
         const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
         const orgId = localStorage.getItem("orgId");
 
-        // Clear all other fields from localStorage
-        localStorage.clear(); // This will clear everything
-
-        // Retain the necessary fields after clearing
+        localStorage.clear();
         localStorage.setItem("academicSessionId", academicSessionId);
         localStorage.setItem("branchId", branchId);
         localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
@@ -174,14 +146,13 @@ const TransferCertificateForm = () => {
         navigate("/admin/student-certificate");
       } else {
         const error = await response.json();
-        alert(`Error saving Transfer Certificate: ${error.message}`);
+        alert(`Error saving Bonafide Certificate: ${error.message}`);
       }
     } catch (error) {
       console.error("Error while saving:", error);
-      alert("An error occurred while saving the Transfer Certificate.");
+      alert("An error occurred while saving the Bonafide Certificate.");
     }
   };
-
 
   return (
     <div className="container-fluid">
@@ -191,15 +162,11 @@ const TransferCertificateForm = () => {
             <div className="card-body">
               <h3 className="text-center mb-4">Bonafide Certificate</h3>
               <div className="row mb-2 mt-3 mx-0">
-                <div
-                  className="col-12 d-flex flex-wrap gap-2"
-                >
+                <div className="col-12 d-flex flex-wrap gap-2">
                   <button
                     type="button"
                     className="btn btn-primary me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                     onClick={handleSave}
                   >
                     Save
@@ -207,35 +174,28 @@ const TransferCertificateForm = () => {
                   <button
                     type="button"
                     className="btn btn-secondary me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                   >
-                    {" "}
-                    Clear{" "}
+                    Clear
                   </button>
                   <button
                     type="button"
                     className="btn btn-danger me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                     onClick={handleClose}
                   >
-                    {" "}
-                    Close{" "}
+                    Close
                   </button>
                 </div>
               </div>
+
               <form>
-                <div className="col-12 mb-3  mt-3 custom-section-box">
+                {/* Header Section */}
+                <div className="col-12 mb-3 mt-3 custom-section-box">
                   <div className="row mb-3 mt-3">
-                    <div className="col-md-6 d-flex align-items-center  ">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        Document No.
+                    <div className="col-md-6 d-flex align-items-center">
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Ref. No.
                       </label>
                       <input
                         type="text"
@@ -244,27 +204,20 @@ const TransferCertificateForm = () => {
                         defaultValue={formData.document_no || ""}
                         onChange={(e) => {
                           const value = e.target.value.trim();
-                          // Extract prefix and postfix based on the example format "4/2024-25"
-                          const [prefix, ...rest] = value.split("/"); // Split on "/"
-                          const postfix = rest.join("/"); // Join the remaining parts for postfix
-
+                          const [prefix, ...rest] = value.split("/");
+                          const postfix = rest.join("/");
                           setFormData({
                             ...formData,
                             document_no: value,
-                            transfer_certificate_no_prefix: prefix || "", // "4"
-                            transfer_certificate_no_postfix: postfix || "", // "2024-25"
+                            transfer_certificate_no_prefix: prefix || "",
+                            transfer_certificate_no_postfix: postfix || "",
                           });
                         }}
                       />
                     </div>
-
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        School Admission No.{" "}
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        School Admission No.
                       </label>
                       <input
                         type="text"
@@ -276,12 +229,8 @@ const TransferCertificateForm = () => {
                   </div>
                   <div className="row mb-3">
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Student Barcode{" "}
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Student Barcode
                       </label>
                       <input
                         type="text"
@@ -291,12 +240,8 @@ const TransferCertificateForm = () => {
                       />
                     </div>
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Cancellation Remarks{" "}
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Cancellation Remarks
                       </label>
                       <input
                         type="text"
@@ -305,13 +250,9 @@ const TransferCertificateForm = () => {
                         defaultValue={formData.cancellationRemarks || ""}
                       />
                     </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Cancelled On{" "}
+                    <div className="col-md-6 d-flex align-items-center mt-3">
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Cancelled On
                       </label>
                       <input
                         type="date"
@@ -320,25 +261,20 @@ const TransferCertificateForm = () => {
                         defaultValue={formData.cancelledOn || ""}
                       />
                     </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Status{" "}
+                    <div className="col-md-6 d-flex align-items-center mt-3">
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Status
                       </label>
                       <select className="detail">
-                        {" "}
-                        <option value="">New</option>{" "}
+                        <option value="">New</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Additional fields */}
+                {/* Bonafide Certificate Fields - matching client format */}
                 <ul className="list-unstyled mb-3 mt-3 custom-section-box">
-                  <li className="mb-3 d-flex  mt-3 align-items-center">
+                  <li className="mb-3 d-flex mt-3 align-items-center">
                     <span className="col-sm-1 text-end">1.</span>
                     <label className="col-sm-3 col-form-label ms-2">
                       Student Name
@@ -349,13 +285,14 @@ const TransferCertificateForm = () => {
                         className="form-control detail"
                         disabled={isFieldsDisabled}
                         defaultValue={formData.studentname || ""}
-                      />{" "}
+                      />
                     </div>
                   </li>
+
                   <li className="mb-3 d-flex align-items-center">
                     <span className="col-sm-1 text-end">2.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      Father's/ Guardian's Name
+                      Father's / Guardian's Name
                     </label>
                     <div className="col-sm-6">
                       <input
@@ -366,6 +303,7 @@ const TransferCertificateForm = () => {
                       />
                     </div>
                   </li>
+
                   <li className="mb-3 d-flex align-items-center">
                     <span className="col-sm-1 text-end">3.</span>
                     <label className="col-sm-3 col-form-label ms-2">
@@ -382,38 +320,172 @@ const TransferCertificateForm = () => {
                   </li>
 
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">3.</span>
+                    <span className="col-sm-1 text-end">4.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Class{" "}
+                      Course
                     </label>
-                    <div className="col-sm-2">
-                      <select
-                        id="admitted-class"
-                        className="form-select"
-                        value={formData.classId}
-                        onChange={handleClassChange}
-                        disabled={isFieldsDisabled}
-                        required
-                      >
-                        <option value="">Select Class</option>
-                        {classes.map((classItem) => (
-                          <option key={classItem.id} value={classItem.id}>
-                            {classItem.classname}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="col-sm-6">
+                      <input
+                        type="text"
+                        className="form-control detail"
+                        value={formData.course_name || formData.coursename || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, course_name: e.target.value })
+                        }
+                      />
                     </div>
                   </li>
 
-                  {/* <li className="mb-3 d-flex align-items-center">
-            <span className="col-sm-1 text-end">20.</span>
-            <label className="col-sm-3 col-form-label ms-2">  Date of Application for Certificate*  </label>
-            <div className="col-sm-8">  <input type="date" className="form-control" />   </div>
-          </li> */}
-
                   <li className="mb-3 d-flex align-items-center">
                     <span className="col-sm-1 text-end">5.</span>
+                    <label className="col-sm-3 col-form-label ms-2">
+                      Academic Year
+                    </label>
+                    <div className="col-sm-6">
+                      <input
+                        type="text"
+                        className="form-control detail"
+                        value={formData.academic_year || formData.academicyear || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, academic_year: e.target.value })
+                        }
+                      />
+                    </div>
+                  </li>
+
+                  <li className="mb-3 d-flex align-items-center">
+                    <span className="col-sm-1 text-end">6.</span>
+                    <label className="col-sm-3 col-form-label ms-2">
+                      Admission Quota
+                    </label>
+                    <div className="col-sm-6">
+                      <input
+                        type="text"
+                        className="form-control detail"
+                        placeholder="e.g. Management / Government"
+                        value={formData.admission_quota || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, admission_quota: e.target.value })
+                        }
+                      />
+                    </div>
+                  </li>
+
+                  <li className="mb-3 d-flex align-items-center">
+                    <span className="col-sm-1 text-end">7.</span>
+                    <label className="col-sm-3 col-form-label ms-2">
+                      Current Year of Study
+                    </label>
+                    <div className="col-sm-6">
+                      <input
+                        type="text"
+                        className="form-control detail"
+                        placeholder="e.g. 1st Year, 2nd Year"
+                        value={formData.current_year || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, current_year: e.target.value })
+                        }
+                      />
+                    </div>
+                  </li>
+
+                  <li className="mb-3 d-flex align-items-center">
+                    <span className="col-sm-1 text-end">8.</span>
+                    <label className="col-sm-3 col-form-label ms-2">
+                      Purpose of Certificate
+                    </label>
+                    <div className="col-sm-6">
+                      <input
+                        type="text"
+                        className="form-control detail"
+                        placeholder="e.g. Educational Loan Purpose"
+                        value={formData.purpose || "Educational Loan Purpose"}
+                        onChange={(e) =>
+                          setFormData({ ...formData, purpose: e.target.value })
+                        }
+                      />
+                    </div>
+                  </li>
+                </ul>
+
+                {/* Fees Structure Section */}
+                <div className="mb-3 mt-3 custom-section-box p-3">
+                  <h5 className="mb-3">Fees Structure</h5>
+                  <div className="table-responsive">
+                    <table className="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>SL NO</th>
+                          <th>PARTICULARS</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>1</td>
+                          <td>Course Fee</td>
+                          <td>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={formData.course_fee || ""}
+                              onChange={(e) =>
+                                setFormData({ ...formData, course_fee: e.target.value })
+                              }
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>2</td>
+                          <td>Hostel Fee</td>
+                          <td>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={formData.hostel_fee || ""}
+                              onChange={(e) =>
+                                setFormData({ ...formData, hostel_fee: e.target.value })
+                              }
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>3</td>
+                          <td>Miscellaneous Fee</td>
+                          <td>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={formData.miscellaneous_fee || ""}
+                              onChange={(e) =>
+                                setFormData({ ...formData, miscellaneous_fee: e.target.value })
+                              }
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>4</td>
+                          <td><strong>Grand Total</strong></td>
+                          <td>
+                            <input
+                              type="text"
+                              className="form-control detail"
+                              value={formData.grand_total || ""}
+                              onChange={(e) =>
+                                setFormData({ ...formData, grand_total: e.target.value })
+                              }
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Dates and Remarks */}
+                <ul className="list-unstyled mb-3 mt-3 custom-section-box">
+                  <li className="mb-3 d-flex mt-3 align-items-center">
+                    <span className="col-sm-1 text-end">9.</span>
                     <label className="col-sm-3 col-form-label ms-2">
                       Date of Application for Certificate
                       <span style={{ color: "red" }}>*</span>
@@ -434,14 +506,12 @@ const TransferCertificateForm = () => {
                   </li>
 
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">6.</span>
+                    <span className="col-sm-1 text-end">10.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
                       Date of Issue of Certificate
                       <span style={{ color: "red" }}>*</span>
                     </label>
                     <div className="col-sm-6">
-                      {" "}
                       <input
                         type="date"
                         className="form-control detail"
@@ -452,15 +522,14 @@ const TransferCertificateForm = () => {
                             tc_issued_date: e.target.value,
                           })
                         }
-                      />{" "}
+                      />
                     </div>
                   </li>
 
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">7.</span>
+                    <span className="col-sm-1 text-end">11.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Remarks{" "}
+                      Remarks
                     </label>
                     <div className="col-sm-6">
                       <input
@@ -489,5 +558,4 @@ const TransferCertificateForm = () => {
   );
 };
 
-export default TransferCertificateForm;
-
+export default BonafideCertificateForm;

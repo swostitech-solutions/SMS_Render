@@ -453,7 +453,7 @@ const TransferCertificateForm = () => {
       };
 
       // API Call
-      const response = await fetch(`${ApiUrl.apiurl}transfer-certificate/`, {
+      const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -173,20 +173,28 @@ const AdmAttendanceEntry = () => {
         const organizationId = sessionStorage.getItem("organization_id");
         const branchId = sessionStorage.getItem("branch_id");
         const response = await fetch(
-          `${ApiUrl.apiurl}STUDENT_CERTIFICATE/GetStudentCertificates/?branch_id=${branchId}&organization_id=${organizationId}`
+          `${ApiUrl.apiurl}StudentCertificate/list/?branch_id=${branchId}&organization_id=${organizationId}`
         );
+
+        if (response.status === 204) {
+          setCertificates([]);
+          setMessage("No records found.");
+          return;
+        }
 
         const result = await response.json();
 
         if (result.message === "success") {
           setCertificates(result.data);
+          setMessage("");
         } else {
           setCertificates([]);
-          console.error("Failed:", result.message);
+          setMessage("No records found.");
         }
       } catch (error) {
         console.error("Error fetching certificates:", error);
         setCertificates([]);
+        setMessage("No records found.");
       } finally {
         setLoading(false);
       }
@@ -257,7 +265,7 @@ const AdmAttendanceEntry = () => {
     const studentId = localStorage.getItem("selectedCertificateStudentId");
 
     try {
-      const apiUrl = `${ApiUrl.apiurl}STUDENT_CERTIFICATE/GetStudentDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}&document_type=${documentType}&studentId=${studentId}`;
+      const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}&document_type=${documentType}&studentId=${studentId}`;
 
       const response = await fetch(apiUrl, { method: "GET" });
 
@@ -284,9 +292,6 @@ const AdmAttendanceEntry = () => {
             break;
           case "BC":
             navigate("/bonafidecertificate", { state: result.data });
-            break;
-          case "FC":
-            navigate("/feecertificate", { state: result.data });
             break;
           default:
             alert("Invalid document type.");
@@ -326,30 +331,38 @@ const AdmAttendanceEntry = () => {
 
   const documentTypeMapping = {
     TC: "Transfer Certificate",
-    CC: "Character Certificate",
-    BC: "Bonified Certificate",
-    FC: "Fee Certificate",
+    BC: "Bonafide Certificate",
+    CC: "Conduct Certificate",
   };
 
   const handleSearch = () => {
     setLoading(true);
     const orgId = sessionStorage.getItem("organization_id") || 1;
     const brId = sessionStorage.getItem("branch_id") || 1;
-    fetch(`${ApiUrl.apiurl}STUDENT_CERTIFICATE/GetStudentCertificates/?organization_id=${orgId}&branch_id=${brId}`)
-      .then((response) => response.json())
+    fetch(`${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${brId}`)
+      .then((response) => {
+        if (response.status === 204) {
+          setCertificates([]);
+          setMessage("No records found.");
+          setLoading(false);
+          return null;
+        }
+        return response.json();
+      })
       .then((data) => {
+        if (!data) return;
         if (data.message === "success") {
           setCertificates(data.data);
           setMessage("");
         } else {
           setCertificates([]);
-          setMessage("No data found");
+          setMessage("No records found.");
         }
         setLoading(false);
       })
       .catch(() => {
         setCertificates([]);
-        setMessage("Error fetching data");
+        setMessage("No records found.");
         setLoading(false);
       });
   };
@@ -375,7 +388,7 @@ const AdmAttendanceEntry = () => {
       "transfer_certificate_id"
     );
 
-    const apiUrl = `${ApiUrl.apiurl}STUDENT_CERTIFICATE/GetStudentDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}&document_type=${documentType}&studentId=${studentId}&transfer_certificate_id=${transferCertificateId}`;
+    const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}&document_type=${documentType}&studentId=${studentId}&transfer_certificate_id=${transferCertificateId}`;
 
     try {
       const response = await fetch(apiUrl);
@@ -415,17 +428,6 @@ const AdmAttendanceEntry = () => {
             });
           }
           break;
-        case "FC":
-          if (action === "view") {
-            navigate("/feecertificateview", {
-              state: { certificate: result.data },
-            });
-          } else {
-            navigate("/feecertificateedit", {
-              state: { certificate: result.data },
-            });
-          }
-          break;
         default:
           alert("Invalid document type.");
           break;
@@ -454,9 +456,6 @@ const AdmAttendanceEntry = () => {
       case "BC":
         window.open("/bonafidecertificatepdf", "_blank");
         break;
-      case "FC":
-        window.open("/feecertificatepdf", "_blank");
-        break;
       default:
         alert("Invalid document type.");
         break;
@@ -471,7 +470,7 @@ const AdmAttendanceEntry = () => {
       const branchId = localStorage.getItem("branchId");
 
       // API URL
-      const apiUrl = `${ApiUrl.apiurl}STUDENT_CERTIFICATE/GetStudentCertificates/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}`;
+      const apiUrl = `${ApiUrl.apiurl}StudentCertificate/list/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}`;
 
       // Fetch API data
       const response = await fetch(apiUrl);
@@ -487,8 +486,7 @@ const AdmAttendanceEntry = () => {
       const documentTypeMap = {
         TC: "Transfer Certificate",
         BC: "Bonafide Certificate",
-        CC: "Character Certificate",
-        FC: "Fee Certificate",
+        CC: "Conduct Certificate",
       };
 
       const statusMap = {
@@ -884,9 +882,8 @@ const AdmAttendanceEntry = () => {
                           classNamePrefix="react-select"
                           options={[
                             { value: "TC", label: "Transfer Certificate" },
-                            { value: "CC", label: "Character Certificate" },
                             { value: "BC", label: "Bonafide Certificate" },
-                            { value: "FC", label: "Fee Certificate" },
+                            { value: "CC", label: "Conduct Certificate" },
                           ]}
                           value={selectedDocumentType}
                           onChange={(selectedOption) => {

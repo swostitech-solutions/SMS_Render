@@ -181,6 +181,7 @@ function Sidebar({ state, setState }) {
             ].filter(Boolean))}
             {isModuleAccessible("fee") && createExpandableSection("Fee", <BsCashCoin />, [
               isChildAccessible("fee.search") && { path: "/admin/fee-search", text: "Search" },
+              isChildAccessible("fee.report") && { path: "/admin/fee-report", text: "Fee Report" },
               isChildAccessible("fee.adhoc") && { path: "/admin/adhoc-fees", text: "ADHOC Fees" },
               isChildAccessible("fee.ledger") && { path: "/admin/fee-ledger", text: "Fee Ledger" },
               isChildAccessible("fee.student_fee") && { path: "/admin/student-fee", text: "Student Fee" },

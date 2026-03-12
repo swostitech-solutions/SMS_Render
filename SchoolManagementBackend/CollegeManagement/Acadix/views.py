@@ -17401,7 +17401,9 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                 if semester_id:
                     filterdata = filterdata.filter(semester=semester_id)
                 if section_id:
-                    filterdata = filterdata.filter(section=section_id)
+                    # student_fee_receipt_header doesn't have a section column, so we find students in the requested section
+                    student_ids_in_section = StudentCourse.objects.filter(section=section_id).values_list('student', flat=True)
+                    filterdata = filterdata.filter(student__in=student_ids_in_section)
                 if date_from and date_to:
                     filterdata = filterdata.filter(receipt_date__range=(date_from, date_to))
                 # Removed default filter to today's date - students should see ALL receipts when no date filter is provided
@@ -17595,12 +17597,17 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                         # 'studentname': f'{RegistrationInstance.first_name}{RegistrationInstance.middle_name}{RegistrationInstance.last_name}',
                         'student_name': student_name,
                         'father_name': item.student.father_name,
+                        'batch_id': studentcourseInstance.batch.id if hasattr(studentcourseInstance, 'batch') and studentcourseInstance.batch else None,
+                        'batch': studentcourseInstance.batch.batch_description if hasattr(studentcourseInstance, 'batch') and studentcourseInstance.batch else None,
+                        'batch_description': studentcourseInstance.batch.batch_description if hasattr(studentcourseInstance, 'batch') and studentcourseInstance.batch else None,
                         'course_id': studentcourseInstance.course.id,
                         'course_name': studentcourseInstance.course.course_name,
                         'department_id': studentcourseInstance.department.id,
                         'department_description': studentcourseInstance.department.department_description,
                         'academic_year_id': studentcourseInstance.academic_year.id,
                         'academic_year_code': studentcourseInstance.academic_year.academic_year_code,
+                        'current_semester_id': studentcourseInstance.semester.id if hasattr(studentcourseInstance, 'semester') and studentcourseInstance.semester else None,
+                        'current_semester_name': studentcourseInstance.semester.semester_description if hasattr(studentcourseInstance, 'semester') and studentcourseInstance.semester else None,
                         'semester_id': receipt_semester_id,  # Use semester from receipt, not student's current semester
                         'semester_description': receipt_semester_description,  # Use semester from receipt
                         'semester': receipt_semester_description,  # Frontend looks for 'semester' - use receipt semester

@@ -56,6 +56,7 @@ import EmployeeSearch from "./pages/AdminPanel/EmployeeSearch";
 
 import CircularEntry from "./pages/AdminPanel/CircularEntry";
 import FeeSearch from "./pages/AdminPanel/FeeSearch";
+import FeeReport from "./pages/AdminPanel/FeeReport";
 import Circular from "./pages/StudentPannel/Circular";
 import Events from "./pages/StudentPannel/Events";
 import OnlineClass from "./pages/StudentPannel/OnlineClass";
@@ -455,6 +456,7 @@ function App() {
 
               <Route path="/admin/circular-entry" element={<CircularEntry />} />
               <Route path="/admin/fee-search" element={<FeeSearch />} />
+              <Route path="/admin/fee-report" element={<FeeReport />} />
               <Route path="/admin/fee-structure" element={<FeeStructure />} />
               <Route path="/admin/book-dashboard" element={<BookDashboard />} />
               <Route

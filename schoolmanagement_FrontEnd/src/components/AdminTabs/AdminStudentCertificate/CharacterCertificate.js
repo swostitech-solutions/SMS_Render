@@ -1,263 +1,18 @@
-// import React from "react";
-
-// function CharacterCertificate() {
-//   return (
-//     <div className="container p-4 border mt-5 bg-white">
-//       <h3 className="text-center mb-4">Character Certificate</h3>
-
-//       {/* Action Buttons */}
-//       <div className="row mb-2">
-//         <div className="col-12" style={{ border: "1px solid #ccc" }}>
-//           <button
-//             type="button"
-//             className="btn btn-primary me-2"
-//             style={{
-//               "--bs-btn-padding-y": ".25rem",
-//               "--bs-btn-padding-x": ".5rem",
-//               "--bs-btn-font-size": ".75rem",
-//               width: "150px",
-//             }}
-//           >
-//             Save
-//           </button>
-
-//           <button
-//             type="button"
-//             className="btn btn-primary me-2"
-//             style={{
-//               "--bs-btn-padding-y": ".25rem",
-//               "--bs-btn-padding-x": ".5rem",
-//               "--bs-btn-font-size": ".75rem",
-//               width: "150px",
-//             }}
-//           >
-//             Clear
-//           </button>
-//           <button
-//             type="button"
-//             className="btn btn-primary me-2"
-//             style={{
-//               "--bs-btn-padding-y": ".25rem",
-//               "--bs-btn-padding-x": ".5rem",
-//               "--bs-btn-font-size": ".75rem",
-//               width: "150px",
-//             }}
-//           >
-//             Close
-//           </button>
-//         </div>
-//       </div>
-
-//       <form>
-//         {/* Transfer Certificate Section */}
-
-//         <div className="row mb-3">
-//           <div className="col-md-6 d-flex align-items-center">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  Document No.   </label>
-//             <input type="text" className="form-control" />
-//           </div>
-//           <div className="col-md-6 d-flex align-items-center">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  School Admission No.  </label>
-//             <input type="text" className="form-control" />
-//           </div>
-//         </div>
-//         <div className="row mb-3">
-//           <div className="col-md-6 d-flex align-items-center">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  Student Barcode  </label>
-//             <input type="text" className="form-control" />
-//           </div>
-//           <div className="col-md-6 d-flex align-items-center">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  Cancelled On  </label>
-//             <input type="date" className="form-control" />
-//           </div>
-//         </div>
-//         <div className="row mb-3">
-//           <div className="col-md-6 d-flex align-items-center">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  Status  </label>
-//             <select className="form-select">
-//               <option value="New">Approved</option>
-//               <option value="Cancelled">Cancelled</option>
-//             </select>
-//           </div>
-//           <div className="col-md-6 d-flex align-items-start">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  Cancellation Remarks  </label>
-//             <textarea className="form-control" rows="2"></textarea>
-//           </div>
-//         </div>
-//         <h3 className="text-left mb-4">Character Certificate</h3>
-//         <ul className="list-unstyled">
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">1.</span>
-//             <label className="col-sm-3 col-form-label ms-2">Student Name</label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">2.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Father's/ Guardian's Name  </label>
-//             <div className="col-sm-8">
-//               <input  type="text"  className="form-control"  placeholder="Enter father's/guardian's name"  />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">3.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Mother's Name  </label>
-//             <div className="col-sm-8">
-//               <input  type="text"  className="form-control"  placeholder="Enter mother's name"  />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">4.</span>
-//             <label className="col-sm-3 col-form-label ms-2">Class</label>
-//             <div className="col-sm-2">
-//               <select className="form-select">
-//                 <option value="New">New</option>
-//                 <option value="Cancelled">Cancelled</option>
-//               </select>
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">5.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Date Of Birth  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">6.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  CBSE Registration No  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">7.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Board Roll No.  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">8.</span>
-//             <label className="col-sm-3 col-form-label ms-2">Marks</label>
-//             {/* <div className="col-sm-2"> */}
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//             {/* </div> */}
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">9.</span>
-//             <label className="col-sm-3 col-form-label ms-2">Subjects</label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">10.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Conduct and Behaviour  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">11.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  NSS/NCC/SCOUT/GUIDE  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">12.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  CULTURAL ACTIVITIES  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">13.</span>
-//             <label className="col-sm-3 col-form-label ms-2">   GAMES & SPORTS  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">14.</span>
-//             <label className="col-sm-3 col-form-label ms-2">   OTHER ACTIVITIES  </label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">15.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Date of Application for Certificate  <span style={{ color: "red" }}>*</span>
-//             </label>
-//             <div className="col-sm-8">  <input type="date" className="form-control" />  </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">16.</span>
-//             <label className="col-sm-3 col-form-label ms-2">  Date of Issue of Certificate
-//               <span style={{ color: "red" }}>*</span>  </label>
-//             <div className="col-sm-8">
-//               <input type="date" className="form-control" />
-//             </div>
-//           </li>
-
-//           <li className="mb-3 d-flex align-items-center">
-//             <span className="col-sm-1 text-end">17.</span>
-//             <label className="col-sm-3 col-form-label ms-2">Remarks</label>
-//             <div className="col-sm-8">
-//               <input type="text" className="form-control" placeholder="" />
-//             </div>
-//           </li>
-//         </ul>
-//       </form>
-//     </div>
-//   );
-// }
-
-// export default CharacterCertificate;
-
-
-
-
-
-
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import  useCourses from "../../hooks/useFetchClasses";
-import { ApiUrl } from "../../../ApiUrl"
-const TransferCertificateForm = () => {
+import useCourses from "../../hooks/useFetchClasses";
+import { ApiUrl } from "../../../ApiUrl";
+
+const ConductCertificate = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedClassId, setSelectedClassId] = useState("");
-  const studentData = location.state || {}; // Retrieve the state (student data) passed from HomePage
-  const {
-    classes,
-    loading: classLoading,
-    error: classError,
-  } =  useCourses();
+  const studentData = location.state || {};
   const [formData, setFormData] = useState({
     ...studentData,
     ...studentData.studentcertificatedetails,
   });
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
+
   useEffect(() => {
     const documentType = localStorage.getItem("selectedDocumentType");
     if (documentType === "CC") {
@@ -265,9 +20,6 @@ const TransferCertificateForm = () => {
     }
   }, []);
 
-  const [selectedClass, setSelectedClass] = useState(
-    localStorage.getItem("selectedClassId") || ""
-  );
   const handleClose = () => {
     const keysToRetain = [
       "academicSessionId",
@@ -288,47 +40,25 @@ const TransferCertificateForm = () => {
     });
     navigate("/admin/student-certificate");
   };
-  const handleClassChange = (e) => {
-    const classId = e.target.value;
-
-    if (classId) {
-      localStorage.setItem("selectedStudentClassId", classId);
-    } else {
-      localStorage.removeItem("selectedStudentClassId");
-    }
-
-    // Update formData with the new classId and reset sectionId
-    setFormData((prev) => ({
-      ...prev,
-      classId,
-      sectionId: "", // Reset section when class changes
-    }));
-
-    setSelectedClassId(classId); // Trigger sections fetch with the selected class ID
-  };
 
   const handleSave = async () => {
     try {
-      // Validate tc_applied_date
+      // Validate required fields
       if (!formData.tc_applied_date) {
         alert("Date of Application for Certificate is required.");
-        return; // Stop execution if validation fails
+        return;
       }
-
-      // Validate tc_issued_date
       if (!formData.tc_issued_date) {
         alert("Date of Issue of Certificate is required.");
-        return; // Stop execution if validation fails
+        return;
       }
 
-      // Retrieve values from local storage
       const student = localStorage.getItem("selectedCertificateStudentId");
       const session = localStorage.getItem("academicSessionId");
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
       const document_type = localStorage.getItem("selectedDocumentType");
 
-      // Ensure the Document No. is split and validated
       const [prefix, ...rest] = (formData.document_no || "").split("/");
       const postfix = rest.join("/");
 
@@ -337,10 +67,6 @@ const TransferCertificateForm = () => {
         return;
       }
 
-      // Default value for transfer_certificate_no
-      const transferCertificateNo = formData.transfer_certificate_no || "4";
-
-      // Prepare the payload
       const payload = {
         student,
         session,
@@ -349,38 +75,22 @@ const TransferCertificateForm = () => {
         document_type,
         transfer_certificate_no_prefix: prefix,
         transfer_certificate_no_postfix: postfix,
-        transfer_certificate_no: transferCertificateNo, // Defaulted to 4 if not provided
+        transfer_certificate_no: formData.transfer_certificate_no || "",
         transfer_certificate_id: 0,
         tc_applied_date: formData.tc_applied_date || null,
-        reason_for_tc: formData.reason_for_tc || "",
         tc_issued_date: formData.tc_issued_date || null,
-        ncc_cadet_details: formData.ncc_cadet_details || "",
-        games_played_details: formData.games_played_details || "",
-        general_conduct: formData.general_conduct || "",
+        general_conduct: formData.general_conduct || "Good",
         other_remarks: formData.other_remarks || "",
         status: formData.status || "N",
-        school_board_last_taken: formData.school_board_last_taken || "",
-        whether_failed: formData.whether_failed || "",
-        subjects_studied: formData.subjects_studied || "",
-        qualified_for_promotion: formData.qualified_for_promotion || "",
-        month_fee_paid: formData.month_fee_paid || "",
-        fee_concession_availed: formData.fee_concession_availed || "",
-        total_no_working_days: formData.total_no_working_days || "",
-        total_no_working_days_present: formData.total_no_working_days_present || "",
+        from_month: formData.from_month || "",
+        to_month: formData.to_month || "",
+        reason_for_tc: formData.reason_for_tc || "",
         cancelled_on: formData.cancelled_on || null,
         cancelled_remarks: formData.cancelled_remarks || "",
         cancelled_by: formData.cancelled_by || "",
-        rollno: formData.rollno || "",
-        cultural_activities: formData.cultural_activities || "",
-        other_activities: formData.other_activities || "",
-        marks_obtained: formData.marks_obtained || "",
-        from_month: formData.from_month || "",
-        to_month: formData.to_month || "",
-        class_last_studied: formData.classId || "", // Mapping classId to class_last_studied
       };
 
-      // API Call
-      const response = await fetch(`${ApiUrl.apiurl}transfer-certificate/`, {
+      const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -390,41 +100,30 @@ const TransferCertificateForm = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert("Character Certificate saved successfully!");
+        alert("Conduct Certificate saved successfully!");
         console.log(result);
 
-        // After the successful API call, clear the specified fields from localStorage
-        // Retain the specific fields
         const academicSessionId = localStorage.getItem("academicSessionId");
         const branchId = localStorage.getItem("branchId");
         const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
         const orgId = localStorage.getItem("orgId");
 
-        // Clear all other fields from localStorage
-        localStorage.clear(); // This will clear everything
-
-        // Retain the necessary fields after clearing
+        localStorage.clear();
         localStorage.setItem("academicSessionId", academicSessionId);
         localStorage.setItem("branchId", branchId);
         localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
         localStorage.setItem("orgId", orgId);
 
-        // Navigate to the student certificate page
         navigate("/admin/student-certificate");
       } else {
         const error = await response.json();
-        alert(`Error saving Transfer Certificate: ${error.message}`);
+        alert(`Error saving Conduct Certificate: ${error.message}`);
       }
     } catch (error) {
       console.error("Error while saving:", error);
-      alert("An error occurred while saving the Transfer Certificate.");
+      alert("An error occurred while saving the Conduct Certificate.");
     }
   };
-
-
-
-
-
 
   return (
     <div className="container-fluid">
@@ -432,15 +131,13 @@ const TransferCertificateForm = () => {
         <div className="col-12">
           <div className="card p-0">
             <div className="card-body">
-              <h3 className="text-center mb-4">Character Certificate</h3>
+              <h3 className="text-center mb-4">Conduct Certificate</h3>
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
                   <button
                     type="button"
                     className="btn btn-primary me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                     onClick={handleSave}
                   >
                     Save
@@ -448,36 +145,28 @@ const TransferCertificateForm = () => {
                   <button
                     type="button"
                     className="btn btn-secondary me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                   >
-                    {" "}
-                    Clear{" "}
+                    Clear
                   </button>
                   <button
                     type="button"
                     className="btn btn-danger me-2"
-                    style={{
-                      width: "150px",
-                    }}
+                    style={{ width: "150px" }}
                     onClick={handleClose}
                   >
-                    {" "}
-                    Close{" "}
+                    Close
                   </button>
                 </div>
               </div>
 
               <form>
+                {/* Header Section */}
                 <div className="col-12 mb-3 custom-section-box">
                   <div className="row mb-3 mt-3">
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        Document No.
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Ref. No.
                       </label>
                       <input
                         type="text"
@@ -486,27 +175,41 @@ const TransferCertificateForm = () => {
                         defaultValue={formData.document_no || ""}
                         onChange={(e) => {
                           const value = e.target.value.trim();
-                          // Extract prefix and postfix based on the example format "4/2024-25"
-                          const [prefix, ...rest] = value.split("/"); // Split on "/"
-                          const postfix = rest.join("/"); // Join the remaining parts for postfix
-
+                          const [prefix, ...rest] = value.split("/");
+                          const postfix = rest.join("/");
                           setFormData({
                             ...formData,
                             document_no: value,
-                            transfer_certificate_no_prefix: prefix || "", // "4"
-                            transfer_certificate_no_postfix: postfix || "", // "2024-25"
+                            transfer_certificate_no_prefix: prefix || "",
+                            transfer_certificate_no_postfix: postfix || "",
                           });
                         }}
                       />
                     </div>
-
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        School Admission No.{" "}
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Status
+                      </label>
+                      <select className="detail">
+                        <option value="">New</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6 d-flex align-items-center">
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Student Barcode
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control detail"
+                        disabled={isFieldsDisabled}
+                        defaultValue={formData.barcode || ""}
+                      />
+                    </div>
+                    <div className="col-md-6 d-flex align-items-center">
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        School Admission No.
                       </label>
                       <input
                         type="text"
@@ -518,27 +221,8 @@ const TransferCertificateForm = () => {
                   </div>
                   <div className="row mb-3">
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Student Barcode{" "}
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.barcode || ""}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Cancellation Remarks{" "}
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Cancellation Remarks
                       </label>
                       <input
                         type="text"
@@ -548,12 +232,8 @@ const TransferCertificateForm = () => {
                       />
                     </div>
                     <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Cancelled On{" "}
+                      <label className="form-label me-3" style={{ width: "200px" }}>
+                        Cancelled On
                       </label>
                       <input
                         type="date"
@@ -562,25 +242,12 @@ const TransferCertificateForm = () => {
                         defaultValue={formData.cancelledOn || ""}
                       />
                     </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label
-                        className="form-label me-3"
-                        style={{ width: "200px" }}
-                      >
-                        {" "}
-                        Status{" "}
-                      </label>
-                      <select className="detail">
-                        {" "}
-                        <option value="">New</option>{" "}
-                      </select>
-                    </div>
                   </div>
                 </div>
 
-                {/* Additional fields */}
-                <ul className="list-unstyled  mb-3 mt-3 custom-section-box">
-                  <li className="mb-3 d-flex align-items-center">
+                {/* Conduct Certificate Fields - matching client format */}
+                <ul className="list-unstyled mb-3 mt-3 custom-section-box">
+                  <li className="mb-3 d-flex mt-3 align-items-center">
                     <span className="col-sm-1 text-end">1.</span>
                     <label className="col-sm-3 col-form-label ms-2">
                       Student Name
@@ -591,13 +258,14 @@ const TransferCertificateForm = () => {
                         className="form-control detail"
                         disabled={isFieldsDisabled}
                         defaultValue={formData.studentname || ""}
-                      />{" "}
+                      />
                     </div>
                   </li>
+
                   <li className="mb-3 d-flex align-items-center">
                     <span className="col-sm-1 text-end">2.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      Father's/ Guardian's Name
+                      D/O, S/O (Father's / Guardian's Name)
                     </label>
                     <div className="col-sm-6">
                       <input
@@ -608,17 +276,21 @@ const TransferCertificateForm = () => {
                       />
                     </div>
                   </li>
+
                   <li className="mb-3 d-flex align-items-center">
                     <span className="col-sm-1 text-end">3.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      Mother's Name
+                      Studied in this Institution From
                     </label>
                     <div className="col-sm-6">
                       <input
                         type="text"
                         className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.mother_name || ""}
+                        placeholder="e.g. June 2022"
+                        value={formData.from_month || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, from_month: e.target.value })
+                        }
                       />
                     </div>
                   </li>
@@ -626,232 +298,41 @@ const TransferCertificateForm = () => {
                   <li className="mb-3 d-flex align-items-center">
                     <span className="col-sm-1 text-end">4.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Date of birth (in Christian Era) according to the
-                      Admission Register (in figures) (in words)
+                      Studied in this Institution To
                     </label>
                     <div className="col-sm-6">
                       <input
                         type="text"
                         className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.dob || ""}
-                      />
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">3.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Class{" "}
-                    </label>
-                    <div className="col-sm-2">
-                      <select
-                        id="admitted-class"
-                        className="form-select detail"
-                        value={formData.classId}
-                        onChange={handleClassChange}
-                        required
-                      >
-                        <option value="">Select Class</option>
-                        {classes.map((classItem) => (
-                          <option key={classItem.id} value={classItem.id}>
-                            {classItem.classname}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">6.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      CBSE Registration No{" "}
-                    </label>
-                    <div className="col-sm-6">
-                      {" "}
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder=""
-                      />{" "}
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">7.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Board Roll No.{" "}
-                    </label>
-                    <div className="col-sm-6">
-                      {" "}
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder=""
-                        value={formData.rollno || ""}
+                        placeholder="e.g. May 2026"
+                        value={formData.to_month || ""}
                         onChange={(e) =>
-                          setFormData({ ...formData, rollno: e.target.value })
-                        }
-                      />{" "}
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">8.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Marks{" "}
-                    </label>
-                    <div className="col-sm-6">
-                      {" "}
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder=""
-                        value={formData.marks_obtained || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            marks_obtained: e.target.value,
-                          })
-                        }
-                      />{" "}
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">9.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Subjects{" "}
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        // disabled={isFieldsDisabled}
-
-                        value={formData.subjects_studied || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            subjects_studied: e.target.value,
-                          })
+                          setFormData({ ...formData, to_month: e.target.value })
                         }
                       />
                     </div>
                   </li>
+
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">10.</span>
+                    <span className="col-sm-1 text-end">5.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Conduct and Behaviour{" "}
+                      Character & Conduct
                     </label>
                     <div className="col-sm-6">
                       <input
                         type="text"
                         className="form-control detail"
-                        placeholder=""
+                        placeholder="e.g. Good"
                         value={formData.general_conduct || ""}
                         onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            general_conduct: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">11.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      NSS/NCC/SCOUT/GUIDE{" "}
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder=""
-                        value={formData.ncc_cadet_details || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            ncc_cadet_details: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">12.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      CULTURAL ACTIVITIES{" "}
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder=""
-                        value={formData.cultural_activities || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            cultural_activities: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">13.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      GAMES & SPORTS
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        // defaultValue={formData.total_working_day || "0"}
-                        value={formData.games_played_details}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            games_played_details: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">14.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      OTHER ACTIVITIES
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        // defaultValue={formData.total_present_day || "0"}
-                        value={formData.other_activities}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            other_activities: e.target.value,
-                          })
+                          setFormData({ ...formData, general_conduct: e.target.value })
                         }
                       />
                     </div>
                   </li>
 
-                  {/* <li className="mb-3 d-flex align-items-center">
-            <span className="col-sm-1 text-end">20.</span>
-            <label className="col-sm-3 col-form-label ms-2">  Date of Application for Certificate*  </label>
-            <div className="col-sm-8">  <input type="date" className="form-control" />   </div>
-          </li> */}
-
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">15.</span>
+                    <span className="col-sm-1 text-end">6.</span>
                     <label className="col-sm-3 col-form-label ms-2">
                       Date of Application for Certificate
                       <span style={{ color: "red" }}>*</span>
@@ -872,14 +353,12 @@ const TransferCertificateForm = () => {
                   </li>
 
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">16.</span>
+                    <span className="col-sm-1 text-end">7.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
                       Date of Issue of Certificate
                       <span style={{ color: "red" }}>*</span>
                     </label>
                     <div className="col-sm-6">
-                      {" "}
                       <input
                         type="date"
                         className="form-control detail"
@@ -890,15 +369,14 @@ const TransferCertificateForm = () => {
                             tc_issued_date: e.target.value,
                           })
                         }
-                      />{" "}
+                      />
                     </div>
                   </li>
 
                   <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">17.</span>
+                    <span className="col-sm-1 text-end">8.</span>
                     <label className="col-sm-3 col-form-label ms-2">
-                      {" "}
-                      Remarks{" "}
+                      Remarks
                     </label>
                     <div className="col-sm-6">
                       <input
@@ -927,4 +405,4 @@ const TransferCertificateForm = () => {
   );
 };
 
-export default TransferCertificateForm;
+export default ConductCertificate;
