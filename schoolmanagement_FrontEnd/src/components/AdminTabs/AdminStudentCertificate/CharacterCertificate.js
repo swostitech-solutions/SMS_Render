@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import useCourses from "../../hooks/useFetchClasses";
 import { ApiUrl } from "../../../ApiUrl";
+
+const getTodayStr = () => {
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const yyyy = today.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+};
+
+const getTodayISO = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+};
 
 const ConductCertificate = () => {
   const navigate = useNavigate();
@@ -18,6 +30,28 @@ const ConductCertificate = () => {
     if (documentType === "CC") {
       setIsFieldsDisabled(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const orgId = localStorage.getItem("orgId");
+    const branchId = localStorage.getItem("branchId");
+    const studentId = localStorage.getItem("selectedCertificateStudentId");
+    if (!orgId || !branchId || !studentId) return;
+    fetch(
+      `${ApiUrl.apiurl}StudentRegistrationApi/GetStudentDetailsBasedOnId/?organization_id=${orgId}&branch_id=${branchId}&student_id=${studentId}`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.data?.student_basic_details) {
+          const s = res.data.student_basic_details;
+          setFormData((prev) => ({
+            ...prev,
+            studentname: prev.studentname || s.student_name || "",
+            father_name: prev.father_name || s.father_name || "",
+          }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
 
   const handleClose = () => {
@@ -43,29 +77,17 @@ const ConductCertificate = () => {
 
   const handleSave = async () => {
     try {
-      // Validate required fields
-      if (!formData.tc_applied_date) {
-        alert("Date of Application for Certificate is required.");
-        return;
-      }
-      if (!formData.tc_issued_date) {
-        alert("Date of Issue of Certificate is required.");
-        return;
-      }
-
       const student = localStorage.getItem("selectedCertificateStudentId");
       const session = localStorage.getItem("academicSessionId");
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
       const document_type = localStorage.getItem("selectedDocumentType");
 
-      const [prefix, ...rest] = (formData.document_no || "").split("/");
+      const docNo = formData.document_no || "";
+      const [prefix, ...rest] = docNo.split("/");
       const postfix = rest.join("/");
 
-      if (!prefix || !postfix) {
-        alert("Please provide a valid Document No. in the format 'prefix/postfix'.");
-        return;
-      }
+      const todayISO = getTodayISO();
 
       const payload = {
         student,
@@ -73,21 +95,21 @@ const ConductCertificate = () => {
         org_id,
         branch_id,
         document_type,
-        transfer_certificate_no_prefix: prefix,
-        transfer_certificate_no_postfix: postfix,
-        transfer_certificate_no: formData.transfer_certificate_no || "",
+        transfer_certificate_no_prefix: prefix || docNo,
+        transfer_certificate_no_postfix: postfix || "",
+        transfer_certificate_no: docNo,
         transfer_certificate_id: 0,
-        tc_applied_date: formData.tc_applied_date || null,
-        tc_issued_date: formData.tc_issued_date || null,
-        general_conduct: formData.general_conduct || "Good",
-        other_remarks: formData.other_remarks || "",
-        status: formData.status || "N",
+        tc_applied_date: todayISO,
+        tc_issued_date: todayISO,
+        general_conduct: "Good",
+        other_remarks: "",
+        status: "N",
         from_month: formData.from_month || "",
         to_month: formData.to_month || "",
-        reason_for_tc: formData.reason_for_tc || "",
-        cancelled_on: formData.cancelled_on || null,
-        cancelled_remarks: formData.cancelled_remarks || "",
-        cancelled_by: formData.cancelled_by || "",
+        reason_for_tc: "",
+        cancelled_on: null,
+        cancelled_remarks: "",
+        cancelled_by: "",
       };
 
       const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
@@ -132,6 +154,8 @@ const ConductCertificate = () => {
           <div className="card p-0">
             <div className="card-body">
               <h3 className="text-center mb-4">Conduct Certificate</h3>
+
+              {/* Action Buttons */}
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
                   <button
@@ -146,6 +170,12 @@ const ConductCertificate = () => {
                     type="button"
                     className="btn btn-secondary me-2"
                     style={{ width: "150px" }}
+                    onClick={() =>
+                      setFormData({
+                        ...studentData,
+                        ...studentData.studentcertificatedetails,
+                      })
+                    }
                   >
                     Clear
                   </button>
@@ -160,243 +190,210 @@ const ConductCertificate = () => {
                 </div>
               </div>
 
-              <form>
-                {/* Header Section */}
-                <div className="col-12 mb-3 custom-section-box">
-                  <div className="row mb-3 mt-3">
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Ref. No.
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.document_no || ""}
-                        onChange={(e) => {
-                          const value = e.target.value.trim();
-                          const [prefix, ...rest] = value.split("/");
-                          const postfix = rest.join("/");
-                          setFormData({
-                            ...formData,
-                            document_no: value,
-                            transfer_certificate_no_prefix: prefix || "",
-                            transfer_certificate_no_postfix: postfix || "",
-                          });
-                        }}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Status
-                      </label>
-                      <select className="detail">
-                        <option value="">New</option>
-                      </select>
-                    </div>
+              {/* Certificate Template */}
+              <div
+                style={{
+                  border: "2px solid #000",
+                  padding: "40px 50px",
+                  maxWidth: "800px",
+                  margin: "0 auto",
+                  backgroundColor: "#fff",
+                  fontFamily: "serif",
+                  position: "relative",
+                }}
+              >
+                {/* Corner marks */}
+                <div style={{
+                  position: "absolute", top: "8px", left: "8px",
+                  width: "30px", height: "30px",
+                  borderTop: "3px solid #000", borderLeft: "3px solid #000"
+                }} />
+                <div style={{
+                  position: "absolute", top: "8px", right: "8px",
+                  width: "30px", height: "30px",
+                  borderTop: "3px solid #000", borderRight: "3px solid #000"
+                }} />
+                <div style={{
+                  position: "absolute", bottom: "8px", left: "8px",
+                  width: "30px", height: "30px",
+                  borderBottom: "3px solid #000", borderLeft: "3px solid #000"
+                }} />
+                <div style={{
+                  position: "absolute", bottom: "8px", right: "8px",
+                  width: "30px", height: "30px",
+                  borderBottom: "3px solid #000", borderRight: "3px solid #000"
+                }} />
+
+                {/* College Header */}
+                <p style={{
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  marginBottom: "30px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}>
+                  Sparsh College of Nursing &amp; Allied Sciences: Kantabada : BBSR.
+                </p>
+
+                {/* Ref No and Date Row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontWeight: "bold", fontSize: "14px", whiteSpace: "nowrap" }}>REF.NO</span>
+                    <input
+                      type="text"
+                      value={formData.document_no || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, document_no: e.target.value })
+                      }
+                      style={{
+                        border: "none",
+                        borderBottom: "1px solid #000",
+                        outline: "none",
+                        width: "180px",
+                        fontFamily: "serif",
+                        fontSize: "14px",
+                        background: "transparent",
+                      }}
+                    />
                   </div>
-                  <div className="row mb-3">
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Student Barcode
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.barcode || ""}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        School Admission No.
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.school_admission_no || ""}
-                      />
-                    </div>
-                  </div>
-                  <div className="row mb-3">
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Cancellation Remarks
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.cancellationRemarks || ""}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Cancelled On
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.cancelledOn || ""}
-                      />
-                    </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontWeight: "bold", fontSize: "14px" }}>DATE :</span>
+                    <input
+                      type="text"
+                      disabled
+                      value={getTodayStr()}
+                      style={{
+                        border: "none",
+                        borderBottom: "1px solid #000",
+                        outline: "none",
+                        width: "140px",
+                        fontFamily: "serif",
+                        fontSize: "14px",
+                        background: "transparent",
+                        color: "#000",
+                      }}
+                    />
                   </div>
                 </div>
 
-                {/* Conduct Certificate Fields - matching client format */}
-                <ul className="list-unstyled mb-3 mt-3 custom-section-box">
-                  <li className="mb-3 d-flex mt-3 align-items-center">
-                    <span className="col-sm-1 text-end">1.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Student Name
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.studentname || ""}
-                      />
-                    </div>
-                  </li>
+                {/* Title */}
+                <h4 style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  textDecoration: "underline",
+                  fontSize: "18px",
+                  textTransform: "uppercase",
+                  marginBottom: "40px",
+                  letterSpacing: "2px",
+                }}>
+                  Conduct Certificate
+                </h4>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">2.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      D/O, S/O (Father's / Guardian's Name)
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.father_name || ""}
-                      />
-                    </div>
-                  </li>
+                {/* Certificate Body */}
+                <div style={{ fontSize: "15px", lineHeight: "2.8", fontWeight: "bold", textTransform: "uppercase" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
+                    <span>IT IS TO CERTIFY THAT</span>
+                    <input
+                      type="text"
+                      disabled
+                      value={formData.studentname || ""}
+                      style={{
+                        border: "none",
+                        borderBottom: "1px solid #000",
+                        outline: "none",
+                        minWidth: "200px",
+                        fontFamily: "serif",
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        background: "transparent",
+                        color: "#000",
+                        textTransform: "uppercase",
+                        textAlign: "center",
+                      }}
+                    />
+                    <span>D/O, S/O</span>
+                  </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">3.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Studied in this Institution From
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="e.g. June 2022"
-                        value={formData.from_month || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, from_month: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
+                  <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
+                    <input
+                      type="text"
+                      value={formData.father_name || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, father_name: e.target.value })
+                      }
+                      style={{
+                        border: "none",
+                        borderBottom: "1px solid #000",
+                        outline: "none",
+                        minWidth: "260px",
+                        fontFamily: "serif",
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        background: "transparent",
+                        color: "#000",
+                        textTransform: "uppercase",
+                        textAlign: "center",
+                      }}
+                    />
+                    <span>WHO HAS STUDIED IN THIS INSTITUTION FROM</span>
+                  </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">4.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Studied in this Institution To
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="e.g. May 2026"
-                        value={formData.to_month || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, to_month: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
+                  <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
+                    <input
+                      type="text"
+                      value={formData.from_month || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, from_month: e.target.value })
+                      }
+                      style={{
+                        border: "none",
+                        borderBottom: "1px solid #000",
+                        outline: "none",
+                        width: "160px",
+                        fontFamily: "serif",
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        background: "transparent",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    />
+                    <span>TO</span>
+                    <input
+                      type="text"
+                      value={formData.to_month || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, to_month: e.target.value })
+                      }
+                      style={{
+                        border: "none",
+                        borderBottom: "1px solid #000",
+                        outline: "none",
+                        width: "160px",
+                        fontFamily: "serif",
+                        fontSize: "15px",
+                        fontWeight: "bold",
+                        background: "transparent",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    />
+                    <span>BEARS A GOOD</span>
+                  </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">5.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Character & Conduct
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="e.g. Good"
-                        value={formData.general_conduct || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, general_conduct: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
+                  <div>
+                    <span>CHARACTER &amp; CONDUCT.</span>
+                  </div>
+                </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">6.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Date of Application for Certificate
-                      <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="date"
-                        className="form-control detail"
-                        value={formData.tc_applied_date || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            tc_applied_date: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
+                {/* Principal Signature */}
+                <div style={{ textAlign: "right", marginTop: "80px", fontWeight: "bold", fontSize: "15px", textTransform: "uppercase" }}>
+                  <div style={{ borderTop: "1px solid #000", display: "inline-block", minWidth: "160px", paddingTop: "6px" }}>
+                    PRINCIPAL
+                  </div>
+                </div>
+              </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">7.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Date of Issue of Certificate
-                      <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="date"
-                        className="form-control detail"
-                        value={formData.tc_issued_date || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            tc_issued_date: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">8.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Remarks
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="Enter remarks"
-                        style={{ resize: "both", overflow: "auto" }}
-                        rows="3"
-                        value={formData.other_remarks || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            other_remarks: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-                </ul>
-              </form>
             </div>
           </div>
         </div>

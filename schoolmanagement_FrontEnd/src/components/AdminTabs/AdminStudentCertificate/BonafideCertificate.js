@@ -1,130 +1,132 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import useCourses from "../../hooks/useFetchClasses";
 import { ApiUrl } from "../../../ApiUrl";
+
+const getTodayStr = () => {
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const yyyy = today.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+};
+
+const getTodayISO = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+};
+
+const inputInline = (extraStyle = {}) => ({
+  border: "none",
+  borderBottom: "1px solid #000",
+  outline: "none",
+  fontFamily: "serif",
+  fontSize: "14px",
+  background: "transparent",
+  color: "#000",
+  ...extraStyle,
+});
 
 const BonafideCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedClassId, setSelectedClassId] = useState("");
   const studentData = location.state || {};
-  const {
-    classes,
-    loading: classLoading,
-    error: classError,
-  } = useCourses();
   const [formData, setFormData] = useState({
     ...studentData,
     ...studentData.studentcertificatedetails,
+    purpose: (studentData.studentcertificatedetails?.purpose) || "Educational Loan Purpose",
   });
-  const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
+
+  const set = (field) => (e) => setFormData({ ...formData, [field]: e.target.value });
 
   useEffect(() => {
-    const documentType = localStorage.getItem("selectedDocumentType");
-    if (documentType === "BC") {
-      setIsFieldsDisabled(true);
-    }
+    const orgId = localStorage.getItem("orgId");
+    const branchId = localStorage.getItem("branchId");
+    const studentId = localStorage.getItem("selectedCertificateStudentId");
+    if (!orgId || !branchId || !studentId) return;
+    fetch(
+      `${ApiUrl.apiurl}StudentRegistrationApi/GetStudentDetailsBasedOnId/?organization_id=${orgId}&branch_id=${branchId}&student_id=${studentId}`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.data?.student_basic_details) {
+          const s = res.data.student_basic_details;
+          setFormData((prev) => ({
+            ...prev,
+            studentname: prev.studentname || s.student_name || "",
+            father_name: prev.father_name || s.father_name || "",
+            course_name: prev.course_name || s.course || "",
+            academic_year: prev.academic_year || s.academic_year || "",
+          }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
 
   const handleClose = () => {
-    const keysToRetain = [
-      "academicSessionId",
-      "branchId",
-      "nextAcademicSessionId",
-      "orgId",
-    ];
+    const keysToRetain = ["academicSessionId", "branchId", "nextAcademicSessionId", "orgId"];
     const retainedValues = keysToRetain.reduce((acc, key) => {
       const value = localStorage.getItem(key);
-      if (value !== null) {
-        acc[key] = value;
-      }
+      if (value !== null) acc[key] = value;
       return acc;
     }, {});
     localStorage.clear();
-    Object.entries(retainedValues).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
-    });
+    Object.entries(retainedValues).forEach(([key, value]) => localStorage.setItem(key, value));
     navigate("/admin/student-certificate");
-  };
-
-  const handleClassChange = (e) => {
-    const classId = e.target.value;
-    if (classId) {
-      localStorage.setItem("selectedStudentClassId", classId);
-    } else {
-      localStorage.removeItem("selectedStudentClassId");
-    }
-    setFormData((prev) => ({
-      ...prev,
-      classId,
-      sectionId: "",
-    }));
-    setSelectedClassId(classId);
   };
 
   const handleSave = async () => {
     try {
-      if (!formData.tc_applied_date) {
-        alert("Date of Application for Certificate is required.");
-        return;
-      }
-      if (!formData.tc_issued_date) {
-        alert("Date of Issue of Certificate is required.");
-        return;
-      }
-
       const student = localStorage.getItem("selectedCertificateStudentId");
       const session = localStorage.getItem("academicSessionId");
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
       const document_type = localStorage.getItem("selectedDocumentType");
-
-      const [prefix, ...rest] = (formData.document_no || "").split("/");
+      const docNo = formData.document_no || "";
+      const [prefix, ...rest] = docNo.split("/");
       const postfix = rest.join("/");
-
-      if (!prefix || !postfix) {
-        alert("Please provide a valid Document No. in the format 'prefix/postfix'.");
-        return;
-      }
-
-      const transferCertificateNo = formData.transfer_certificate_no || "";
+      const todayISO = getTodayISO();
 
       const payload = {
-        student,
-        session,
-        org_id,
-        branch_id,
-        document_type,
-        transfer_certificate_no_prefix: prefix,
-        transfer_certificate_no_postfix: postfix,
-        transfer_certificate_no: transferCertificateNo,
+        student, session, org_id, branch_id, document_type,
+        transfer_certificate_no_prefix: prefix || docNo,
+        transfer_certificate_no_postfix: postfix || "",
+        transfer_certificate_no: docNo,
         transfer_certificate_id: 0,
-        tc_applied_date: formData.tc_applied_date || null,
-        tc_issued_date: formData.tc_issued_date || null,
-        other_remarks: formData.other_remarks || "",
-        status: formData.status || "N",
-        class_last_studied: formData.classId || "",
-        cancelled_on: formData.cancelled_on || null,
-        cancelled_remarks: formData.cancelled_remarks || "",
-        cancelled_by: formData.cancelled_by || "",
-        // Bonafide specific fields
+        tc_applied_date: todayISO,
+        tc_issued_date: todayISO,
+        other_remarks: "",
+        status: "N",
+        cancelled_on: null,
+        cancelled_remarks: "",
+        cancelled_by: "",
         course_name: formData.course_name || "",
         academic_year: formData.academic_year || "",
         admission_quota: formData.admission_quota || "",
         current_year: formData.current_year || "",
+        year_from: formData.year_from || "",
+        year_to: formData.year_to || "",
         purpose: formData.purpose || "Educational Loan Purpose",
-        // Fee structure fields
-        course_fee: formData.course_fee || "",
-        hostel_fee: formData.hostel_fee || "",
-        miscellaneous_fee: formData.miscellaneous_fee || "",
-        grand_total: formData.grand_total || "",
+        course_fee_y1: formData.course_fee_y1 || "",
+        course_fee_y2: formData.course_fee_y2 || "",
+        course_fee_y3: formData.course_fee_y3 || "",
+        course_fee_y4: formData.course_fee_y4 || "",
+        hostel_fee_y1: formData.hostel_fee_y1 || "",
+        hostel_fee_y2: formData.hostel_fee_y2 || "",
+        hostel_fee_y3: formData.hostel_fee_y3 || "",
+        hostel_fee_y4: formData.hostel_fee_y4 || "",
+        misc_fee_y1: formData.misc_fee_y1 || "",
+        misc_fee_y2: formData.misc_fee_y2 || "",
+        misc_fee_y3: formData.misc_fee_y3 || "",
+        misc_fee_y4: formData.misc_fee_y4 || "",
+        grand_total_y1: formData.grand_total_y1 || "",
+        grand_total_y2: formData.grand_total_y2 || "",
+        grand_total_y3: formData.grand_total_y3 || "",
+        grand_total_y4: formData.grand_total_y4 || "",
       };
 
       const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -136,13 +138,11 @@ const BonafideCertificateForm = () => {
         const branchId = localStorage.getItem("branchId");
         const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
         const orgId = localStorage.getItem("orgId");
-
         localStorage.clear();
         localStorage.setItem("academicSessionId", academicSessionId);
         localStorage.setItem("branchId", branchId);
         localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
         localStorage.setItem("orgId", orgId);
-
         navigate("/admin/student-certificate");
       } else {
         const error = await response.json();
@@ -154,6 +154,15 @@ const BonafideCertificateForm = () => {
     }
   };
 
+  const feeInput = (field) => (
+    <input
+      type="text"
+      value={formData[field] || ""}
+      onChange={set(field)}
+      style={{ width: "100%", border: "none", outline: "none", textAlign: "center", fontSize: "13px", background: "transparent" }}
+    />
+  );
+
   return (
     <div className="container-fluid">
       <div className="row">
@@ -161,395 +170,141 @@ const BonafideCertificateForm = () => {
           <div className="card p-0">
             <div className="card-body">
               <h3 className="text-center mb-4">Bonafide Certificate</h3>
-              <div className="row mb-2 mt-3 mx-0">
+
+              {/* Action Buttons */}
+              <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary me-2"
-                    style={{ width: "150px" }}
-                    onClick={handleSave}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary me-2"
-                    style={{ width: "150px" }}
-                  >
+                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave}>Save</button>
+                  <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }}
+                    onClick={() => setFormData({ ...studentData, ...studentData.studentcertificatedetails, purpose: studentData.studentcertificatedetails?.purpose || "Educational Loan Purpose" })}>
                     Clear
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger me-2"
-                    style={{ width: "150px" }}
-                    onClick={handleClose}
-                  >
-                    Close
-                  </button>
+                  <button type="button" className="btn btn-danger me-2" style={{ width: "150px" }} onClick={handleClose}>Close</button>
                 </div>
               </div>
 
-              <form>
-                {/* Header Section */}
-                <div className="col-12 mb-3 mt-3 custom-section-box">
-                  <div className="row mb-3 mt-3">
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Ref. No.
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.document_no || ""}
-                        onChange={(e) => {
-                          const value = e.target.value.trim();
-                          const [prefix, ...rest] = value.split("/");
-                          const postfix = rest.join("/");
-                          setFormData({
-                            ...formData,
-                            document_no: value,
-                            transfer_certificate_no_prefix: prefix || "",
-                            transfer_certificate_no_postfix: postfix || "",
-                          });
-                        }}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        School Admission No.
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.school_admission_no || ""}
-                      />
-                    </div>
+              {/* Certificate Template */}
+              <div style={{ border: "2px solid #000", padding: "40px 50px", maxWidth: "820px", margin: "0 auto", backgroundColor: "#fff", fontFamily: "serif", fontSize: "14px" }}>
+
+                {/* Ref and Date row */}
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <strong>Ref: -</strong>
+                    <input type="text" value={formData.document_no || ""} onChange={set("document_no")}
+                      style={inputInline({ width: "160px" })} />
                   </div>
-                  <div className="row mb-3">
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Student Barcode
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.barcode || ""}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Cancellation Remarks
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.cancellationRemarks || ""}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center mt-3">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Cancelled On
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.cancelledOn || ""}
-                      />
-                    </div>
-                    <div className="col-md-6 d-flex align-items-center mt-3">
-                      <label className="form-label me-3" style={{ width: "200px" }}>
-                        Status
-                      </label>
-                      <select className="detail">
-                        <option value="">New</option>
-                      </select>
-                    </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <strong>Date:-</strong>
+                    <input type="text" disabled value={getTodayStr()}
+                      style={inputInline({ width: "130px" })} />
                   </div>
                 </div>
 
-                {/* Bonafide Certificate Fields - matching client format */}
-                <ul className="list-unstyled mb-3 mt-3 custom-section-box">
-                  <li className="mb-3 d-flex mt-3 align-items-center">
-                    <span className="col-sm-1 text-end">1.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Student Name
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.studentname || ""}
-                      />
-                    </div>
-                  </li>
+                {/* Title */}
+                <h2 style={{ textAlign: "center", fontWeight: "bold", textDecoration: "underline", fontSize: "22px", textTransform: "uppercase", marginBottom: "8px", letterSpacing: "1px" }}>
+                  BONAFIED CERTIFICATE
+                </h2>
+                <h5 style={{ textAlign: "center", fontWeight: "bold", textDecoration: "underline", fontSize: "16px", textTransform: "uppercase", marginBottom: "24px" }}>
+                  TO WHOM EVER IT MAY CONCERN
+                </h5>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">2.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Father's / Guardian's Name
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.father_name || ""}
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">3.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Mother's Name
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        disabled={isFieldsDisabled}
-                        defaultValue={formData.mother_name || ""}
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">4.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Course
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        value={formData.course_name || formData.coursename || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, course_name: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">5.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Academic Year
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        value={formData.academic_year || formData.academicyear || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, academic_year: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">6.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Admission Quota
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="e.g. Management / Government"
-                        value={formData.admission_quota || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, admission_quota: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">7.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Current Year of Study
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="e.g. 1st Year, 2nd Year"
-                        value={formData.current_year || ""}
-                        onChange={(e) =>
-                          setFormData({ ...formData, current_year: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
-
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">8.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Purpose of Certificate
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="e.g. Educational Loan Purpose"
-                        value={formData.purpose || "Educational Loan Purpose"}
-                        onChange={(e) =>
-                          setFormData({ ...formData, purpose: e.target.value })
-                        }
-                      />
-                    </div>
-                  </li>
-                </ul>
-
-                {/* Fees Structure Section */}
-                <div className="mb-3 mt-3 custom-section-box p-3">
-                  <h5 className="mb-3">Fees Structure</h5>
-                  <div className="table-responsive">
-                    <table className="table table-bordered">
-                      <thead>
-                        <tr>
-                          <th>SL NO</th>
-                          <th>PARTICULARS</th>
-                          <th>Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>1</td>
-                          <td>Course Fee</td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={formData.course_fee || ""}
-                              onChange={(e) =>
-                                setFormData({ ...formData, course_fee: e.target.value })
-                              }
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-                          <td>Hostel Fee</td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={formData.hostel_fee || ""}
-                              onChange={(e) =>
-                                setFormData({ ...formData, hostel_fee: e.target.value })
-                              }
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td>Miscellaneous Fee</td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={formData.miscellaneous_fee || ""}
-                              onChange={(e) =>
-                                setFormData({ ...formData, miscellaneous_fee: e.target.value })
-                              }
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>4</td>
-                          <td><strong>Grand Total</strong></td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={formData.grand_total || ""}
-                              onChange={(e) =>
-                                setFormData({ ...formData, grand_total: e.target.value })
-                              }
-                            />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                {/* Body paragraph */}
+                <div style={{ lineHeight: "2.2", textAlign: "justify" }}>
+                  <span>This is to certify that&nbsp;(&nbsp;</span>
+                  <input type="text" disabled value={formData.studentname || ""}
+                    style={inputInline({ minWidth: "180px", textAlign: "center" })} />
+                  <span>&nbsp;) is a Bonafide student of&nbsp;<strong>Sparsh College of Nursing and Allied Sciences, Kantabada, Bhubaneswar.</strong>
+                  &nbsp;She/he is taken admission in our College in&nbsp;</span>
+                  <input type="text" value={formData.course_name || formData.coursename || ""} onChange={set("course_name")}
+                    style={inputInline({ width: "140px", textAlign: "center" })} />
+                  <strong>course</strong>
+                  <span>&nbsp;for the academic Year&nbsp;</span>
+                  <input type="text" value={formData.academic_year || formData.academicyear || ""} onChange={set("academic_year")}
+                    style={inputInline({ width: "80px", textAlign: "center" })} />
+                  <span>&nbsp;under&nbsp;</span>
+                  <input type="text" value={formData.admission_quota || ""} onChange={set("admission_quota")}
+                    style={inputInline({ width: "120px", textAlign: "center" })} />
+                  <strong>Quota</strong>
+                  <span>. But now she/he is continuing her study in&nbsp;</span>
+                  <input type="text" value={formData.current_year || ""} onChange={set("current_year")}
+                    style={inputInline({ width: "80px", textAlign: "center" })} />
+                  <span>year&nbsp;(20</span>
+                  <input type="text" value={formData.year_from || ""} onChange={set("year_from")}
+                    style={inputInline({ width: "40px", textAlign: "center" })} />
+                  <span>-20</span>
+                  <input type="text" value={formData.year_to || ""} onChange={set("year_to")}
+                    style={inputInline({ width: "40px", textAlign: "center" })} />
+                  <span>) successfully. We are hereby inform you that the following fees structure is applicable for the current academic year. This certificate is issued to this student on her request for the purpose of&nbsp;</span>
+                  <input type="text" value={formData.purpose || "Educational Loan Purpose"} onChange={set("purpose")}
+                    style={inputInline({ width: "220px", textAlign: "center", fontWeight: "bold" })} />
+                  <strong>.</strong>
                 </div>
 
-                {/* Dates and Remarks */}
-                <ul className="list-unstyled mb-3 mt-3 custom-section-box">
-                  <li className="mb-3 d-flex mt-3 align-items-center">
-                    <span className="col-sm-1 text-end">9.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Date of Application for Certificate
-                      <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="date"
-                        className="form-control detail"
-                        value={formData.tc_applied_date || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            tc_applied_date: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
+                {/* Fees Structure */}
+                <div style={{ marginTop: "28px", marginBottom: "28px" }}>
+                  <p style={{ textAlign: "center", fontWeight: "bold", textDecoration: "underline", marginBottom: "8px" }}>Fees Structure</p>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                    <thead>
+                      <tr>
+                        <th rowSpan={2} style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>SL NO</th>
+                        <th rowSpan={2} style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>PARTICULARS</th>
+                        <th colSpan={4} style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>B.SC NURSING</th>
+                      </tr>
+                      <tr>
+                        <th style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>First</th>
+                        <th style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>Second</th>
+                        <th style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>Third</th>
+                        <th style={{ border: "1px solid #000", padding: "6px", textAlign: "center" }}>Fourth Year</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { sl: 1, label: "Course Fee",        y1: "course_fee_y1", y2: "course_fee_y2", y3: "course_fee_y3", y4: "course_fee_y4" },
+                        { sl: 2, label: "Hostel Fee",        y1: "hostel_fee_y1", y2: "hostel_fee_y2", y3: "hostel_fee_y3", y4: "hostel_fee_y4" },
+                        { sl: 3, label: "Miscellaneous fee", y1: "misc_fee_y1",   y2: "misc_fee_y2",   y3: "misc_fee_y3",   y4: "misc_fee_y4"   },
+                        { sl: 4, label: "Grand Total",       y1: "grand_total_y1", y2: "grand_total_y2", y3: "grand_total_y3", y4: "grand_total_y4" },
+                      ].map((row) => (
+                        <tr key={row.sl}>
+                          <td style={{ border: "1px solid #000", padding: "4px", textAlign: "center" }}>{row.sl}</td>
+                          <td style={{ border: "1px solid #000", padding: "4px", textAlign: "center" }}>{row.label}</td>
+                          <td style={{ border: "1px solid #000", padding: "4px" }}>{feeInput(row.y1)}</td>
+                          <td style={{ border: "1px solid #000", padding: "4px" }}>{feeInput(row.y2)}</td>
+                          <td style={{ border: "1px solid #000", padding: "4px" }}>{feeInput(row.y3)}</td>
+                          <td style={{ border: "1px solid #000", padding: "4px" }}>{feeInput(row.y4)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">10.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Date of Issue of Certificate
-                      <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="date"
-                        className="form-control detail"
-                        value={formData.tc_issued_date || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            tc_issued_date: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
+                {/* Bank Details */}
+                <div style={{ marginTop: "20px" }}>
+                  <p style={{ textAlign: "center", fontWeight: "bold", textDecoration: "underline", marginBottom: "10px" }}>College Bank Account Details</p>
+                  <table style={{ fontSize: "13px", borderSpacing: "0 4px" }}>
+                    <tbody>
+                      {[
+                        ["ACCOUNT NAME",   "SPARSH COLLEGE OF NURSING & ALLIED SCIENCES"],
+                        ["ACCOUNT NUMBER", "242305002528"],
+                        ["BANK",           "ICICI BANK"],
+                        ["BRANCH NAME",    "SAHEED NAGAR, BHUBANESWAR"],
+                        ["IFSC CODE",      "ICIC0002423"],
+                      ].map(([label, value]) => (
+                        <tr key={label}>
+                          <td style={{ fontWeight: "bold", paddingRight: "12px", whiteSpace: "nowrap" }}>{label}</td>
+                          <td style={{ paddingRight: "8px", fontWeight: "bold" }}>:</td>
+                          <td style={{ fontWeight: "bold" }}>{value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-                  <li className="mb-3 d-flex align-items-center">
-                    <span className="col-sm-1 text-end">11.</span>
-                    <label className="col-sm-3 col-form-label ms-2">
-                      Remarks
-                    </label>
-                    <div className="col-sm-6">
-                      <input
-                        type="text"
-                        className="form-control detail"
-                        placeholder="Enter remarks"
-                        style={{ resize: "both", overflow: "auto" }}
-                        rows="3"
-                        value={formData.other_remarks || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            other_remarks: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </li>
-                </ul>
-              </form>
+                {/* Principal */}
+                <div style={{ textAlign: "right", marginTop: "60px", fontStyle: "italic", fontSize: "14px" }}>
+                  Principal
+                </div>
+
+              </div>
             </div>
           </div>
         </div>

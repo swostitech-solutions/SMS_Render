@@ -97,9 +97,33 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
       const orgId = sessionStorage.getItem("organization_id");
       const brId = sessionStorage.getItem("branch_id");
 
-      const response = await fetch(
-        `${ApiUrl.apiurl}StudentCourse/StudentCourseRecordFilter/?organization_id=${orgId}&branch_id=${brId}`
-      );
+      let url = `${ApiUrl.apiurl}StudentCourse/StudentCourseRecordFilter/?organization_id=${orgId}&branch_id=${brId}`;
+
+      // Dynamically append text filters
+      if (filters.studentName)
+        url += `&student_name=${encodeURIComponent(filters.studentName)}`;
+      if (filters.admissionNo)
+        url += `&admission_no=${encodeURIComponent(filters.admissionNo)}`;
+      if (filters.barcode)
+        url += `&barcode=${encodeURIComponent(filters.barcode)}`;
+      if (filters.fatherName)
+        url += `&fatherName=${encodeURIComponent(filters.fatherName)}`;
+      if (filters.motherName)
+        url += `&motherName=${encodeURIComponent(filters.motherName)}`;
+      if (filters.schoolAdmissionNo)
+        url += `&college_admission_no=${encodeURIComponent(filters.schoolAdmissionNo)}`;
+
+      // Dynamically append dropdown filters
+      if (selectedBatch) url += `&batch_id=${selectedBatch}`;
+      if (selectedCourse) url += `&course_id=${selectedCourse}`;
+      if (selectedDepartment) url += `&department_id=${selectedDepartment}`;
+      if (selectedAcademicYear) url += `&academic_year_id=${selectedAcademicYear}`;
+      if (selectedSemester) url += `&semester_id=${selectedSemester}`;
+      if (selectedSection) url += `&section_id=${selectedSection}`;
+
+      console.log("🔍 Certificate Search URL:", url);
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error("Error fetching student record");
@@ -158,6 +182,15 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
       motherName: "",
       schoolAdmissionNo: "",
     });
+
+    // Reset dropdown selections
+    setSelectedBatch(null);
+    setSelectedCourse(null);
+    setSelectedDepartment(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+
     setStudentData(fullStudentData);
   };
 

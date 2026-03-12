@@ -38,6 +38,7 @@ const AdmAttendanceEntry = () => {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState(null);
+  const [selectedStudentData, setSelectedStudentData] = useState(null);
 
   const [showStudentSelectionModal, setShowStudentSelectionModal] =
     useState(false);
@@ -265,9 +266,43 @@ const AdmAttendanceEntry = () => {
     const studentId = localStorage.getItem("selectedCertificateStudentId");
 
     try {
-      const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}&document_type=${documentType}&studentId=${studentId}`;
+      const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&organization_id=${orgId}&branch_id=${branchId}&document_type=${documentType}&student_id=${studentId}`;
 
       const response = await fetch(apiUrl, { method: "GET" });
+
+      if (response.status === 204) {
+        // No certificate exists yet. Proceed to create a new one with basic student data.
+        let stateData = {};
+        if (selectedStudentData) {
+            stateData = {
+                student_id: selectedStudentData.id,
+                studentname: `${selectedStudentData.first_name || ""} ${selectedStudentData.middle_name || ""} ${selectedStudentData.last_name || ""}`.trim().replace(/\s+/g, " "),
+                father_name: selectedStudentData.father_name,
+                mother_name: selectedStudentData.mother_name,
+                school_admission_no: selectedStudentData.admission_no || selectedStudentData.school_admission_no,
+                registration_no: selectedStudentData.rollno || selectedStudentData.registration_no,
+                course: selectedStudentData.classname,
+                section: selectedStudentData.sectionname,
+                barcode: selectedStudentData.barcode,
+            };
+        }
+
+        switch (documentType) {
+          case "TC":
+            navigate("/transfercertificateform", { state: stateData });
+            break;
+          case "CC":
+            navigate("/charactercertificate", { state: stateData });
+            break;
+          case "BC":
+            navigate("/bonafidecertificate", { state: stateData });
+            break;
+          default:
+            alert("Invalid document type.");
+            break;
+        }
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to fetch student details.");
@@ -388,7 +423,7 @@ const AdmAttendanceEntry = () => {
       "transfer_certificate_id"
     );
 
-    const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}&document_type=${documentType}&studentId=${studentId}&transfer_certificate_id=${transferCertificateId}`;
+    const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&organization_id=${orgId}&branch_id=${branchId}&document_type=${documentType}&student_id=${studentId}&transfer_certificate_id=${transferCertificateId}`;
 
     try {
       const response = await fetch(apiUrl);
@@ -646,6 +681,7 @@ const AdmAttendanceEntry = () => {
                         handleClose={handleModalClose}
                         onSelectStudent={(student) => {
                           const studentDetails = student.studentBasicDetails;
+                          setSelectedStudentData(studentDetails);
 
                           admissionNoRef.current.value =
                             studentDetails.admission_no;
