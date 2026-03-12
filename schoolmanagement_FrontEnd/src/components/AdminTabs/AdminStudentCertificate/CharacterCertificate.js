@@ -38,6 +38,9 @@ const ConductCertificate = () => {
   });
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
   const apiStudentData = useRef({});
+  
+  // Fields that are fetched from student registration and should be disabled
+  const disabledFields = new Set(["studentname", "father_name"]);
 
   useEffect(() => {
     const documentType = localStorage.getItem("selectedDocumentType");
@@ -73,6 +76,41 @@ const ConductCertificate = () => {
       })
       .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
+
+  // Auto-generate unique Ref No for new certificates
+  useEffect(() => {
+    if (isEditMode || formData.document_no) return; // Skip if editing or already generated
+    const orgId = localStorage.getItem("orgId");
+    const branchId = localStorage.getItem("branchId");
+    if (!orgId || !branchId) return;
+
+    fetch(
+      `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}&document_type=CC`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          // Extract all CC certificate numbers
+          const ccCerts = res.data.filter((c) => c.document_type === "CC");
+          let nextNum = 1;
+          
+          if (ccCerts.length > 0) {
+            // Sort by ID descending and get the latest
+            const latest = ccCerts.sort((a, b) => (b.character_certificate_id || 0) - (a.character_certificate_id || 0))[0];
+            if (latest.document_no) {
+              // Extract the number from format: ORG001/Sparsh/2025-2028/cc/1
+              const match = latest.document_no.match(/\/(\d+)$/);
+              nextNum = match ? parseInt(match[1]) + 1 : ccCerts.length + 1;
+            }
+          }
+
+          // Generate new Ref No  
+          const refNo = `ORG001/Sparsh/2025-2028/cc/${nextNum}`;
+          setFormData((prev) => ({ ...prev, document_no: refNo }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch certificates for Ref No generation:", err));
+  }, [isEditMode]);
 
   const handleClose = () => {
     const keysToRetain = [
@@ -330,10 +368,8 @@ const ConductCertificate = () => {
                     <span style={{ fontWeight: "bold", fontSize: "14px", whiteSpace: "nowrap" }}>REF.NO</span>
                     <input
                       type="text"
+                      disabled
                       value={formData.document_no || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, document_no: e.target.value }))
-                      }
                       style={{
                         border: "none",
                         borderBottom: "1px solid #000",
@@ -406,10 +442,8 @@ const ConductCertificate = () => {
                   <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
                     <input
                       type="text"
+                      disabled
                       value={formData.father_name || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, father_name: e.target.value }))
-                      }
                       style={{
                         border: "none",
                         borderBottom: "1px solid #000",

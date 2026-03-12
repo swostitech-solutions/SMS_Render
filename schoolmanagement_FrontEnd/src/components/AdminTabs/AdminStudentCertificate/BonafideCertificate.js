@@ -53,6 +53,9 @@ const BonafideCertificateForm = () => {
 
   const set = (field) => (e) => setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   const [errors, setErrors] = useState({});
+  
+  // Fields that are fetched from student registration and should be disabled
+  const disabledFields = new Set(["studentname", "course_name", "academic_year", "current_year", "admission_quota", "session"]);
 
   const validateFields = () => {
     const newErrors = {};
@@ -110,6 +113,41 @@ const BonafideCertificateForm = () => {
       })
       .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
+
+  // Auto-generate unique Ref No for new certificates
+  useEffect(() => {
+    if (isEditMode || formData.document_no) return; // Skip if editing or already generated
+    const orgId = localStorage.getItem("orgId");
+    const branchId = localStorage.getItem("branchId");
+    if (!orgId || !branchId) return;
+
+    fetch(
+      `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}&document_type=BC`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          // Extract all BC certificate numbers
+          const bcCerts = res.data.filter((c) => c.document_type === "BC");
+          let nextNum = 1;
+          
+          if (bcCerts.length > 0) {
+            // Sort by ID descending and get the latest
+            const latest = bcCerts.sort((a, b) => (b.bonafide_certificate_id || 0) - (a.bonafide_certificate_id || 0))[0];
+            if (latest.document_no) {
+              // Extract the number from format: ORG001/Sparsh/2025-2028/bc/1
+              const match = latest.document_no.match(/\/(\d+)$/);
+              nextNum = match ? parseInt(match[1]) + 1 : bcCerts.length + 1;
+            }
+          }
+
+          // Generate new Ref No
+          const refNo = `ORG001/Sparsh/${formData.session || "2025-2028"}/bc/${nextNum}`;
+          setFormData((prev) => ({ ...prev, document_no: refNo }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch certificates for Ref No generation:", err));
+  }, [isEditMode, formData.session]);
 
   const handleClose = () => {
     const keysToRetain = ["academicSessionId", "branchId", "nextAcademicSessionId", "orgId"];
@@ -323,7 +361,7 @@ const BonafideCertificateForm = () => {
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
                     <strong style={{ marginTop: "2px" }}>Ref: -</strong>
                     <div>
-                      <input type="text" value={formData.document_no || ""} onChange={set("document_no")}
+                      <input type="text" disabled value={formData.document_no || ""}
                         style={inputInline({ width: "160px" })} />
                       {errors.document_no && <small className="text-danger" style={{ display: "block" }}>{errors.document_no}</small>}
                     </div>
@@ -351,33 +389,33 @@ const BonafideCertificateForm = () => {
                   <span>&nbsp;) is a Bonafide student of&nbsp;<strong>Sparsh College of Nursing and Allied Sciences, Kantabada, Bhubaneswar.</strong>
                   &nbsp;She/he is taken admission in our College in&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" value={formData.course_name || formData.coursename || ""} onChange={set("course_name")}
+                    <input type="text" disabled value={formData.course_name || formData.coursename || ""}
                       style={inputInline({ width: "140px", textAlign: "center" })} />
                     {errors.course_name && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.course_name}</small>}
                   </span>
                   <strong>course</strong>
                   <span>&nbsp;for the academic Year&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" value={formData.academic_year || formData.academicyear || ""} onChange={set("academic_year")}
+                    <input type="text" disabled value={formData.academic_year || formData.academicyear || ""}
                       style={inputInline({ width: "80px", textAlign: "center" })} />
                     {errors.academic_year && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.academic_year}</small>}
                   </span>
                   <span>&nbsp;under&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" value={formData.admission_quota || ""} onChange={set("admission_quota")}
+                    <input type="text" disabled value={formData.admission_quota || ""}
                       style={inputInline({ width: "120px", textAlign: "center" })} />
                     {errors.admission_quota && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.admission_quota}</small>}
                   </span>
                   <strong>Quota</strong>
                   <span>. But now she/he is continuing her study in&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" value={formData.current_year || ""} onChange={set("current_year")}
+                    <input type="text" disabled value={formData.current_year || ""}
                       style={inputInline({ width: "100px", textAlign: "center" })} />
                     {errors.current_year && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.current_year}</small>}
                   </span>
                   <span>&nbsp;year&nbsp;(&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" value={formData.session || formData.academic_year || ""} onChange={set("session")}
+                    <input type="text" disabled value={formData.session || formData.academic_year || ""}
                       style={inputInline({ width: "100px", textAlign: "center" })} />
                     {errors.session && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.session}</small>}
                   </span>

@@ -61,6 +61,9 @@ const TransferCertificateForm = () => {
   const set = (field) => (e) =>
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
 
+  // Fields that are fetched from student registration and should be disabled
+  const disabledFields = new Set(["studentname"]);
+
   useEffect(() => {
     if (isEditMode) return; // In edit mode, data is already pre-filled from certificate
     const studentId = localStorage.getItem("selectedCertificateStudentId");
@@ -97,6 +100,42 @@ const TransferCertificateForm = () => {
       })
       .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
+
+  // Auto-generate unique Ref No for new certificates
+  useEffect(() => {
+    if (isEditMode || formData.document_no) return; // Skip if editing or already generated
+    const orgId = localStorage.getItem("orgId");
+    const branchId = localStorage.getItem("branchId");
+    if (!orgId || !branchId) return;
+
+    fetch(
+      `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}&document_type=TC`
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          // Extract all TC certificate numbers
+          const tcCerts = res.data.filter((c) => c.document_type === "TC");
+          let nextNum = 1;
+          
+          if (tcCerts.length > 0) {
+            // Sort by ID descending and get the latest
+            const latest = tcCerts.sort((a, b) => (b.transfer_certificate_id || 0) - (a.transfer_certificate_id || 0))[0];
+            if (latest.document_no) {
+              // Extract the number from format: ORG001/Sparsh/2025-2028/tc/1
+              const match = latest.document_no.match(/\/(\d+)$/);
+              nextNum = match ? parseInt(match[1]) + 1 : tcCerts.length + 1;
+            }
+          }
+
+          // Generate new Ref No - use batch code from formData or default
+          const batchCode = formData.batch || "2025-2028";
+          const refNo = `ORG001/Sparsh/${batchCode}/tc/${nextNum}`;
+          setFormData((prev) => ({ ...prev, document_no: refNo }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch certificates for Ref No generation:", err));
+  }, [isEditMode, formData.batch]);
 
   const handleClose = () => {
     const keysToRetain = ["academicSessionId", "branchId", "nextAcademicSessionId", "orgId"];
@@ -297,7 +336,7 @@ const TransferCertificateForm = () => {
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <strong>Ref No –</strong>
-                    <input type="text" value={formData.document_no || ""} onChange={set("document_no")}
+                    <input type="text" disabled value={formData.document_no || ""}
                       style={il({ width: "160px" })} />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
