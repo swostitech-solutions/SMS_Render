@@ -36,12 +36,42 @@ const BonafideCertificateForm = () => {
     purpose: (studentData.studentcertificatedetails?.purpose) || "Educational Loan Purpose",
   });
 
-  const set = (field) => (e) => setFormData({ ...formData, [field]: e.target.value });
+  const set = (field) => (e) => setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  const [errors, setErrors] = useState({});
+
+  const validateFields = () => {
+    const newErrors = {};
+    if (!formData.document_no?.trim()) newErrors.document_no = "Ref No is required";
+    if (!formData.course_name?.trim()) newErrors.course_name = "Course is required";
+    if (!formData.academic_year?.trim()) newErrors.academic_year = "Academic year is required";
+    if (!formData.admission_quota?.trim()) newErrors.admission_quota = "Quota is required";
+    if (!formData.current_year?.trim()) newErrors.current_year = "Current year is required";
+    if (!formData.session?.trim()) newErrors.session = "Session is required";
+    if (!formData.purpose?.trim()) newErrors.purpose = "Purpose is required";
+    if (!formData.course_fee_y1?.trim()) newErrors.course_fee_y1 = "Required";
+    if (!formData.course_fee_y2?.trim()) newErrors.course_fee_y2 = "Required";
+    if (!formData.course_fee_y3?.trim()) newErrors.course_fee_y3 = "Required";
+    if (!formData.course_fee_y4?.trim()) newErrors.course_fee_y4 = "Required";
+    if (!formData.hostel_fee_y1?.trim()) newErrors.hostel_fee_y1 = "Required";
+    if (!formData.hostel_fee_y2?.trim()) newErrors.hostel_fee_y2 = "Required";
+    if (!formData.hostel_fee_y3?.trim()) newErrors.hostel_fee_y3 = "Required";
+    if (!formData.hostel_fee_y4?.trim()) newErrors.hostel_fee_y4 = "Required";
+    if (!formData.misc_fee_y1?.trim()) newErrors.misc_fee_y1 = "Required";
+    if (!formData.misc_fee_y2?.trim()) newErrors.misc_fee_y2 = "Required";
+    if (!formData.misc_fee_y3?.trim()) newErrors.misc_fee_y3 = "Required";
+    if (!formData.misc_fee_y4?.trim()) newErrors.misc_fee_y4 = "Required";
+    if (!formData.grand_total_y1?.trim()) newErrors.grand_total_y1 = "Required";
+    if (!formData.grand_total_y2?.trim()) newErrors.grand_total_y2 = "Required";
+    if (!formData.grand_total_y3?.trim()) newErrors.grand_total_y3 = "Required";
+    if (!formData.grand_total_y4?.trim()) newErrors.grand_total_y4 = "Required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   useEffect(() => {
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
-    const studentId = localStorage.getItem("selectedCertificateStudentId");
+    const studentId = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id;
     if (!orgId || !branchId || !studentId) return;
     fetch(
       `${ApiUrl.apiurl}StudentRegistrationApi/GetStudentDetailsBasedOnId/?organization_id=${orgId}&branch_id=${branchId}&student_id=${studentId}`
@@ -50,12 +80,15 @@ const BonafideCertificateForm = () => {
       .then((res) => {
         if (res?.data?.student_basic_details) {
           const s = res.data.student_basic_details;
+          const fullName = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
           setFormData((prev) => ({
             ...prev,
-            studentname: prev.studentname || s.student_name || "",
-            father_name: prev.father_name || s.father_name || "",
-            course_name: prev.course_name || s.course || "",
-            academic_year: prev.academic_year || s.academic_year || "",
+            studentname: fullName || s.student_name || "",
+            father_name: s.father_name || prev.father_name || "",
+            course_name: s.course_name || prev.course_name || "",
+            academic_year: s.academic_year || prev.academic_year || "",
+            current_year: s.academic_year || prev.current_year || "",
+            session: s.batch_name || prev.session || "",
           }));
         }
       })
@@ -75,12 +108,13 @@ const BonafideCertificateForm = () => {
   };
 
   const handleSave = async () => {
+    if (!validateFields()) return;
     try {
-      const student = localStorage.getItem("selectedCertificateStudentId");
+      const student = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id || null;
       const session = localStorage.getItem("academicSessionId");
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
-      const document_type = localStorage.getItem("selectedDocumentType");
+      const document_type = localStorage.getItem("selectedDocumentType") || "BC";
       const docNo = formData.document_no || "";
       const [prefix, ...rest] = docNo.split("/");
       const postfix = rest.join("/");
@@ -103,8 +137,7 @@ const BonafideCertificateForm = () => {
         academic_year: formData.academic_year || "",
         admission_quota: formData.admission_quota || "",
         current_year: formData.current_year || "",
-        year_from: formData.year_from || "",
-        year_to: formData.year_to || "",
+        session: formData.session || formData.academic_year || "",
         purpose: formData.purpose || "Educational Loan Purpose",
         course_fee_y1: formData.course_fee_y1 || "",
         course_fee_y2: formData.course_fee_y2 || "",
@@ -155,12 +188,15 @@ const BonafideCertificateForm = () => {
   };
 
   const feeInput = (field) => (
-    <input
-      type="text"
-      value={formData[field] || ""}
-      onChange={set(field)}
-      style={{ width: "100%", border: "none", outline: "none", textAlign: "center", fontSize: "13px", background: "transparent" }}
-    />
+    <div>
+      <input
+        type="text"
+        value={formData[field] || ""}
+        onChange={set(field)}
+        style={{ width: "100%", border: "none", outline: "none", textAlign: "center", fontSize: "13px", background: "transparent" }}
+      />
+      {errors[field] && <small className="text-danger" style={{ display: "block", fontSize: "10px", textAlign: "center" }}>{errors[field]}</small>}
+    </div>
   );
 
   return (
@@ -188,10 +224,13 @@ const BonafideCertificateForm = () => {
 
                 {/* Ref and Date row */}
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <strong>Ref: -</strong>
-                    <input type="text" value={formData.document_no || ""} onChange={set("document_no")}
-                      style={inputInline({ width: "160px" })} />
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                    <strong style={{ marginTop: "2px" }}>Ref: -</strong>
+                    <div>
+                      <input type="text" value={formData.document_no || ""} onChange={set("document_no")}
+                        style={inputInline({ width: "160px" })} />
+                      {errors.document_no && <small className="text-danger" style={{ display: "block" }}>{errors.document_no}</small>}
+                    </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <strong>Date:-</strong>
@@ -215,28 +254,43 @@ const BonafideCertificateForm = () => {
                     style={inputInline({ minWidth: "180px", textAlign: "center" })} />
                   <span>&nbsp;) is a Bonafide student of&nbsp;<strong>Sparsh College of Nursing and Allied Sciences, Kantabada, Bhubaneswar.</strong>
                   &nbsp;She/he is taken admission in our College in&nbsp;</span>
-                  <input type="text" value={formData.course_name || formData.coursename || ""} onChange={set("course_name")}
-                    style={inputInline({ width: "140px", textAlign: "center" })} />
+                  <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                    <input type="text" value={formData.course_name || formData.coursename || ""} onChange={set("course_name")}
+                      style={inputInline({ width: "140px", textAlign: "center" })} />
+                    {errors.course_name && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.course_name}</small>}
+                  </span>
                   <strong>course</strong>
                   <span>&nbsp;for the academic Year&nbsp;</span>
-                  <input type="text" value={formData.academic_year || formData.academicyear || ""} onChange={set("academic_year")}
-                    style={inputInline({ width: "80px", textAlign: "center" })} />
+                  <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                    <input type="text" value={formData.academic_year || formData.academicyear || ""} onChange={set("academic_year")}
+                      style={inputInline({ width: "80px", textAlign: "center" })} />
+                    {errors.academic_year && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.academic_year}</small>}
+                  </span>
                   <span>&nbsp;under&nbsp;</span>
-                  <input type="text" value={formData.admission_quota || ""} onChange={set("admission_quota")}
-                    style={inputInline({ width: "120px", textAlign: "center" })} />
+                  <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                    <input type="text" value={formData.admission_quota || ""} onChange={set("admission_quota")}
+                      style={inputInline({ width: "120px", textAlign: "center" })} />
+                    {errors.admission_quota && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.admission_quota}</small>}
+                  </span>
                   <strong>Quota</strong>
                   <span>. But now she/he is continuing her study in&nbsp;</span>
-                  <input type="text" value={formData.current_year || ""} onChange={set("current_year")}
-                    style={inputInline({ width: "80px", textAlign: "center" })} />
-                  <span>year&nbsp;(20</span>
-                  <input type="text" value={formData.year_from || ""} onChange={set("year_from")}
-                    style={inputInline({ width: "40px", textAlign: "center" })} />
-                  <span>-20</span>
-                  <input type="text" value={formData.year_to || ""} onChange={set("year_to")}
-                    style={inputInline({ width: "40px", textAlign: "center" })} />
-                  <span>) successfully. We are hereby inform you that the following fees structure is applicable for the current academic year. This certificate is issued to this student on her request for the purpose of&nbsp;</span>
-                  <input type="text" value={formData.purpose || "Educational Loan Purpose"} onChange={set("purpose")}
-                    style={inputInline({ width: "220px", textAlign: "center", fontWeight: "bold" })} />
+                  <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                    <input type="text" value={formData.current_year || ""} onChange={set("current_year")}
+                      style={inputInline({ width: "100px", textAlign: "center" })} />
+                    {errors.current_year && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.current_year}</small>}
+                  </span>
+                  <span>&nbsp;year&nbsp;(&nbsp;</span>
+                  <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                    <input type="text" value={formData.session || formData.academic_year || ""} onChange={set("session")}
+                      style={inputInline({ width: "100px", textAlign: "center" })} />
+                    {errors.session && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.session}</small>}
+                  </span>
+                  <span>&nbsp;) successfully. We are hereby inform you that the following fees structure is applicable for the current academic year. This certificate is issued to this student on her request for the purpose of&nbsp;</span>
+                  <span style={{ display: "inline-block", verticalAlign: "top" }}>
+                    <input type="text" value={formData.purpose || "Educational Loan Purpose"} onChange={set("purpose")}
+                      style={inputInline({ width: "220px", textAlign: "center", fontWeight: "bold" })} />
+                    {errors.purpose && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.purpose}</small>}
+                  </span>
                   <strong>.</strong>
                 </div>
 

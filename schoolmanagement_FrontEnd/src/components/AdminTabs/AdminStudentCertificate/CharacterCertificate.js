@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 
@@ -24,6 +24,7 @@ const ConductCertificate = () => {
     ...studentData.studentcertificatedetails,
   });
   const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
+  const apiStudentData = useRef({});
 
   useEffect(() => {
     const documentType = localStorage.getItem("selectedDocumentType");
@@ -35,7 +36,7 @@ const ConductCertificate = () => {
   useEffect(() => {
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
-    const studentId = localStorage.getItem("selectedCertificateStudentId");
+    const studentId = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id;
     if (!orgId || !branchId || !studentId) return;
     fetch(
       `${ApiUrl.apiurl}StudentRegistrationApi/GetStudentDetailsBasedOnId/?organization_id=${orgId}&branch_id=${branchId}&student_id=${studentId}`
@@ -44,10 +45,15 @@ const ConductCertificate = () => {
       .then((res) => {
         if (res?.data?.student_basic_details) {
           const s = res.data.student_basic_details;
+          const fullName = [s.first_name, s.middle_name, s.last_name].filter(Boolean).join(" ");
+          const fetched = {
+            studentname: fullName || s.student_name || "",
+            father_name: s.father_name || "",
+          };
+          apiStudentData.current = fetched;
           setFormData((prev) => ({
             ...prev,
-            studentname: prev.studentname || s.student_name || "",
-            father_name: prev.father_name || s.father_name || "",
+            ...fetched,
           }));
         }
       })
@@ -77,11 +83,11 @@ const ConductCertificate = () => {
 
   const handleSave = async () => {
     try {
-      const student = localStorage.getItem("selectedCertificateStudentId");
+      const student = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id || null;
       const session = localStorage.getItem("academicSessionId");
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
-      const document_type = localStorage.getItem("selectedDocumentType");
+      const document_type = localStorage.getItem("selectedDocumentType") || "CC";
 
       const docNo = formData.document_no || "";
       const [prefix, ...rest] = docNo.split("/");
@@ -171,10 +177,13 @@ const ConductCertificate = () => {
                     className="btn btn-secondary me-2"
                     style={{ width: "150px" }}
                     onClick={() =>
-                      setFormData({
-                        ...studentData,
-                        ...studentData.studentcertificatedetails,
-                      })
+                      setFormData((prev) => ({
+                        ...prev,
+                        ...apiStudentData.current,
+                        document_no: "",
+                        from_month: "",
+                        to_month: "",
+                      }))
                     }
                   >
                     Clear
@@ -243,7 +252,7 @@ const ConductCertificate = () => {
                       type="text"
                       value={formData.document_no || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, document_no: e.target.value })
+                        setFormData((prev) => ({ ...prev, document_no: e.target.value }))
                       }
                       style={{
                         border: "none",
@@ -319,7 +328,7 @@ const ConductCertificate = () => {
                       type="text"
                       value={formData.father_name || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, father_name: e.target.value })
+                        setFormData((prev) => ({ ...prev, father_name: e.target.value }))
                       }
                       style={{
                         border: "none",
@@ -343,7 +352,7 @@ const ConductCertificate = () => {
                       type="text"
                       value={formData.from_month || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, from_month: e.target.value })
+                        setFormData((prev) => ({ ...prev, from_month: e.target.value }))
                       }
                       style={{
                         border: "none",
@@ -363,7 +372,7 @@ const ConductCertificate = () => {
                       type="text"
                       value={formData.to_month || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, to_month: e.target.value })
+                        setFormData((prev) => ({ ...prev, to_month: e.target.value }))
                       }
                       style={{
                         border: "none",

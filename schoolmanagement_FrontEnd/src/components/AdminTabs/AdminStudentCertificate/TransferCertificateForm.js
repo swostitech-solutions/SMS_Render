@@ -23,6 +23,15 @@ const il = (extra = {}) => ({
   ...extra,
 });
 
+const Row = ({ label, children }) => (
+  <tr>
+    <td style={{ paddingRight: "6px", verticalAlign: "top", paddingTop: "6px" }}>•</td>
+    <td style={{ width: "260px", verticalAlign: "top", paddingTop: "6px", fontFamily: "serif", fontSize: "14px" }}>{label}</td>
+    <td style={{ paddingRight: "8px", paddingTop: "6px", verticalAlign: "top" }}>:</td>
+    <td style={{ verticalAlign: "top", paddingTop: "6px" }}>{children}</td>
+  </tr>
+);
+
 const TransferCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -143,15 +152,6 @@ const TransferCertificateForm = () => {
       alert("An error occurred while saving the Transfer Certificate.");
     }
   };
-
-  const Row = ({ label, children }) => (
-    <tr>
-      <td style={{ paddingRight: "6px", verticalAlign: "top", paddingTop: "6px" }}>•</td>
-      <td style={{ width: "260px", verticalAlign: "top", paddingTop: "6px", fontFamily: "serif", fontSize: "14px" }}>{label}</td>
-      <td style={{ paddingRight: "8px", paddingTop: "6px", verticalAlign: "top" }}>:</td>
-      <td style={{ verticalAlign: "top", paddingTop: "6px" }}>{children}</td>
-    </tr>
-  );
 
   const textInput = (field) => (
     <input

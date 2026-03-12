@@ -185,8 +185,8 @@ const AdmAttendanceEntry = () => {
 
         const result = await response.json();
 
-        if (result.message === "success") {
-          setCertificates(result.data);
+        if (Array.isArray(result)) {
+          setCertificates(result);
           setMessage("");
         } else {
           setCertificates([]);
@@ -386,8 +386,8 @@ const AdmAttendanceEntry = () => {
       })
       .then((data) => {
         if (!data) return;
-        if (data.message === "success") {
-          setCertificates(data.data);
+        if (Array.isArray(data)) {
+          setCertificates(data);
           setMessage("");
         } else {
           setCertificates([]);
@@ -407,18 +407,19 @@ const AdmAttendanceEntry = () => {
   }, []);
 
   const handleButtonClick = async (certificate, action) => {
-    localStorage.setItem("document_type", certificate.documentType);
-    localStorage.setItem("studentId", certificate.studentId);
+    localStorage.setItem("document_type", certificate.document_type);
+    localStorage.setItem("selectedCertificateStudentId", certificate.student_id);
+    localStorage.setItem("selectedDocumentType", certificate.document_type);
     localStorage.setItem(
       "transfer_certificate_id",
-      certificate.transfer_certificate_id
+      certificate.transfer_certificate_id || certificate.character_certificate_id || certificate.bonafide_certificate_id || certificate.fee_certificate_id || 0
     );
 
     const academicYearId = localStorage.getItem("academicSessionId");
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
     const documentType = localStorage.getItem("document_type");
-    const studentId = localStorage.getItem("studentId");
+    const studentId = localStorage.getItem("selectedCertificateStudentId");
     const transferCertificateId = localStorage.getItem(
       "transfer_certificate_id"
     );
@@ -473,15 +474,17 @@ const AdmAttendanceEntry = () => {
   };
 
   const handleViewPDFClick = (certificate) => {
-    localStorage.setItem(
-      "transfer_certificate_id",
-      certificate.transfer_certificate_id
-    );
-    localStorage.setItem("studentId", certificate.studentId);
-    localStorage.setItem("documentType", certificate.documentType);
+    const certId = certificate.transfer_certificate_id || certificate.character_certificate_id || certificate.bonafide_certificate_id || certificate.fee_certificate_id || 0;
+    localStorage.setItem("transfer_certificate_id", certId);
+    localStorage.setItem("selectedCertificateStudentId", certificate.student_id);
+    localStorage.setItem("selectedDocumentType", certificate.document_type);
+    localStorage.setItem("document_type", certificate.document_type);
+    // Legacy keys used by PDF components
+    localStorage.setItem("studentId", certificate.student_id);
+    localStorage.setItem("documentType", certificate.document_type);
 
     // Open PDF viewer in a new tab
-    switch (certificate.documentType) {
+    switch (certificate.document_type) {
       case "TC":
         window.open("/transfercertificatepdf", "_blank");
         break;
@@ -973,14 +976,10 @@ const AdmAttendanceEntry = () => {
                       <tr>
                         <th>Sl.No</th>
                         <th>Document Type</th>
-                        <th>Applied On</th>
-                        <th>Issued On</th>
-                        <th>Document No</th>
                         <th>Student Name</th>
                         <th>School Admission No</th>
                         <th>Course</th>
                         <th>Section</th>
-                        <th>Reason</th>
                         <th>Status</th>
                         <th>View/Edit</th>
                         <th>View PDF</th>
@@ -989,58 +988,36 @@ const AdmAttendanceEntry = () => {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan="13" className="text-center">Loading...</td>
+                          <td colSpan="9" className="text-center">Loading...</td>
                         </tr>
                       ) : certificates.length > 0 ? (
                         currentPageData.map((certificate, index) => (
-                          <tr key={certificate.transfer_certificate_id}>
+                          <tr key={certificate.transfer_certificate_id || certificate.character_certificate_id || certificate.bonafide_certificate_id || certificate.fee_certificate_id || index}>
                             <td>{offset + index + 1}</td>
 
                             {/* Document Type */}
                             <td>
-                              {documentTypeMapping[certificate.documentType] || "N/A"}
-                            </td>
-
-                            {/* Applied On */}
-                            <td>{certificate.tc_applied_date || ""}</td>
-
-                            {/* Issued On */}
-                            <td>{certificate.tc_issued_date || ""}</td>
-
-                            {/* Document Number */}
-                            <td>
-                              {certificate.transfer_certificate_no_prefix &&
-                                certificate.transfer_certificate_no_postfix
-                                ? `${certificate.transfer_certificate_no_prefix}/${certificate.transfer_certificate_no_postfix}`
-                                : certificate.transfer_certificate_no || "N/A"}
+                              {documentTypeMapping[certificate.document_type] || certificate.document_type || "N/A"}
                             </td>
 
                             {/* Student Name */}
-                            <td>{certificate.studentname}</td>
+                            <td>{certificate.student_name || ""}</td>
 
                             {/* School Admission No */}
-                            <td>{certificate.admission_no}</td>
+                            <td>{certificate.college_admission_no || ""}</td>
 
                             {/* Class / Course */}
-                            <td>{certificate.course_name}</td>
+                            <td>{certificate.course || ""}</td>
 
                             {/* Section */}
-                            <td>{certificate.section_name}</td>
-
-                            {/* Reason */}
-                            <td>{certificate.reason_for_tc || ""}</td>
+                            <td>{certificate.section || ""}</td>
 
                             {/* Status */}
-                            <td>
-                              {certificate.status === "A" && "Approved"}
-                              {certificate.status === "C" && "Cancelled"}
-                              {certificate.status === "N" && "New"}
-                              {!certificate.status && "N/A"}
-                            </td>
+                            <td>{certificate.certificate_status || "N/A"}</td>
 
                             {/* View/Edit Button */}
                             <td>
-                              {certificate.status === "C" ? (
+                              {certificate.certificate_status === "Cancelled" ? (
                                 <button
                                   className="btn btn-sm btn-primary d-flex align-items-center"
                                   onClick={() => handleButtonClick(certificate, "view")}
@@ -1061,7 +1038,7 @@ const AdmAttendanceEntry = () => {
 
                             {/* View PDF */}
                             <td>
-                              {certificate.status === "A" && (
+                              {certificate.certificate_status === "Approved" && (
                                 <button
                                   className="btn btn-sm btn-secondary d-flex align-items-center"
                                   onClick={() => handleViewPDFClick(certificate)}
@@ -1075,7 +1052,7 @@ const AdmAttendanceEntry = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="13" className="text-center text-muted">
+                          <td colSpan="9" className="text-center text-muted">
                             {message || "No records found."}
                           </td>
                         </tr>

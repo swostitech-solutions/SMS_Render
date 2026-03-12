@@ -24366,12 +24366,16 @@ class StudentCertificateCreateAPIView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         try:
             certificate_type = request.query_params.get('certificate_type')
+            if not certificate_type:
+                certificate_type = request.data.get('document_type', '') or ''
+            if not certificate_type:
+                return Response({'message': 'document_type is required'}, status=status.HTTP_400_BAD_REQUEST)
             if certificate_type == 'TC':
                 # serializer_class = StudentTransferCertificateSerializer
                 serializer = StudentTCSerializer(data = request.data)
                 if serializer.is_valid():
                     data = serializer.data
-                    student_instance = StudentRegistration.objects.get(id=data.get('student_id'))
+                    student_instance = StudentRegistration.objects.get(id=data.get('student'))
                     student_transfer_certificate_last_instance = StudentTransferCertificate.objects.last()
                     if student_transfer_certificate_last_instance:
                         last_tc_number = student_transfer_certificate_last_instance.tc_number
@@ -24380,33 +24384,44 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                     else:
                         tc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/tc/{1}"
 
-                    student_transfer_certificate_instance = StudentTransferCertificate.objects.filter(student_id=data.get('student_id'))
+                    student_transfer_certificate_instance = StudentTransferCertificate.objects.filter(student_id=data.get('student'))
                     if student_transfer_certificate_instance:
                         return Response({"message":"transfer certificate already issued !!!"}, status=status.HTTP_200_OK)
                     else:
                         StudentTransferCertificate.objects.create(
                             organization=student_instance.organization,
                             branch=student_instance.branch,
-                            student = student_instance,
-                            tc_number = tc_number,
-                            issue_date = data.get('issue_date'),
-                            reason_of_leaving = data.get('reason_of_leaving'),
-                            student_behaviour = data.get('student_behaviour'),
-                            readmission_eligibility = data.get('readmission_eligibility'),
-                            certificate_status = data.get('certificate_status'),
-                            created_at = datetime.now(),
-                            created_by = 1
+                            student=student_instance,
+                            tc_number=tc_number,
+                            issue_date=data.get('issue_date') or None,
+                            date_of_leaving=data.get('date_of_leaving') or None,
+                            reason_of_leaving=data.get('reason_for_tc') or data.get('reason_of_leaving') or '',
+                            student_behaviour=data.get('general_conduct') or data.get('student_behaviour') or '',
+                            dob=data.get('dob') or '',
+                            date_of_admission=data.get('date_of_admission') or '',
+                            registration_number=data.get('registration_number') or '',
+                            nationality=data.get('nationality') or '',
+                            religion_caste=data.get('religion_caste') or '',
+                            permanent_address=data.get('permanent_address') or '',
+                            class_last_studied=data.get('class_last_studied') or '',
+                            general_conduct=data.get('general_conduct') or '',
+                            qualified_for_promotion=data.get('qualified_for_promotion') or '',
+                            reason_for_tc=data.get('reason_for_tc') or '',
+                            from_month=data.get('from_month') or '',
+                            to_month=data.get('to_month') or '',
+                            created_at=datetime.now(),
+                            created_by=1
                         )
                         return Response({"message":"transfer certificate created."}, status=status.HTTP_200_OK)
                 else:
-                    return Response({"message":serializer.error_messages},status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
             elif certificate_type == 'CC':
                 # serializer_class = StudentCharacterCertificateSerializer
                 serializer = StudentCCSerializer(data = request.data)
                 if serializer.is_valid():
                     data = serializer.data
-                    student_instance = StudentRegistration.objects.get(id=data.get('student_id'))
+                    student_instance = StudentRegistration.objects.get(id=data.get('student'))
                     student_character_certificate_last_instance = StudentCharacterCertificate.objects.last()
                     if student_character_certificate_last_instance:
                         last_cc_number = student_character_certificate_last_instance.cc_number
@@ -24416,7 +24431,7 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                         cc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/cc/{1}"
 
                     student_character_certificate_instance = StudentCharacterCertificate.objects.filter(
-                        student_id=data.get('student_id'))
+                        student_id=data.get('student'))
                     if student_character_certificate_instance:
                         return Response({"message":"character certificate already issued !!!"}, status=status.HTTP_200_OK)
                     else:
@@ -24425,23 +24440,24 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                             branch=student_instance.branch,
                             student=student_instance,
                             cc_number=cc_number,
-                            issue_date=data.get('issue_date'),
-                            student_behaviour=data.get('student_behaviour'),
-                            certificate_status=data.get('certificate_status'),
+                            issue_date=data.get('issue_date') or None,
+                            from_month=data.get('from_month') or '',
+                            to_month=data.get('to_month') or '',
+                            father_name=data.get('father_name') or '',
                             created_at=datetime.now(),
                             created_by=1
                         )
                         return Response({"message":"success"}, status=status.HTTP_200_OK)
 
                 else:
-                    return Response({"message": serializer.error_messages}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
             elif certificate_type.upper() == 'BC':
                 # serializer_class = StudentBonafideCertificateSerializer
                 serializer = StudentBCSerializer(data = request.data)
                 if serializer.is_valid():
                     data = serializer.data
-                    student_instance = StudentRegistration.objects.get(id=data.get('student_id'))
+                    student_instance = StudentRegistration.objects.get(id=data.get('student'))
                     student_bonafide_certificate_last_instance = StudentBonafideCertificate.objects.last()
                     if student_bonafide_certificate_last_instance:
                         last_bc_number = student_bonafide_certificate_last_instance.bc_number
@@ -24451,7 +24467,7 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                         bc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/bc/{1}"
 
                     student_bonafide_certificate_instance = StudentBonafideCertificate.objects.filter(
-                        student_id=data.get('student_id'))
+                        student_id=data.get('student'))
 
                     if student_bonafide_certificate_instance:
                         return Response({"message":"bonafide certificate already issued !!!"}, status=status.HTTP_200_OK)
@@ -24461,15 +24477,36 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                             branch=student_instance.branch,
                             student=student_instance,
                             bc_number=bc_number,
-                            issue_date=data.get('issue_date'),
-                            purpose = data.get('purpose'),
-                            certificate_status=data.get('certificate_status'),
+                            issue_date=data.get('issue_date') or None,
+                            purpose=data.get('purpose') or '',
+                            course_name=data.get('course_name') or '',
+                            academic_year=data.get('academic_year') or '',
+                            admission_quota=data.get('admission_quota') or '',
+                            current_year=data.get('current_year') or '',
+                            year_from=data.get('year_from') or '',
+                            year_to=data.get('year_to') or '',
+                            course_fee_y1=data.get('course_fee_y1') or '',
+                            course_fee_y2=data.get('course_fee_y2') or '',
+                            course_fee_y3=data.get('course_fee_y3') or '',
+                            course_fee_y4=data.get('course_fee_y4') or '',
+                            hostel_fee_y1=data.get('hostel_fee_y1') or '',
+                            hostel_fee_y2=data.get('hostel_fee_y2') or '',
+                            hostel_fee_y3=data.get('hostel_fee_y3') or '',
+                            hostel_fee_y4=data.get('hostel_fee_y4') or '',
+                            misc_fee_y1=data.get('misc_fee_y1') or '',
+                            misc_fee_y2=data.get('misc_fee_y2') or '',
+                            misc_fee_y3=data.get('misc_fee_y3') or '',
+                            misc_fee_y4=data.get('misc_fee_y4') or '',
+                            grand_total_y1=data.get('grand_total_y1') or '',
+                            grand_total_y2=data.get('grand_total_y2') or '',
+                            grand_total_y3=data.get('grand_total_y3') or '',
+                            grand_total_y4=data.get('grand_total_y4') or '',
                             created_at=datetime.now(),
                             created_by=1
                         )
                         return Response({"message": "success"}, status=status.HTTP_200_OK)
                 else:
-                    return Response({"message": serializer.error_messages}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
             elif certificate_type.upper() == 'FC':
             # serializer_class = StudentBonafideCertificateSerializer
@@ -24872,12 +24909,24 @@ class StudentCertificateUpdateView(generics.UpdateAPIView):
                 except StudentTransferCertificate.DoesNotExist:
                     return Response({"message":"record doesn't exist"},status=status.HTTP_204_NO_CONTENT)
 
-                instance.issue_date = data.get('issue_date')
-                instance.date_of_leaving = data.get('date_of_leaving')
-                instance.reason_of_leaving = data.get('reason_of_leaving')
-                instance.student_behaviour = data.get('student_behaviour')
-                instance.certificate_status = data.get('certificate_status')
-                instance.readmission_eligibility = data.get('readmission_eligibility')
+                instance.issue_date = data.get('issue_date') or None
+                instance.date_of_leaving = data.get('date_of_leaving') or None
+                instance.reason_of_leaving = data.get('reason_for_tc') or data.get('reason_of_leaving') or ''
+                instance.student_behaviour = data.get('general_conduct') or data.get('student_behaviour') or ''
+                instance.certificate_status = data.get('certificate_status') or instance.certificate_status
+                instance.readmission_eligibility = data.get('readmission_eligibility') or instance.readmission_eligibility
+                instance.dob = data.get('dob') or instance.dob
+                instance.date_of_admission = data.get('date_of_admission') or instance.date_of_admission
+                instance.registration_number = data.get('registration_number') or instance.registration_number
+                instance.nationality = data.get('nationality') or instance.nationality
+                instance.religion_caste = data.get('religion_caste') or instance.religion_caste
+                instance.permanent_address = data.get('permanent_address') or instance.permanent_address
+                instance.class_last_studied = data.get('class_last_studied') or instance.class_last_studied
+                instance.general_conduct = data.get('general_conduct') or instance.general_conduct
+                instance.qualified_for_promotion = data.get('qualified_for_promotion') or instance.qualified_for_promotion
+                instance.reason_for_tc = data.get('reason_for_tc') or instance.reason_for_tc
+                instance.from_month = data.get('from_month') or instance.from_month
+                instance.to_month = data.get('to_month') or instance.to_month
                 instance.updated_at = datetime.now()
                 instance.updated_by = 1
                 instance.save()
@@ -24890,9 +24939,12 @@ class StudentCertificateUpdateView(generics.UpdateAPIView):
                 except StudentCharacterCertificate.DoesNotExist:
                     return Response({"message":"record doesn't exist"},status=status.HTTP_204_NO_CONTENT)
 
-                instance.issue_date = data.get('issue_date')
-                instance.student_behaviour = data.get('student_behaviour')
-                instance.certificate_status = data.get('certificate_status')
+                instance.issue_date = data.get('issue_date') or None
+                instance.student_behaviour = data.get('student_behaviour') or instance.student_behaviour
+                instance.certificate_status = data.get('certificate_status') or instance.certificate_status
+                instance.from_month = data.get('from_month') or instance.from_month
+                instance.to_month = data.get('to_month') or instance.to_month
+                instance.father_name = data.get('father_name') or instance.father_name
                 instance.updated_at = datetime.now()
                 instance.updated_by = 1
                 instance.save()
@@ -24905,9 +24957,31 @@ class StudentCertificateUpdateView(generics.UpdateAPIView):
                 except StudentBonafideCertificate.DoesNotExist:
                     return Response({"message":"record doesn't exist"},status=status.HTTP_204_NO_CONTENT)
 
-                instance.issue_date = data.get('issue_date')
-                instance.purpose = data.get('purpose')
-                instance.certificate_status = data.get('certificate_status')
+                instance.issue_date = data.get('issue_date') or None
+                instance.purpose = data.get('purpose') or instance.purpose
+                instance.certificate_status = data.get('certificate_status') or instance.certificate_status
+                instance.course_name = data.get('course_name') or instance.course_name
+                instance.academic_year = data.get('academic_year') or instance.academic_year
+                instance.admission_quota = data.get('admission_quota') or instance.admission_quota
+                instance.current_year = data.get('current_year') or instance.current_year
+                instance.year_from = data.get('year_from') or instance.year_from
+                instance.year_to = data.get('year_to') or instance.year_to
+                instance.course_fee_y1 = data.get('course_fee_y1') or instance.course_fee_y1
+                instance.course_fee_y2 = data.get('course_fee_y2') or instance.course_fee_y2
+                instance.course_fee_y3 = data.get('course_fee_y3') or instance.course_fee_y3
+                instance.course_fee_y4 = data.get('course_fee_y4') or instance.course_fee_y4
+                instance.hostel_fee_y1 = data.get('hostel_fee_y1') or instance.hostel_fee_y1
+                instance.hostel_fee_y2 = data.get('hostel_fee_y2') or instance.hostel_fee_y2
+                instance.hostel_fee_y3 = data.get('hostel_fee_y3') or instance.hostel_fee_y3
+                instance.hostel_fee_y4 = data.get('hostel_fee_y4') or instance.hostel_fee_y4
+                instance.misc_fee_y1 = data.get('misc_fee_y1') or instance.misc_fee_y1
+                instance.misc_fee_y2 = data.get('misc_fee_y2') or instance.misc_fee_y2
+                instance.misc_fee_y3 = data.get('misc_fee_y3') or instance.misc_fee_y3
+                instance.misc_fee_y4 = data.get('misc_fee_y4') or instance.misc_fee_y4
+                instance.grand_total_y1 = data.get('grand_total_y1') or instance.grand_total_y1
+                instance.grand_total_y2 = data.get('grand_total_y2') or instance.grand_total_y2
+                instance.grand_total_y3 = data.get('grand_total_y3') or instance.grand_total_y3
+                instance.grand_total_y4 = data.get('grand_total_y4') or instance.grand_total_y4
                 instance.updated_at = datetime.now()
                 instance.updated_by = 1
                 instance.save()
@@ -24975,13 +25049,18 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
             if document_type.upper() == 'TC':
                 if student_id:
                     try:
-                        instance = StudentTransferCertificate.objects.get(student_id = student_id)
+                        if transfer_certificate_id:
+                            instance = StudentTransferCertificate.objects.get(id=transfer_certificate_id, student_id=student_id)
+                        else:
+                            instance = StudentTransferCertificate.objects.filter(student_id=student_id).latest('created_at')
                     except StudentTransferCertificate.DoesNotExist:
                         return Response({"message":"record not found !!!"},status=status.HTTP_204_NO_CONTENT)
 
+                    student_name = " ".join(filter(None, [instance.student.first_name, instance.student.middle_name, instance.student.last_name]))
                     data = {
+                        "id": instance.id,
                         "student_id": instance.student.id,
-                        "student_name": instance.student.id,
+                        "student_name": student_name,
                         "organization_id": instance.student.organization.id,
                         "organization": instance.student.organization.organization_description,
                         "branch_id": instance.student.branch.id,
@@ -24997,26 +25076,45 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
                         "semester_id": instance.student.semester.id,
                         "semester": instance.student.semester.semester_description,
                         "section_id": instance.student.section.id,
-                        "section": instance.student.section.section_description,
+                        "section": instance.student.section.section_name,
                         "tc_number": instance.tc_number,
+                        "document_no": instance.tc_number,
                         "issue_date": instance.issue_date,
                         "date_of_leaving": instance.date_of_leaving,
-                        "reason_of_leaving":instance.reason_of_leaving,
-                        "student_behaviour":instance.student_behaviour,
-                        "certificate_status":instance.certificate_status,
-                        "readmission_eligibility":instance.readmission_eligibility,
+                        "reason_of_leaving": instance.reason_of_leaving,
+                        "student_behaviour": instance.student_behaviour,
+                        "certificate_status": instance.certificate_status,
+                        "readmission_eligibility": instance.readmission_eligibility,
+                        "dob": instance.dob,
+                        "date_of_admission": instance.date_of_admission,
+                        "registration_number": instance.registration_number,
+                        "nationality": instance.nationality,
+                        "religion_caste": instance.religion_caste,
+                        "permanent_address": instance.permanent_address,
+                        "class_last_studied": instance.class_last_studied,
+                        "general_conduct": instance.general_conduct,
+                        "qualified_for_promotion": instance.qualified_for_promotion,
+                        "reason_for_tc": instance.reason_for_tc,
+                        "from_month": instance.from_month,
+                        "to_month": instance.to_month,
                     }
                     return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             elif document_type.upper() == 'CC':
                 if student_id:
                     try:
-                        instance = StudentCharacterCertificate.objects.get(student_id = student_id)
+                        if transfer_certificate_id:
+                            instance = StudentCharacterCertificate.objects.get(id=transfer_certificate_id, student_id=student_id)
+                        else:
+                            instance = StudentCharacterCertificate.objects.filter(student_id=student_id).latest('created_at')
                     except StudentCharacterCertificate.DoesNotExist:
                         return Response({"message":"record not found !!!"},status=status.HTTP_204_NO_CONTENT)
 
+                    student_name = " ".join(filter(None, [instance.student.first_name, instance.student.middle_name, instance.student.last_name]))
                     data = {
+                        "id": instance.id,
                         "student_id": instance.student.id,
-                        "student_name": instance.student.id,
+                        "student_name": student_name,
+                        "father_name": instance.father_name or instance.student.father_name,
                         "organization_id": instance.student.organization.id,
                         "organization": instance.student.organization.organization_description,
                         "branch_id": instance.student.branch.id,
@@ -25032,20 +25130,30 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
                         "semester_id": instance.student.semester.id,
                         "semester": instance.student.semester.semester_description,
                         "section_id": instance.student.section.id,
-                        "section": instance.student.section.section_description,
-                        "cc_number":instance.cc_number
+                        "section": instance.student.section.section_name,
+                        "cc_number": instance.cc_number,
+                        "document_no": instance.cc_number,
+                        "issue_date": instance.issue_date,
+                        "certificate_status": instance.certificate_status,
+                        "from_month": instance.from_month,
+                        "to_month": instance.to_month,
                     }
                     return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             elif document_type.upper() == 'BC':
                 if student_id:
                     try:
-                        instance = StudentBonafideCertificate.objects.get(student_id=student_id)
+                        if transfer_certificate_id:
+                            instance = StudentBonafideCertificate.objects.get(id=transfer_certificate_id, student_id=student_id)
+                        else:
+                            instance = StudentBonafideCertificate.objects.filter(student_id=student_id).latest('created_at')
                     except StudentBonafideCertificate.DoesNotExist:
                         return Response({"message": "record not found !!!"}, status=status.HTTP_204_NO_CONTENT)
 
+                    student_name = " ".join(filter(None, [instance.student.first_name, instance.student.middle_name, instance.student.last_name]))
                     data = {
+                        "id": instance.id,
                         "student_id": instance.student.id,
-                        "student_name": instance.student.id,
+                        "student_name": student_name,
                         "organization_id": instance.student.organization.id,
                         "organization": instance.student.organization.organization_description,
                         "branch_id": instance.student.branch.id,
@@ -25061,8 +25169,33 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
                         "semester_id": instance.student.semester.id,
                         "semester": instance.student.semester.semester_description,
                         "section_id": instance.student.section.id,
-                        "section": instance.student.section.section_description,
-
+                        "section": instance.student.section.section_name,
+                        "bc_number": instance.bc_number,
+                        "document_no": instance.bc_number,
+                        "issue_date": instance.issue_date,
+                        "certificate_status": instance.certificate_status,
+                        "course_name": instance.course_name,
+                        "academic_year_str": instance.academic_year,
+                        "admission_quota": instance.admission_quota,
+                        "current_year": instance.current_year,
+                        "session": instance.year_from,
+                        "purpose": instance.purpose,
+                        "course_fee_y1": instance.course_fee_y1,
+                        "course_fee_y2": instance.course_fee_y2,
+                        "course_fee_y3": instance.course_fee_y3,
+                        "course_fee_y4": instance.course_fee_y4,
+                        "hostel_fee_y1": instance.hostel_fee_y1,
+                        "hostel_fee_y2": instance.hostel_fee_y2,
+                        "hostel_fee_y3": instance.hostel_fee_y3,
+                        "hostel_fee_y4": instance.hostel_fee_y4,
+                        "misc_fee_y1": instance.misc_fee_y1,
+                        "misc_fee_y2": instance.misc_fee_y2,
+                        "misc_fee_y3": instance.misc_fee_y3,
+                        "misc_fee_y4": instance.misc_fee_y4,
+                        "grand_total_y1": instance.grand_total_y1,
+                        "grand_total_y2": instance.grand_total_y2,
+                        "grand_total_y3": instance.grand_total_y3,
+                        "grand_total_y4": instance.grand_total_y4,
                     }
                     return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             elif document_type.upper() == 'FC':
@@ -25090,7 +25223,7 @@ class GetStudentCertificateDetailBasedOnDocumentTypeStudentId(APIView):
                         "semester_id": instance.student.semester.id,
                         "semester": instance.student.semester.semester_description,
                         "section_id": instance.student.section.id,
-                        "section": instance.student.section.section_description,
+                        "section": instance.student.section.section_name,
 
                     }
                     return Response({"message":"success","data":data},status=status.HTTP_200_OK)

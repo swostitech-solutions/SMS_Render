@@ -80,122 +80,49 @@ const TransferCertificateForm = () => {
 
 
   const handleSave = async () => {
-    // Initialize useNavigate inside your function
-
     try {
-      // Validate from_month
-      // if (!formData.from_month) {
-      //   alert("From Month is required.");
-      //   return; // Stop execution if validation fails
-      // }
-
-      // // Validate to_month
-      // if (!formData.to_month) {
-      //   alert("To Month is required.");
-      //   return; // Stop execution if validation fails
-      // }
-
-      // Retrieve values from local storage
-      const student = localStorage.getItem("studentId");
-      const session = localStorage.getItem("academicSessionId");
+      const certId = location.state?.certificate?.id;
       const org_id = localStorage.getItem("orgId");
       const branch_id = localStorage.getItem("branchId");
-      const document_type = localStorage.getItem("document_type");
-      const transferCertificateId = localStorage.getItem("transfer_certificate_id") || 0;
-      // Ensure the Document No. is split and validated
-      const [prefix, ...rest] = (formData.document_no || "").split("/");
-      const postfix = rest.join("/");
+      const currentDate = new Date().toISOString().split("T")[0];
 
-      if (!prefix || !postfix) {
-        alert("Please provide a valid Document No. in the format 'prefix/postfix'.");
-        return;
-      }
-
-      // Default value for transfer_certificate_no
-      const transferCertificateNo = formData.transfer_certificate_no || "";
-
-      // Get current date in YYYY-MM-DD format
-      const currentDate = new Date().toISOString().split('T')[0]; // Get the date part (YYYY-MM-DD)
-
-      // Prepare the payload
       const payload = {
-        student,
-        session,
-        org_id,
-        branch_id,
-        document_type,
-        transfer_certificate_no_prefix: prefix,
-        transfer_certificate_no_postfix: postfix,
-        transfer_certificate_no: transferCertificateNo,
-        transfer_certificate_id: 0,
-        tc_applied_date: currentDate,
-        reason_for_tc: formData.reason_for_tc || "",
-        tc_issued_date: formData.tc_issued_date || null,
-        ncc_cadet_details: formData.ncc_cadet_details || "",
-        games_played_details: formData.games_played_details || "",
-        general_conduct: formData.general_conduct || "",
-        other_remarks: formData.other_remarks || "",
-        status: formData.status || "A", // Ensure 'A' is passed if no value is selected
-        school_board_last_taken: formData.school_board_last_taken || "",
-        whether_failed: formData.whether_failed || "",
-        subjects_studied: formData.subjects_studied || "",
-        qualified_for_promotion: formData.qualified_for_promotion || "",
-        transfer_certificate_id: transferCertificateId,
-        month_fee_paid: formData.month_fee_paid || "",
-        fee_concession_availed: formData.fee_concession_availed || "",
-        total_no_working_days: formData.total_no_working_days || "",
-        total_no_working_days_present: formData.total_no_working_days_present || "",
-        cancelled_on: formData.cancelled_on || null,
-        cancelled_remarks: formData.cancelled_remarks || "",
-        cancelled_by: formData.cancelled_by || "",
-        rollno: formData.rollno || "",
-        cultural_activities: formData.cultural_activities || "",
-        other_activities: formData.other_activities || "",
-        marks_obtained: formData.marks_obtained || "",
+        issue_date: currentDate,
         from_month: formData.from_month || "",
         to_month: formData.to_month || "",
-        class_last_studied: formData.classId || "",
+        general_conduct: formData.general_conduct || formData.student_behaviour || "",
+        reason_for_tc: formData.reason_for_tc || formData.reason_of_leaving || "",
+        date_of_leaving: formData.date_of_leaving || null,
+        dob: formData.dob || null,
+        date_of_admission: formData.date_of_admission || null,
+        registration_number: formData.registration_number || "",
+        nationality: formData.nationality || "",
+        religion_caste: formData.religion_caste || "",
+        permanent_address: formData.permanent_address || "",
+        class_last_studied: formData.classId || formData.class_last_studied || "",
+        qualified_for_promotion: formData.qualified_for_promotion || "",
+        readmission_eligibility: formData.readmission_eligibility || "",
       };
 
-
-      // API Call
-      const response = await fetch(`${ApiUrl.apiurl}StudentCertificate/create/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${ApiUrl.apiurl}StudentCertificate/update/?organization_id=${org_id}&branch_id=${branch_id}&student_certificate_id=${certId}&document_type=TC`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (response.ok) {
-        const result = await response.json();
-        alert("Fee Certificate saved successfully!");
-        console.log(result);
-
-        const academicSessionId = localStorage.getItem("academicSessionId");
-        const branchId = localStorage.getItem("branchId");
-        const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
-        const orgId = localStorage.getItem("orgId");
-
-        // Clear all other fields from localStorage
-        localStorage.clear(); // This will clear everything
-
-        // Retain the necessary fields after clearing
-        localStorage.setItem("academicSessionId", academicSessionId);
-        localStorage.setItem("branchId", branchId);
-        localStorage.setItem("nextAcademicSessionId", nextAcademicSessionId);
-        localStorage.setItem("orgId", orgId);
-
-
-        // Navigate to the new page after successful save
+        alert("Transfer Certificate updated successfully!");
         navigate("/admin/student-certificate");
       } else {
         const error = await response.json();
-        alert(`Error saving Transfer Certificate: ${error.message}`);
+        alert(`Error updating Transfer Certificate: ${error.message}`);
       }
     } catch (error) {
-      console.error("Error while saving:", error);
-      alert("An error occurred while saving the Transfer Certificate.");
+      console.error("Error while updating:", error);
+      alert("An error occurred while updating the Transfer Certificate.");
     }
   };
 

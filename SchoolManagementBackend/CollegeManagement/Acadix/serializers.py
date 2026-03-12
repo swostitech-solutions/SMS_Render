@@ -2932,29 +2932,54 @@ class studentperiodwiseSerializer(serializers.Serializer):
 # # Manish sir API's
 #
 class StudentTCSerializer(serializers.Serializer):
-    # certificate_type = serializers.CharField(required=True,allow_null=False)
-    student_id = serializers.IntegerField(required=True,allow_null=False)
-    issue_date = serializers.DateField(required=True,allow_null=False)
-    date_of_leaving = serializers.DateField(required=True,allow_null=False)
-    reason_of_leaving = serializers.CharField(required=True,allow_null=False)
-    student_behaviour = serializers.CharField(required=True,allow_null=False)
-    readmission_eligibility = serializers.CharField(required=True,allow_null=False)
-    certificate_status = serializers.CharField(required=True, allow_null=False)
+    student = serializers.IntegerField(required=True, allow_null=False)
+    dob = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    date_of_admission = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    registration_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    nationality = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    religion_caste = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    permanent_address = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    class_last_studied = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    general_conduct = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    qualified_for_promotion = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    reason_for_tc = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    date_of_leaving = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    from_month = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    to_month = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
 class StudentCCSerializer(serializers.Serializer):
-    # certificate_type = serializers.CharField(required=True,allow_null=False)
-    student_id = serializers.IntegerField(required=True,allow_null=False)
-    issue_date = serializers.DateField(required=True,allow_null=False)
-    student_behaviour = serializers.CharField(required=True,allow_null=False)
-    certificate_status = serializers.CharField(required=True, allow_null=False)
+    student = serializers.IntegerField(required=True, allow_null=False)
+    from_month = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    to_month = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    father_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
 
 class StudentBCSerializer(serializers.Serializer):
-    # certificate_type = serializers.CharField(required=True,allow_null=False)
-    student_id = serializers.IntegerField(required=True,allow_null=False)
-    issue_date = serializers.DateField(required=True,allow_null=False)
-    purpose = serializers.CharField(required=True,allow_null=False)
-    certificate_status = serializers.CharField(required=True, allow_null=False)
+    student = serializers.IntegerField(required=True, allow_null=False)
+    purpose = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    course_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    academic_year = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    admission_quota = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    current_year = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    year_from = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    year_to = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    course_fee_y1 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    course_fee_y2 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    course_fee_y3 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    course_fee_y4 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    hostel_fee_y1 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    hostel_fee_y2 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    hostel_fee_y3 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    hostel_fee_y4 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    misc_fee_y1 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    misc_fee_y2 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    misc_fee_y3 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    misc_fee_y4 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    grand_total_y1 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    grand_total_y2 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    grand_total_y3 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    grand_total_y4 = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 class StudentFCSerializer(serializers.Serializer):
     # certificate_type = serializers.CharField(required=True,allow_null=False)
@@ -2969,17 +2994,25 @@ class StudentFCSerializer(serializers.Serializer):
 class StudentTransferCertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentTransferCertificate
-        fields = ['id','student','issue_date','date_of_leaving','reason_of_leaving','student_behaviour','readmission_eligibility','created_at','created_by','updated_by','updated_at']
+        fields = ['id','student','tc_number','issue_date','date_of_leaving','reason_of_leaving','student_behaviour','readmission_eligibility',
+                  'dob','date_of_admission','registration_number','nationality','religion_caste','permanent_address',
+                  'class_last_studied','general_conduct','qualified_for_promotion','reason_for_tc','from_month','to_month',
+                  'created_at','created_by','updated_by','updated_at']
 
 class StudentCharacterCertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCharacterCertificate
-        fields = ['id','student','cc_number','issue_date','purpose','created_at','created_by','updated_by','updated_at']
+        fields = ['id','student','cc_number','issue_date','student_behaviour','from_month','to_month','father_name','created_at','created_by','updated_by','updated_at']
 
 class StudentBonafideCertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentBonafideCertificate
-        fields = ['id','student','bc_number','issue_date','purpose','created_at','created_by','updated_by','updated_at']
+        fields = ['id','student','bc_number','issue_date','purpose','course_name','academic_year','admission_quota','current_year',
+                  'year_from','year_to','course_fee_y1','course_fee_y2','course_fee_y3','course_fee_y4',
+                  'hostel_fee_y1','hostel_fee_y2','hostel_fee_y3','hostel_fee_y4',
+                  'misc_fee_y1','misc_fee_y2','misc_fee_y3','misc_fee_y4',
+                  'grand_total_y1','grand_total_y2','grand_total_y3','grand_total_y4',
+                  'created_at','created_by','updated_by','updated_at']
 
 class StudentFeeCertificateSerializer(serializers.ModelSerializer):
     class Meta:
