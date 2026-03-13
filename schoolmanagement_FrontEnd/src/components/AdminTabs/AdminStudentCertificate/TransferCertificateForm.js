@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
-import jsPDF from "jspdf";
+import html2pdf from "html2pdf.js";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -290,110 +290,19 @@ const TransferCertificateForm = () => {
   };
 
   const handleDownloadPDF = async () => {
+    const element = document.getElementById("certificate-print-area");
+    if (!element) return;
+
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `Transfer_Certificate_${formData.studentname || "Student"}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+
     try {
-      const doc = new jsPDF("portrait", "mm", "a4");
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const marginLeft = 20;
-      const marginRight = 20;
-
-      // Certificate border with corner marks
-      const borderMargin = 25;
-      const borderX = borderMargin;
-      const borderY = borderMargin;
-      const borderW = pageWidth - borderMargin * 2;
-      const borderH = pageHeight - borderMargin * 2;
-
-      // Draw main border
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.rect(borderX, borderY, borderW, borderH);
-
-      // Draw corner marks
-      const cornerSize = 8;
-      const cornerThickness = 1;
-      doc.setLineWidth(cornerThickness);
-
-      // Top-left
-      doc.line(borderX, borderY, borderX + cornerSize, borderY);
-      doc.line(borderX, borderY, borderX, borderY + cornerSize);
-
-      // Top-right
-      doc.line(borderX + borderW, borderY, borderX + borderW - cornerSize, borderY);
-      doc.line(borderX + borderW, borderY, borderX + borderW, borderY + cornerSize);
-
-      // Bottom-left
-      doc.line(borderX, borderY + borderH, borderX + cornerSize, borderY + borderH);
-      doc.line(borderX, borderY + borderH, borderX, borderY + borderH - cornerSize);
-
-      // Bottom-right
-      doc.line(borderX + borderW, borderY + borderH, borderX + borderW - cornerSize, borderY + borderH);
-      doc.line(borderX + borderW, borderY + borderH, borderX + borderW, borderY + borderH - cornerSize);
-
-      let yPos = borderY + 12;
-
-      // College header
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES: KANTABADA : BBSR.", pageWidth / 2, yPos, { align: "center" });
-      yPos += 8;
-
-      // Ref No and Date
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(`Ref No – ${formData.document_no || ""}`, marginLeft, yPos);
-      doc.text(`Date – ${getTodayStr()}`, pageWidth - marginRight, yPos, { align: "right" });
-      yPos += 8;
-
-      // Title
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("SCHOOL LEAVING CERTIFICATE", pageWidth / 2, yPos, { align: "center" });
-      yPos += 10;
-
-      // Certificate details table
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
-
-      const details = [
-        ["1. Name of Student", formData.studentname || ""],
-        ["2. Father's Name", formData.father_name || ""],
-        ["3. Mother's Name", formData.mother_name || ""],
-        ["4. Date of Birth", formData.dob || ""],
-        ["5. Date of Admission", formData.date_of_admission || ""],
-        ["6. Class Last Studied", formData.class_last_studied || ""],
-        ["7. Date of Leaving", formData.date_of_leaving || ""],
-        ["8. General Conduct", formData.general_conduct || ""],
-        ["9. Qualified for Promotion", formData.qualified_for_promotion || ""],
-        ["10. Reason for TC", formData.reason_for_tc || ""],
-        ["11. Nationality", formData.nationality || ""],
-        ["12. Religion/Caste", formData.religion_caste || ""],
-        ["13. Registration Number", formData.registration_number || ""],
-        ["14. Permanent Address", formData.permanent_address || ""],
-      ];
-
-      details.forEach(([label, value]) => {
-        if (yPos > 240) {
-          doc.addPage();
-          yPos = 30;
-        }
-        doc.setFont("Helvetica", "bold");
-        doc.text(label, marginLeft, yPos);
-        doc.setFont("Helvetica", "normal");
-        doc.text(value, marginLeft + 65, yPos);
-        yPos += 6;
-      });
-
-      // Principal signature section
-      yPos += 15;
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(10);
-      doc.line(pageWidth - marginRight - 40, yPos, pageWidth - marginRight, yPos);
-      doc.text("PRINCIPAL", pageWidth - marginRight - 15, yPos + 6, { align: "center" });
-
-      // Save PDF
-      const filename = `Transfer_Certificate_${formData.studentname || "Student"}.pdf`;
-      doc.save(filename);
+      await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF.");
@@ -457,7 +366,7 @@ const TransferCertificateForm = () => {
               </div>
 
               {/* Certificate Template */}
-              <div style={{ border: "2px solid #000", padding: "40px 50px", maxWidth: "820px", margin: "0 auto", backgroundColor: "#fff", fontFamily: "serif", position: "relative" }}>
+              <div id="certificate-print-area" style={{ border: "2px solid #000", padding: "40px 50px", maxWidth: "820px", margin: "0 auto", backgroundColor: "#fff", fontFamily: "serif", position: "relative" }}>
 
                 {/* Corner marks */}
                 {[

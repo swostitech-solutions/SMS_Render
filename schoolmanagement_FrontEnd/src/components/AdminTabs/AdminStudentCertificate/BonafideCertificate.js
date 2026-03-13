@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
-import jsPDF from "jspdf";
+import html2pdf from "html2pdf.js";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -302,136 +302,19 @@ const BonafideCertificateForm = () => {
   };
 
   const handleDownloadPDF = async () => {
+    const element = document.getElementById("certificate-print-area");
+    if (!element) return;
+
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `Bonafide_Certificate_${formData.studentname || "Student"}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+
     try {
-      const doc = new jsPDF("portrait", "mm", "a4");
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const marginLeft = 20;
-      const marginRight = 20;
-
-      // Certificate border with corner marks
-      const borderMargin = 25;
-      const borderX = borderMargin;
-      const borderY = borderMargin;
-      const borderW = pageWidth - borderMargin * 2;
-      const borderH = pageHeight - borderMargin * 2;
-
-      // Draw main border
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.rect(borderX, borderY, borderW, borderH);
-
-      // Draw corner marks
-      const cornerSize = 8;
-      const cornerThickness = 1;
-      doc.setLineWidth(cornerThickness);
-
-      // Top-left
-      doc.line(borderX, borderY, borderX + cornerSize, borderY);
-      doc.line(borderX, borderY, borderX, borderY + cornerSize);
-
-      // Top-right
-      doc.line(borderX + borderW, borderY, borderX + borderW - cornerSize, borderY);
-      doc.line(borderX + borderW, borderY, borderX + borderW, borderY + cornerSize);
-
-      // Bottom-left
-      doc.line(borderX, borderY + borderH, borderX + cornerSize, borderY + borderH);
-      doc.line(borderX, borderY + borderH, borderX, borderY + borderH - cornerSize);
-
-      // Bottom-right
-      doc.line(borderX + borderW, borderY + borderH, borderX + borderW - cornerSize, borderY + borderH);
-      doc.line(borderX + borderW, borderY + borderH, borderX + borderW, borderY + borderH - cornerSize);
-
-      let yPos = borderY + 12;
-
-      // College header
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES: KANTABADA : BBSR.", pageWidth / 2, yPos, { align: "center" });
-      yPos += 8;
-
-      // Ref No and Date
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(`Ref No – ${formData.document_no || ""}`, marginLeft, yPos);
-      doc.text(`Date – ${getTodayStr()}`, pageWidth - marginRight, yPos, { align: "right" });
-      yPos += 8;
-
-      // Title
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("TO WHOMSOEVER IT MAY CONCERN", pageWidth / 2, yPos, { align: "center" });
-      yPos += 10;
-
-      // Certificate details
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
-
-      const details = [
-        ["Student Name", formData.studentname || ""],
-        ["Course", formData.course_name || ""],
-        ["Academic Year", formData.academic_year || ""],
-        ["Admission Quota", formData.admission_quota || ""],
-        ["Current Year", formData.current_year || ""],
-        ["Session", formData.session || ""],
-        ["Purpose", formData.purpose || ""],
-      ];
-
-      details.forEach(([label, value]) => {
-        doc.setFont("Helvetica", "bold");
-        doc.text(label + ":", marginLeft, yPos);
-        doc.setFont("Helvetica", "normal");
-        doc.text(value, marginLeft + 60, yPos);
-        yPos += 6;
-      });
-
-      yPos += 4;
-
-      // Fee Structure Table
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text("FEE STRUCTURE", pageWidth / 2, yPos, { align: "center" });
-      yPos += 6;
-
-      doc.setFontSize(8);
-      const feeTableData = [
-        ["Fee Type", "Year 1", "Year 2", "Year 3", "Year 4"],
-        ["Course Fees", formData.course_fee_y1 || "", formData.course_fee_y2 || "", formData.course_fee_y3 || "", formData.course_fee_y4 || ""],
-        ["Hostel Fees", formData.hostel_fee_y1 || "", formData.hostel_fee_y2 || "", formData.hostel_fee_y3 || "", formData.hostel_fee_y4 || ""],
-        ["Misc Fees", formData.misc_fee_y1 || "", formData.misc_fee_y2 || "", formData.misc_fee_y3 || "", formData.misc_fee_y4 || ""],
-        ["Grand Total", formData.grand_total_y1 || "", formData.grand_total_y2 || "", formData.grand_total_y3 || "", formData.grand_total_y4 || ""],
-      ];
-
-      const colWidth = (pageWidth - marginLeft - marginRight - 20) / 5;
-
-      // Draw header row
-      doc.setFont("Helvetica", "bold");
-      feeTableData[0].forEach((header, idx) => {
-        doc.text(header, marginLeft + idx * colWidth + 3, yPos);
-      });
-      doc.line(marginLeft, yPos + 2, pageWidth - marginRight, yPos + 2);
-      yPos += 6;
-
-      // Draw data rows
-      doc.setFont("Helvetica", "normal");
-      for (let i = 1; i < feeTableData.length; i++) {
-        feeTableData[i].forEach((cell, idx) => {
-          doc.text(cell, marginLeft + idx * colWidth + 3, yPos);
-        });
-        yPos += 5;
-      }
-
-      yPos += 10;
-
-      // Principal signature section
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(10);
-      doc.line(pageWidth - marginRight - 40, yPos, pageWidth - marginRight, yPos);
-      doc.text("PRINCIPAL", pageWidth - marginRight - 15, yPos + 6, { align: "center" });
-
-      // Save PDF
-      const filename = `Bonafide_Certificate_${formData.studentname || "Student"}.pdf`;
-      doc.save(filename);
+      await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF.");
@@ -497,7 +380,7 @@ const BonafideCertificateForm = () => {
               </div>
 
               {/* Certificate Template */}
-              <div style={{ border: "2px solid #000", padding: "40px 50px", maxWidth: "820px", margin: "0 auto", backgroundColor: "#fff", fontFamily: "serif", fontSize: "14px" }}>
+              <div id="certificate-print-area" style={{ border: "2px solid #000", padding: "40px 50px", maxWidth: "820px", margin: "0 auto", backgroundColor: "#fff", fontFamily: "serif", fontSize: "14px" }}>
 
                 {/* Ref and Date row */}
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>

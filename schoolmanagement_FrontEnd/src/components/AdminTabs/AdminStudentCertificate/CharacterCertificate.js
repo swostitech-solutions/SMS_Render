@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
-import jsPDF from "jspdf";
+import html2pdf from "html2pdf.js";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -262,121 +262,20 @@ const ConductCertificate = () => {
   };
 
   const handleDownloadPDF = async () => {
+    const element = document.getElementById("certificate-print-area");
+    if (!element) return;
+    
+    // Temporarily adjust styling for PDF generation if needed
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `Conduct_Certificate_${formData.studentname || "Student"}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+
     try {
-      const doc = new jsPDF("portrait", "mm", "a4");
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const marginLeft = 20;
-      const marginRight = 20;
-      const contentWidth = pageWidth - marginLeft - marginRight;
-
-      // Certificate border with corner marks
-      const borderMargin = 25;
-      const borderX = borderMargin;
-      const borderY = borderMargin;
-      const borderW = pageWidth - borderMargin * 2;
-      const borderH = pageHeight - borderMargin * 2;
-
-      // Draw main border
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.rect(borderX, borderY, borderW, borderH);
-
-      // Draw corner marks
-      const cornerSize = 8;
-      const cornerThickness = 1;
-      doc.setLineWidth(cornerThickness);
-
-      // Top-left
-      doc.line(borderX, borderY, borderX + cornerSize, borderY);
-      doc.line(borderX, borderY, borderX, borderY + cornerSize);
-
-      // Top-right
-      doc.line(borderX + borderW, borderY, borderX + borderW - cornerSize, borderY);
-      doc.line(borderX + borderW, borderY, borderX + borderW, borderY + cornerSize);
-
-      // Bottom-left
-      doc.line(borderX, borderY + borderH, borderX + cornerSize, borderY + borderH);
-      doc.line(borderX, borderY + borderH, borderX, borderY + borderH - cornerSize);
-
-      // Bottom-right
-      doc.line(borderX + borderW, borderY + borderH, borderX + borderW - cornerSize, borderY + borderH);
-      doc.line(borderX + borderW, borderY + borderH, borderX + borderW, borderY + borderH - cornerSize);
-
-      let yPos = borderY + 12;
-
-      // College header
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES: KANTABADA : BBSR.", pageWidth / 2, yPos, { align: "center" });
-      yPos += 8;
-
-      // Ref No and Date
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(9);
-      doc.text(`REF.NO ${formData.document_no || ""}`, marginLeft, yPos);
-      doc.text(`DATE : ${getTodayStr()}`, pageWidth - marginRight, yPos, { align: "right" });
-      yPos += 8;
-
-      // Title
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("CONDUCT CERTIFICATE", pageWidth / 2, yPos, { align: "center" });
-      yPos += 12;
-
-      // Certificate body
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-
-      // "IT IS TO CERTIFY THAT"
-      let text = "IT IS TO CERTIFY THAT";
-      doc.text(text, marginLeft, yPos);
-      yPos += 6;
-
-      // Student name
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text((formData.studentname || "").toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-      yPos += 7;
-
-      // "D/O, S/O"
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text("D/O, S/O", marginLeft, yPos);
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text((formData.father_name || "").toUpperCase(), marginLeft + 20, yPos);
-      yPos += 7;
-
-      // "WHO HAS STUDIED IN THIS INSTITUTION FROM"
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      const studiedText = "WHO HAS STUDIED IN THIS INSTITUTION FROM";
-      doc.text(studiedText, marginLeft, yPos);
-      yPos += 6;
-
-      // From and To dates
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(10);
-      const dateRange = `${formData.from_month || ""} TO ${formData.to_month || ""} BEARS A GOOD`;
-      doc.text(dateRange, marginLeft, yPos);
-      yPos += 6;
-
-      // "CHARACTER & CONDUCT."
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text("CHARACTER & CONDUCT.", marginLeft, yPos);
-      yPos += 20;
-
-      // Principal signature section
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(10);
-      doc.line(pageWidth - marginRight - 40, pageHeight - borderMargin - 18, pageWidth - marginRight, pageHeight - borderMargin - 18);
-      doc.text("PRINCIPAL", pageWidth - marginRight - 15, pageHeight - borderMargin - 12, { align: "center" });
-
-      // Save PDF
-      const filename = `Conduct_Certificate_${formData.studentname || "Student"}.pdf`;
-      doc.save(filename);
+      await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF.");
@@ -467,6 +366,7 @@ const ConductCertificate = () => {
 
               {/* Certificate Template */}
               <div
+                id="certificate-print-area"
                 style={{
                   border: "2px solid #000",
                   padding: "40px 50px",
