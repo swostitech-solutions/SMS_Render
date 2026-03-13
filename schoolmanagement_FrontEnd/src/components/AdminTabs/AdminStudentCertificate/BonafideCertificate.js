@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
+import jsPDF from "jspdf";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -30,13 +31,15 @@ const BonafideCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly
+  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly; View mode: viewMode: true
   const certificate = location.state?.certificate;
-  const isEditMode = !!certificate;
+  const viewMode = location.state?.viewMode || false;
+  const isEditMode = !!certificate && !viewMode;
+  const isViewMode = viewMode;
 
-  const studentData = isEditMode ? {} : (location.state || {});
+  const studentData = isEditMode || isViewMode ? {} : (location.state || {});
   const [formData, setFormData] = useState(() => {
-    if (isEditMode) {
+    if (isEditMode || isViewMode) {
       return {
         ...certificate,
         studentname: certificate.student_name || "",
@@ -50,6 +53,8 @@ const BonafideCertificateForm = () => {
       purpose: (studentData.studentcertificatedetails?.purpose) || "Educational Loan Purpose",
     };
   });
+
+  const [isFieldsDisabled, setIsFieldsDisabled] = useState(isViewMode);
 
   const set = (field) => (e) => setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   const [errors, setErrors] = useState({});
@@ -114,39 +119,26 @@ const BonafideCertificateForm = () => {
       .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
 
-  // Auto-generate unique Ref No for new certificates
+  // Auto-generate unique Ref No for new certificates immediately on load
   useEffect(() => {
-    if (isEditMode || formData.document_no) return; // Skip if editing or already generated
-    const orgId = localStorage.getItem("orgId");
-    const branchId = localStorage.getItem("branchId");
-    if (!orgId || !branchId) return;
+    if (isEditMode || formData.document_no) return; // Skip if editing or already has Ref No
 
-    fetch(
-      `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}&document_type=BC`
-    )
-      .then((res) => res.json())
-      .then((res) => {
-        if (res?.data && Array.isArray(res.data)) {
-          // Extract all BC certificate numbers
-          const bcCerts = res.data.filter((c) => c.document_type === "BC");
-          let nextNum = 1;
-          
-          if (bcCerts.length > 0) {
-            // Sort by ID descending and get the latest
-            const latest = bcCerts.sort((a, b) => (b.bonafide_certificate_id || 0) - (a.bonafide_certificate_id || 0))[0];
-            if (latest.document_no) {
-              // Extract the number from format: ORG001/Sparsh/2025-2028/bc/1
-              const match = latest.document_no.match(/\/(\d+)$/);
-              nextNum = match ? parseInt(match[1]) + 1 : bcCerts.length + 1;
-            }
-          }
+    // Generate Ref No immediately using localStorage counter (no API delay)
+    const generateRefNo = () => {
+      let nextNum = 1;
+      const cachedCounter = localStorage.getItem("bc_certificate_counter");
+      
+      if (cachedCounter) {
+        nextNum = parseInt(cachedCounter) + 1;
+      }
+      
+      const refNo = `BC${String(nextNum).padStart(3, '0')}`;
+      localStorage.setItem("bc_certificate_counter", nextNum.toString());
+      return refNo;
+    };
 
-          // Generate new Ref No
-          const refNo = `ORG001/Sparsh/${formData.session || "2025-2028"}/bc/${nextNum}`;
-          setFormData((prev) => ({ ...prev, document_no: refNo }));
-        }
-      })
-      .catch((err) => console.error("Failed to fetch certificates for Ref No generation:", err));
+    const refNo = generateRefNo();
+    setFormData((prev) => ({ ...prev, document_no: refNo }));
   }, [isEditMode, formData.session]);
 
   const handleClose = () => {
@@ -220,7 +212,7 @@ const BonafideCertificateForm = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert("Bonafide Certificate saved successfully!");
+        alert(`Bonafide Certificate saved successfully! Ref No: ${formData.document_no}`);
         console.log(result);
         const academicSessionId = localStorage.getItem("academicSessionId");
         const branchId = localStorage.getItem("branchId");
@@ -309,10 +301,148 @@ const BonafideCertificateForm = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const doc = new jsPDF("portrait", "mm", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginLeft = 20;
+      const marginRight = 20;
+
+      // Certificate border with corner marks
+      const borderMargin = 25;
+      const borderX = borderMargin;
+      const borderY = borderMargin;
+      const borderW = pageWidth - borderMargin * 2;
+      const borderH = pageHeight - borderMargin * 2;
+
+      // Draw main border
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.rect(borderX, borderY, borderW, borderH);
+
+      // Draw corner marks
+      const cornerSize = 8;
+      const cornerThickness = 1;
+      doc.setLineWidth(cornerThickness);
+
+      // Top-left
+      doc.line(borderX, borderY, borderX + cornerSize, borderY);
+      doc.line(borderX, borderY, borderX, borderY + cornerSize);
+
+      // Top-right
+      doc.line(borderX + borderW, borderY, borderX + borderW - cornerSize, borderY);
+      doc.line(borderX + borderW, borderY, borderX + borderW, borderY + cornerSize);
+
+      // Bottom-left
+      doc.line(borderX, borderY + borderH, borderX + cornerSize, borderY + borderH);
+      doc.line(borderX, borderY + borderH, borderX, borderY + borderH - cornerSize);
+
+      // Bottom-right
+      doc.line(borderX + borderW, borderY + borderH, borderX + borderW - cornerSize, borderY + borderH);
+      doc.line(borderX + borderW, borderY + borderH, borderX + borderW, borderY + borderH - cornerSize);
+
+      let yPos = borderY + 12;
+
+      // College header
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES: KANTABADA : BBSR.", pageWidth / 2, yPos, { align: "center" });
+      yPos += 8;
+
+      // Ref No and Date
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`Ref No – ${formData.document_no || ""}`, marginLeft, yPos);
+      doc.text(`Date – ${getTodayStr()}`, pageWidth - marginRight, yPos, { align: "right" });
+      yPos += 8;
+
+      // Title
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("TO WHOMSOEVER IT MAY CONCERN", pageWidth / 2, yPos, { align: "center" });
+      yPos += 10;
+
+      // Certificate details
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+
+      const details = [
+        ["Student Name", formData.studentname || ""],
+        ["Course", formData.course_name || ""],
+        ["Academic Year", formData.academic_year || ""],
+        ["Admission Quota", formData.admission_quota || ""],
+        ["Current Year", formData.current_year || ""],
+        ["Session", formData.session || ""],
+        ["Purpose", formData.purpose || ""],
+      ];
+
+      details.forEach(([label, value]) => {
+        doc.setFont("Helvetica", "bold");
+        doc.text(label + ":", marginLeft, yPos);
+        doc.setFont("Helvetica", "normal");
+        doc.text(value, marginLeft + 60, yPos);
+        yPos += 6;
+      });
+
+      yPos += 4;
+
+      // Fee Structure Table
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text("FEE STRUCTURE", pageWidth / 2, yPos, { align: "center" });
+      yPos += 6;
+
+      doc.setFontSize(8);
+      const feeTableData = [
+        ["Fee Type", "Year 1", "Year 2", "Year 3", "Year 4"],
+        ["Course Fees", formData.course_fee_y1 || "", formData.course_fee_y2 || "", formData.course_fee_y3 || "", formData.course_fee_y4 || ""],
+        ["Hostel Fees", formData.hostel_fee_y1 || "", formData.hostel_fee_y2 || "", formData.hostel_fee_y3 || "", formData.hostel_fee_y4 || ""],
+        ["Misc Fees", formData.misc_fee_y1 || "", formData.misc_fee_y2 || "", formData.misc_fee_y3 || "", formData.misc_fee_y4 || ""],
+        ["Grand Total", formData.grand_total_y1 || "", formData.grand_total_y2 || "", formData.grand_total_y3 || "", formData.grand_total_y4 || ""],
+      ];
+
+      const colWidth = (pageWidth - marginLeft - marginRight - 20) / 5;
+
+      // Draw header row
+      doc.setFont("Helvetica", "bold");
+      feeTableData[0].forEach((header, idx) => {
+        doc.text(header, marginLeft + idx * colWidth + 3, yPos);
+      });
+      doc.line(marginLeft, yPos + 2, pageWidth - marginRight, yPos + 2);
+      yPos += 6;
+
+      // Draw data rows
+      doc.setFont("Helvetica", "normal");
+      for (let i = 1; i < feeTableData.length; i++) {
+        feeTableData[i].forEach((cell, idx) => {
+          doc.text(cell, marginLeft + idx * colWidth + 3, yPos);
+        });
+        yPos += 5;
+      }
+
+      yPos += 10;
+
+      // Principal signature section
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.line(pageWidth - marginRight - 40, yPos, pageWidth - marginRight, yPos);
+      doc.text("PRINCIPAL", pageWidth - marginRight - 15, yPos + 6, { align: "center" });
+
+      // Save PDF
+      const filename = `Bonafide_Certificate_${formData.studentname || "Student"}.pdf`;
+      doc.save(filename);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF.");
+    }
+  };
+
   const feeInput = (field) => (
     <div>
       <input
         type="text"
+        disabled={isFieldsDisabled}
         value={formData[field] || ""}
         onChange={set(field)}
         style={{ width: "100%", border: "none", outline: "none", textAlign: "center", fontSize: "13px", background: "transparent" }}
@@ -332,8 +462,21 @@ const BonafideCertificateForm = () => {
               {/* Action Buttons */}
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
-                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave} disabled={isEditMode}>Save</button>
-                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleUpdate} disabled={!isEditMode}>Update</button>
+                  {/* Save Button - Only in Create & Edit Mode */}
+                  {!isViewMode && (
+                    <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave} disabled={isEditMode}>Save</button>
+                  )}
+                  
+                  {/* Update Button - Only in Edit Mode (not View) */}
+                  {isEditMode && !isViewMode && (
+                    <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleUpdate}>Update</button>
+                  )}
+
+                  {/* Download PDF Button - Only in View Mode */}
+                  {isViewMode && (
+                    <button type="button" className="btn btn-success me-2" style={{ width: "150px" }} onClick={handleDownloadPDF}>Download PDF</button>
+                  )}
+
                   <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }}
                     onClick={() => {
                       if (isEditMode) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
+import jsPDF from "jspdf";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -36,14 +37,16 @@ const TransferCertificateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly
+  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly; View mode: viewMode: true
   const certificate = location.state?.certificate;
-  const isEditMode = !!certificate;
+  const viewMode = location.state?.viewMode || false;
+  const isEditMode = !!certificate && !viewMode;
+  const isViewMode = viewMode;
 
-  const studentData = isEditMode ? {} : (location.state || {});
-  const merged = isEditMode ? {} : { ...studentData, ...studentData.studentcertificatedetails };
+  const studentData = isEditMode || isViewMode ? {} : (location.state || {});
+  const merged = isEditMode || isViewMode ? {} : { ...studentData, ...studentData.studentcertificatedetails };
   const [formData, setFormData] = useState(() => {
-    if (isEditMode) {
+    if (isEditMode || isViewMode) {
       return {
         ...certificate,
         studentname: certificate.student_name || "",
@@ -57,6 +60,8 @@ const TransferCertificateForm = () => {
       registration_number: merged.registration_number || merged.registration_no || "",
     };
   });
+
+  const [isFieldsDisabled, setIsFieldsDisabled] = useState(isViewMode);
 
   const set = (field) => (e) =>
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -101,40 +106,26 @@ const TransferCertificateForm = () => {
       .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
 
-  // Auto-generate unique Ref No for new certificates
+  // Auto-generate unique Ref No for new certificates immediately on load
   useEffect(() => {
-    if (isEditMode || formData.document_no) return; // Skip if editing or already generated
-    const orgId = localStorage.getItem("orgId");
-    const branchId = localStorage.getItem("branchId");
-    if (!orgId || !branchId) return;
+    if (isEditMode || formData.document_no) return; // Skip if editing or already has Ref No
 
-    fetch(
-      `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}&document_type=TC`
-    )
-      .then((res) => res.json())
-      .then((res) => {
-        if (res?.data && Array.isArray(res.data)) {
-          // Extract all TC certificate numbers
-          const tcCerts = res.data.filter((c) => c.document_type === "TC");
-          let nextNum = 1;
-          
-          if (tcCerts.length > 0) {
-            // Sort by ID descending and get the latest
-            const latest = tcCerts.sort((a, b) => (b.transfer_certificate_id || 0) - (a.transfer_certificate_id || 0))[0];
-            if (latest.document_no) {
-              // Extract the number from format: ORG001/Sparsh/2025-2028/tc/1
-              const match = latest.document_no.match(/\/(\d+)$/);
-              nextNum = match ? parseInt(match[1]) + 1 : tcCerts.length + 1;
-            }
-          }
+    // Generate Ref No immediately using localStorage counter (no API delay)
+    const generateRefNo = () => {
+      let nextNum = 1;
+      const cachedCounter = localStorage.getItem("tc_certificate_counter");
+      
+      if (cachedCounter) {
+        nextNum = parseInt(cachedCounter) + 1;
+      }
+      
+      const refNo = `TC${String(nextNum).padStart(3, '0')}`;
+      localStorage.setItem("tc_certificate_counter", nextNum.toString());
+      return refNo;
+    };
 
-          // Generate new Ref No - use batch code from formData or default
-          const batchCode = formData.batch || "2025-2028";
-          const refNo = `ORG001/Sparsh/${batchCode}/tc/${nextNum}`;
-          setFormData((prev) => ({ ...prev, document_no: refNo }));
-        }
-      })
-      .catch((err) => console.error("Failed to fetch certificates for Ref No generation:", err));
+    const refNo = generateRefNo();
+    setFormData((prev) => ({ ...prev, document_no: refNo }));
   }, [isEditMode, formData.batch]);
 
   const handleClose = () => {
@@ -149,7 +140,28 @@ const TransferCertificateForm = () => {
     navigate("/admin/student-certificate");
   };
 
+  const validateFields = () => {
+    const errors = {};
+    if (!formData.studentname?.trim()) errors.studentname = "Student name is required";
+    if (!formData.date_of_leaving?.trim()) errors.date_of_leaving = "Date of leaving is required";
+    if (!formData.reason_for_tc?.trim()) errors.reason_for_tc = "Reason for TC is required";
+    if (!formData.general_conduct?.trim()) errors.general_conduct = "General conduct is required";
+    if (!formData.qualified_for_promotion?.trim()) errors.qualified_for_promotion = "Qualified for promotion is required";
+    if (!formData.class_last_studied?.trim()) errors.class_last_studied = "Class last studied is required";
+    return errors;
+  };
+
+  const [fieldErrors, setFieldErrors] = useState({});
+
   const handleSave = async () => {
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      alert("Please fill all mandatory fields!");
+      return;
+    }
+    setFieldErrors({});
+
     try {
       const student = localStorage.getItem("selectedCertificateStudentId");
       const session = localStorage.getItem("academicSessionId");
@@ -200,7 +212,7 @@ const TransferCertificateForm = () => {
       });
 
       if (response.ok) {
-        alert("Transfer Certificate saved successfully!");
+        alert(`Transfer Certificate saved successfully! Ref No: ${formData.document_no}`);
         const academicSessionId = localStorage.getItem("academicSessionId");
         const branchId = localStorage.getItem("branchId");
         const nextAcademicSessionId = localStorage.getItem("nextAcademicSessionId");
@@ -277,9 +289,121 @@ const TransferCertificateForm = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const doc = new jsPDF("portrait", "mm", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginLeft = 20;
+      const marginRight = 20;
+
+      // Certificate border with corner marks
+      const borderMargin = 25;
+      const borderX = borderMargin;
+      const borderY = borderMargin;
+      const borderW = pageWidth - borderMargin * 2;
+      const borderH = pageHeight - borderMargin * 2;
+
+      // Draw main border
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.rect(borderX, borderY, borderW, borderH);
+
+      // Draw corner marks
+      const cornerSize = 8;
+      const cornerThickness = 1;
+      doc.setLineWidth(cornerThickness);
+
+      // Top-left
+      doc.line(borderX, borderY, borderX + cornerSize, borderY);
+      doc.line(borderX, borderY, borderX, borderY + cornerSize);
+
+      // Top-right
+      doc.line(borderX + borderW, borderY, borderX + borderW - cornerSize, borderY);
+      doc.line(borderX + borderW, borderY, borderX + borderW, borderY + cornerSize);
+
+      // Bottom-left
+      doc.line(borderX, borderY + borderH, borderX + cornerSize, borderY + borderH);
+      doc.line(borderX, borderY + borderH, borderX, borderY + borderH - cornerSize);
+
+      // Bottom-right
+      doc.line(borderX + borderW, borderY + borderH, borderX + borderW - cornerSize, borderY + borderH);
+      doc.line(borderX + borderW, borderY + borderH, borderX + borderW, borderY + borderH - cornerSize);
+
+      let yPos = borderY + 12;
+
+      // College header
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES: KANTABADA : BBSR.", pageWidth / 2, yPos, { align: "center" });
+      yPos += 8;
+
+      // Ref No and Date
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`Ref No – ${formData.document_no || ""}`, marginLeft, yPos);
+      doc.text(`Date – ${getTodayStr()}`, pageWidth - marginRight, yPos, { align: "right" });
+      yPos += 8;
+
+      // Title
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("SCHOOL LEAVING CERTIFICATE", pageWidth / 2, yPos, { align: "center" });
+      yPos += 10;
+
+      // Certificate details table
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+
+      const details = [
+        ["1. Name of Student", formData.studentname || ""],
+        ["2. Father's Name", formData.father_name || ""],
+        ["3. Mother's Name", formData.mother_name || ""],
+        ["4. Date of Birth", formData.dob || ""],
+        ["5. Date of Admission", formData.date_of_admission || ""],
+        ["6. Class Last Studied", formData.class_last_studied || ""],
+        ["7. Date of Leaving", formData.date_of_leaving || ""],
+        ["8. General Conduct", formData.general_conduct || ""],
+        ["9. Qualified for Promotion", formData.qualified_for_promotion || ""],
+        ["10. Reason for TC", formData.reason_for_tc || ""],
+        ["11. Nationality", formData.nationality || ""],
+        ["12. Religion/Caste", formData.religion_caste || ""],
+        ["13. Registration Number", formData.registration_number || ""],
+        ["14. Permanent Address", formData.permanent_address || ""],
+      ];
+
+      details.forEach(([label, value]) => {
+        if (yPos > 240) {
+          doc.addPage();
+          yPos = 30;
+        }
+        doc.setFont("Helvetica", "bold");
+        doc.text(label, marginLeft, yPos);
+        doc.setFont("Helvetica", "normal");
+        doc.text(value, marginLeft + 65, yPos);
+        yPos += 6;
+      });
+
+      // Principal signature section
+      yPos += 15;
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.line(pageWidth - marginRight - 40, yPos, pageWidth - marginRight, yPos);
+      doc.text("PRINCIPAL", pageWidth - marginRight - 15, yPos + 6, { align: "center" });
+
+      // Save PDF
+      const filename = `Transfer_Certificate_${formData.studentname || "Student"}.pdf`;
+      doc.save(filename);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF.");
+    }
+  };
+
   const textInput = (field) => (
     <input
       type="text"
+      disabled={isFieldsDisabled}
       value={formData[field] || ""}
       onChange={set(field)}
       style={il({ minWidth: "180px", width: "100%" })}
@@ -297,8 +421,21 @@ const TransferCertificateForm = () => {
               {/* Action Buttons */}
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
-                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave} disabled={isEditMode}>Save</button>
-                  <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleUpdate} disabled={!isEditMode}>Update</button>
+                  {/* Save Button - Only in Create & Edit Mode */}
+                  {!isViewMode && (
+                    <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleSave} disabled={isEditMode}>Save</button>
+                  )}
+                  
+                  {/* Update Button - Only in Edit Mode (not View) */}
+                  {isEditMode && !isViewMode && (
+                    <button type="button" className="btn btn-primary me-2" style={{ width: "150px" }} onClick={handleUpdate}>Update</button>
+                  )}
+
+                  {/* Download PDF Button - Only in View Mode */}
+                  {isViewMode && (
+                    <button type="button" className="btn btn-success me-2" style={{ width: "150px" }} onClick={handleDownloadPDF}>Download PDF</button>
+                  )}
+
                   <button type="button" className="btn btn-secondary me-2" style={{ width: "150px" }}
                     onClick={() => {
                       if (isEditMode) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
+import jsPDF from "jspdf";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -19,13 +20,15 @@ const ConductCertificate = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly
+  // Edit mode: state has { certificate: {...} }; Create mode: state has student data directly; View mode: viewMode: true
   const certificate = location.state?.certificate;
-  const isEditMode = !!certificate;
+  const viewMode = location.state?.viewMode || false;
+  const isEditMode = !!certificate && !viewMode;
+  const isViewMode = viewMode;
 
-  const studentData = isEditMode ? {} : (location.state || {});
+  const studentData = isEditMode || isViewMode ? {} : (location.state || {});
   const [formData, setFormData] = useState(() => {
-    if (isEditMode) {
+    if (isEditMode || isViewMode) {
       return {
         ...certificate,
         studentname: certificate.student_name || "",
@@ -36,7 +39,7 @@ const ConductCertificate = () => {
       ...studentData.studentcertificatedetails,
     };
   });
-  const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
+  const [isFieldsDisabled, setIsFieldsDisabled] = useState(isViewMode);
   const apiStudentData = useRef({});
   
   // Fields that are fetched from student registration and should be disabled
@@ -77,39 +80,26 @@ const ConductCertificate = () => {
       .catch((err) => console.error("Failed to fetch student details:", err));
   }, []);
 
-  // Auto-generate unique Ref No for new certificates
+  // Auto-generate unique Ref No for new certificates immediately on load
   useEffect(() => {
-    if (isEditMode || formData.document_no) return; // Skip if editing or already generated
-    const orgId = localStorage.getItem("orgId");
-    const branchId = localStorage.getItem("branchId");
-    if (!orgId || !branchId) return;
+    if (isEditMode || formData.document_no) return; // Skip if editing or already has Ref No
 
-    fetch(
-      `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}&document_type=CC`
-    )
-      .then((res) => res.json())
-      .then((res) => {
-        if (res?.data && Array.isArray(res.data)) {
-          // Extract all CC certificate numbers
-          const ccCerts = res.data.filter((c) => c.document_type === "CC");
-          let nextNum = 1;
-          
-          if (ccCerts.length > 0) {
-            // Sort by ID descending and get the latest
-            const latest = ccCerts.sort((a, b) => (b.character_certificate_id || 0) - (a.character_certificate_id || 0))[0];
-            if (latest.document_no) {
-              // Extract the number from format: ORG001/Sparsh/2025-2028/cc/1
-              const match = latest.document_no.match(/\/(\d+)$/);
-              nextNum = match ? parseInt(match[1]) + 1 : ccCerts.length + 1;
-            }
-          }
+    // Generate Ref No immediately using localStorage counter (no API delay)
+    const generateRefNo = () => {
+      let nextNum = 1;
+      const cachedCounter = localStorage.getItem("cc_certificate_counter");
+      
+      if (cachedCounter) {
+        nextNum = parseInt(cachedCounter) + 1;
+      }
+      
+      const refNo = `CC${String(nextNum).padStart(3, '0')}`;
+      localStorage.setItem("cc_certificate_counter", nextNum.toString());
+      return refNo;
+    };
 
-          // Generate new Ref No  
-          const refNo = `ORG001/Sparsh/2025-2028/cc/${nextNum}`;
-          setFormData((prev) => ({ ...prev, document_no: refNo }));
-        }
-      })
-      .catch((err) => console.error("Failed to fetch certificates for Ref No generation:", err));
+    const refNo = generateRefNo();
+    setFormData((prev) => ({ ...prev, document_no: refNo }));
   }, [isEditMode]);
 
   const handleClose = () => {
@@ -132,8 +122,25 @@ const ConductCertificate = () => {
     });
     navigate("/admin/student-certificate");
   };
+  const validateFields = () => {
+    const errors = {};
+    if (!formData.studentname?.trim()) errors.studentname = "Student name is required";
+    if (!formData.father_name?.trim()) errors.father_name = "Father's name is required";
+    if (!formData.from_month?.trim()) errors.from_month = "From month is required";
+    if (!formData.to_month?.trim()) errors.to_month = "To month is required";
+    return errors;
+  };
 
+  const [fieldErrors, setFieldErrors] = useState({});
   const handleSave = async () => {
+    const errors = validateFields();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      alert("Please fill all mandatory fields!");
+      return;
+    }
+    setFieldErrors({});
+
     try {
       const student = localStorage.getItem("selectedCertificateStudentId") || studentData.student_id || null;
       const session = localStorage.getItem("academicSessionId");
@@ -182,7 +189,7 @@ const ConductCertificate = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert("Conduct Certificate saved successfully!");
+        alert(`Conduct Certificate saved successfully! Ref No: ${formData.document_no}`);
         console.log(result);
 
         const academicSessionId = localStorage.getItem("academicSessionId");
@@ -254,6 +261,128 @@ const ConductCertificate = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const doc = new jsPDF("portrait", "mm", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginLeft = 20;
+      const marginRight = 20;
+      const contentWidth = pageWidth - marginLeft - marginRight;
+
+      // Certificate border with corner marks
+      const borderMargin = 25;
+      const borderX = borderMargin;
+      const borderY = borderMargin;
+      const borderW = pageWidth - borderMargin * 2;
+      const borderH = pageHeight - borderMargin * 2;
+
+      // Draw main border
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.rect(borderX, borderY, borderW, borderH);
+
+      // Draw corner marks
+      const cornerSize = 8;
+      const cornerThickness = 1;
+      doc.setLineWidth(cornerThickness);
+
+      // Top-left
+      doc.line(borderX, borderY, borderX + cornerSize, borderY);
+      doc.line(borderX, borderY, borderX, borderY + cornerSize);
+
+      // Top-right
+      doc.line(borderX + borderW, borderY, borderX + borderW - cornerSize, borderY);
+      doc.line(borderX + borderW, borderY, borderX + borderW, borderY + cornerSize);
+
+      // Bottom-left
+      doc.line(borderX, borderY + borderH, borderX + cornerSize, borderY + borderH);
+      doc.line(borderX, borderY + borderH, borderX, borderY + borderH - cornerSize);
+
+      // Bottom-right
+      doc.line(borderX + borderW, borderY + borderH, borderX + borderW - cornerSize, borderY + borderH);
+      doc.line(borderX + borderW, borderY + borderH, borderX + borderW, borderY + borderH - cornerSize);
+
+      let yPos = borderY + 12;
+
+      // College header
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES: KANTABADA : BBSR.", pageWidth / 2, yPos, { align: "center" });
+      yPos += 8;
+
+      // Ref No and Date
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`REF.NO ${formData.document_no || ""}`, marginLeft, yPos);
+      doc.text(`DATE : ${getTodayStr()}`, pageWidth - marginRight, yPos, { align: "right" });
+      yPos += 8;
+
+      // Title
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("CONDUCT CERTIFICATE", pageWidth / 2, yPos, { align: "center" });
+      yPos += 12;
+
+      // Certificate body
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+
+      // "IT IS TO CERTIFY THAT"
+      let text = "IT IS TO CERTIFY THAT";
+      doc.text(text, marginLeft, yPos);
+      yPos += 6;
+
+      // Student name
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text((formData.studentname || "").toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+      yPos += 7;
+
+      // "D/O, S/O"
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("D/O, S/O", marginLeft, yPos);
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text((formData.father_name || "").toUpperCase(), marginLeft + 20, yPos);
+      yPos += 7;
+
+      // "WHO HAS STUDIED IN THIS INSTITUTION FROM"
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+      const studiedText = "WHO HAS STUDIED IN THIS INSTITUTION FROM";
+      doc.text(studiedText, marginLeft, yPos);
+      yPos += 6;
+
+      // From and To dates
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      const dateRange = `${formData.from_month || ""} TO ${formData.to_month || ""} BEARS A GOOD`;
+      doc.text(dateRange, marginLeft, yPos);
+      yPos += 6;
+
+      // "CHARACTER & CONDUCT."
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("CHARACTER & CONDUCT.", marginLeft, yPos);
+      yPos += 20;
+
+      // Principal signature section
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(10);
+      doc.line(pageWidth - marginRight - 40, pageHeight - borderMargin - 18, pageWidth - marginRight, pageHeight - borderMargin - 18);
+      doc.text("PRINCIPAL", pageWidth - marginRight - 15, pageHeight - borderMargin - 12, { align: "center" });
+
+      // Save PDF
+      const filename = `Conduct_Certificate_${formData.studentname || "Student"}.pdf`;
+      doc.save(filename);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF.");
+    }
+  };
+
   return (
     <div className="container-fluid">
       <div className="row">
@@ -265,24 +394,43 @@ const ConductCertificate = () => {
               {/* Action Buttons */}
               <div className="row mb-3 mt-3 mx-0">
                 <div className="col-12 d-flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary me-2"
-                    style={{ width: "150px" }}
-                    onClick={handleSave}
-                    disabled={isEditMode}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary me-2"
-                    style={{ width: "150px" }}
-                    onClick={handleUpdate}
-                    disabled={!isEditMode}
-                  >
-                    Update
-                  </button>
+                  {/* Save Button - Only in Create & Edit Mode */}
+                  {!isViewMode && (
+                    <button
+                      type="button"
+                      className="btn btn-primary me-2"
+                      style={{ width: "150px" }}
+                      onClick={handleSave}
+                      disabled={isEditMode}
+                    >
+                      Save
+                    </button>
+                  )}
+                  
+                  {/* Update Button - Only in Edit Mode (not View) */}
+                  {isEditMode && !isViewMode && (
+                    <button
+                      type="button"
+                      className="btn btn-primary me-2"
+                      style={{ width: "150px" }}
+                      onClick={handleUpdate}
+                    >
+                      Update
+                    </button>
+                  )}
+
+                  {/* Download PDF Button - Only in View Mode */}
+                  {isViewMode && (
+                    <button
+                      type="button"
+                      className="btn btn-success me-2"
+                      style={{ width: "150px" }}
+                      onClick={handleDownloadPDF}
+                    >
+                      Download PDF
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     className="btn btn-secondary me-2"
@@ -464,6 +612,7 @@ const ConductCertificate = () => {
                   <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
                     <input
                       type="text"
+                      disabled={isFieldsDisabled}
                       value={formData.from_month || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, from_month: e.target.value }))
@@ -484,6 +633,7 @@ const ConductCertificate = () => {
                     <span>TO</span>
                     <input
                       type="text"
+                      disabled={isFieldsDisabled}
                       value={formData.to_month || ""}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, to_month: e.target.value }))

@@ -8,6 +8,7 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import Select from "react-select";
 import ReactPaginate from "react-paginate";
+import { jsPDF } from "jspdf";
 import useFetchSessionList from "../../hooks/fetchSessionList";
 import useFetchCourseByFilter from "../../hooks/useFetchCourses";
 import useFetchBranch from "../../hooks/useFetchBranch";
@@ -483,31 +484,126 @@ const AdmAttendanceEntry = () => {
     }
   };
 
-  const handleViewPDFClick = (certificate) => {
-    const certId = certificate.transfer_certificate_id || certificate.character_certificate_id || certificate.bonafide_certificate_id || certificate.fee_certificate_id || 0;
-    localStorage.setItem("transfer_certificate_id", certId);
-    localStorage.setItem("selectedCertificateStudentId", certificate.student_id);
-    localStorage.setItem("selectedDocumentType", certificate.document_type);
-    localStorage.setItem("document_type", certificate.document_type);
-    // Legacy keys used by PDF components
-    localStorage.setItem("studentId", certificate.student_id);
-    localStorage.setItem("documentType", certificate.document_type);
+  const handleGenerateCertificatePDF = async (certificate) => {
+    const certId = certificate.transfer_certificate_id || certificate.character_certificate_id || certificate.bonafide_certificate_id || 0;
+    const studentId = certificate.student_id;
+    const documentType = certificate.document_type;
+    const orgId = sessionStorage.getItem("organization_id");
+    const branchId = sessionStorage.getItem("branch_id");
 
-    // Open PDF viewer in a new tab
-    switch (certificate.document_type) {
-      case "TC":
-        window.open("/transfercertificatepdf", "_blank");
-        break;
-      case "CC":
-        window.open("/charactercertificatepdf", "_blank");
-        break;
-      case "BC":
-        window.open("/bonafidecertificatepdf", "_blank");
-        break;
-      default:
-        alert("Invalid document type.");
-        break;
+    try {
+      // Fetch certificate details from API using correct parameters
+      const response = await fetch(
+        `${ApiUrl.apiurl}StudentCertificate/pdf/?organization_id=${orgId}&branch_id=${branchId}&student_id=${studentId}&document_type=${documentType}&student_certificate_id=${certId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch certificate data");
+      }
+
+      const data = await response.json();
+
+      if (data?.message === "success" && data?.data) {
+        const cert = data.data;
+        const doc = new jsPDF();
+
+        // Add logo
+        try {
+          doc.addImage("/Assets/sparsh.jpeg", "JPEG", 10, 10, 30, 30);
+        } catch (e) {
+          console.warn("Logo not found, continuing without it");
+        }
+
+        // Header
+        doc.setFontSize(14);
+        doc.setFont("Helvetica", "bold");
+        doc.setTextColor(0, 0, 255);
+        doc.text("Sparsh College of Nursing and Allied Sciences", 50, 15);
+
+        doc.setFontSize(12);
+        doc.setFont("Helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        doc.text("Affiliated to", 50, 21);
+        doc.text("Affiliation No.: School Code: SPARSH", 50, 27);
+        doc.text("Tel. No.:", 50, 33);
+        doc.text("https://sparshhospitals.com/nursing-college-admission/", 50, 39);
+
+        // Certificate title
+        doc.setFontSize(16);
+        doc.setFont("Helvetica", "bold");
+        const title = documentType === "TC" ? "School Leaving Certificate" : 
+                     documentType === "CC" ? "Character Certificate" : 
+                     "Bonafide Certificate";
+        doc.text(title, 105, 50, { align: "center" });
+
+        // Certificate number
+        doc.setFontSize(10);
+        doc.setFont("Helvetica", "normal");
+        const certNumber = documentType === "TC" ? cert.tc_number : 
+                          documentType === "CC" ? cert.cc_number : 
+                          documentType === "BC" ? cert.bc_number : 
+                          cert.fc_number || "";
+        
+        doc.text("Admission No.: " + (cert.admission_no || ""), 10, 60);
+        doc.text("SRN: ", 105, 60, { align: "center" });
+        doc.text(`Ref No.: ${certNumber}`, 200, 60, { align: "right" });
+
+        // Certificate details
+        const details = [
+          { key: "1. Name of Student", value: cert.student_name || "" },
+          { key: "2. Father's Name", value: cert.father_name || "" },
+          { key: "3. Mother's Name", value: cert.mother_name || "" },
+          { key: "4. Date of Birth", value: cert.date_of_birth ? cert.date_of_birth.split("T")[0] : "" },
+          { key: "5. Nationality", value: cert.nationality || "" },
+          { key: "6. Category", value: cert.category || "" },
+          { key: "7. Date of Admission", value: cert.date_of_admission ? cert.date_of_admission.split("T")[0] : "" },
+        ];
+
+        if (documentType === "TC" && cert.course_name) {
+          details.push(
+            { key: "8. Class/Course", value: cert.course_name || "" },
+            { key: "9. Subjects Studied", value: cert.subjects_studied || "" }
+          );
+        }
+
+        let yPosition = 70;
+        doc.setFontSize(10);
+        doc.setFont("Helvetica", "normal");
+
+        details.forEach((detail) => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          doc.text(`${detail.key}: ${detail.value || "-"}`, 10, yPosition);
+          yPosition += 8;
+        });
+
+        // Generate PDF and open in new window
+        const pdfBlob = doc.output("blob");
+        window.open(URL.createObjectURL(pdfBlob), "_blank");
+      } else {
+        alert("Certificate data not found or invalid response from server.");
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("An error occurred while generating the PDF. Please try again.");
     }
+  };
+
+  const handleViewPDFClick = (certificate) => {
+    // Navigate to certificate page in view mode instead of generating PDF
+    const documentType = certificate.document_type;
+    const routePath = documentType === "TC" ? "/transfercertificateform" : 
+                     documentType === "CC" ? "/charactercertificate" : 
+                     "/bonafidecertificate";
+    
+    navigate(routePath, { 
+      state: { 
+        certificate: certificate,
+        viewMode: true  // Flag to indicate this is view-only mode
+      } 
+    });
   };
 
   const handleExportToExcel = async () => {

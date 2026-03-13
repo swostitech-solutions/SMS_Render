@@ -24376,13 +24376,17 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                 if serializer.is_valid():
                     data = serializer.data
                     student_instance = StudentRegistration.objects.get(id=data.get('student'))
-                    student_transfer_certificate_last_instance = StudentTransferCertificate.objects.last()
-                    if student_transfer_certificate_last_instance:
-                        last_tc_number = student_transfer_certificate_last_instance.tc_number
-                        last_tc_number = last_tc_number.split("/")[-1]
-                        tc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/tc/{int(last_tc_number)+1}"
-                    else:
-                        tc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/tc/{1}"
+                    
+                    # Use document_no from request if provided, otherwise generate the old format
+                    tc_number = data.get('document_no') or request.data.get('document_no')
+                    if not tc_number:
+                        student_transfer_certificate_last_instance = StudentTransferCertificate.objects.last()
+                        if student_transfer_certificate_last_instance:
+                            last_tc_number = student_transfer_certificate_last_instance.tc_number
+                            last_tc_number = last_tc_number.split("/")[-1]
+                            tc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/tc/{int(last_tc_number)+1}"
+                        else:
+                            tc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/tc/{1}"
 
                     student_transfer_certificate_instance = StudentTransferCertificate.objects.filter(student_id=data.get('student'))
                     if student_transfer_certificate_instance:
@@ -24422,13 +24426,17 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                 if serializer.is_valid():
                     data = serializer.data
                     student_instance = StudentRegistration.objects.get(id=data.get('student'))
-                    student_character_certificate_last_instance = StudentCharacterCertificate.objects.last()
-                    if student_character_certificate_last_instance:
-                        last_cc_number = student_character_certificate_last_instance.cc_number
-                        last_cc_number = last_cc_number.split("/")[-1]
-                        cc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/cc/{int(last_cc_number) + 1}"
-                    else:
-                        cc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/cc/{1}"
+                    
+                    # Use document_no from request if provided, otherwise generate the old format
+                    cc_number = data.get('document_no') or request.data.get('document_no')
+                    if not cc_number:
+                        student_character_certificate_last_instance = StudentCharacterCertificate.objects.last()
+                        if student_character_certificate_last_instance:
+                            last_cc_number = student_character_certificate_last_instance.cc_number
+                            last_cc_number = last_cc_number.split("/")[-1]
+                            cc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/cc/{int(last_cc_number) + 1}"
+                        else:
+                            cc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/cc/{1}"
 
                     student_character_certificate_instance = StudentCharacterCertificate.objects.filter(
                         student_id=data.get('student'))
@@ -24458,13 +24466,17 @@ class StudentCertificateCreateAPIView(CreateAPIView):
                 if serializer.is_valid():
                     data = serializer.data
                     student_instance = StudentRegistration.objects.get(id=data.get('student'))
-                    student_bonafide_certificate_last_instance = StudentBonafideCertificate.objects.last()
-                    if student_bonafide_certificate_last_instance:
-                        last_bc_number = student_bonafide_certificate_last_instance.bc_number
-                        last_bc_number = last_bc_number.split("/")[-1]
-                        bc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/bc/{int(last_bc_number) + 1}"
-                    else:
-                        bc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/bc/{1}"
+                    
+                    # Use document_no from request if provided, otherwise generate the old format
+                    bc_number = data.get('document_no') or request.data.get('document_no')
+                    if not bc_number:
+                        student_bonafide_certificate_last_instance = StudentBonafideCertificate.objects.last()
+                        if student_bonafide_certificate_last_instance:
+                            last_bc_number = student_bonafide_certificate_last_instance.bc_number
+                            last_bc_number = last_bc_number.split("/")[-1]
+                            bc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/bc/{int(last_bc_number) + 1}"
+                        else:
+                            bc_number = f"{student_instance.organization.organization_code}/{student_instance.branch.branch_code}/{student_instance.batch.batch_code}/bc/{1}"
 
                     student_bonafide_certificate_instance = StudentBonafideCertificate.objects.filter(
                         student_id=data.get('student'))
@@ -25295,146 +25307,135 @@ class StudentCertificatePDFGenerateAPIView(APIView):
                         instance = StudentTransferCertificate.objects.get(student_id = student_id)
                     except StudentTransferCertificate.DoesNotExist:
                         return Response({"message":"record not found !!!"},status=status.HTTP_204_NO_CONTENT)
-                    if instance.certificate_status.upper() == 'APPROVED':
-                        data = {
-                            "student_id": instance.student.id,
-                            "student_name": student_name,
-                            "document_type": "TC",
-                            "organization_id": instance.student.organization.id,
-                            "organization": instance.student.organization.organization_description,
-                            "branch_id": instance.student.branch.id,
-                            "branch": instance.student.branch.branch_name,
-                            "batch_id": instance.student.batch.id,
-                            "batch": instance.student.batch.batch_code,
-                            "course_id": instance.student.course.id,
-                            "course": instance.student.course.course_name,
-                            "department_id": instance.student.department.id,
-                            "department": instance.student.department.department_description,
-                            "academic_year_id": instance.student.academic_year.id,
-                            "academic_year": instance.student.academic_year.academic_year_code,
-                            "semester_id": instance.student.semester.id,
-                            "semester": instance.student.semester.semester_description,
-                            "section_id": instance.student.section.id,
-                            "section": instance.student.section.section_name,
-                            "tc_number": instance.tc_number,
-                            "issue_date": instance.issue_date,
-                            "date_of_leaving": instance.date_of_leaving,
-                            "reason_of_leaving":instance.reason_of_leaving,
-                            "student_behaviour":instance.student_behaviour,
-                            "certificate_status":instance.certificate_status,
-                            "readmission_eligibility":instance.readmission_eligibility,
-                        }
-                        return Response({"message":"success","data":data},status=status.HTTP_200_OK)
-                    else:
-                        return Response({"message": "Certificate is not approved !!!"},
-                                        status=status.HTTP_400_BAD_REQUEST)
+                    # Allow PDF generation for all certificates (no approval required)
+                    data = {
+                        "student_id": instance.student.id,
+                        "student_name": student_name,
+                        "document_type": "TC",
+                        "organization_id": instance.student.organization.id,
+                        "organization": instance.student.organization.organization_description,
+                        "branch_id": instance.student.branch.id,
+                        "branch": instance.student.branch.branch_name,
+                        "batch_id": instance.student.batch.id,
+                        "batch": instance.student.batch.batch_code,
+                        "course_id": instance.student.course.id,
+                        "course": instance.student.course.course_name,
+                        "department_id": instance.student.department.id,
+                        "department": instance.student.department.department_description,
+                        "academic_year_id": instance.student.academic_year.id,
+                        "academic_year": instance.student.academic_year.academic_year_code,
+                        "semester_id": instance.student.semester.id,
+                        "semester": instance.student.semester.semester_description,
+                        "section_id": instance.student.section.id,
+                        "section": instance.student.section.section_name,
+                        "tc_number": instance.tc_number,
+                        "issue_date": instance.issue_date,
+                        "date_of_leaving": instance.date_of_leaving,
+                        "reason_of_leaving":instance.reason_of_leaving,
+                        "student_behaviour":instance.student_behaviour,
+                        "certificate_status":instance.certificate_status,
+                        "readmission_eligibility":instance.readmission_eligibility,
+                    }
+                    return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             elif document_type.upper() == 'CC':
                 if student_id:
                     try:
                         instance = StudentCharacterCertificate.objects.get(student_id = student_id)
                     except StudentCharacterCertificate.DoesNotExist:
                         return Response({"message":"record not found !!!"},status=status.HTTP_204_NO_CONTENT)
-                    if instance.certificate_status.upper() == 'APPROVED':
-                        data = {
-                            "student_id": instance.student.id,
-                            "student_name": instance.student.id,
-                            "document_type": "CC",
-                            "organization_id": instance.student.organization.id,
-                            "organization": instance.student.organization.organization_description,
-                            "branch_id": instance.student.branch.id,
-                            "branch": instance.student.branch.branch_name,
-                            "batch_id": instance.student.batch.id,
-                            "batch": instance.student.batch.batch_code,
-                            "course_id": instance.student.course.id,
-                            "course": instance.student.course.course_name,
-                            "department_id": instance.student.department.id,
-                            "department": instance.student.department.department_description,
-                            "academic_year_id": instance.student.academic_year.id,
-                            "academic_year": instance.student.academic_year.academic_year_code,
-                            "semester_id": instance.student.semester.id,
-                            "semester": instance.student.semester.semester_description,
-                            "section_id": instance.student.section.id,
-                            "section": instance.student.section.section_name,
-                            "cc_number":instance.cc_number,
-                            "issue_date": instance.issue_date,
-                            "student_behaviour": instance.student_behaviour,
-                            "certificate_status": instance.certificate_status
-                        }
-                        return Response({"message":"success","data":data},status=status.HTTP_200_OK)
-                    else:
-                        return Response({"message": "Certificate is not approved !!!"},status=status.HTTP_400_BAD_REQUEST)
+                    # Allow PDF generation for all certificates (no approval required)
+                    data = {
+                        "student_id": instance.student.id,
+                        "student_name": instance.student.id,
+                        "document_type": "CC",
+                        "organization_id": instance.student.organization.id,
+                        "organization": instance.student.organization.organization_description,
+                        "branch_id": instance.student.branch.id,
+                        "branch": instance.student.branch.branch_name,
+                        "batch_id": instance.student.batch.id,
+                        "batch": instance.student.batch.batch_code,
+                        "course_id": instance.student.course.id,
+                        "course": instance.student.course.course_name,
+                        "department_id": instance.student.department.id,
+                        "department": instance.student.department.department_description,
+                        "academic_year_id": instance.student.academic_year.id,
+                        "academic_year": instance.student.academic_year.academic_year_code,
+                        "semester_id": instance.student.semester.id,
+                        "semester": instance.student.semester.semester_description,
+                        "section_id": instance.student.section.id,
+                        "section": instance.student.section.section_name,
+                        "cc_number":instance.cc_number,
+                        "issue_date": instance.issue_date,
+                        "student_behaviour": instance.student_behaviour,
+                        "certificate_status": instance.certificate_status
+                    }
+                    return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             elif document_type.upper() == 'BC':
                 if student_id:
                     try:
                         instance = StudentBonafideCertificate.objects.get(student_id=student_id)
                     except StudentBonafideCertificate.DoesNotExist:
                         return Response({"message": "record not found !!!"}, status=status.HTTP_204_NO_CONTENT)
-                    if instance.certificate_status.upper() == 'APPROVED':
-                        data = {
-                            "student_id": instance.student.id,
-                            "student_name": instance.student.id,
-                            "document_type": "BC",
-                            "organization_id": instance.student.organization.id,
-                            "organization": instance.student.organization.organization_description,
-                            "branch_id": instance.student.branch.id,
-                            "branch": instance.student.branch.branch_name,
-                            "batch_id": instance.student.batch.id,
-                            "batch": instance.student.batch.batch_code,
-                            "course_id": instance.student.course.id,
-                            "course": instance.student.course.course_name,
-                            "department_id": instance.student.department.id,
-                            "department": instance.student.department.department_description,
-                            "academic_year_id": instance.student.academic_year.id,
-                            "academic_year": instance.student.academic_year.academic_year_code,
-                            "semester_id": instance.student.semester.id,
-                            "semester": instance.student.semester.semester_description,
-                            "section_id": instance.student.section.id,
-                            "section": instance.student.section.section_name,
-                            "bc_number": instance.bc_number,
-                            "issue_date": instance.issue_date,
-                            "purpose": instance.purpose,
-                            "certificate_status": instance.certificate_status
-                        }
-                        return Response({"message":"success","data":data},status=status.HTTP_200_OK)
-                    else:
-                        return Response({"message": "Certificate is not approved !!!"},
-                                        status=status.HTTP_400_BAD_REQUEST)
+                    # Allow PDF generation for all certificates (no approval required)
+                    data = {
+                        "student_id": instance.student.id,
+                        "student_name": instance.student.id,
+                        "document_type": "BC",
+                        "organization_id": instance.student.organization.id,
+                        "organization": instance.student.organization.organization_description,
+                        "branch_id": instance.student.branch.id,
+                        "branch": instance.student.branch.branch_name,
+                        "batch_id": instance.student.batch.id,
+                        "batch": instance.student.batch.batch_code,
+                        "course_id": instance.student.course.id,
+                        "course": instance.student.course.course_name,
+                        "department_id": instance.student.department.id,
+                        "department": instance.student.department.department_description,
+                        "academic_year_id": instance.student.academic_year.id,
+                        "academic_year": instance.student.academic_year.academic_year_code,
+                        "semester_id": instance.student.semester.id,
+                        "semester": instance.student.semester.semester_description,
+                        "section_id": instance.student.section.id,
+                        "section": instance.student.section.section_name,
+                        "bc_number": instance.bc_number,
+                        "issue_date": instance.issue_date,
+                        "purpose": instance.purpose,
+                        "certificate_status": instance.certificate_status
+                    }
+                    return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             elif document_type.upper() == 'FC':
                 if student_id:
                     try:
                         instance = StudentFeeCertificate.objects.get(student_id=student_id)
                     except StudentFeeCertificate.DoesNotExist:
                         return Response({"message": "record not found !!!"}, status=status.HTTP_204_NO_CONTENT)
-                    if instance.certificate_status.upper() == 'APPROVED':
-                        data = {
-                            "student_id": instance.student.id,
-                            "student_name": instance.student.id,
-                            "document_type": "FC",
-                            "organization_id": instance.student.organization.id,
-                            "organization": instance.student.organization.organization_description,
-                            "branch_id": instance.student.branch.id,
-                            "branch": instance.student.branch.branch_name,
-                            "batch_id": instance.student.batch.id,
-                            "batch": instance.student.batch.batch_code,
-                            "course_id": instance.student.course.id,
-                            "course": instance.student.course.course_name,
-                            "department_id": instance.student.department.id,
-                            "department": instance.student.department.department_description,
-                            "academic_year_id": instance.student.academic_year.id,
-                            "academic_year": instance.student.academic_year.academic_year_code,
-                            "semester_id": instance.student.semester.id,
-                            "semester": instance.student.semester.semester_description,
-                            "section_id": instance.student.section.id,
-                            "section": instance.student.section.section_name,
-                            "fc_number": instance.fc_number,
-                            "issue_date": instance.issue_date,
-                            "purpose": instance.purpose,
-                            "certificate_status": instance.certificate_status
-                        }
-                        return Response({"message":"success","data":data},status=status.HTTP_200_OK)
-                    else:
-                        return Response({"message": "Certificate is not approved !!!"},
-                                        status=status.HTTP_400_BAD_REQUEST)
+                    # Allow PDF generation for all certificates (no approval required)
+                    data = {
+                        "student_id": instance.student.id,
+                        "student_name": instance.student.id,
+                        "document_type": "FC",
+                        "organization_id": instance.student.organization.id,
+                        "organization": instance.student.organization.organization_description,
+                        "branch_id": instance.student.branch.id,
+                        "branch": instance.student.branch.branch_name,
+                        "batch_id": instance.student.batch.id,
+                        "batch": instance.student.batch.batch_code,
+                        "course_id": instance.student.course.id,
+                        "course": instance.student.course.course_name,
+                        "department_id": instance.student.department.id,
+                        "department": instance.student.department.department_description,
+                        "academic_year_id": instance.student.academic_year.id,
+                        "academic_year": instance.student.academic_year.academic_year_code,
+                        "semester_id": instance.student.semester.id,
+                        "semester": instance.student.semester.semester_description,
+                        "section_id": instance.student.section.id,
+                        "section": instance.student.section.section_name,
+                        "fc_number": instance.fc_number,
+                        "issue_date": instance.issue_date,
+                        "purpose": instance.purpose,
+                        "certificate_status": instance.certificate_status
+                    }
+                    return Response({"message":"success","data":data},status=status.HTTP_200_OK)
             else:
                 return Response({"message":"invalid document_type"},status=status.HTTP_204_NO_CONTENT)
 
