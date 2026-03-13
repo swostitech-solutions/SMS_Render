@@ -293,6 +293,7 @@ function AdmFeeReport() {
         const row = {
           "Sl No": index + 1,
           "Student Name": item.student_name || "",
+          "Session": item.batch_name || "",
           "Course": item.course_name || "",
           "Section": item.section_name || "",
           "Father Name": item.fatherName || "",
@@ -479,6 +480,7 @@ function AdmFeeReport() {
                         <tr>
                           <th rowSpan="2">Sr No</th>
                           <th rowSpan="2" style={{ minWidth: "150px" }}>Student Name</th>
+                          <th rowSpan="2">Session</th>
                           <th rowSpan="2">Course</th>
                           <th rowSpan="2">Section</th>
                           <th rowSpan="2" style={{ minWidth: "150px" }}>Father Name</th>
@@ -509,6 +511,7 @@ function AdmFeeReport() {
                             <tr key={index}>
                               <td>{offset + index + 1}</td>
                               <td>{item.student_name || "-"}</td>
+                              <td>{item.batch_name || "-"}</td>
                               <td>{item.course_name || "-"}</td>
                               <td>{item.section_name || "-"}</td>
                               <td>{item.fatherName || "-"}</td>
@@ -531,7 +534,7 @@ function AdmFeeReport() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={10 + dynamicHeaders.length * 3} className="text-center">No fee records found.</td>
+                            <td colSpan={11 + dynamicHeaders.length * 3} className="text-center">No fee records found.</td>
                           </tr>
                         )}
                       </tbody>
