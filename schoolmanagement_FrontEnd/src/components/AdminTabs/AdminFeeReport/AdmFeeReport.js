@@ -496,9 +496,9 @@ function AdmFeeReport() {
                         <tr>
                           {dynamicHeaders.map((_, idx) => (
                             <React.Fragment key={`sub-${idx}`}>
-                              <th className="bg-light" style={{ minWidth: "80px" }}>Total</th>
-                              <th className="bg-light" style={{ minWidth: "80px" }}>Paid</th>
-                              <th className="bg-light" style={{ minWidth: "80px" }}>Bal</th>
+                              <th style={{ minWidth: "80px" }}>Total</th>
+                              <th style={{ minWidth: "80px" }}>Paid</th>
+                              <th style={{ minWidth: "80px" }}>Bal</th>
                             </React.Fragment>
                           ))}
                         </tr>
