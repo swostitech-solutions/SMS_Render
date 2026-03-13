@@ -2670,36 +2670,29 @@ class BookIssuesSearchListAPIView(ListAPIView):
                         if item.issued_by:
                             try:
                                 EmployeeInstance = EmployeeMaster.objects.get(id=item.issued_by, is_active=True)
+                                name_parts = [
+                                    EmployeeInstance.title.strip() if EmployeeInstance.title else "",
+                                    EmployeeInstance.first_name.strip() if EmployeeInstance.first_name else "",
+                                    EmployeeInstance.middle_name.strip() if EmployeeInstance.middle_name else "",
+                                    EmployeeInstance.last_name.strip() if EmployeeInstance.last_name else "",
+                                ]
+                                staff_name = " ".join(part for part in name_parts if part).strip()
                             except:
-                                return Response({"message": "you are not a authenticate user for book issue"},
-                                                status=status.HTTP_400_BAD_REQUEST)
-
-                            name_parts = [
-                                EmployeeInstance.title.strip() if EmployeeInstance.title else "",
-                                EmployeeInstance.first_name.strip() if EmployeeInstance.first_name else "",
-                                EmployeeInstance.middle_name.strip() if EmployeeInstance.middle_name else "",
-                                EmployeeInstance.last_name.strip() if EmployeeInstance.last_name else "",
-                            ]
-
-                            # Join the non-empty parts with a single space
-                            staff_name = " ".join(part for part in name_parts if part).strip()
+                                staff_name = ""
+                        
                         staff_returned = ""
                         if item.returned_by:
                             try:
-                                EmployeeInstance = EmployeeMaster.objects.get(id=item.issued_by, is_active=True)
+                                EmployeeInstance = EmployeeMaster.objects.get(id=item.returned_by, is_active=True)
+                                name_parts = [
+                                    EmployeeInstance.title,
+                                    EmployeeInstance.first_name,
+                                    EmployeeInstance.middle_name,
+                                    EmployeeInstance.last_name
+                                ]
+                                staff_returned = " ".join(filter(bool, name_parts)).strip()
                             except:
-                                return Response({"message": "you are not a authenticate user for book issue"},
-                                                status=status.HTTP_400_BAD_REQUEST)
-
-                            name_parts = [
-                                EmployeeInstance.title,
-                                EmployeeInstance.first_name,
-                                EmployeeInstance.middle_name,
-                                EmployeeInstance.last_name
-                            ]
-
-                            # Filter out None or empty strings and join them with a space
-                            staff_returned = " ".join(filter(bool, name_parts)).strip()
+                                staff_returned = ""
 
                         data = {
                             'book_issue_id': item.book_issue_id,
@@ -2745,34 +2738,29 @@ class BookIssuesSearchListAPIView(ListAPIView):
                         if item.issued_by:
                             try:
                                 EmployeeInstance = EmployeeMaster.objects.get(id=item.issued_by, is_active=True)
+                                name_part = filter(None, [
+                                    EmployeeInstance.title,
+                                    EmployeeInstance.first_name,
+                                    EmployeeInstance.middle_name,
+                                    EmployeeInstance.last_name
+                                ])
+                                Issued_staff_name = " ".join(name_part)
                             except:
-                                return Response({"message": "you are not a authenticate user for book issue"},
-                                                status=status.HTTP_400_BAD_REQUEST)
-
-                            name_part = filter(None, [
-                                EmployeeInstance.title,
-                                EmployeeInstance.first_name,
-                                EmployeeInstance.middle_name,
-                                EmployeeInstance.last_name
-
-                            ])
-                            Issued_staff_name = " ".join(name_part)
+                                Issued_staff_name = ""
+                        
                         staff_returned = ""
                         if item.returned_by:
                             try:
-                                EmployeeInstance = EmployeeMaster.objects.get(id=item.issued_by, is_active=True)
+                                EmployeeInstance = EmployeeMaster.objects.get(id=item.returned_by, is_active=True)
+                                name_part = filter(None, [
+                                    EmployeeInstance.title,
+                                    EmployeeInstance.first_name,
+                                    EmployeeInstance.middle_name,
+                                    EmployeeInstance.last_name
+                                ])
+                                staff_returned = " ".join(name_part)
                             except:
-                                return Response({"message": "you are not a authenticate user for book issue"},
-                                                status=status.HTTP_400_BAD_REQUEST)
-
-                            name_part = filter(None, [
-                                EmployeeInstance.title,
-                                EmployeeInstance.first_name,
-                                EmployeeInstance.middle_name,
-                                EmployeeInstance.last_name
-
-                            ])
-                            staff_returned = " ".join(name_part)
+                                staff_returned = ""
 
                         data = {
                             'book_issue_id': item.book_issue_id,
