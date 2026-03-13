@@ -231,6 +231,7 @@ function Sidebar({ state, setState }) {
             {isModuleAccessible("lessonplan") && createExpandableSection("LessonPlan", <FaBookOpen />, [
               isChildAccessible("lessonplan.lesson_plan") && { path: "/admin/lesson-plan", text: "Lesson Plan" },
               isChildAccessible("lessonplan.teacher") && { path: "/admin/teacher-lesson-plan", text: "Teacher Lesson Plan" },
+              isChildAccessible("lessonplan.completion_report") && { path: "/admin/lesson-plan-completion-report", text: "Lesson Plan Completion Report" },
             ].filter(Boolean))}
             {isModuleAccessible("mentor") && createExpandableSection("Mentor", <PiChalkboardTeacher />, [
               isChildAccessible("mentor.assign") && { path: "/admin/assign-mentor", text: "Assign Mentor" },

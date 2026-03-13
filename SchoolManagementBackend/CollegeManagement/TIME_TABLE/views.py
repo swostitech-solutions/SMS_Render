@@ -899,6 +899,7 @@ class GetProfessorLecturePlanListAPIView(ListAPIView):
                 LecturePlanRecord = None
 
             if LecturePlanRecord:
+                LecturePlanRecord = LecturePlanRecord.order_by('-lecture_plan_id')
                 ResponseData = []
                 for item in LecturePlanRecord:
                     data = {
@@ -1148,13 +1149,22 @@ class TeacherLessonPlanSearchCriteriaListAPIView(ListAPIView):
                 if serializer.validated_data.get('subject_id'):
                     professorLectureList = professorLectureList.filter(subject=serializer.validated_data.get('subject_id'))
 
-
+                professorLectureList = professorLectureList.order_by('-lecture_plan_id')
 
                 if professorLectureList:
                     ResponseData = []
                     for item in professorLectureList:
+                        name_part = filter(None, [
+                            item.professor.title if hasattr(item.professor, 'title') else '',
+                            item.professor.first_name,
+                            item.professor.middle_name if hasattr(item.professor, 'middle_name') else '',
+                            item.professor.last_name
+                        ])
+                        professor_name = " ".join(name_part)
+
                         data = {
                             'LESSON_PLAN_ID': item.lecture_plan_id,
+                            'professor_name': professor_name,
                             'lecture_no': item.lecture_no,
                             'module_no': item.module_no,
                             'topic_details': item.topic.topic_name,

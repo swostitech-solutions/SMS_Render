@@ -136,6 +136,7 @@ import VisitorList from "./pages/AdminPanel/VisitorList";
 import AssignStudentMentor from "./components/AdminTabs/AdminAssignMentor/AssignStudentMentor";
 import LessonPlan from "./pages/AdminPanel/LessonPlan";
 import TeacherLessonPlan from "./pages/AdminPanel/TeacherLessonPlan";
+import LessonPlanCompletionReport from "./pages/AdminPanel/LessonPlanCompletionReport";
 import IncomeDetail from "./components/AdminTabs/AdminSearchIncome/IncomeDetail";
 import Training from "./pages/AdminPanel/Trainings";
 // import MOU from "./pages/AdminPanel/MOU";
@@ -591,6 +592,7 @@ function App() {
               />
               <Route path="/admin/visitors-list" element={<VisitorList />} />
               <Route path="/admin/lesson-plan" element={<LessonPlan />} />
+              <Route path="/admin/lesson-plan-completion-report" element={<LessonPlanCompletionReport />} />
               <Route path="/admin/income-detail" element={<IncomeDetail />} />
               {/* <Route path="/admin/mou-list" element={<MOU />} /> */}
               <Route path="/admin/mou-list" element={<AdmMOUList />} />
