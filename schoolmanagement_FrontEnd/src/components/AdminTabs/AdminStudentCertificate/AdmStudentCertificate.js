@@ -134,6 +134,13 @@ const AdmAttendanceEntry = () => {
 
     // Reset React Selects
     setSelectedDocumentType(null);
+    setSelectedBatch(null);
+    setSelectedCourse(null);
+    setSelectedDepartment(null);
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSection(null);
+    setSelectedStudentData(null);
 
     // Clear localStorage (except critical keys)
     const keysToKeep = [
@@ -372,7 +379,19 @@ const AdmAttendanceEntry = () => {
     setLoading(true);
     const orgId = sessionStorage.getItem("organization_id") || 1;
     const brId = sessionStorage.getItem("branch_id") || 1;
-    fetch(`${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${brId}`)
+    
+    let url = `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${brId}`;
+    
+    if (selectedStudentData && selectedStudentData.id) url += `&student_id=${selectedStudentData.id}`;
+    if (selectedBatch) url += `&batch_id=${selectedBatch}`;
+    if (selectedCourse) url += `&course_id=${selectedCourse}`;
+    if (selectedDepartment) url += `&department_id=${selectedDepartment}`;
+    if (selectedAcademicYear) url += `&academic_year_id=${selectedAcademicYear}`;
+    if (selectedSemester) url += `&semester_id=${selectedSemester}`;
+    if (selectedSection) url += `&section_id=${selectedSection}`;
+    if (selectedDocumentType?.value) url += `&document_type=${selectedDocumentType.value}`;
+
+    fetch(url)
       .then((response) => {
         if (response.status === 204) {
           setCertificates([]);
@@ -609,41 +628,45 @@ const AdmAttendanceEntry = () => {
   const handleExportToExcel = async () => {
     try {
       // Retrieve values from localStorage
-      const academicYearId = localStorage.getItem("academicSessionId");
-      const orgId = localStorage.getItem("orgId");
-      const branchId = localStorage.getItem("branchId");
+      const orgId = sessionStorage.getItem("organization_id") || localStorage.getItem("orgId");
+      const branchId = sessionStorage.getItem("branch_id") || localStorage.getItem("branchId");
 
       // API URL
-      const apiUrl = `${ApiUrl.apiurl}StudentCertificate/list/?academic_year_id=${academicYearId}&orgId=${orgId}&branchId=${branchId}`;
+      let apiUrl = `${ApiUrl.apiurl}StudentCertificate/list/?organization_id=${orgId}&branch_id=${branchId}`;
+      if (selectedStudentData && selectedStudentData.id) apiUrl += `&student_id=${selectedStudentData.id}`;
+      if (selectedBatch) apiUrl += `&batch_id=${selectedBatch}`;
+      if (selectedCourse) apiUrl += `&course_id=${selectedCourse}`;
+      if (selectedDepartment) apiUrl += `&department_id=${selectedDepartment}`;
+      if (selectedAcademicYear) apiUrl += `&academic_year_id=${selectedAcademicYear}`;
+      if (selectedSemester) apiUrl += `&semester_id=${selectedSemester}`;
+      if (selectedSection) apiUrl += `&section_id=${selectedSection}`;
+      if (selectedDocumentType?.value) apiUrl += `&document_type=${selectedDocumentType.value}`;
 
       // Fetch API data
       const response = await fetch(apiUrl);
+      
+      if (response.status === 204) {
+        alert("No records found.");
+        return;
+      }
+      
       const result = await response.json();
 
-      if (result.message !== "success") {
+      let data = [];
+      if (Array.isArray(result)) {
+        data = result;
+      } else {
         throw new Error("Failed to fetch data");
       }
 
-      const data = result.data;
-
-      // Map documentType codes
-      const documentTypeMap = {
-        TC: "Transfer Certificate",
-        BC: "Bonafide Certificate",
-        CC: "Conduct Certificate",
-      };
-
       // Prepare data for Excel
       const excelData = data.map((item, index) => ({
-        "Sr.No": index + 1,
-        "Document Type": documentTypeMap[item.documentType] || "Unknown",
-        "Applied On": item.tc_applied_date,
-        "Issued On": item.tc_issued_date || "Not Issued",
-        "Document No": item.transfer_certificate_no,
-        "Student Name": item.studentname,
-        "School Admission No": item.school_admission_no,
-        Section: item.sectionname,
-        Reason: item.reason_for_tc || "N/A",
+        "Sl.No": index + 1,
+        "Document Type": documentTypeMapping[item.document_type] || item.document_type || "N/A",
+        "Student Name": item.student_name || "",
+        "Session": item.batch || "",
+        "Academic Year": item.academic_year || "",
+        "Course": item.course || "",
       }));
 
       // Create a new workbook and worksheet
@@ -1038,9 +1061,9 @@ const AdmAttendanceEntry = () => {
                         <th>Sl.No</th>
                         <th>Document Type</th>
                         <th>Student Name</th>
-                        <th>School Admission No</th>
+                        <th>Session</th>
+                        <th>Academic Year</th>
                         <th>Course</th>
-                        <th>Section</th>
                         <th>Edit</th>
                         <th>View PDF</th>
                       </tr>
@@ -1063,14 +1086,14 @@ const AdmAttendanceEntry = () => {
                             {/* Student Name */}
                             <td>{certificate.student_name || ""}</td>
 
-                            {/* School Admission No */}
-                            <td>{certificate.college_admission_no || ""}</td>
+                            {/* Session */}
+                            <td>{certificate.batch || ""}</td>
+
+                            {/* Academic Year */}
+                            <td>{certificate.academic_year || ""}</td>
 
                             {/* Class / Course */}
                             <td>{certificate.course || ""}</td>
-
-                            {/* Section */}
-                            <td>{certificate.section || ""}</td>
 
                             {/* View/Edit Button */}
                             <td>

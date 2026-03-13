@@ -22808,16 +22808,36 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                         total_fees = Decimal('0.00')
                         total_paid_fees = Decimal('0.00')
                         discount_fees = Decimal('0.00')
+                        semester_wise_details = {}
 
                         # Calculate fee amounts
                         for fee in feesrecord:
                             if fee.element_name == 'DISCOUNT':
                                 discount_fees += fee.paid_amount
-
-
                             else:
                                 total_fees += fee.element_amount or 0
                                 total_paid_fees += fee.paid_amount
+                            
+                            # Build the complete breakdown
+                            sem_name = "Unknown"
+                            if fee.semester:
+                                sem_name = fee.semester.semester_description
+                            elif fee.fee_applied_from:
+                                sem_name = fee.fee_applied_from.semester_description
+                                
+                            elem = fee.element_name
+                            if sem_name not in semester_wise_details:
+                                semester_wise_details[sem_name] = {}
+                            if elem not in semester_wise_details[sem_name]:
+                                semester_wise_details[sem_name][elem] = {'amount': Decimal('0.00'), 'paid': Decimal('0.00'), 'balance': Decimal('0.00')}
+                            
+                            if fee.element_name == 'DISCOUNT':
+                                # We can just track discounts inside the "DISCOUNT" element key
+                                semester_wise_details[sem_name][elem]['paid'] += fee.paid_amount or Decimal('0.00')
+                            else:
+                                semester_wise_details[sem_name][elem]['amount'] += fee.element_amount or Decimal('0.00')
+                                semester_wise_details[sem_name][elem]['paid'] += fee.paid_amount or Decimal('0.00')
+                                semester_wise_details[sem_name][elem]['balance'] += (fee.element_amount or Decimal('0.00')) - (fee.paid_amount or Decimal('0.00'))
 
                         remaining_fees = total_fees - total_paid_fees - discount_fees
 
@@ -22826,6 +22846,7 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                         total_paid_fees = Decimal('0.00')
                         discount_fees = Decimal('0.00')
                         remaining_fees = Decimal('0.00')
+                        semester_wise_details = {}
 
                     # Get student name
                     name_part = filter(None, [
@@ -22865,7 +22886,8 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                         'total_fees': total_fees,
                         'total_paid': total_paid_fees,
                         'discount_fees': discount_fees,
-                        'remaining_fees': remaining_fees
+                        'remaining_fees': remaining_fees,
+                        'semester_wise_details': semester_wise_details
                     })
 
                 # Logic to filter records where remaining_fees > 0 if showbalancefees is true

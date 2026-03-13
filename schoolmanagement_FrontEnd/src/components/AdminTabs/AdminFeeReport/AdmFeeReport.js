@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Select from "react-select";
 import { ApiUrl } from "../../../ApiUrl";
 import { useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 function AdmFeeReport() {
   const navigate = useNavigate();
@@ -27,12 +25,12 @@ function AdmFeeReport() {
   const [sections, setSections] = useState([]);
 
   // Data States
-  const [receiptsData, setReceiptsData] = useState([]);
+  const [reportData, setReportData] = useState([]);
   const [showTable, setShowTable] = useState(false);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(0);
-  const receiptsPerPage = 10;
+  const itemsPerPage = 10;
 
   // Initialization: Fetch Sessions
   useEffect(() => {
@@ -210,19 +208,17 @@ function AdmFeeReport() {
     const params = new URLSearchParams({
       organization_id,
       branch_id,
-      view_receipt: true,
-      view_cancel_receipt: false
     });
 
     if (selectedSession) params.append("batch_id", selectedSession.value);
     if (selectedCourse) params.append("course_id", selectedCourse.value);
     if (selectedDepartment) params.append("department_id", selectedDepartment.value);
-    if (selectedAcademicYear) params.append("academic_year_id", selectedAcademicYear.value);
     if (selectedSemester) params.append("semester_id", selectedSemester.value);
     if (selectedSection) params.append("section_id", selectedSection.value);
+    params.append("show_fees", "A");
 
-    // Using the same endpoint as AdmFeeSearch
-    const apiUrl = `${ApiUrl.apiurl}FeeReceipt/GetFilterFeeReceipts/?${params.toString()}`;
+    // Using the same endpoint as AdmFeeLedger for simplified table view
+    const apiUrl = `${ApiUrl.apiurl}FeeLedger/GetFeeLedgerBasedOnCondition/?${params.toString()}`;
 
     try {
       const response = await fetch(apiUrl, {
@@ -235,17 +231,17 @@ function AdmFeeReport() {
 
       const result = await response.json();
 
-      if (response.ok && Array.isArray(result.data)) {
-        setReceiptsData(result.data);
+      if (response.ok && result.message === "success!!") {
+        setReportData(result.data);
         setShowTable(true);
         setCurrentPage(0);
       } else {
-        setReceiptsData([]);
+        setReportData([]);
         setShowTable(false);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      setReceiptsData([]);
+      setReportData([]);
       setShowTable(false);
     }
   };
@@ -258,13 +254,67 @@ function AdmFeeReport() {
     setSelectedSemester(null);
     setSelectedSection(null);
     setShowTable(false);
-    setReceiptsData([]);
+    setReportData([]);
     setCurrentPage(0);
   };
 
+  const dynamicHeaders = useMemo(() => {
+    const headersMap = {};
+    
+    reportData.forEach((student) => {
+      if (student.semester_wise_details) {
+        Object.keys(student.semester_wise_details).forEach((sem) => {
+          if (!headersMap[sem]) headersMap[sem] = new Set();
+          Object.keys(student.semester_wise_details[sem]).forEach((elem) => {
+            if (elem !== "DISCOUNT") {
+              headersMap[sem].add(elem);
+            }
+          });
+        });
+      }
+    });
+
+    const headers = [];
+    const sems = Object.keys(headersMap).sort();
+    
+    sems.forEach((sem) => {
+      const elems = Array.from(headersMap[sem]).sort();
+      elems.forEach((elem) => {
+        headers.push({ sem, elem }); 
+      });
+    });
+
+    return headers;
+  }, [reportData]);
+
   const exportToExcel = () => {
-    if (receiptsData.length > 0) {
-      const ws = XLSX.utils.json_to_sheet(receiptsData);
+    if (reportData.length > 0) {
+      const exportRows = reportData.map((item, index) => {
+        const row = {
+          "Sl No": index + 1,
+          "Student Name": item.student_name || "",
+          "Course": item.course_name || "",
+          "Section": item.section_name || "",
+          "Father Name": item.fatherName || "",
+          "Mother Name": item.motherName || "",
+        };
+
+        dynamicHeaders.forEach(({sem, elem}) => {
+          const detail = item.semester_wise_details?.[sem]?.[elem];
+          row[`${sem} - ${elem} (Amount)`] = detail ? detail.amount : 0;
+          row[`${sem} - ${elem} (Paid)`] = detail ? detail.paid : 0;
+          row[`${sem} - ${elem} (Balance)`] = detail ? detail.balance : 0;
+        });
+
+        row["Total Fees"] = item.total_fees || 0;
+        row["Fees Paid"] = item.total_paid || 0;
+        row["Discount"] = item.discount_fees || 0;
+        row["Balance"] = item.remaining_fees || 0;
+
+        return row;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportRows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "FeeReports");
       XLSX.writeFile(wb, "Fee_Report_Data.xlsx");
@@ -273,167 +323,10 @@ function AdmFeeReport() {
     }
   };
 
-  const handleReceiptLinkClick = async (receiptNo) => {
-    const orgId = sessionStorage.getItem("organization_id");
-    const branchId = sessionStorage.getItem("branch_id");
-
-    if (!orgId || !branchId) {
-      alert("Organization or Branch ID missing.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${ApiUrl.apiurl}FeeReceipt/GetFeeReceiptsBasedOnReceiptNo/?organization_id=${orgId}&branch_id=${branchId}&receipt_no=${receiptNo}`
-      );
-      const result = await response.json();
-
-      if (response.ok && result.receipt_data) {
-        const data = result.receipt_data;
-        const doc = new jsPDF("portrait", "mm", "a4");
-
-        // LOGO LOAD
-        const toBase64 = (url) =>
-          new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = () => {
-              const canvas = document.createElement("canvas");
-              canvas.width = img.width;
-              canvas.height = img.height;
-              canvas.getContext("2d").drawImage(img, 0, 0);
-              resolve(canvas.toDataURL("image/jpeg"));
-            };
-            img.onerror = reject;
-            img.src = url;
-          });
-
-        try {
-          const sparshLogo = await toBase64("/Assets/sparsh.jpeg");
-          doc.addImage(sparshLogo, "JPEG", 10, 10, 20, 20);
-        } catch { }
-
-        // HEADER
-        const pageWidth = doc.internal.pageSize.getWidth();
-        doc.setFont("Helvetica", "bold");
-        doc.setFontSize(16);
-        const headerText = "Sparsh College of Nursing and Allied Sciences";
-        const textWidth =
-          (doc.getStringUnitWidth(headerText) * doc.internal.getFontSize()) /
-          doc.internal.scaleFactor;
-        doc.text(headerText, (pageWidth - textWidth) / 2, 22);
-        doc.setFontSize(12);
-        doc.text("Fee Receipt", pageWidth / 2, 30, { align: "center" });
-
-        // RECEIPT DETAILS
-        const receiptDetails = [
-          ["Receipt No", data.receipt_no, "Section", data.section_name],
-          [
-            "Receipt Date",
-            data.receipt_date?.split("T")[0],
-            "Father's Name",
-            data.father_name,
-          ],
-          [
-            "Student Name",
-            Array.isArray(data.student_name)
-              ? data.student_name.join(" ")
-              : typeof data.student_name === "object" &&
-                data.student_name !== null
-                ? Object.values(data.student_name).join(" ")
-                : data.student_name || "",
-            "Fee Period",
-            Array.isArray(data.fee_semesters)
-              ? data.fee_semesters.join(", ")
-              : typeof data.fee_semesters === "object" &&
-                data.fee_semesters !== null
-                ? Object.values(data.fee_semesters).join(", ")
-                : data.fee_semesters || "",
-          ],
-          ["Admission No", data.admission_no, "Amount", Number(data.amount || 0).toFixed(2)],
-          ["Class", `${data.course_name || ""} - ${data.semester_name || ""}`, "", ""],
-        ];
-
-        doc.autoTable({
-          startY: 35,
-          body: receiptDetails,
-          theme: "grid",
-          styles: { fontSize: 11, fontStyle: "bold" },
-          margin: { left: 15 },
-          tableWidth: 180,
-        });
-
-        // FEE ELEMENT TABLE
-        const feeElements = Object.values(data.payment_element_list || {}).map(
-          (el, index) => [index + 1, el.element_name, Number(el.amount || 0).toFixed(2)]
-        );
-        feeElements.push(["", "Total", Number(data.amount || 0).toFixed(2)]);
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 8,
-          head: [["Sr. No.", "Element", "Amount"]],
-          body: feeElements,
-          theme: "grid",
-          styles: { fontSize: 11, fontStyle: "bold" },
-          columnStyles: { 2: { halign: "right" } },
-          margin: { left: 15 },
-          tableWidth: 180,
-        });
-
-        // PAYMENT METHOD TABLE
-        const paymentData = [
-          [
-            data.payment_method || "-",
-            data.payment_reference || "-",
-            data.remarks || "-",
-            Number(data.amount || 0).toFixed(2),
-          ],
-        ];
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 8,
-          head: [["Payment Method", "Payment Reference", "Remark", "Amount"]],
-          body: paymentData,
-          theme: "grid",
-          styles: { fontSize: 11, fontStyle: "bold" },
-          columnStyles: { 3: { halign: "right" } },
-          margin: { left: 15 },
-          tableWidth: 180,
-        });
-
-        // SUMMARY TABLE
-        const summary = [
-          ["Total Session Fee", Number(data.total_academic_year_fees || 0).toFixed(2)],
-          ["Total Paid", Number(data.total_paid || 0).toFixed(2)],
-          ["Total Balance", Number(data.remaining_amount || 0).toFixed(2)],
-        ];
-
-        doc.autoTable({
-          startY: doc.lastAutoTable.finalY + 8,
-          body: summary,
-          theme: "grid",
-          styles: { fontSize: 11, fontStyle: "bold" },
-          columnStyles: { 1: { halign: "right" } },
-          margin: { left: 15 },
-          tableWidth: 180,
-        });
-
-        // OPEN PDF
-        const pdfBlob = doc.output("blob");
-        window.open(URL.createObjectURL(pdfBlob), "_blank");
-      } else {
-        alert(result.message || "Failed to fetch receipt details.");
-      }
-    } catch (error) {
-      console.error("Error fetching receipt details:", error);
-      alert("An error occurred. Please try again.");
-    }
-  };
-
   const handlePageClick = (data) => setCurrentPage(data.selected);
-  const offset = currentPage * receiptsPerPage;
-  const currentReceipts = receiptsData.slice(offset, offset + receiptsPerPage);
-  const pageCount = Math.ceil(receiptsData.length / receiptsPerPage);
+  const offset = currentPage * itemsPerPage;
+  const currentItems = reportData.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(reportData.length / itemsPerPage);
 
   return (
     <div className="container-fluid">
@@ -581,66 +474,70 @@ function AdmFeeReport() {
               {showTable && (
                 <div className="fee-details-table mt-4 mx-2">
                   <div className="table-responsive">
-                    <table className="table table-bordered">
-                      <thead>
+                    <table className="table table-bordered align-middle text-center">
+                      <thead className="table-light">
                         <tr>
-                          <th>Sr No</th>
-                          <th>Session</th>
-                          <th>Academic Year</th>
-                          <th>Course</th>
-                          <th>Current Semester</th>
-                          <th>Fee Period</th>
-                          <th>Name</th>
-                          <th>Father's Name</th>
-                          <th>Section</th>
-                          <th>Bar Code No</th>
-                          <th>College Admission No</th>
-                          <th>Receipt Date</th>
-                          <th>Receipt Amount</th>
-                          <th>Discount Amount</th>
-                          <th>Receipt No</th>
+                          <th rowSpan="2">Sr No</th>
+                          <th rowSpan="2" style={{ minWidth: "150px" }}>Student Name</th>
+                          <th rowSpan="2">Course</th>
+                          <th rowSpan="2">Section</th>
+                          <th rowSpan="2" style={{ minWidth: "150px" }}>Father Name</th>
+                          <th rowSpan="2" style={{ minWidth: "150px" }}>Mother Name</th>
+                          {dynamicHeaders.map((header, idx) => (
+                            <th key={idx} colSpan="3" className="border-bottom">
+                              {header.sem} <br/> <small className="text-muted">{header.elem}</small>
+                            </th>
+                          ))}
+                          <th rowSpan="2">Total Fees</th>
+                          <th rowSpan="2">Fees Paid</th>
+                          <th rowSpan="2">Discount</th>
+                          <th rowSpan="2">Balance</th>
+                        </tr>
+                        <tr>
+                          {dynamicHeaders.map((_, idx) => (
+                            <React.Fragment key={`sub-${idx}`}>
+                              <th className="bg-light" style={{ minWidth: "80px" }}>Total</th>
+                              <th className="bg-light" style={{ minWidth: "80px" }}>Paid</th>
+                              <th className="bg-light" style={{ minWidth: "80px" }}>Bal</th>
+                            </React.Fragment>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {receiptsData.length > 0 ? (
-                          currentReceipts.map((receipt, index) => (
+                        {reportData.length > 0 ? (
+                          currentItems.map((item, index) => (
                             <tr key={index}>
                               <td>{offset + index + 1}</td>
-                              <td>{receipt.batch_description || receipt.batch || "-"}</td>
-                              <td>{receipt.academic_year_code || receipt.academic_year || "-"}</td>
-                              <td>{receipt.course_name || "-"}</td>
-                              <td>{receipt.current_semester_name || "-"}</td>
-                              <td>{receipt.semester_description || receipt.semester_name || "-"}</td>
-                              <td>{receipt.student_name || "-"}</td>
-                              <td>{receipt.father_name || "-"}</td>
-                              <td>{receipt.section_name || "-"}</td>
-                              <td>{receipt.barcode || "-"}</td>
-                              <td>{receipt.college_admission_no || "-"}</td>
-                              <td>{receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : receipt.receipt_date ? new Date(receipt.receipt_date).toLocaleDateString() : "-"}</td>
-                              <td>{receipt.amount || 0}</td>
-                              <td>{receipt.discount_amount || 0}</td>
-                              <td>
-                                <a
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleReceiptLinkClick(receipt.receipt_no);
-                                  }}
-                                >
-                                  RC{receipt.receipt_no || "-"}
-                                </a>
-                              </td>
+                              <td>{item.student_name || "-"}</td>
+                              <td>{item.course_name || "-"}</td>
+                              <td>{item.section_name || "-"}</td>
+                              <td>{item.fatherName || "-"}</td>
+                              <td>{item.motherName || "-"}</td>
+                              {dynamicHeaders.map((header, idx) => {
+                                const detail = item.semester_wise_details?.[header.sem]?.[header.elem];
+                                return (
+                                  <React.Fragment key={`data-${idx}`}>
+                                    <td>{detail ? detail.amount : "-"}</td>
+                                    <td>{detail ? detail.paid : "-"}</td>
+                                    <td>{detail ? detail.balance : "-"}</td>
+                                  </React.Fragment>
+                                );
+                              })}
+                              <td>{item.total_fees || 0}</td>
+                              <td>{item.total_paid || 0}</td>
+                              <td>{item.discount_fees || 0}</td>
+                              <td>{item.remaining_fees || 0}</td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="15" className="text-center">No fee records found.</td>
+                            <td colSpan={10 + dynamicHeaders.length * 3} className="text-center">No fee records found.</td>
                           </tr>
                         )}
                       </tbody>
                     </table>
                   </div>
-                  {receiptsData.length > 0 && (
+                  {reportData.length > 0 && (
                     <ReactPaginate
                       previousLabel={"Previous"}
                       nextLabel={"Next"}
