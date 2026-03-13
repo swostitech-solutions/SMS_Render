@@ -48,13 +48,6 @@ const ConductCertificate = () => {
   const disabledFields = new Set(["studentname", "father_name"]);
 
   useEffect(() => {
-    const documentType = localStorage.getItem("selectedDocumentType");
-    if (documentType === "CC") {
-      setIsFieldsDisabled(true);
-    }
-  }, []);
-
-  useEffect(() => {
     if (isEditMode) return; // In edit mode, data is already pre-filled from certificate
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");

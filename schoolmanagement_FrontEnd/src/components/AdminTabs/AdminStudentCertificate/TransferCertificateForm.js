@@ -53,6 +53,7 @@ const TransferCertificateForm = () => {
         studentname: certificate.student_name || "",
         permanent_address: certificate.permanent_address || "",
         registration_number: certificate.registration_number || "",
+        document_no: extractDocumentNo("TC", certificate.document_no || certificate.tc_number || certificate.transfer_certificate_no),
       };
     }
     return {
@@ -71,7 +72,6 @@ const TransferCertificateForm = () => {
   const disabledFields = new Set(["studentname"]);
 
   useEffect(() => {
-    if (isEditMode) return; // In edit mode, data is already pre-filled from certificate
     const studentId = localStorage.getItem("selectedCertificateStudentId");
     const orgId = localStorage.getItem("orgId");
     const branchId = localStorage.getItem("branchId");
@@ -257,6 +257,8 @@ const TransferCertificateForm = () => {
         nationality: formData.nationality || "",
         from_month: formData.from_month || "",
         to_month: formData.to_month || "",
+        father_name: formData.father_name || "",
+        mother_name: formData.mother_name || "",
       };
 
       const response = await fetch(
@@ -413,7 +415,9 @@ const TransferCertificateForm = () => {
                     <Row label="Name of the Mother">{textInput("mother_name")}</Row>
                     <Row label="Nationality">{textInput("nationality")}</Row>
                     <Row label="Religion and Caste">{textInput("religion_caste")}</Row>
-                    <Row label="Date of Birth">{textInput("dob")}</Row>
+                    <Row label="Date of Birth">
+                      <input type="date" disabled={isFieldsDisabled} value={formData.dob || ""} onChange={set("dob")} style={il({ minWidth: "180px", width: "100%" })} />
+                    </Row>
                     <Row label="Permanent Address">{textInput("permanent_address")}</Row>
                     <Row label="Registration Number">{textInput("registration_number")}</Row>
                     <Row label="Date of Admission">{textInput("date_of_admission")}</Row>
@@ -430,7 +434,7 @@ const TransferCertificateForm = () => {
                       {textInput("general_conduct")}
                     </Row>
                     <Row label="Date of leaving from college">
-                      <input type="date" value={formData.date_of_leaving || ""} onChange={set("date_of_leaving")}
+                      <input type="date" disabled={isFieldsDisabled} value={formData.date_of_leaving || ""} onChange={set("date_of_leaving")}
                         style={il({ minWidth: "160px" })} />
                     </Row>
                   </tbody>

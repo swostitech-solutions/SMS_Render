@@ -318,13 +318,13 @@ const AdmAttendanceEntry = () => {
 
         switch (documentType) {
           case "TC":
-            navigate("/transfercertificateform", { state: result.data });
+            navigate("/transfercertificateform", { state: { certificate: result.data } });
             break;
           case "CC":
-            navigate("/charactercertificate", { state: result.data });
+            navigate("/charactercertificate", { state: { certificate: result.data } });
             break;
           case "BC":
-            navigate("/bonafidecertificate", { state: result.data });
+            navigate("/bonafidecertificate", { state: { certificate: result.data } });
             break;
           default:
             alert("Invalid document type.");
@@ -442,9 +442,9 @@ const AdmAttendanceEntry = () => {
 
       switch (documentType) {
         case "TC":
-          if (action === "view") {
-            navigate("/transfercertificateformview", {
-              state: { certificate: result.data },
+          if (action === "view" || action === "view-new") {
+            navigate("/transfercertificateform", {
+              state: { certificate: result.data, viewMode: true },
             });
           } else {
             navigate("/transfercertificateform", {
@@ -453,9 +453,9 @@ const AdmAttendanceEntry = () => {
           }
           break;
         case "CC":
-          if (action === "view") {
-            navigate("/charactercertificateview", {
-              state: { certificate: result.data },
+          if (action === "view" || action === "view-new") {
+            navigate("/charactercertificate", {
+              state: { certificate: result.data, viewMode: true },
             });
           } else {
             navigate("/charactercertificate", {
@@ -464,9 +464,9 @@ const AdmAttendanceEntry = () => {
           }
           break;
         case "BC":
-          if (action === "view") {
-            navigate("/bonafidecertificateview", {
-              state: { certificate: result.data },
+          if (action === "view" || action === "view-new") {
+            navigate("/bonafidecertificate", {
+              state: { certificate: result.data, viewMode: true },
             });
           } else {
             navigate("/bonafidecertificate", {

@@ -46,6 +46,7 @@ const BonafideCertificateForm = () => {
         studentname: certificate.student_name || "",
         academic_year: certificate.academic_year_str || certificate.academic_year || "",
         purpose: certificate.purpose || "Educational Loan Purpose",
+        document_no: extractDocumentNo("BC", certificate.document_no || certificate.bc_number || certificate.bonafide_certificate_no),
       };
     }
     return {
@@ -429,7 +430,7 @@ const BonafideCertificateForm = () => {
                   </span>
                   <span>&nbsp;under&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" disabled value={formData.admission_quota || ""}
+                    <input type="text" disabled={isFieldsDisabled} value={formData.admission_quota || ""} onChange={set("admission_quota")}
                       style={inputInline({ width: "120px", textAlign: "center" })} />
                     {errors.admission_quota && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.admission_quota}</small>}
                   </span>
