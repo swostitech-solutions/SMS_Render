@@ -449,7 +449,7 @@ const BonafideCertificateForm = () => {
                   </span>
                   <span>&nbsp;) successfully. We are hereby inform you that the following fees structure is applicable for the current academic year. This certificate is issued to this student on her request for the purpose of&nbsp;</span>
                   <span style={{ display: "inline-block", verticalAlign: "top" }}>
-                    <input type="text" value={formData.purpose || "Educational Loan Purpose"} onChange={set("purpose")}
+                    <input type="text" disabled={isFieldsDisabled} value={formData.purpose || "Educational Loan Purpose"} onChange={set("purpose")}
                       style={inputInline({ width: "220px", textAlign: "center", fontWeight: "bold" })} />
                     {errors.purpose && <small className="text-danger" style={{ display: "block", fontSize: "11px" }}>{errors.purpose}</small>}
                   </span>
