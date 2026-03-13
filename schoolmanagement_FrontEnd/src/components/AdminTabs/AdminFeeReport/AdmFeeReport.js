@@ -30,7 +30,7 @@ function AdmFeeReport() {
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   // Initialization: Fetch Sessions
   useEffect(() => {
@@ -477,72 +477,93 @@ function AdmFeeReport() {
 
               {showTable && (
                 <div className="fee-details-table mt-4 mx-2">
-                  <div className="table-responsive">
-                    <table className="table table-bordered align-middle text-center">
-                      <thead className="table-light">
-                        <tr>
-                          <th rowSpan="2">Sr No</th>
-                          <th rowSpan="2" style={{ minWidth: "150px" }}>Student Name</th>
-                          <th rowSpan="2">Session</th>
-                          <th rowSpan="2">Course</th>
-                          <th rowSpan="2">Section</th>
-                          <th rowSpan="2" style={{ minWidth: "150px" }}>Father Name</th>
-                          <th rowSpan="2" style={{ minWidth: "150px" }}>Mother Name</th>
-                          {dynamicHeaders.map((header, idx) => (
-                            <th key={idx} colSpan="3" className="border-bottom">
-                              {header.sem} <br/> <small className="text-muted">{header.elem}</small>
-                            </th>
-                          ))}
-                          <th rowSpan="2">Total Fees</th>
-                          <th rowSpan="2">Fees Paid</th>
-                          <th rowSpan="2">Discount</th>
-                          <th rowSpan="2">Balance</th>
-                        </tr>
-                        <tr>
-                          {dynamicHeaders.map((_, idx) => (
-                            <React.Fragment key={`sub-${idx}`}>
-                              <th style={{ minWidth: "80px" }}>Total</th>
-                              <th style={{ minWidth: "80px" }}>Paid</th>
-                              <th style={{ minWidth: "80px" }}>Bal</th>
-                            </React.Fragment>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {reportData.length > 0 ? (
-                          currentItems.map((item, index) => (
-                            <tr key={index}>
-                              <td>{offset + index + 1}</td>
-                              <td>{item.student_name || "-"}</td>
-                              <td>{item.batch_name || "-"}</td>
-                              <td>{item.course_name || "-"}</td>
-                              <td>{item.section_name || "-"}</td>
-                              <td>{item.fatherName || "-"}</td>
-                              <td>{item.motherName || "-"}</td>
-                              {dynamicHeaders.map((header, idx) => {
-                                const detail = item.semester_wise_details?.[header.sem]?.[header.elem];
-                                return (
-                                  <React.Fragment key={`data-${idx}`}>
-                                    <td>{detail ? detail.amount : "-"}</td>
-                                    <td>{detail ? detail.paid : "-"}</td>
-                                    <td>{detail ? detail.balance : "-"}</td>
-                                  </React.Fragment>
-                                );
-                              })}
-                              <td>{item.total_fees || 0}</td>
-                              <td>{item.total_paid || 0}</td>
-                              <td>{item.discount_fees || 0}</td>
-                              <td>{item.remaining_fees || 0}</td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={11 + dynamicHeaders.length * 3} className="text-center">No fee records found.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                  {reportData.length > 0 ? (
+                    currentItems.map((item, index) => {
+                      const studentHeaders = [];
+                      if (item.semester_wise_details) {
+                        Object.keys(item.semester_wise_details).sort().forEach(sem => {
+                          Object.keys(item.semester_wise_details[sem]).sort().forEach(elem => {
+                            if (elem !== "DISCOUNT") {
+                              studentHeaders.push({ sem, elem });
+                            }
+                          });
+                        });
+                      }
+
+                      return (
+                        <div key={index} className="card mt-3 mb-4 shadow-sm" style={{ border: "2px solid #ddd" }}>
+                          <div className="card-header bg-light text-dark d-flex flex-wrap justify-content-between align-items-center">
+                            <div>
+                              <strong style={{ fontSize: "1.5rem" }}>{offset + index + 1}. {item.student_name || "-"}</strong> 
+                              <span className="ms-3 badge bg-primary" style={{ fontSize: "1.2rem", padding: "6px 10px" }}>{item.batch_name || "-"}</span>
+                              <span className="ms-2 badge bg-primary" style={{ fontSize: "1.2rem", padding: "6px 10px" }}>{item.course_name || "-"}</span>
+                              <span className="ms-2 badge bg-primary" style={{ fontSize: "1.2rem", padding: "6px 10px" }}>{item.department_description || "-"}</span>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: "1.1rem" }}><strong>Father:</strong> {item.fatherName || "-"} | <strong>Mother:</strong> {item.motherName || "-"}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="card-body p-0 table-responsive rounded">
+                            <table className="table table-bordered mb-0 align-middle text-center m-0">
+                              <thead className="table-light">
+                                <tr>
+                                  {studentHeaders.map((header, idx) => (
+                                    <th key={`h-${idx}`} colSpan="3" className="border-bottom">
+                                      {header.sem} <br/> <small>{header.elem}</small>
+                                    </th>
+                                  ))}
+                                  {studentHeaders.length === 0 && (
+                                    <th rowSpan="2" className="border-bottom align-middle py-3">Fee Breakdowns</th>
+                                  )}
+                                  <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Total Fees</th>
+                                  <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Fees Paid</th>
+                                  <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Discount</th>
+                                  <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Balance</th>
+                                </tr>
+                                {studentHeaders.length > 0 && (
+                                  <tr>
+                                    {studentHeaders.map((_, idx) => (
+                                      <React.Fragment key={`sub-${idx}`}>
+                                        <th style={{ minWidth: "80px", color: "inherit", backgroundColor: "transparent" }}>Total</th>
+                                        <th style={{ minWidth: "80px", color: "inherit", backgroundColor: "transparent" }}>Paid</th>
+                                        <th style={{ minWidth: "80px", color: "inherit", backgroundColor: "transparent" }}>Bal</th>
+                                      </React.Fragment>
+                                    ))}
+                                  </tr>
+                                )}
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  {studentHeaders.map((header, idx) => {
+                                    const detail = item.semester_wise_details?.[header.sem]?.[header.elem];
+                                    return (
+                                      <React.Fragment key={`data-${idx}`}>
+                                        <td>{detail ? detail.amount : "-"}</td>
+                                        <td>{detail ? detail.paid : "-"}</td>
+                                        <td>{detail ? detail.balance : "-"}</td>
+                                      </React.Fragment>
+                                    );
+                                  })}
+                                  {studentHeaders.length === 0 && (
+                                    <td className="text-muted border-end-0">No specific fees applied</td>
+                                  )}
+                                  <td className="fw-bold">{item.total_fees || 0}</td>
+                                  <td className="fw-bold text-success">{item.total_paid || 0}</td>
+                                  <td className="fw-bold text-info">{item.discount_fees || 0}</td>
+                                  <td className="fw-bold text-danger">{item.remaining_fees || 0}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="alert alert-warning text-center mt-3">
+                      No fee records found.
+                    </div>
+                  )}
                   {reportData.length > 0 && (
                     <ReactPaginate
                       previousLabel={"Previous"}
