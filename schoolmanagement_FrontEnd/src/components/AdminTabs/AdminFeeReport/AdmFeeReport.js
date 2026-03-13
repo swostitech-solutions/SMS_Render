@@ -213,6 +213,7 @@ function AdmFeeReport() {
     if (selectedSession) params.append("batch_id", selectedSession.value);
     if (selectedCourse) params.append("course_id", selectedCourse.value);
     if (selectedDepartment) params.append("department_id", selectedDepartment.value);
+    if (selectedAcademicYear) params.append("academic_year_id", selectedAcademicYear.value);
     if (selectedSemester) params.append("semester_id", selectedSemester.value);
     if (selectedSection) params.append("section_id", selectedSection.value);
     params.append("show_fees", "A");

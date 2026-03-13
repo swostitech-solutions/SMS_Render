@@ -22660,6 +22660,9 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
             # filterdata = StudentCourse.objects.filter(academic_year=academicyearId, is_active=True)
 
             # Apply additional filters
+            if batch_id:
+                filterdata = filterdata.filter(batch=batch_id)
+
             if student_id:
                 filterdata = filterdata.filter(student=student_id)
             if course_id:
