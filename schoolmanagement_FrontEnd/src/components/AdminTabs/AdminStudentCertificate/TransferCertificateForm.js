@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 import html2pdf from "html2pdf.js";
+import { extractDocumentNo } from "../../../utils/formatRefNo";
 
 const getTodayStr = () => {
   const today = new Date();

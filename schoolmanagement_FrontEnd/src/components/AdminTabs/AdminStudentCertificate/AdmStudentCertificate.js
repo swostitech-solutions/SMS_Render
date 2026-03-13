@@ -1089,7 +1089,7 @@ const AdmAttendanceEntry = () => {
                                 href="#"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleViewPDFClick(certificate);
+                                  handleButtonClick(certificate, "view-new");
                                 }}
                               >
                                 View

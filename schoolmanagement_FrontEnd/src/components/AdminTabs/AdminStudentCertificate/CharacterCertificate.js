@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 import html2pdf from "html2pdf.js";
+import { extractDocumentNo } from "../../../utils/formatRefNo";
 
 const getTodayStr = () => {
   const today = new Date();
@@ -32,6 +33,7 @@ const ConductCertificate = () => {
       return {
         ...certificate,
         studentname: certificate.student_name || "",
+        document_no: extractDocumentNo("CC", certificate.document_no || certificate.cc_number)
       };
     }
     return {
