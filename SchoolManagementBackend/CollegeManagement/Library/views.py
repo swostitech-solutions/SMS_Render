@@ -3479,28 +3479,42 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
             if filterdata.exists():
                 for item in filterdata:
                     # Student Instance - handle both student and professor cases
-                    RegistrationInstance = None
+                    member_name = ""
+                    admission_no = None
+                    school_barcode = None
+                    valid_member = False
+
                     if item.student:
                         try:
                             RegistrationInstance = StudentRegistration.objects.get(id=item.student.id)
+                            name_part = filter(None, [
+                                RegistrationInstance.first_name,
+                                RegistrationInstance.middle_name,
+                                RegistrationInstance.last_name
+                            ])
+                            member_name = " ".join(name_part)
+                            admission_no = RegistrationInstance.admission_no
+                            school_barcode = RegistrationInstance.barcode
+                            valid_member = True
                         except (ObjectDoesNotExist, AttributeError):
-                            RegistrationInstance = None
+                            pass
+                    elif item.professor:
+                        try:
+                            EmployeeInstance = EmployeeMaster.objects.get(id=item.professor.id)
+                            name_part = filter(None, [
+                                EmployeeInstance.title,
+                                EmployeeInstance.first_name,
+                                EmployeeInstance.middle_name,
+                                EmployeeInstance.last_name
+                            ])
+                            member_name = " ".join(name_part)
+                            admission_no = "-"
+                            school_barcode = "-"
+                            valid_member = True
+                        except (ObjectDoesNotExist, AttributeError):
+                            pass
 
-                    # Student Name construct
-                    student_name = ""
-                    admission_no = None
-                    school_barcode = None
-
-                    if RegistrationInstance:
-                        name_part = filter(None, [
-                            RegistrationInstance.first_name,
-                            RegistrationInstance.middle_name,
-                            RegistrationInstance.last_name
-                        ])
-                        student_name = " ".join(name_part)
-                        admission_no = RegistrationInstance.admission_no
-                        school_barcode = RegistrationInstance.barcode
-
+                    if valid_member:
                         issueByName = ""
                         ReturnedByName = ""
                         # Issued By construct
@@ -3511,13 +3525,22 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
                                 EmployeeInstance = None
 
                             if EmployeeInstance:
-                                name_part = filter(None, [
-                                    EmployeeInstance.title,
-                                    EmployeeInstance.first_name,
-                                    EmployeeInstance.middle_name,
-                                    EmployeeInstance.last_name
-                                ])
-                                issueByName = " ".join(name_part)
+                                name_part = [
+                                    EmployeeInstance.title.strip() if EmployeeInstance.title else "",
+                                    EmployeeInstance.first_name.strip() if EmployeeInstance.first_name else "",
+                                    EmployeeInstance.middle_name.strip() if EmployeeInstance.middle_name else "",
+                                    EmployeeInstance.last_name.strip() if EmployeeInstance.last_name else "",
+                                ]
+                                issueByName = " ".join(filter(None, name_part))
+                            else:
+                                from Acadix.models import UserLogin
+                                try:
+                                    UserInstance = UserLogin.objects.get(id=item.issued_by)
+                                    issueByName = UserInstance.user_name
+                                except ObjectDoesNotExist:
+                                    pass
+                        if not issueByName:
+                            issueByName = "-"
 
                         if item.returned_by:
                             try:
@@ -3526,18 +3549,27 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
                                 EmployeeInstance = None
 
                             if EmployeeInstance:
-                                name_part = filter(None, [
-                                    EmployeeInstance.title,
-                                    EmployeeInstance.first_name,
-                                    EmployeeInstance.middle_name,
-                                    EmployeeInstance.last_name
-                                ])
-                                ReturnedByName = " ".join(name_part)
+                                name_part = [
+                                    EmployeeInstance.title.strip() if EmployeeInstance.title else "",
+                                    EmployeeInstance.first_name.strip() if EmployeeInstance.first_name else "",
+                                    EmployeeInstance.middle_name.strip() if EmployeeInstance.middle_name else "",
+                                    EmployeeInstance.last_name.strip() if EmployeeInstance.last_name else "",
+                                ]
+                                ReturnedByName = " ".join(filter(None, name_part))
+                            else:
+                                from Acadix.models import UserLogin
+                                try:
+                                    UserInstance = UserLogin.objects.get(id=item.returned_by)
+                                    ReturnedByName = UserInstance.user_name
+                                except ObjectDoesNotExist:
+                                    pass
+                        if not ReturnedByName:
+                            ReturnedByName = "-"
 
                         BookDetailsInstance = LibraryBook.objects.get(id=item.book_detail.book.id)
 
                         data = {
-                            'studentName': student_name,
+                            'studentName': member_name,
                             'admissionNo': admission_no,
                             'schoolBarcode': school_barcode,
                             'bookName': BookDetailsInstance.book_name,

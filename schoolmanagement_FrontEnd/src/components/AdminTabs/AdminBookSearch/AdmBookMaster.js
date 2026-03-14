@@ -6074,7 +6074,7 @@ const BookForm = () => {
                         <th className="d-none d-md-table-cell">Bill No</th>
                         <th>No. of Copies</th>
                         <th>Cost/Bill Value</th>
-                        <th className="d-none d-lg-table-cell">Concession</th>
+                        {/* <th className="d-none d-lg-table-cell">Concession</th> */}
                         <th>Remove</th>
                       </tr>
                     </thead>
@@ -6149,7 +6149,7 @@ const BookForm = () => {
                             />
                             {purchaseRowErrors[row.id]?.cost && <small className="text-danger">{purchaseRowErrors[row.id].cost}</small>}
                           </td>
-                          <td className="d-none d-lg-table-cell">
+                          {/* <td className="d-none d-lg-table-cell">
                             <Form.Control
                               type="number"
                               className="form-control detail"
@@ -6163,7 +6163,7 @@ const BookForm = () => {
                                 )
                               }
                             />
-                          </td>
+                          </td> */}
                           <td>
                             <Button
                               variant="danger"
