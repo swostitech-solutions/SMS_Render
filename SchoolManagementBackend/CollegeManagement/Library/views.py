@@ -3437,7 +3437,7 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
             academicyearId = request.query_params.get('academic_year_id')
             fromDate = request.query_params.get('fromDate')
             toDate = request.query_params.get('toDate')
-            registrationNo = request.query_params.get('registrationNo')
+            admissionNo = request.query_params.get('admissionNo')
             flag = request.query_params.get('flag')
 
             # Start with base queryset
@@ -3463,16 +3463,14 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
                 toDate = datetime.strptime(toDate, "%Y-%m-%d").date()
                 filterdata = filterdata.filter(issue_date__lte=toDate)
 
-            if registrationNo:
-                try:
-                    RegistrationInstance = StudentRegistration.objects.get(registration_no=registrationNo,
-                                                                           is_active=True)
-                except ObjectDoesNotExist:
-                    RegistrationInstance = None
-
-                if RegistrationInstance:
-                    filterdata = filterdata.filter(student_id=RegistrationInstance.id)
-                else:
+            if admissionNo:
+                from django.db.models import Q
+                filterdata = filterdata.filter(
+                    Q(student__admission_no__icontains=admissionNo) | 
+                    Q(professor__employee_code__icontains=admissionNo)
+                )
+                
+                if not filterdata.exists():
                     return Response({'message': 'No record found'}, status=status.HTTP_200_OK)
 
             FinalResponseData = []
