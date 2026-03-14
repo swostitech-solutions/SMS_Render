@@ -1041,6 +1041,11 @@ class LibraryBookSearchAPIView(ListAPIView):
                 if filterdata:
                     for item in filterdata:
                         barcodedata = LibraryBooksBarcode.objects.filter(book=item.id, is_active=True)
+                        if book_accession_no:
+                            barcodedata = barcodedata.filter(barcode=book_accession_no)
+                        if locationId:
+                            barcodedata = barcodedata.filter(location_id=locationId)
+                            
                         for barcodes in barcodedata:
                             # Safely get library branch info
                             library_branch_id = None
@@ -1316,7 +1321,7 @@ class LibraryBookCreateAPIView(CreateAPIView):
 
             # Save Library Book record
             library_book_instance = LibraryBook.objects.create(
-                book_code=libraryBookdetails['book_code'],
+                book_code=libraryBookdetails.get('book_code', ''),
                 book_name=libraryBookdetails['book_name'],
                 book_category=book_category_instance,
                 book_sub_category=book_sub_category_instance,
@@ -2084,7 +2089,8 @@ class LibraryBookUpdateAPIView(APIView):
 
             # update the book details
 
-            bookInstance.book_code = libraryBookdetails.get('book_code')
+            book_code_val = libraryBookdetails.get('book_code')
+            bookInstance.book_code = book_code_val if book_code_val is not None else ''
             bookInstance.book_name = libraryBookdetails.get('book_name')
             bookInstance.book_category = bookcategoryInstance
             bookInstance.book_sub_category = booksubcategoryInstance
@@ -3431,7 +3437,7 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
             academicyearId = request.query_params.get('academic_year_id')
             fromDate = request.query_params.get('fromDate')
             toDate = request.query_params.get('toDate')
-            registrationNo = request.query_params.get('registrationNo')
+            admissionNo = request.query_params.get('admissionNo')
             flag = request.query_params.get('flag')
 
             # Start with base queryset
@@ -3457,44 +3463,56 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
                 toDate = datetime.strptime(toDate, "%Y-%m-%d").date()
                 filterdata = filterdata.filter(issue_date__lte=toDate)
 
-            if registrationNo:
-                try:
-                    RegistrationInstance = StudentRegistration.objects.get(registration_no=registrationNo,
-                                                                           is_active=True)
-                except ObjectDoesNotExist:
-                    RegistrationInstance = None
-
-                if RegistrationInstance:
-                    filterdata = filterdata.filter(student_id=RegistrationInstance.id)
-                else:
+            if admissionNo:
+                from django.db.models import Q
+                filterdata = filterdata.filter(
+                    Q(student__admission_no__icontains=admissionNo) | 
+                    Q(professor__employee_code__icontains=admissionNo)
+                )
+                
+                if not filterdata.exists():
                     return Response({'message': 'No record found'}, status=status.HTTP_200_OK)
 
             FinalResponseData = []
             if filterdata.exists():
                 for item in filterdata:
                     # Student Instance - handle both student and professor cases
-                    RegistrationInstance = None
+                    member_name = ""
+                    admission_no = None
+                    school_barcode = None
+                    valid_member = False
+
                     if item.student:
                         try:
                             RegistrationInstance = StudentRegistration.objects.get(id=item.student.id)
+                            name_part = filter(None, [
+                                RegistrationInstance.first_name,
+                                RegistrationInstance.middle_name,
+                                RegistrationInstance.last_name
+                            ])
+                            member_name = " ".join(name_part)
+                            admission_no = RegistrationInstance.admission_no
+                            school_barcode = RegistrationInstance.barcode
+                            valid_member = True
                         except (ObjectDoesNotExist, AttributeError):
-                            RegistrationInstance = None
+                            pass
+                    elif item.professor:
+                        try:
+                            EmployeeInstance = EmployeeMaster.objects.get(id=item.professor.id)
+                            name_part = filter(None, [
+                                EmployeeInstance.title,
+                                EmployeeInstance.first_name,
+                                EmployeeInstance.middle_name,
+                                EmployeeInstance.last_name
+                            ])
+                            member_name = " ".join(name_part)
+                            admission_no = "-"
+                            school_barcode = "-"
+                            valid_member = True
+                        except (ObjectDoesNotExist, AttributeError):
+                            pass
 
-                    # Student Name construct
-                    student_name = ""
-                    admission_no = None
-                    school_barcode = None
-
-                    if RegistrationInstance:
-                        name_part = filter(None, [
-                            RegistrationInstance.first_name,
-                            RegistrationInstance.middle_name,
-                            RegistrationInstance.last_name
-                        ])
-                        student_name = " ".join(name_part)
-                        admission_no = RegistrationInstance.admission_no
-                        school_barcode = RegistrationInstance.barcode
-
+                    if valid_member:
                         issueByName = ""
                         ReturnedByName = ""
                         # Issued By construct
@@ -3505,13 +3523,22 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
                                 EmployeeInstance = None
 
                             if EmployeeInstance:
-                                name_part = filter(None, [
-                                    EmployeeInstance.title,
-                                    EmployeeInstance.first_name,
-                                    EmployeeInstance.middle_name,
-                                    EmployeeInstance.last_name
-                                ])
-                                issueByName = " ".join(name_part)
+                                name_part = [
+                                    EmployeeInstance.title.strip() if EmployeeInstance.title else "",
+                                    EmployeeInstance.first_name.strip() if EmployeeInstance.first_name else "",
+                                    EmployeeInstance.middle_name.strip() if EmployeeInstance.middle_name else "",
+                                    EmployeeInstance.last_name.strip() if EmployeeInstance.last_name else "",
+                                ]
+                                issueByName = " ".join(filter(None, name_part))
+                            else:
+                                from Acadix.models import UserLogin
+                                try:
+                                    UserInstance = UserLogin.objects.get(id=item.issued_by)
+                                    issueByName = UserInstance.user_name
+                                except ObjectDoesNotExist:
+                                    pass
+                        if not issueByName:
+                            issueByName = "-"
 
                         if item.returned_by:
                             try:
@@ -3520,18 +3547,27 @@ class LibraryIssueReturnReportListAPIView(ListAPIView):
                                 EmployeeInstance = None
 
                             if EmployeeInstance:
-                                name_part = filter(None, [
-                                    EmployeeInstance.title,
-                                    EmployeeInstance.first_name,
-                                    EmployeeInstance.middle_name,
-                                    EmployeeInstance.last_name
-                                ])
-                                ReturnedByName = " ".join(name_part)
+                                name_part = [
+                                    EmployeeInstance.title.strip() if EmployeeInstance.title else "",
+                                    EmployeeInstance.first_name.strip() if EmployeeInstance.first_name else "",
+                                    EmployeeInstance.middle_name.strip() if EmployeeInstance.middle_name else "",
+                                    EmployeeInstance.last_name.strip() if EmployeeInstance.last_name else "",
+                                ]
+                                ReturnedByName = " ".join(filter(None, name_part))
+                            else:
+                                from Acadix.models import UserLogin
+                                try:
+                                    UserInstance = UserLogin.objects.get(id=item.returned_by)
+                                    ReturnedByName = UserInstance.user_name
+                                except ObjectDoesNotExist:
+                                    pass
+                        if not ReturnedByName:
+                            ReturnedByName = "-"
 
                         BookDetailsInstance = LibraryBook.objects.get(id=item.book_detail.book.id)
 
                         data = {
-                            'studentName': student_name,
+                            'studentName': member_name,
                             'admissionNo': admission_no,
                             'schoolBarcode': school_barcode,
                             'bookName': BookDetailsInstance.book_name,
@@ -4220,7 +4256,9 @@ class LibraryStatisticsAPIView(ListAPIView):
                 books_qs = books_qs.filter(batch_id=branch_id)
             # Books are not filtered by academic year (they are permanent assets)
 
-            total_books = books_qs.count()
+            # Sum the total number of copies for all books instead of just counting unique books
+            total_books_sum = books_qs.aggregate(total=Sum('no_of_copies'))['total']
+            total_books = total_books_sum if total_books_sum else 0
 
             # 3. Total no of Titles (distinct book names/titles)
             total_titles = books_qs.values('book_name').distinct().count()

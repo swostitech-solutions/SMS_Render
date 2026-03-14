@@ -799,14 +799,6 @@ const FeeDetails = () => {
                   </div>
                 </div>
 
-                {/* Debug Info: Show record count */}
-                <div className="row mx-1">
-                  <div className="col-12">
-                    <div className="alert alert-info py-1">
-                      Records found: {filteredFeeData ? filteredFeeData.length : 0}
-                    </div>
-                  </div>
-                </div>
                 <div id="feeTable" className="col-12">
                   <div className="table-responsive">
                     <table className="table table-bordered">
