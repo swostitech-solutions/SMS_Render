@@ -507,7 +507,8 @@ export default function BasicTabs() {
               father_email: student.father_email || "",
               mother_email: student.mother_email || "",
               primary_guardian: student.primary_guardian || "",
-              student_status: student.status || "",
+              student_status: student.status || (student.is_active ? "ACTIVE" : "INACTIVE") || "ACTIVE",
+              is_active: student.is_active !== undefined ? student.is_active : student.status === "ACTIVE",
               profile_pic: student.profile_pic || "",
               father_title: (() => {
                 const raw = student.father_title || student.fatherTitle;
@@ -737,6 +738,7 @@ export default function BasicTabs() {
         mother_aadhaar_no: formData.mother_aadharno,
         created_by: userId,
         status: formData.student_status || "ACTIVE",
+        is_active: formData.student_status === "ACTIVE",
       };
 
       const fee_detail = {
@@ -963,6 +965,8 @@ export default function BasicTabs() {
         mother_email: formData.mother_email || "",
         mother_aadhaar_no: formData.mother_aadharno || "",
         created_by: userId || "1",
+        status: formData.student_status || "ACTIVE",
+        is_active: formData.student_status === "ACTIVE",
       };
 
       const address_detail = {

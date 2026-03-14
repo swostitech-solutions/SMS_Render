@@ -403,7 +403,9 @@ const AdmAttendanceEntry = ({
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    // For checkboxes use the boolean `checked` value, not the string "on"
+    const finalValue = type === "checkbox" ? checked : value;
 
     // 🚫 Prevent Year > 4 digits for date inputs
     if (["dob", "doj", "date_of_admission"].includes(name)) {
@@ -497,7 +499,7 @@ const AdmAttendanceEntry = ({
 
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: finalValue,
     }));
   };
 

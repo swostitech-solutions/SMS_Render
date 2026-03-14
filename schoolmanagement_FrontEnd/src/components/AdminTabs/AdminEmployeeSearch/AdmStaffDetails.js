@@ -840,7 +840,7 @@ export default function BasicTabs() {
           basicPayload.append("last_name", basicInfoData.lastName || "");
           basicPayload.append("nuid", basicInfoData.nuid || "");
           if (basicInfoData.dob) basicPayload.append("date_of_birth", basicInfoData.dob);
-          basicPayload.append("place_of_birth", basicInfoData.placeOf_birth || "");
+          basicPayload.append("place_of_birth", basicInfoData.placeOfBirth || "");
           basicPayload.append("marital_status", basicInfoData.maritalStatus || "1");
           basicPayload.append("gender", basicInfoData.gender || "");
           // Map status to is_active (backend expects "True"/"False" string or boolean)

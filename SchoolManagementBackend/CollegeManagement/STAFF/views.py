@@ -476,7 +476,7 @@ class StaffRegistrationDocumentCreateUpdateAPIView(UpdateAPIView):
             # get employee Instance
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeInstance = EmployeeMaster.objects.get(organization=organization_id,branch=branch_id,id=employee_id,is_active=True)
+                    EmployeeInstance = EmployeeMaster.objects.get(organization=organization_id,branch=branch_id,id=employee_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({'message':'No Employee Found'},status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -688,7 +688,7 @@ class StaffRegistrationFamilyCreateUpdateAPIView(UpdateAPIView):
 
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id,is_active=True)
+                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({"message":"No Employee Found !!!"}, status=status.HTTP_404_NOT_FOUND)
             else:
@@ -845,7 +845,7 @@ class StaffRegistrationQualificationCreateUpdateAPIView(UpdateAPIView):
             # get employee Instance
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id,is_active=True)
+                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({"message":"No Employee Found !!!"}, status=status.HTTP_404_NOT_FOUND)
             else:
@@ -969,7 +969,7 @@ class StaffRegistrationCourseCreateUpdateAPIView(UpdateAPIView):
             # get employee Instance
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id,is_active=True)
+                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({"message":"No Employee Found !!!"}, status=status.HTTP_404_NOT_FOUND)
             else:
@@ -1095,7 +1095,7 @@ class StaffRegistrationLANGUAGECreateUpdateAPIView(UpdateAPIView):
             # Get employee instance
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id,is_active=True)
+                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({"message":"No Employee Found !!!"}, status=status.HTTP_404_NOT_FOUND)
             else:
@@ -1166,7 +1166,7 @@ class StaffRegistrationExperienceCreateUpdateAPIView(UpdateAPIView):
             # get employee Instance
             if organization_id and branch_id and employee_id:
                 try:
-                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id,is_active=True)
+                    EmployeeInstance = EmployeeMaster.objects.get(id=employee_id,organization=organization_id, branch=branch_id)
                 except EmployeeMaster.DoesNotExist:
                     return Response({"message":"No Employee Found !!!"}, status=status.HTTP_404_NOT_FOUND)
             else:

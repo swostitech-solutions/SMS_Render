@@ -151,6 +151,12 @@ const StaffInfo = ({
 
 
   useEffect(() => {
+    // If the component has already initialized from the full database fetch (basicInfoData),
+    // DO NOT allow the location.state (employeeDetails) to overwrite the verified data!
+    if (hasInitialized.current) {
+        return;
+    }
+
     if (employeeDetails) {
       const bloodGroupObj = bloodGroups.find(
         (bg) =>
@@ -165,8 +171,6 @@ const StaffInfo = ({
           (n.nationality_name || "").toLowerCase().trim() === (employeeDetails.nationality || "").toString().toLowerCase().trim() ||
           (n.nationality_code || "").toLowerCase().trim() === (employeeDetails.nationality || "").toString().toLowerCase().trim()
       );
-      console.log("Matching Religion:", employeeDetails.religion);
-      console.log("Available Religions:", religions);
 
       const religionObj = religions.find(
         (r) =>
@@ -174,7 +178,6 @@ const StaffInfo = ({
           (r.religion_name || "").toLowerCase().trim() === (employeeDetails.religion || "").toString().toLowerCase().trim() ||
           (r.religion_code || "").toLowerCase().trim() === (employeeDetails.religion || "").toString().toLowerCase().trim()
       );
-      console.log("Found Religion Obj:", religionObj);
       const motherTongueObj = languages.find(
         (l) =>
           l.id === parseInt(employeeDetails.mother_tongue) ||
@@ -197,7 +200,8 @@ const StaffInfo = ({
       }
 
       //  Directly use employee_type_id
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         employeeId: employeeDetails.id || "",
         employeeCode: employeeDetails.employee_code || "",
         nuid: employeeDetails.nuid || "",
@@ -221,16 +225,12 @@ const StaffInfo = ({
         officeEmail: employeeDetails.office_email || "",
         phoneNumber: employeeDetails.phone_number || "",
         emergencyContactNumber: employeeDetails.emergency_contact_number || "",
-        status: employeeDetails.is_active ? "ACTIVE" : "INACTIVE",
+        status: employeeDetails.hasOwnProperty('is_active') 
+                  ? (employeeDetails.is_active ? "ACTIVE" : "INACTIVE") 
+                  : (employeeDetails.status ? String(employeeDetails.status).toUpperCase() : "ACTIVE"),
         profilePicture: employeeDetails.profile || "",
-      });
+      }));
 
-      // Debug logs
-      console.log("Employee Details:", employeeDetails);
-      console.log("Gender ID from API:", employeeDetails.gender_id);
-      console.log("Mother Tongue ID from API:", employeeDetails.mother_tongue_id);
-      console.log("Gender value set:", employeeDetails.gender_id ? parseInt(employeeDetails.gender_id) : "");
-      console.log("Mother Tongue value set:", employeeDetails.mother_tongue_id ? parseInt(employeeDetails.mother_tongue_id) : "");
       // Set profile image preview
       setFrontCover(employeeDetails.profile || "");
     }

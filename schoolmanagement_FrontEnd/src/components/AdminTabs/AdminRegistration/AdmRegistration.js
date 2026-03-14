@@ -314,7 +314,6 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       appendIfValid("semester_id", selectedSemester);
       appendIfValid("section_id", selectedSectionFiltered);
 
-      // 🔍 Student Filters
       appendIfValid("student_name", filters.studentName);
       appendIfValid("admission_no", filters.admissionNo);
       appendIfValid("barcode", filters.barcode);
@@ -322,6 +321,9 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
       appendIfValid("mother_name", filters.motherName);
       appendIfValid("school_admission_no", filters.schoolAdmissionNo);
       appendIfValid("student_status", filters.status);
+      appendIfValid("gender", filters.gender);
+      appendIfValid("from_date", fromDate);
+      appendIfValid("to_date", toDate);
 
       const apiUrl = `${ApiUrl.apiurl}StudentRegistrationApi/GetAllSTUDENTList/?${params.toString()}`;
       console.log("Search API URL:", apiUrl);
@@ -1292,7 +1294,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           <input
                             type="text"
                             className="form-control detail"
-                            placeholder="Search: name, admission no, session, course, barcode, etc..."
+                            placeholder="Search: name, admission no, session, course, address, city, state, barcode..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                           />
@@ -1333,6 +1335,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           <th scope="col">Mother's Name</th>
                           <th scope="col">Religion</th>
                           <th scope="col">Address</th>
+                          <th scope="col">City</th>
+                          <th scope="col">State</th>
                           <th scope="col">Barcode</th>
                           <th scope="col">Category</th>
                           <th scope="col">Action</th>
@@ -1364,6 +1368,8 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                                 <td>{studentBasicDetails?.mother_name || "—"}</td>
                                 <td>{studentBasicDetails?.religion_name || "—"}</td>
                                 <td>{student?.addressDetails?.[0]?.present_address || "—"}</td>
+                                <td>{student?.addressDetails?.[0]?.present_city || "—"}</td>
+                                <td>{student?.addressDetails?.[0]?.present_state || "—"}</td>
                                 <td>{studentBasicDetails?.barcode || "—"}</td>
                                 <td>{studentBasicDetails?.category_name || "—"}</td>
 
@@ -1384,7 +1390,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           })
                         ) : (
                           <tr>
-                            <td colSpan="17" style={{ textAlign: "center" }}>
+                            <td colSpan="19" style={{ textAlign: "center" }}>
                               No Data Available
                             </td>
                           </tr>

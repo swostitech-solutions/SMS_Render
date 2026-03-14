@@ -62,19 +62,6 @@ from .utils import send_otp_email, generate_otp
 
 # from .serializers_new import UserTypeSerializer, EmployeeSerializer, LoginSerializer, LoginModelSerializer, \
 #     ChangePasswordSerializer, DetailsSerializer, AcademicYearSerializer, CourseSerializer, SectionSerializer, \
-#     CourseSemesterSectionBindSerializer, StudentSiblingDetailSerializer, \
-#     StudentEmergencyContactSerializer, AuthorisedPickupSerializer, StudentDocumentSerializer, \
-#     StudentPreviousEducationSerializer, OrganizationSerializer, BranchesSerializer, StudentRegistrationSerializer, \
-#     StudentCourseSerializer, FeeStructureMasterSerializer, FeeStructureDetailSerializer, \
-#     FeeStructureDetailUpdateSerializer, AcademicSessionUpdateYear, PeriodSerializer, PeriodUpdateSerializer, \
-#     UserTypeUpdateSerializer, OrganizationUpdateSerializer, BranchesUpdateSerializer, CourseUpdateSerializer, \
-#     SectionUpdateSerializer, CourseSemesterSectionBindUpdateSerializer, SiblingDetailUpdateSerializer, \
-#     StudentEmergencyUpdateContactSerializer, AuthorisedPickupUpdateSerializer, StudentDocumentUpdateSerializer, \
-#     StudentPreviousEducationUpdateSerializer, AddressSerializer, AddressUpdatedSerializer, \
-#     StudentDetailsGetSerializer, StudentFeeDetailSerializer, FeeElementTypeSerializer, InsertFeesForSelectedStudent, \
-#     HouseSerializer, ReligionSerializer, CategorySerializer, NationalitySerializer, \
-#     CountrySerializer, StateSerializer, CitySerializer, ProfessionSerializer, \
-#     DocumentSerializer, BloodSerializer, LanguageSerializer, StudentPromotionSerializer, \
 #     StudentRegistrationSerializer, FeeStructureMasterRequestSerializer, StudentBasicDetailSerializer, \
 #     StudentSibilingDetailSerializer, StudentEmergencyContactDetailsSerializer, AuthorisedPickupDetailsSerializer, \
 #     StudentDocumentDetailsSerializer, StudentPreviousEducationDetailsSerializer, AddressDetailsSerializer, \
@@ -11766,17 +11753,16 @@ class StudentRegistrationListAPIView(ListAPIView):
             # admission_no,from_date,to_date,student_status,barcode,college_admission_no,father_name,mother_name
 
             if organization_id and branch_id:
-                try:
-                    studentRegistrationList = StudentRegistration.objects.filter(organization=organization_id,
-                                                                                 branch=branch_id,
-                                                                                 is_active=True).select_related(
-                        'organization', 'branch', 'batch', 'batch__branch',
-                        'course', 'department', 'academic_year', 'semester', 'section',
-                        'gender', 'house', 'religion', 'category', 'mother_tongue', 'blood', 'nationality'
-                    ).order_by('-created_at')
-                except StudentRegistration.DoesNotExist:
-                    return Response({"message": "student registration record not found !!!"},
-                                    status=status.HTTP_404_NOT_FOUND)
+                # Initial filter should only include basic org/branch. 
+                # We will handle is_active/status filtering later.
+                studentRegistrationList = StudentRegistration.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id
+                ).select_related(
+                    'organization', 'branch', 'batch', 'batch__branch',
+                    'course', 'department', 'academic_year', 'semester', 'section',
+                    'gender', 'house', 'religion', 'category', 'mother_tongue', 'blood', 'nationality'
+                ).order_by('-created_at')
             else:
                 return Response({"message": "organization_id and branch_id is required !!!"},
                                 status=status.HTTP_404_NOT_FOUND)
@@ -11846,24 +11832,21 @@ class StudentRegistrationListAPIView(ListAPIView):
                     first = name_parts[0].strip()
                     studentRegistrationList = studentRegistrationList.filter(
                         Q(first_name__icontains=first) | Q(middle_name__icontains=first) | Q(last_name__icontains=first)
-                        , is_active=True
                         ).order_by('-created_at')
 
                 elif len(name_parts) == 2:  # First + Last
                     first, last = name_parts
                     studentRegistrationList = studentRegistrationList.filter(
-                        Q(first_name__iexact=first, last_name__iexact=last) |
-                        Q(first_name__iexact=first, middle_name__isnull=False, last_name__iexact=last)
-                        , is_active=True
+                        Q(first_name__icontains=first, last_name__icontains=last) |
+                        Q(first_name__icontains=first, middle_name__icontains=last) # Allow searching first and last
                     ).order_by('-created_at')
 
                 elif len(name_parts) == 3:  # First + Middle + Last
                     first, middle, last = name_parts
                     studentRegistrationList = studentRegistrationList.filter(
-                        first_name__iexact=first,
-                        middle_name__iexact=middle,
-                        last_name__iexact=last,
-                        is_active=True
+                        first_name__icontains=first,
+                        middle_name__icontains=middle,
+                        last_name__icontains=last
                     ).order_by('-created_at')
                 # studentNameSplit = studentName.split()
                 # student_list = StudentRegistration.objects.filter(first_name__istartswith=studentName,
@@ -11878,17 +11861,22 @@ class StudentRegistrationListAPIView(ListAPIView):
                 studentRegistrationList = studentRegistrationList.filter(gender=gender).order_by('-created_at')
 
             if admission_no:
-                # admission_no = request.query_params.get('admission_no')
-                studentRegistrationList = studentRegistrationList.filter(admission_no=admission_no).order_by(
+                studentRegistrationList = studentRegistrationList.filter(admission_no__icontains=admission_no).order_by(
                     '-created_at')
             if from_date and to_date:
-                # from_date = request.query_params.get('from_date')
-                # to_date = request.query_params.get('to_date')
                 studentRegistrationList = studentRegistrationList.filter(
-                    created_at__range=(from_date, to_date)).order_by('-created_at')
+                    created_at__date__range=(from_date, to_date)).order_by('-created_at')
+            elif from_date:
+                studentRegistrationList = studentRegistrationList.filter(
+                    created_at__date__gte=from_date).order_by('-created_at')
+            elif to_date:
+                studentRegistrationList = studentRegistrationList.filter(
+                    created_at__date__lte=to_date).order_by('-created_at')
             if student_status:
-                # student_status = request.query_params.get('student_status')
                 studentRegistrationList = studentRegistrationList.filter(status=student_status).order_by('-created_at')
+            else:
+                # Default behavior: if no status is explicitly requested, show only ACTIVE students
+                studentRegistrationList = studentRegistrationList.filter(is_active=True).order_by('-created_at')
             if barcode:
                 # barcode = request.query_params.get('barcode')
                 studentRegistrationList = studentRegistrationList.filter(barcode=barcode,
@@ -11905,14 +11893,10 @@ class StudentRegistrationListAPIView(ListAPIView):
                     college_admission_no=college_admission_no, ).order_by(
                     '-created_at')
             if father_name:
-                # fatherName = request.query_params.get('fatherName')
-                studentRegistrationList = studentRegistrationList.filter(father_name__icontains=father_name,
-                                                                         is_active=True)
+                studentRegistrationList = studentRegistrationList.filter(father_name__icontains=father_name).order_by('-created_at')
 
             if mother_name:
-                # motherName = request.query_params.get('motherName')
-                studentRegistrationList = studentRegistrationList.filter(mother_name__icontains=mother_name,
-                                                                         is_active=True)
+                studentRegistrationList = studentRegistrationList.filter(mother_name__icontains=mother_name).order_by('-created_at')
                 # name_parts = fatherName.strip().split()
                 # if len(name_parts) == 1:
                 #     first = name_parts[0].strip()
@@ -12186,6 +12170,7 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                     # instance.enrollment_no = studentBasicDetails.get('enrollment_no', instance.enrollment_no)
                     instance.primary_guardian = student_basic_detail.get('primary_guardian', instance.primary_guardian)
                     instance.status = student_basic_detail.get('status', instance.status)
+                    instance.is_active = (instance.status == 'ACTIVE')
                     instance.father_name = student_basic_detail.get('father_name', instance.father_name)
                     instance.father_profession = student_basic_detail.get('father_profession',
                                                                           instance.father_profession)
