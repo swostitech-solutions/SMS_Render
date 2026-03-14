@@ -328,13 +328,44 @@ const AdmAttendanceEntry = () => {
       const result = await response.json();
       console.log("📥 Save Response:", result);
 
-      if (response.ok && result.message === "Success") {
-        alert("✅ Attendance saved successfully!");
-      } else {
-        alert(
-          `❌ Failed to save attendance: ${result.message || "Unknown error."}`
-        );
+    if (response.ok && result.message === "Success") {
+      alert("✅ Attendance saved successfully!");
+
+      // Clear attendance table
+      setAttendanceData([]);
+
+      // Reset attendance status
+      setAttendanceStatus("");
+
+      // Disable edit mode
+      setIsEditing(false);
+
+      // Clear form fields
+      setFormData({
+        batch: "",
+        course: "",
+        branch: "",
+        academic_year: "",
+        semester: "",
+        addmitted_section: "",
+        feeappfrom: "",
+        subject: "",
+        teacher: "",
+      });
+
+      // Reset date to today
+      const today = new Date().toISOString().split("T")[0];
+      setAssignmentDate(today);
+
+      // Clear date input
+      if (dateRef.current) {
+        dateRef.current.value = today;
       }
+    } else {
+      alert(
+        `❌ Failed to save attendance: ${result.message || "Unknown error."}`,
+      );
+    }
     } catch (error) {
       console.error("❌ Error while saving attendance:", error);
       alert("Error while saving attendance: " + error.message);

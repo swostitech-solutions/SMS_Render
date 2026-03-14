@@ -1235,41 +1235,43 @@ const AdmBookMovements = () => {
                                 <td>
                                   {item.issue_date
                                     ? new Date(item.issue_date)
-                                      .toISOString()
-                                      .split("T")[0]
-                                      .split("-")
-                                      .reverse()
-                                      .join("-")
+                                        .toISOString()
+                                        .split("T")[0]
+                                        .split("-")
+                                        .reverse()
+                                        .join("-")
                                     : ""}
                                 </td>
-                                <td>{displayName || ""}</td>
+                                <td>Librarian</td>
                                 <td>
                                   {item.due_date
                                     ? new Date(item.due_date)
-                                      .toISOString()
-                                      .split("T")[0]
-                                      .split("-")
-                                      .reverse()
-                                      .join("-")
+                                        .toISOString()
+                                        .split("T")[0]
+                                        .split("-")
+                                        .reverse()
+                                        .join("-")
                                     : ""}
                                 </td>
                                 <td>
                                   {item.return_date
                                     ? new Date(item.return_date)
-                                      .toISOString()
-                                      .split("T")[0]
-                                      .split("-")
-                                      .reverse()
-                                      .join("-")
+                                        .toISOString()
+                                        .split("T")[0]
+                                        .split("-")
+                                        .reverse()
+                                        .join("-")
                                     : ""}
                                 </td>
-                                <td>{isReturned ? (displayName || "") : ""}</td>
+                                <td>{isReturned ? displayName || "" : ""}</td>
                                 <td>
                                   <input
                                     type="checkbox"
                                     name="bookSelect"
                                     checked={!!selectedReturns[offset + index]}
-                                    onChange={() => handleCheckboxChange(offset + index)}
+                                    onChange={() =>
+                                      handleCheckboxChange(offset + index)
+                                    }
                                     disabled={isReturned}
                                   />
                                 </td>
@@ -1281,7 +1283,7 @@ const AdmBookMovements = () => {
                                       onChange={(e) =>
                                         handleReturnDateChange(
                                           offset + index,
-                                          e.target.value
+                                          e.target.value,
                                         )
                                       }
                                       max={getCurrentDate()}

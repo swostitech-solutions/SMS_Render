@@ -1190,7 +1190,7 @@ const AdmAttendanceEntry = ({
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="barcode" className="form-label">
-                        Barcode
+                        Roll No
                       </label>
                       <input
                         type="text"

@@ -455,34 +455,46 @@ const StudentPromotion = () => {
   const toClassRef = useRef();
   const toSectionRef = useRef();
 
-  const handleClear = () => {
-    // 🔹 Reset "From" dropdowns
-    setFromBatch(null);
-    setFromCourse(null);
-    setFromDepartment(null);
-    setFromAcademicYear(null);
-    setFromSemester(null);
-    setFromSection(null);
+ const handleClear = () => {
+   // 🔹 Reset "From" dropdowns
+   setFromBatch(null);
+   setFromCourse(null);
+   setFromDepartment(null);
+   setFromAcademicYear(null);
+   setFromSemester(null);
+   setFromSection(null);
 
-    // 🔹 Reset "To" dropdowns
-    setToBatch(null);
-    setToCourse(null);
-    setToDepartment(null);
-    setToAcademicYear(null);
-    setToSemester(null);
-    setToSection(null);
+   // 🔹 Reset "To" dropdowns
+   setToBatch(null);
+   setToCourse(null);
+   setToDepartment(null);
+   setToAcademicYear(null);
+   setToSemester(null);
+   setToSection(null);
 
-    // 🔹 Reset other form data if present
-    setFormData({});
-    setLeftSearchTerm("");
-    setRightSearchTerm("");
+   // 🔹 Clear table data
+   setStudents([]);
+   setPromotedStudents([]);
 
-    // 🔹 Optional: also clear localStorage/sessionStorage if you store selection
-    localStorage.removeItem("selectedFromBatch");
-    localStorage.removeItem("selectedToBatch");
+   // 🔹 Clear selected checkboxes
+   setSelectedStudents([]);
 
-    console.log("✅ All dropdowns cleared successfully.");
-  };
+   // 🔹 Hide table
+   setShowTableData(false);
+
+   // 🔹 Clear search inputs
+   setLeftSearchTerm("");
+   setRightSearchTerm("");
+
+   // 🔹 Clear loading & errors
+   setStudentError("");
+   setStudentLoading(false);
+
+   // 🔹 Reset formData
+   setFormData({});
+
+   console.log("✅ All fields and tables cleared.");
+ };
 
   const handleNewClick = () => {
     navigate("/admin/dashboard");
@@ -536,7 +548,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: fromBatch,
                                   label: BatchList.find(
-                                    (b) => b.id === fromBatch
+                                    (b) => b.id === fromBatch,
                                   )?.batch_description,
                                 }
                               : null
@@ -560,12 +572,20 @@ const StudentPromotion = () => {
                         </Label>
                         <Select
                           className="detail"
+                          value={
+                            fromCourseList
+                              .map((c) => ({
+                                value: c.id,
+                                label: c.course_name,
+                              }))
+                              .find((c) => c.value === fromCourse) || null
+                          }
                           options={fromCourseList.map((c) => ({
                             value: c.id,
                             label: c.course_name,
                           }))}
                           onChange={(opt) => {
-                            setFromCourse(opt?.value);
+                            setFromCourse(opt?.value || null);
                             setFromDepartment(null);
                             setFromAcademicYear(null);
                             setFromSemester(null);
@@ -594,7 +614,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: fromDepartment,
                                   label: BranchList.find(
-                                    (d) => d.id === fromDepartment
+                                    (d) => d.id === fromDepartment,
                                   )?.department_description,
                                 }
                               : null
@@ -625,12 +645,12 @@ const StudentPromotion = () => {
                           }
                           value={
                             AcademicYearList?.find(
-                              (a) => a.id === fromAcademicYear
+                              (a) => a.id === fromAcademicYear,
                             )
                               ? {
                                   value: fromAcademicYear,
                                   label: AcademicYearList.find(
-                                    (a) => a.id === fromAcademicYear
+                                    (a) => a.id === fromAcademicYear,
                                   )?.academic_year_description,
                                 }
                               : null
@@ -663,7 +683,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: fromSemester,
                                   label: SemesterList.find(
-                                    (s) => s.id === fromSemester
+                                    (s) => s.id === fromSemester,
                                   )?.semester_description,
                                 }
                               : null
@@ -695,7 +715,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: fromSection,
                                   label: SectionList.find(
-                                    (s) => s.id === fromSection
+                                    (s) => s.id === fromSection,
                                   )?.section_name,
                                 }
                               : null
@@ -764,12 +784,20 @@ const StudentPromotion = () => {
                         </Label>
                         <Select
                           className="detail"
+                          value={
+                            toCourseList
+                              .map((c) => ({
+                                value: c.id,
+                                label: c.course_name,
+                              }))
+                              .find((c) => c.value === toCourse) || null
+                          }
                           options={toCourseList.map((c) => ({
                             value: c.id,
                             label: c.course_name,
                           }))}
                           onChange={(opt) => {
-                            setToCourse(opt?.value);
+                            setToCourse(opt?.value || null);
                             setToDepartment(null);
                             setToAcademicYear(null);
                             setToSemester(null);
@@ -798,7 +826,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: toDepartment,
                                   label: BranchList.find(
-                                    (d) => d.id === toDepartment
+                                    (d) => d.id === toDepartment,
                                   )?.department_description,
                                 }
                               : null
@@ -830,12 +858,12 @@ const StudentPromotion = () => {
                           }
                           value={
                             AcademicYearList?.find(
-                              (a) => a.id === toAcademicYear
+                              (a) => a.id === toAcademicYear,
                             )
                               ? {
                                   value: toAcademicYear,
                                   label: AcademicYearList.find(
-                                    (a) => a.id === toAcademicYear
+                                    (a) => a.id === toAcademicYear,
                                   )?.academic_year_description,
                                 }
                               : null
@@ -898,7 +926,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: Number(toSemester),
                                   label: toSemesterList?.find(
-                                    (s) => Number(s.id) === Number(toSemester)
+                                    (s) => Number(s.id) === Number(toSemester),
                                   )?.semester_description,
                                 }
                               : null
@@ -938,7 +966,7 @@ const StudentPromotion = () => {
                               ? {
                                   value: Number(toSection),
                                   label: toSectionList.find(
-                                    (s) => Number(s.id) === Number(toSection)
+                                    (s) => Number(s.id) === Number(toSection),
                                   )?.section_name,
                                 }
                               : null
@@ -956,9 +984,9 @@ const StudentPromotion = () => {
 
               <Row className="mx-2" style={{ border: "1px solid #ccc" }}>
                 <Col xs={12} md={5} className="mb-3 mt-3  ">
-                  <Input 
-                    type="text" 
-                    placeholder="Search students..." 
+                  <Input
+                    type="text"
+                    placeholder="Search students..."
                     value={leftSearchTerm}
                     onChange={(e) => setLeftSearchTerm(e.target.value)}
                     className="mb-3"
@@ -982,7 +1010,11 @@ const StudentPromotion = () => {
                                     onChange={handleSelectAll}
                                     checked={
                                       filteredStudents.length > 0 &&
-                                      filteredStudents.every(student => selectedStudents.includes(student.student_id))
+                                      filteredStudents.every((student) =>
+                                        selectedStudents.includes(
+                                          student.student_id,
+                                        ),
+                                      )
                                     }
                                   />
                                 </th>
@@ -1018,11 +1050,11 @@ const StudentPromotion = () => {
                                         <Input
                                           type="checkbox"
                                           checked={selectedStudents.includes(
-                                            student.student_id
+                                            student.student_id,
                                           )}
                                           onChange={() =>
                                             handleCheckboxChange(
-                                              student.student_id
+                                              student.student_id,
                                             )
                                           }
                                         />
@@ -1137,9 +1169,9 @@ const StudentPromotion = () => {
                 </Col>
 
                 <Col xs={12} md={5} className="mt-3">
-                  <Input 
-                    type="text" 
-                    placeholder="Search promoted students..." 
+                  <Input
+                    type="text"
+                    placeholder="Search promoted students..."
                     value={rightSearchTerm}
                     onChange={(e) => setRightSearchTerm(e.target.value)}
                     className="mb-3"
@@ -1162,8 +1194,13 @@ const StudentPromotion = () => {
                                     type="checkbox"
                                     onChange={handleSelectAllPromoted}
                                     checked={
-                                      filteredPromotedStudents.length > 0 && 
-                                      filteredPromotedStudents.every(student => selectedStudents.includes(student.student_id))
+                                      filteredPromotedStudents.length > 0 &&
+                                      filteredPromotedStudents.every(
+                                        (student) =>
+                                          selectedStudents.includes(
+                                            student.student_id,
+                                          ),
+                                      )
                                     }
                                   />
                                 </th>
@@ -1180,11 +1217,11 @@ const StudentPromotion = () => {
                                       <Input
                                         type="checkbox"
                                         checked={selectedStudents.includes(
-                                          student.student_id
+                                          student.student_id,
                                         )}
                                         onChange={() =>
                                           handleCheckboxChange(
-                                            student.student_id
+                                            student.student_id,
                                           )
                                         } // Ensure this function is working properly
                                       />

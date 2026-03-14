@@ -290,7 +290,7 @@ const AdmIssueReturnReport = () => {
                             <td>{book.authorName}</td>
                             <td>{book.barcode}</td>
                             <td>{book.issueDate}</td>
-                            <td>{book.IssuesBy}</td>
+                            <td>Librarian</td>
                             <td>{book.returnDate}</td>
                             <td>{book.ReturnedBy}</td>
                           </tr>

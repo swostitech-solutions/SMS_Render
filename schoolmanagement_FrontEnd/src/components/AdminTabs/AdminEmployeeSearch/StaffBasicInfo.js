@@ -343,14 +343,20 @@ const StaffInfo = ({
     }
 
     // Validate Email ID
-    if (!formData.email || formData.email.trim() === "") {
-      alert("Email ID is required.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      alert("Please enter a valid Email ID.");
-      return;
-    }
+   if (!formData.email || formData.email.trim() === "") {
+     setRequiredErrors((prev) => ({
+       ...prev,
+       email: "Email ID is required.",
+     }));
+     return;
+   }
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+  setRequiredErrors((prev) => ({
+    ...prev,
+    email: "Please enter a valid Email ID.",
+  }));
+  return;
+}
 
     try {
       // Data is already synced to parent via useEffect - no need for sessionStorage
@@ -436,7 +442,9 @@ const StaffInfo = ({
                         />
                       </div>
                       {requiredErrors.employeeCode && (
-                        <small className="text-danger">{requiredErrors.employeeCode}</small>
+                        <small className="text-danger">
+                          {requiredErrors.employeeCode}
+                        </small>
                       )}
                     </div>
 
@@ -474,7 +482,7 @@ const StaffInfo = ({
                           titleOptions.find(
                             (option) =>
                               option.value.toLowerCase() ===
-                              formData.title.toLowerCase()
+                              formData.title.toLowerCase(),
                           ) || null
                         }
                         onChange={(selected) =>
@@ -529,7 +537,9 @@ const StaffInfo = ({
                         />
                       </div>
                       {requiredErrors.firstName && (
-                        <small className="text-danger">{requiredErrors.firstName}</small>
+                        <small className="text-danger">
+                          {requiredErrors.firstName}
+                        </small>
                       )}
                     </div>
 
@@ -554,7 +564,9 @@ const StaffInfo = ({
                         />
                       </div>
                       {requiredErrors.dob && (
-                        <small className="text-danger">{requiredErrors.dob}</small>
+                        <small className="text-danger">
+                          {requiredErrors.dob}
+                        </small>
                       )}
                     </div>
 
@@ -589,7 +601,7 @@ const StaffInfo = ({
                         className="detail"
                         options={maritalStatusOptions}
                         value={maritalStatusOptions.find(
-                          (option) => option.value === formData.maritalStatus
+                          (option) => option.value === formData.maritalStatus,
                         )}
                         onChange={(selectedOption) =>
                           setFormData({
@@ -619,7 +631,7 @@ const StaffInfo = ({
                             label: item.blood_name,
                           }))
                           .find(
-                            (option) => option.value === formData.bloodGroup
+                            (option) => option.value === formData.bloodGroup,
                           )}
                         onChange={(selectedOption) =>
                           setFormData({
@@ -649,7 +661,7 @@ const StaffInfo = ({
                             label: item.nationality_name,
                           }))
                           .find(
-                            (option) => option.value === formData.nationality
+                            (option) => option.value === formData.nationality,
                           )}
                         onChange={(selectedOption) => {
                           setFormData({
@@ -660,7 +672,9 @@ const StaffInfo = ({
                         }}
                       />
                       {requiredErrors.nationality && (
-                        <small className="text-danger">{requiredErrors.nationality}</small>
+                        <small className="text-danger">
+                          {requiredErrors.nationality}
+                        </small>
                       )}
                     </div>
 
@@ -692,7 +706,9 @@ const StaffInfo = ({
                         }}
                       />
                       {requiredErrors.religion && (
-                        <small className="text-danger">{requiredErrors.religion}</small>
+                        <small className="text-danger">
+                          {requiredErrors.religion}
+                        </small>
                       )}
                     </div>
 
@@ -724,7 +740,9 @@ const StaffInfo = ({
                         }}
                       />
                       {requiredErrors.gender && (
-                        <small className="text-danger">{requiredErrors.gender}</small>
+                        <small className="text-danger">
+                          {requiredErrors.gender}
+                        </small>
                       )}
                     </div>
 
@@ -747,7 +765,7 @@ const StaffInfo = ({
                             label: item.mother_tongue_name,
                           }))
                           .find(
-                            (option) => option.value === formData.motherTongue
+                            (option) => option.value === formData.motherTongue,
                           )}
                         onChange={(selectedOption) => {
                           setFormData({
@@ -758,7 +776,9 @@ const StaffInfo = ({
                         }}
                       />
                       {requiredErrors.motherTongue && (
-                        <small className="text-danger">{requiredErrors.motherTongue}</small>
+                        <small className="text-danger">
+                          {requiredErrors.motherTongue}
+                        </small>
                       )}
                     </div>
 
@@ -773,7 +793,7 @@ const StaffInfo = ({
                         className="detail"
                         options={employeeTypeOptions}
                         value={employeeTypeOptions.find(
-                          (option) => option.value === formData.employeeType
+                          (option) => option.value === formData.employeeType,
                         )}
                         onChange={(selectedOption) => {
                           setFormData({
@@ -784,7 +804,9 @@ const StaffInfo = ({
                         }}
                       />
                       {requiredErrors.employeeType && (
-                        <small className="text-danger">{requiredErrors.employeeType}</small>
+                        <small className="text-danger">
+                          {requiredErrors.employeeType}
+                        </small>
                       )}
                     </div>
 
@@ -816,8 +838,9 @@ const StaffInfo = ({
 
                     <div className="col-md-3 mb-3">
                       <label htmlFor="email-id" className="form-label">
-                        Email ID
+                        Email ID <span style={{ color: "red" }}>*</span>
                       </label>
+
                       <div className="d-flex align-items-center">
                         <input
                           type="email"
@@ -831,8 +854,11 @@ const StaffInfo = ({
                           }}
                         />
                       </div>
+
                       {requiredErrors.email && (
-                        <small className="text-danger">{requiredErrors.email}</small>
+                        <small className="text-danger">
+                          {requiredErrors.email}
+                        </small>
                       )}
                     </div>
 
@@ -875,7 +901,9 @@ const StaffInfo = ({
                             setFormData({ ...formData, phoneNumber: val });
                             clearRequiredError("phoneNumber");
                             if (val && val.length !== 10) {
-                              setPhoneNumberError("Mobile number must be exactly 10 digits.");
+                              setPhoneNumberError(
+                                "Mobile number must be exactly 10 digits.",
+                              );
                             } else {
                               setPhoneNumberError("");
                             }
@@ -883,7 +911,13 @@ const StaffInfo = ({
                         />
                       </div>
                       {(requiredErrors.phoneNumber || phoneNumberError) && (
-                        <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
+                        <div
+                          style={{
+                            color: "red",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                          }}
+                        >
                           {requiredErrors.phoneNumber || phoneNumberError}
                         </div>
                       )}
@@ -906,9 +940,14 @@ const StaffInfo = ({
                           maxLength={10}
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "");
-                            setFormData({ ...formData, emergencyContactNumber: val });
+                            setFormData({
+                              ...formData,
+                              emergencyContactNumber: val,
+                            });
                             if (val && val.length !== 10) {
-                              setEmergencyContactError("Emergency contact must be exactly 10 digits.");
+                              setEmergencyContactError(
+                                "Emergency contact must be exactly 10 digits.",
+                              );
                             } else {
                               setEmergencyContactError("");
                             }
@@ -916,7 +955,13 @@ const StaffInfo = ({
                         />
                       </div>
                       {emergencyContactError && (
-                        <div style={{ color: "red", fontSize: "12px", marginTop: "4px" }}>
+                        <div
+                          style={{
+                            color: "red",
+                            fontSize: "12px",
+                            marginTop: "4px",
+                          }}
+                        >
                           {emergencyContactError}
                         </div>
                       )}
@@ -932,19 +977,21 @@ const StaffInfo = ({
                         className="form-control detail"
                       />
 
-                      {frontCover && typeof frontCover === 'string' && frontCover.length > 0 && (
-                        <Image
-                          src={frontCover}
-                          alt="Front Cover Preview"
-                          thumbnail
-                          style={{
-                            marginTop: "10px",
-                            width: "120px",
-                            height: "150px",
-                            objectFit: "cover",
-                          }}
-                        />
-                      )}
+                      {frontCover &&
+                        typeof frontCover === "string" &&
+                        frontCover.length > 0 && (
+                          <Image
+                            src={frontCover}
+                            alt="Front Cover Preview"
+                            thumbnail
+                            style={{
+                              marginTop: "10px",
+                              width: "120px",
+                              height: "150px",
+                              objectFit: "cover",
+                            }}
+                          />
+                        )}
                     </div>
                   </div>
                 </div>

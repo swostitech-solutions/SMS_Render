@@ -392,32 +392,34 @@ const AdmAttendanceEntry = () => {
         );
       }
 
-      if (response.ok) {
-        const data = await response.json();
-        setSubmitMessage({
-          type: "success",
-          text: placementData?.id
-            ? "Placement updated successfully!"
-            : "Placement created successfully!",
-        });
-        console.log(
-          placementData?.id
-            ? "Placement updated successfully:"
-            : "Placement created successfully:",
-          data
-        );
-      } else {
-        const errorData = await response.json();
-        const { mappedErrors, message } = mapApiErrorsToFields(errorData);
-        if (Object.keys(mappedErrors).length > 0) {
-          setFieldErrors(mappedErrors);
-        }
-        setSubmitMessage({
-          type: "danger",
-          text: message || getErrorMessage(errorData),
-        });
-        console.error("Error saving placement:", errorData);
-      }
+     if (response.ok) {
+       const data = await response.json();
+
+       // Show popup alert
+       alert(
+         placementData?.id
+           ? "Training updated successfully!"
+           : "Training saved successfully!",
+       );
+
+       console.log(
+         placementData?.id
+           ? "Placement updated successfully:"
+           : "Placement created successfully:",
+         data,
+       );
+
+       // Clear the form after saving
+       handleClear();
+     } else {
+       const errorData = await response.json();
+       const { mappedErrors, message } = mapApiErrorsToFields(errorData);
+       if (Object.keys(mappedErrors).length > 0) {
+         setFieldErrors(mappedErrors);
+       }
+    
+       console.error("Error saving placement:", errorData);
+     }
     } catch (error) {
       setSubmitMessage({
         type: "danger",
@@ -472,7 +474,10 @@ const AdmAttendanceEntry = () => {
               </div>
 
               {submitMessage.text && (
-                <div className={`alert alert-${submitMessage.type}`} role="alert">
+                <div
+                  className={`alert alert-${submitMessage.type}`}
+                  role="alert"
+                >
                   {submitMessage.text}
                 </div>
               )}
@@ -610,13 +615,14 @@ const AdmAttendanceEntry = () => {
                 >
                   <Form>
                     <Row className="mb-3">
-                      <Col md={6}>
+                      <Col xs={12} md={6}>
                         <Form.Label>
-                          Name of Organization/Company{" "}
+                          Name of Organization{" "}
                           <span style={{ color: "red" }}>*</span>
                         </Form.Label>
                       </Col>
-                      <Col md={6}>
+
+                      <Col xs={12} md={6}>
                         <Form.Control
                           type="text"
                           className="form-control detail"
@@ -624,9 +630,6 @@ const AdmAttendanceEntry = () => {
                           value={formData.organizationName}
                           onChange={handleChange}
                         />
-                        {fieldErrors.organizationName && (
-                          <small className="text-danger">{fieldErrors.organizationName}</small>
-                        )}
                       </Col>
                     </Row>
 
@@ -646,7 +649,9 @@ const AdmAttendanceEntry = () => {
                           onChange={handleChange}
                         />
                         {fieldErrors.trainingModule && (
-                          <small className="text-danger">{fieldErrors.trainingModule}</small>
+                          <small className="text-danger">
+                            {fieldErrors.trainingModule}
+                          </small>
                         )}
                       </Col>
                     </Row>
@@ -668,7 +673,9 @@ const AdmAttendanceEntry = () => {
                           placeholder="Enter days"
                         />
                         {fieldErrors.duration && (
-                          <small className="text-danger">{fieldErrors.duration}</small>
+                          <small className="text-danger">
+                            {fieldErrors.duration}
+                          </small>
                         )}
                       </Col>
                     </Row>
@@ -686,11 +693,16 @@ const AdmAttendanceEntry = () => {
                           value={fromDate || ""}
                           onChange={(e) => {
                             setFromDate(e.target.value);
-                            setFieldErrors((prev) => ({ ...prev, fromDate: "" }));
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              fromDate: "",
+                            }));
                           }}
                         />
                         {fieldErrors.fromDate && (
-                          <small className="text-danger">{fieldErrors.fromDate}</small>
+                          <small className="text-danger">
+                            {fieldErrors.fromDate}
+                          </small>
                         )}
                       </Col>
                     </Row>
@@ -712,7 +724,9 @@ const AdmAttendanceEntry = () => {
                           }}
                         />
                         {fieldErrors.toDate && (
-                          <small className="text-danger">{fieldErrors.toDate}</small>
+                          <small className="text-danger">
+                            {fieldErrors.toDate}
+                          </small>
                         )}
                       </Col>
                     </Row>
@@ -733,18 +747,26 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedBatch}
-                          onChange={handleSelectChange(setSelectedBatch, "batch")}
+                          onChange={handleSelectChange(
+                            setSelectedBatch,
+                            "batch",
+                          )}
                           placeholder="Select Session"
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
-                              borderColor: fieldErrors.batch ? "#dc3545" : provided.borderColor,
+                              borderColor: fieldErrors.batch
+                                ? "#dc3545"
+                                : provided.borderColor,
                             }),
                           }}
                         />
                         {fieldErrors.batch && (
-                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.875rem" }}
+                          >
                             {fieldErrors.batch}
                           </div>
                         )}
@@ -768,19 +790,27 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedCourse}
-                          onChange={handleSelectChange(setSelectedCourse, "course")}
+                          onChange={handleSelectChange(
+                            setSelectedCourse,
+                            "course",
+                          )}
                           placeholder="Select Course"
                           isDisabled={!selectedBatch}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
-                              borderColor: fieldErrors.course ? "#dc3545" : provided.borderColor,
+                              borderColor: fieldErrors.course
+                                ? "#dc3545"
+                                : provided.borderColor,
                             }),
                           }}
                         />
                         {fieldErrors.course && (
-                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.875rem" }}
+                          >
                             {fieldErrors.course}
                           </div>
                         )}
@@ -804,19 +834,27 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedDepartment}
-                          onChange={handleSelectChange(setSelectedDepartment, "department")}
+                          onChange={handleSelectChange(
+                            setSelectedDepartment,
+                            "department",
+                          )}
                           placeholder="Select Department"
                           isDisabled={!selectedCourse}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
-                              borderColor: fieldErrors.department ? "#dc3545" : provided.borderColor,
+                              borderColor: fieldErrors.department
+                                ? "#dc3545"
+                                : provided.borderColor,
                             }),
                           }}
                         />
                         {fieldErrors.department && (
-                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.875rem" }}
+                          >
                             {fieldErrors.department}
                           </div>
                         )}
@@ -840,19 +878,27 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedAcademicYear}
-                          onChange={handleSelectChange(setSelectedAcademicYear, "academicYear")}
+                          onChange={handleSelectChange(
+                            setSelectedAcademicYear,
+                            "academicYear",
+                          )}
                           placeholder="Select Academic Year"
                           isDisabled={!selectedDepartment}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
-                              borderColor: fieldErrors.academicYear ? "#dc3545" : provided.borderColor,
+                              borderColor: fieldErrors.academicYear
+                                ? "#dc3545"
+                                : provided.borderColor,
                             }),
                           }}
                         />
                         {fieldErrors.academicYear && (
-                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.875rem" }}
+                          >
                             {fieldErrors.academicYear}
                           </div>
                         )}
@@ -874,19 +920,27 @@ const AdmAttendanceEntry = () => {
                             })) || []
                           }
                           value={selectedSemester}
-                          onChange={handleSelectChange(setSelectedSemester, "semester")}
+                          onChange={handleSelectChange(
+                            setSelectedSemester,
+                            "semester",
+                          )}
                           placeholder="Select Semester"
                           isDisabled={!selectedAcademicYear}
                           styles={{
                             control: (provided) => ({
                               ...provided,
                               minHeight: "38px",
-                              borderColor: fieldErrors.semester ? "#dc3545" : provided.borderColor,
+                              borderColor: fieldErrors.semester
+                                ? "#dc3545"
+                                : provided.borderColor,
                             }),
                           }}
                         />
                         {fieldErrors.semester && (
-                          <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+                          <div
+                            className="text-danger mt-1"
+                            style={{ fontSize: "0.875rem" }}
+                          >
                             {fieldErrors.semester}
                           </div>
                         )}
@@ -909,7 +963,9 @@ const AdmAttendanceEntry = () => {
                           onChange={handleChange}
                         />
                         {fieldErrors.numParticipants && (
-                          <small className="text-danger">{fieldErrors.numParticipants}</small>
+                          <small className="text-danger">
+                            {fieldErrors.numParticipants}
+                          </small>
                         )}
                       </Col>
                     </Row>
@@ -927,7 +983,9 @@ const AdmAttendanceEntry = () => {
                           onChange={handleChange}
                         />
                         {fieldErrors.hrName && (
-                          <small className="text-danger">{fieldErrors.hrName}</small>
+                          <small className="text-danger">
+                            {fieldErrors.hrName}
+                          </small>
                         )}
                       </Col>
                     </Row>
