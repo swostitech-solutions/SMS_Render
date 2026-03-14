@@ -1041,6 +1041,11 @@ class LibraryBookSearchAPIView(ListAPIView):
                 if filterdata:
                     for item in filterdata:
                         barcodedata = LibraryBooksBarcode.objects.filter(book=item.id, is_active=True)
+                        if book_accession_no:
+                            barcodedata = barcodedata.filter(barcode=book_accession_no)
+                        if locationId:
+                            barcodedata = barcodedata.filter(location_id=locationId)
+                            
                         for barcodes in barcodedata:
                             # Safely get library branch info
                             library_branch_id = None
@@ -1316,7 +1321,7 @@ class LibraryBookCreateAPIView(CreateAPIView):
 
             # Save Library Book record
             library_book_instance = LibraryBook.objects.create(
-                book_code=libraryBookdetails['book_code'],
+                book_code=libraryBookdetails.get('book_code', ''),
                 book_name=libraryBookdetails['book_name'],
                 book_category=book_category_instance,
                 book_sub_category=book_sub_category_instance,
@@ -2084,7 +2089,8 @@ class LibraryBookUpdateAPIView(APIView):
 
             # update the book details
 
-            bookInstance.book_code = libraryBookdetails.get('book_code')
+            book_code_val = libraryBookdetails.get('book_code')
+            bookInstance.book_code = book_code_val if book_code_val is not None else ''
             bookInstance.book_name = libraryBookdetails.get('book_name')
             bookInstance.book_category = bookcategoryInstance
             bookInstance.book_sub_category = booksubcategoryInstance
@@ -4220,7 +4226,9 @@ class LibraryStatisticsAPIView(ListAPIView):
                 books_qs = books_qs.filter(batch_id=branch_id)
             # Books are not filtered by academic year (they are permanent assets)
 
-            total_books = books_qs.count()
+            # Sum the total number of copies for all books instead of just counting unique books
+            total_books_sum = books_qs.aggregate(total=Sum('no_of_copies'))['total']
+            total_books = total_books_sum if total_books_sum else 0
 
             # 3. Total no of Titles (distinct book names/titles)
             total_titles = books_qs.values('book_name').distinct().count()

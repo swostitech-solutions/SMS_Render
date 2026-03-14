@@ -5141,10 +5141,10 @@ const BookForm = () => {
     let isValid = true;
     const newErrors = {};
 
-    if (!bookDetails.book_code) {
-      newErrors.book_code = "Book Code is required";
-      isValid = false;
-    }
+    // if (!bookDetails.book_code) {
+    //   newErrors.book_code = "Book Code is required";
+    //   isValid = false;
+    // }
     if (!bookDetails.book_name) {
       newErrors.book_name = "Book Name is required";
       isValid = false;
@@ -5357,7 +5357,7 @@ const BookForm = () => {
     if (!bookDetails?.type) fieldErrors.type = "Book/Journal is required.";
     if (!bookCategory) fieldErrors.bookCategory = "Category is required.";
     if (!bookSubCategory) fieldErrors.bookSubCategory = "Sub Category is required.";
-    if (!bookDetails?.book_code) fieldErrors.book_code = "Book Code is required.";
+    // if (!bookDetails?.book_code) fieldErrors.book_code = "Book Code is required.";
     if (!bookDetails?.book_name) fieldErrors.book_name = "Book Title is required.";
     if (!bookStatus?.value) fieldErrors.bookStatus = "Book Status is required.";
 
@@ -5757,29 +5757,31 @@ const BookForm = () => {
                         </Form.Group>
                       </Col>
 
-                      <Col>
-                        <Form.Group controlId="bookCode">
-                          <Form.Label>
-                            Book Code<span style={{ color: "red" }}>*</span>
-                          </Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Enter book code"
-                            className="form-control detail"
-                            name="book_code"
-                            value={bookDetails.book_code}
-                            onChange={(e) => {
-                              handleChange(e);
-                              setErrors((prev) => ({ ...prev, book_code: "" })); // Clear error
-                            }}
-                          />
-                          {errors.book_code && (
-                            <div className="text-danger">
-                              {errors.book_code}
-                            </div>
-                          )}
-                        </Form.Group>
-                      </Col>
+{/*
+                        <Col>
+                          <Form.Group controlId="bookCode">
+                            <Form.Label>
+                              Book Code
+                            </Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="Enter book code"
+                              className="form-control detail"
+                              name="book_code"
+                              value={bookDetails.book_code}
+                              onChange={(e) => {
+                                handleChange(e);
+                                setErrors((prev) => ({ ...prev, book_code: "" })); // Clear error
+                              }}
+                            />
+                            {errors.book_code && (
+                              <div className="text-danger">
+                                {errors.book_code}
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                        */}
 
                       <Col>
                         <Form.Group controlId="bookTitle">

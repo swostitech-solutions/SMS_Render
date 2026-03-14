@@ -23619,8 +23619,16 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
                 )
             # print(studentIds,type(studentIds))
 
-            semester_list = Semester.objects.filter(organization=organization_id, branch=branch_id,
-                                                    course=course_id, department=department_id).order_by('id')
+            filter_kwargs = {
+                'organization': organization_id,
+                'branch': branch_id
+            }
+            if course_id:
+                filter_kwargs['course'] = course_id
+            if department_id:
+                filter_kwargs['department'] = department_id
+
+            semester_list = Semester.objects.filter(**filter_kwargs).order_by('id')
             
             if fee_due_from and fee_due_to:
                 # Validate sorting orders

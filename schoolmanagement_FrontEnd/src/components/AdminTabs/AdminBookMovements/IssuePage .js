@@ -101,6 +101,7 @@ const IssuePage = () => {
       const data = await response.json();
       if (data.message === "success") {
         setSaveMsg({ type: "success", text: "Books issued successfully!" });
+        alert("Book issued successfully!");
         handleCloseModals();
         sessionStorage.removeItem("studentId");
       } else {

@@ -61,7 +61,7 @@ class EmptyStringToNullIntegerField(serializers.IntegerField):
 class LibraryBookSerializer(serializers.Serializer):
     loginId = serializers.IntegerField(allow_null=False)
     academicyearId = serializers.IntegerField(allow_null=False)
-    book_code = serializers.CharField(allow_null=False, allow_blank=False)
+    book_code = serializers.CharField(allow_null=True, allow_blank=True, required=False)
     book_name = serializers.CharField(allow_null=False, allow_blank=False)
     library_branch_Id = serializers.IntegerField(allow_null=True, required=False)
     book_category_Id = serializers.IntegerField(allow_null=False)
@@ -170,7 +170,7 @@ class LibraryBookUpdateSerializerRequest(serializers.Serializer):
     loginId = serializers.IntegerField(allow_null=False)
     bookId = serializers.IntegerField(allow_null=False)
     academic_year_id = serializers.IntegerField(allow_null=False)
-    book_code = serializers.CharField(allow_null=False,allow_blank=False)
+    book_code = serializers.CharField(allow_null=True, allow_blank=True, required=False)
     book_name = serializers.CharField(allow_null=False, allow_blank=False)
     library_branch_Id = serializers.IntegerField(allow_null=False)
     book_category_Id = serializers.IntegerField(allow_null=False)
