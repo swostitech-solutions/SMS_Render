@@ -24,7 +24,7 @@ def health_check(request):
 
 urlpatterns = [
     path('health/', health_check, name='health_check'),
-    path('admin/', admin.site.urls),
+    path('backend-admin/', admin.site.urls),
     path('',include('Acadix.urls')),
     path('',include('Transport.urls')),
     path('',include('Library.urls')),
