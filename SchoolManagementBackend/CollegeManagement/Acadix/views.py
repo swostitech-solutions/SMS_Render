@@ -20523,7 +20523,7 @@ class SearchStudentCourseListAPIView(ListAPIView):
                     studentCourseList = StudentCourse.objects.filter(organization=organization_id,
                                                                      branch=branch_id,
                                                                      is_active=True,
-                                                                     student__is_active=True).order_by('-updated_at')
+                                                                     student__is_active=True).order_by('-created_at')
                 except StudentCourse.DoesNotExist:
                     return Response({"message": "student course record not found !!!"},
                                     status=status.HTTP_404_NOT_FOUND)
