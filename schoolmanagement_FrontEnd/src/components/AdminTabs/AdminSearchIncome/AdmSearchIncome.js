@@ -703,7 +703,7 @@ const AdmAttendanceEntry = () => {
               <div className="col-12">
                 {searchResults.length > 0 && (
                   <div className="table-responsive">
-                    <table className="table">
+                    <table className="table table-bordered ">
                       <thead className="thead-dark">
                         <tr>
                           <th>Income ID</th>

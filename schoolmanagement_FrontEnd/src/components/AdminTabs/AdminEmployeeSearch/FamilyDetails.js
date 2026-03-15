@@ -6,7 +6,7 @@
 //   return (
 //     <div className="container-fluid ">
 //       <div className="table-responsive">
-//         <table className="table">
+//         <table className="table table-bordered ">
 //           <thead>
 //             <tr>
 //               <th>Sr.No</th>

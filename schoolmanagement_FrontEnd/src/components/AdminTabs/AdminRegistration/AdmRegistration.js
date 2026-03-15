@@ -689,7 +689,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
         ["House", basic.house_name],
         ["Email", basic.email],
         ["Aadhaar No", basic.student_aadhaar_no],
-        ["Barcode", basic.barcode],
+        ["Roll No", basic.barcode],
         ["Enrollment No", basic.enrollment_no],
         ["Status", basic.status],
         ["Children in Family", basic.children_in_family],
@@ -947,14 +947,14 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                       </div>
                       <div className="col-12 col-md-3 mb-2">
                         <label htmlFor="barcode" className="form-label">
-                          Student Barcode
+                          Roll No
                         </label>
                         <input
                           type="text"
                           id="barcode"
                           name="barcode"
                           className="form-control detail"
-                          placeholder="Enter barcode"
+                          placeholder="Enter Roll No"
                           value={filters.barcode}
                           onChange={handleInputChange}
                         />
@@ -1337,7 +1337,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           <th scope="col">Address</th>
                           <th scope="col">City</th>
                           <th scope="col">State</th>
-                          <th scope="col">Barcode</th>
+                          <th scope="col">Roll No</th>
                           <th scope="col">Category</th>
                           <th scope="col">Action</th>
                         </tr>

@@ -339,7 +339,7 @@ const TransferCertificateForm = () => {
                         style={{ width: "200px" }}
                       >
                         {" "}
-                        Student Barcode{" "}
+                        Roll No{" "}
                       </label>
                       <input
                         type="text"

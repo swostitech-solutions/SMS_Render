@@ -268,7 +268,7 @@ const AdmIssueReturnReport = () => {
                         <th>Sr.No</th>
                         <th>Name</th>
                         <th>Admission No</th>
-                        <th>Student BarCode</th>
+                        <th>Roll No</th>
                         <th>Title</th>
                         <th>Author</th>
                         <th>Book Accession No</th>

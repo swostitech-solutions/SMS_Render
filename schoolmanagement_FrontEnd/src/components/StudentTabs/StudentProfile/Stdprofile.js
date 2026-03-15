@@ -442,7 +442,7 @@ const StudentProfileCard = ({ studentData, onClose }) => {
                           value={basicDetails.branch_name}
                         />
                         <SimpleRowItem
-                          label="Batch"
+                          label="Session"
                           value={basicDetails.batch_name}
                         />
                       </Col>

@@ -649,7 +649,7 @@ const StudentSearch = () => {
 
                       <div className="col-12 col-md-3 mb-4">
                         <label htmlFor="student-barcode" className="form-label">
-                          Student BarCode
+                          Roll No
                         </label>
                         <input
                           type="text"
@@ -794,7 +794,7 @@ const StudentSearch = () => {
                         />
                       </div>
 
-                      <div className="col-12 col-md-3 mb-4">
+                      {/* <div className="col-12 col-md-3 mb-4">
                         <label htmlFor="roll-number" className="form-label">
                           Roll Number
                         </label>
@@ -805,7 +805,7 @@ const StudentSearch = () => {
                           value={formData.rollNo}
                           onChange={handleInputChange}
                         />
-                      </div>
+                      </div> */}
 
                       <div className="col-12 col-md-3 mb-4">
                         <label htmlFor="father-name" className="form-label">
@@ -876,7 +876,7 @@ const StudentSearch = () => {
                         <th>Student Name</th>
                         <th>Enrollment No</th>
                         <th>Roll No</th>
-                        <th>BarCode</th>
+                        {/* <th>Roll no</th> */}
                         <th>Father Name</th>
                         <th>Mother Name</th>
                         <th>Select Term</th>
@@ -893,7 +893,7 @@ const StudentSearch = () => {
                             <td>{student.section_name}</td>
                             <td>{student.full_name}</td>
                             <td>{student.enrollment_no}</td>
-                            <td>{student.rollno || "-"}</td>
+                            {/* <td>{student.rollno || "-"}</td> */}
                             <td>{student.barcode || "-"}</td>
                             <td>{student.father_name || "-"}</td>
                             <td>{student.mother_name || "-"}</td>

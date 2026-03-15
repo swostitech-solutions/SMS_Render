@@ -615,7 +615,7 @@ const AdmAttendanceEntry = () => {
                         <th>Student Name</th>
                         <th>ONMRC Registration No</th>
                         <th>Admission No</th>
-                        <th>BarCode</th>
+                        <th>Roll no</th>
                         <th>Father Name</th>
                         <th>Message Type</th>
                         <th>Message Date</th>

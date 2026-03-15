@@ -316,14 +316,14 @@ const ModalConfirm = ({ show, handleClose, onSelectStudent }) => {
                       />
                     </div>
                     <div className="col-12 col-md-3 mb-2">
-                      <label className="form-label">Student Barcode</label>
+                      <label className="form-label">Roll No</label>
                       <input
                         type="text"
                         name="barcode"
                         value={filters.barcode}
                         onChange={handleInputChange}
                         className="form-control detail"
-                        placeholder="Student Barcode"
+                        placeholder="Roll No"
                       />
                     </div>
                     {/* Batch */}
@@ -561,7 +561,7 @@ const ModalConfirm = ({ show, handleClose, onSelectStudent }) => {
                           <th>Section</th>
                           <th>Father Name</th>
                           <th>Mother Name</th>
-                          <th>Student Barcode</th>
+                          <th>Roll No</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>

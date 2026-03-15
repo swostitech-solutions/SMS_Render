@@ -466,7 +466,7 @@
 //                       className="table-responsive"
 //                       style={{ maxHeight: "400px", overflowY: "auto" }}
 //                     >
-//                       <table className="table">
+//                       <table className="table table-bordered ">
 //                         <thead className="thead-dark">
 //                           <tr>
 //                             <th>Receipt No.</th>
@@ -537,7 +537,7 @@
 //                       className="table-responsive"
 //                       style={{ maxHeight: "400px", overflowY: "auto" }}
 //                     >
-//                       <table className="table">
+//                       <table className="table table-bordered ">
 //                         <thead className="thead-dark">
 //                           <tr>
 //                             <th>Expense No.</th>
@@ -598,7 +598,7 @@
 //                       className="table-responsive"
 //                       style={{ maxHeight: "400px", overflowY: "auto" }}
 //                     >
-//                       <table className="table">
+//                       <table className="table table-bordered ">
 //                         <thead className="thead-dark">
 //                           <tr>
 //                             <th>Income No.</th>
@@ -652,7 +652,7 @@
 //                 <Col md={6}>
 //                   <div className="border p-3">
 //                     <h5 style={{ color: "black" }}>CALCULATION</h5>
-//                     <table className="table">
+//                     <table className="table table-bordered ">
 //                       <tbody>
 //                         <tr>
 //                           <td>
@@ -1832,7 +1832,7 @@ const AdmAttendanceEntry = () => {
                         className="table-responsive"
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
-                        <table className="table">
+                        <table className="table table-bordered ">
                           <thead className="thead-dark">
                             <tr>
                               <th>Receipt No.</th>
@@ -1907,7 +1907,7 @@ const AdmAttendanceEntry = () => {
                         className="table-responsive"
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
-                        <table className="table">
+                        <table className="table table-bordered ">
                           <thead className="thead-dark">
                             <tr>
                               <th>Expense No.</th>
@@ -1968,7 +1968,7 @@ const AdmAttendanceEntry = () => {
                         className="table-responsive"
                         style={{ maxHeight: "400px", overflowY: "auto" }}
                       >
-                        <table className="table">
+                        <table className="table table-bordered ">
                           <thead className="thead-dark">
                             <tr>
                               <th>Income No.</th>

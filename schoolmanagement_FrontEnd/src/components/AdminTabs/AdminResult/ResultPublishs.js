@@ -762,7 +762,7 @@ const StudentSearch = () => {
 
                       <div className="col-12 col-md-3 mb-4">
                         <label htmlFor="student-barcode" className="form-label">
-                          Student BarCode
+                          Roll No
                         </label>
                         <input
                           type="text"
@@ -968,7 +968,7 @@ const StudentSearch = () => {
                         <th>Course</th>
                         <th>Section</th>
                         <th>Student Name</th>
-                        <th>BarCode</th>
+                        <th>Roll no</th>
                         <th>Father Name</th>
                         <th>Mother Name</th>
                         <th>Select Semester</th>

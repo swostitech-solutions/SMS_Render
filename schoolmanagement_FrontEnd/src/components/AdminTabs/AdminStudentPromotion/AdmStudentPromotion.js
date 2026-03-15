@@ -531,7 +531,7 @@ const StudentPromotion = () => {
                     <Row>
                       <Col xs={12} sm={6} className="mb-3">
                         <Label htmlFor="from-class" className="form-label">
-                          From Batch
+                          From Session
                           <span style={{ color: "red" }}>*</span>
                         </Label>
                         <Select
@@ -743,7 +743,7 @@ const StudentPromotion = () => {
                     <Row>
                       <Col xs={12} sm={6} className="mb-3">
                         <Label htmlFor="from-class" className="form-label">
-                          To Batch
+                          To Session
                           <span style={{ color: "red" }}>*</span>
                         </Label>
                         <Select

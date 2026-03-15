@@ -992,7 +992,7 @@ const IssuePage = () => {
                       </div>
                       <div className="col-12 col-md-3 mb-1">
                         <label htmlFor="student-barcode" className="form-label">
-                          Student Barcode
+                          Roll No
                         </label>
                         <div className="d-flex align-items-center">
                           <input
@@ -1000,7 +1000,7 @@ const IssuePage = () => {
                             id="student-barcode"
                             className="form-control detail"
                             value={barCode}
-                            placeholder="Enter student barcode"
+                            placeholder="Enter Roll No"
                           />
                         </div>
                       </div>

@@ -419,7 +419,7 @@ const AdmAttendanceEntry = () => {
                         <th>Current Count</th>
                         <th>Student Name</th>
                         <th>Admission No</th>
-                        <th>BarCode</th>
+                        <th>Roll no</th>
                         <th>Course</th>
                         <th>Section</th>
                         <th>Assignment Date</th>

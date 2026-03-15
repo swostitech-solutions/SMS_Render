@@ -884,7 +884,7 @@ const FeeDetails = () => {
                               </div>
 
                               <div className="col-md-6">
-                                <table className="table">
+                                <table className="table table-bordered ">
                                   <tbody>
                                     <tr>
                                       <td className="text-end fw-bold">

@@ -1032,13 +1032,13 @@ const AssignStudentMentor = () => {
                             htmlFor="school-barcode"
                             className="form-label"
                           >
-                            BarCode
+                            Roll No
                           </label>
                           <input
                             type="text"
                             id="school-barcode"
                             className="form-control detail"
-                            placeholder="Enter school barcode"
+                            placeholder="Enter Roll No"
                             ref={barcodeRef}
                             value={barcode}
                             onChange={(e) => setBarcode(e.target.value)}
@@ -1093,7 +1093,7 @@ const AssignStudentMentor = () => {
                         <th>Sr.No</th>
                         <th>Student Name</th>
                         <th>Admission No</th>
-                        <th>BarCode</th>
+                        <th>Roll no</th>
                         <th>Course</th>
                         <th>Section</th>
                         <th>Father Name</th>

@@ -350,7 +350,7 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
                         className="form-label"
                       >
                         {" "}
-                        Student Barcode{" "}
+                        Roll No{" "}
                       </label>
                       <input
                         type="text"
@@ -620,7 +620,7 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
                           <th>Section</th>
                           <th>Father Name</th>
                           <th>Mother Name</th>
-                          <th>Student Barcode</th>
+                          <th>Roll No</th>
                         </tr>
                       </thead>
                       <tbody>

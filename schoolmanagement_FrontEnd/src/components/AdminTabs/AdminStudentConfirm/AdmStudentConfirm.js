@@ -1515,7 +1515,7 @@ const AdmAttendanceEntry = () => {
                         <th>Student Name</th>
                         <th>ONMRC Registration No</th>
                         <th>Admission No</th>
-                        <th>Barcode</th>
+                        <th>Roll no</th>
                         <th>Session</th>
                         <th>Course</th>
                         <th>Department</th>
@@ -1643,7 +1643,7 @@ const AdmAttendanceEntry = () => {
                     />
                   </div>
                   <div className="col-12 col-md-3 mb-2">
-                    <label className="form-label">Student Barcode</label>
+                    <label className="form-label">Roll No</label>
                     <input
                       type="text"
                       className="form-control detail"

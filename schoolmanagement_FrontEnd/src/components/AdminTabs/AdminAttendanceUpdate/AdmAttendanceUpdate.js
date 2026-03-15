@@ -1314,7 +1314,7 @@ const AdmAttendanceEntry = () => {
                         <th>Admission No</th>
                         <th>Student Name</th>
                         <th>Mark Attendance</th>
-                        <th>BarCode</th>
+                        <th>Roll no</th>
                         <th>Primary Guardian</th>
                         <th>Father Mobile No</th>
                         <th>Mother Mobile No</th>

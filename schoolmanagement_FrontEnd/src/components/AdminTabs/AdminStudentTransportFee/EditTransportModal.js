@@ -397,7 +397,7 @@
 //               </div>
 
 //               <div className="col-md-4">
-//                 <label className="form-label">Student Barcode</label>
+//                 <label className="form-label">Roll No</label>
 //                 <input
 //                   type="text"
 //                   className="form-control detail"
@@ -984,7 +984,7 @@ const EditTransportModal = ({
               </div>
 
               <div className="col-md-4">
-                <label className="form-label">Student Barcode</label>
+                <label className="form-label">Roll No</label>
                 <input
                   type="text"
                   className="form-control detail"

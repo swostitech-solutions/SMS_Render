@@ -1587,7 +1587,7 @@ const AdmAttendanceEntry = () => {
                         <tr>
                           <th>Student Name</th>
                           {/* <th>Admission No</th>
-                          <th>BarCode</th> */}
+                          <th>Roll no</th> */}
                           <th>Course</th>
                           <th>Section</th>
                           <th>Father Name</th>

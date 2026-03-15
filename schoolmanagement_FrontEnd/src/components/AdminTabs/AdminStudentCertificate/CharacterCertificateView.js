@@ -63,7 +63,7 @@
 //         </div>
 //         <div className="row mb-3">
 //           <div className="col-md-6 d-flex align-items-center">
-//             <label className="form-label me-3" style={{ width: "200px" }}>  Student Barcode  </label>
+//             <label className="form-label me-3" style={{ width: "200px" }}>  Roll No  </label>
 //             <input type="text" className="form-control" />
 //           </div>
 //           <div className="col-md-6 d-flex align-items-center">
@@ -644,7 +644,7 @@ const TransferCertificateForm = () => {
                         style={{ width: "200px" }}
                       >
                         {" "}
-                        Student Barcode{" "}
+                        Roll No{" "}
                       </label>
                       <input
                         type="text"

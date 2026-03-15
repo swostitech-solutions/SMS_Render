@@ -1451,7 +1451,7 @@ const AdmAttendanceEntry = () => {
                         <th>Academic Year</th>
                         <th>Semester</th>
                         <th>Student Name</th>
-                        <th>Barcode</th>
+                        <th>Roll no</th>
                         <th>Father Name</th>
                         <th>Mother Name</th>
                         <th>House</th>

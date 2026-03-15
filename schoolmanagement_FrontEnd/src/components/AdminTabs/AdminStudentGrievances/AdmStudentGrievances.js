@@ -871,7 +871,7 @@ const AdmAttendanceEntry = () => {
                           <th>Academic Year</th>
                           <th>Semester</th>
                           <th>Section</th>
-                          {/* <th>Barcode</th> */}
+                          {/* <th>Roll no</th> */}
                           <th>Type</th>
                           <th>Priority</th>
                           <th>Severity</th>

@@ -821,14 +821,14 @@ const handleClear = () => {
 
                       <div className="col-12 col-md-3 mb-1">
                         <label htmlFor="student-barcode" className="form-label">
-                          Student BarCode<span style={{ color: "red" }}>*</span>
+                          Roll No<span style={{ color: "red" }}>*</span>
                         </label>
                         <div className="d-flex align-items-center">
                           <input
                             type="text"
                             id="student-barcode"
                             className="form-control detail"
-                            placeholder="Enter student BarCode"
+                            placeholder="Enter Roll No"
                             ref={barcodeRef}
                             disabled
                           />
@@ -838,9 +838,10 @@ const handleClear = () => {
                       {/* Batch */}
                       <div className="col-12 col-md-3 mb-2">
                         <label htmlFor="batch" className="form-label">
-                          Batch
+                          Session
                         </label>
                         <Select
+                          className="detail"
                           isLoading={loadingBatch}
                           options={
                             BatchList?.map((b) => ({
@@ -881,6 +882,7 @@ const handleClear = () => {
                           Course
                         </label>
                         <Select
+                          className="detail"
                           isLoading={loadingCourse}
                           options={
                             CourseList?.map((c) => ({
@@ -915,6 +917,7 @@ const handleClear = () => {
                           Department <span style={{ color: "red" }}>*</span>
                         </label>
                         <Select
+                          className="detail"
                           isLoading={loadingDept}
                           options={
                             BranchList?.map((d) => ({
@@ -948,6 +951,7 @@ const handleClear = () => {
                           Academic Year <span style={{ color: "red" }}>*</span>
                         </label>
                         <Select
+                          className="detail"
                           isLoading={loadingAY}
                           options={
                             AcademicYearList?.map((a) => ({
@@ -982,6 +986,7 @@ const handleClear = () => {
                           Semester <span style={{ color: "red" }}>*</span>
                         </label>
                         <Select
+                          className="detail"
                           isLoading={loadingSem}
                           options={
                             SemesterList?.map((s) => ({
@@ -1013,6 +1018,7 @@ const handleClear = () => {
                           Section <span style={{ color: "red" }}>*</span>
                         </label>
                         <Select
+                          className="detail"
                           isLoading={loadingSec}
                           options={
                             SectionList?.map((s) => ({
@@ -1098,7 +1104,7 @@ const handleClear = () => {
               </div>
               <div className="col-12">
                 <div className="table-responsive">
-                  <table className="table table-bordered table-striped">
+                  <table className="table table-bordered ">
                     <thead>
                       <tr>
                         <th>Sl.No</th>

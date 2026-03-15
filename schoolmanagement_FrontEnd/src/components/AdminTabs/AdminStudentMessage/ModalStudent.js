@@ -367,7 +367,7 @@ const ModalStudent = ({ show, handleClose, onSelectStudent }) => {
                     </div>
                     <div className="col-12 col-md-3 mb-2">
                       <label htmlFor="barcodeNo" className="form-label">
-                        Student Barcode
+                        Roll No
                       </label>
                       <input
                         type="text"
@@ -635,7 +635,7 @@ const ModalStudent = ({ show, handleClose, onSelectStudent }) => {
                           <th>Section</th>
                           <th>Father Name</th>
                           <th>Mother Name</th>
-                          <th>Student Barcode</th>
+                          <th>Roll No</th>
                           <th>Actions</th>
                         </tr>
                       </thead>

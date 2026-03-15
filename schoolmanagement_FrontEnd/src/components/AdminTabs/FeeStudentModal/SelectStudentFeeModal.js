@@ -811,7 +811,7 @@ const handleClearFilters = () => {
                         htmlFor="school-admission-no"
                         className="form-label"
                       >
-                        Student Barcode
+                        Roll No
                       </label>
                       <input
                         type="text"
@@ -819,7 +819,7 @@ const handleClearFilters = () => {
                         value={filters.barcode}
                         onChange={handleInputChange}
                         className="form-control detail"
-                        placeholder="Student Barcode"
+                        placeholder="Roll No"
                         style={{ height: "38px", padding: "0.375rem 0.75rem" }} // Inline style to set height and padding
                       />
                     </div>
@@ -982,7 +982,7 @@ const handleClearFilters = () => {
                               <th>Section</th>
                               <th>Father Name</th>
                               <th>Mother Name</th>
-                              <th>Student Barcode</th>
+                              <th>Roll No</th>
                               <th>Actions</th>
                             </tr>
                           </thead>

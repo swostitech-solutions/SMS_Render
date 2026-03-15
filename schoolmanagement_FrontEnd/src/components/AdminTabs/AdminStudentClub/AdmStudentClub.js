@@ -712,7 +712,7 @@ const AdmAttendanceEntry = () => {
                           <input
                             type="text"
                             id="student-name"
-                            className="form-control"
+                            className="form-control detail"
                             placeholder="Enter student name"
                             ref={studentNameRef}
                             disabled={isInputDisabled}
@@ -747,7 +747,7 @@ const AdmAttendanceEntry = () => {
                               ? {
                                   value: selectedBatch,
                                   label: BatchList.find(
-                                    (b) => b.id === selectedBatch
+                                    (b) => b.id === selectedBatch,
                                   )?.batch_description,
                                 }
                               : null
@@ -783,7 +783,7 @@ const AdmAttendanceEntry = () => {
                               ? {
                                   value: selectedCourse,
                                   label: CourseList.find(
-                                    (c) => c.id === selectedCourse
+                                    (c) => c.id === selectedCourse,
                                   )?.course_name,
                                 }
                               : null
@@ -818,7 +818,7 @@ const AdmAttendanceEntry = () => {
                               ? {
                                   value: selectedDepartment,
                                   label: BranchList.find(
-                                    (d) => d.id === selectedDepartment
+                                    (d) => d.id === selectedDepartment,
                                   )?.department_description,
                                 }
                               : null
@@ -849,12 +849,12 @@ const AdmAttendanceEntry = () => {
                           }
                           value={
                             AcademicYearList?.find(
-                              (a) => a.id === selectedAcademicYear
+                              (a) => a.id === selectedAcademicYear,
                             )
                               ? {
                                   value: selectedAcademicYear,
                                   label: AcademicYearList.find(
-                                    (a) => a.id === selectedAcademicYear
+                                    (a) => a.id === selectedAcademicYear,
                                   )?.academic_year_description,
                                 }
                               : null
@@ -887,7 +887,7 @@ const AdmAttendanceEntry = () => {
                               ? {
                                   value: selectedSemester,
                                   label: SemesterList.find(
-                                    (s) => s.id === selectedSemester
+                                    (s) => s.id === selectedSemester,
                                   )?.semester_description,
                                 }
                               : null
@@ -919,7 +919,7 @@ const AdmAttendanceEntry = () => {
                               ? {
                                   value: selectedSection,
                                   label: SectionList.find(
-                                    (s) => s.id === selectedSection
+                                    (s) => s.id === selectedSection,
                                   )?.section_name,
                                 }
                               : null
@@ -949,7 +949,7 @@ const AdmAttendanceEntry = () => {
                                   label:
                                     clubGroupList.find(
                                       (g) =>
-                                        g.club_group_id === selectedClubGroup
+                                        g.club_group_id === selectedClubGroup,
                                     )?.club_group_description || "",
                                 }
                               : null
@@ -987,7 +987,7 @@ const AdmAttendanceEntry = () => {
                                   value: selectedClub,
                                   label:
                                     clubOptions.find(
-                                      (c) => c.club_id === selectedClub
+                                      (c) => c.club_id === selectedClub,
                                     )?.club_description || "",
                                 }
                               : null
@@ -1023,7 +1023,7 @@ const AdmAttendanceEntry = () => {
                   ) : errorStudents ? (
                     <p style={{ color: "red" }}>{errorStudents}</p>
                   ) : (
-                    <table className="table ">
+                    <table className="table  table-bordered">
                       <thead>
                         <tr>
                           <th>
@@ -1042,7 +1042,7 @@ const AdmAttendanceEntry = () => {
                           <th>Student Name</th>
                           <th>ONMRC Registration No</th>
                           <th>Admission No</th>
-                          <th>Barcode</th>
+                          <th>Roll no</th>
                           <th>Course</th>
                           <th>Section</th>
                           <th>Father Name</th>
@@ -1067,7 +1067,7 @@ const AdmAttendanceEntry = () => {
                                     onChange={(e) =>
                                       handleCheckboxChange(
                                         sid,
-                                        e.target.checked
+                                        e.target.checked,
                                       )
                                     }
                                   />
@@ -1099,7 +1099,7 @@ const AdmAttendanceEntry = () => {
                                               clubGroupList.find(
                                                 (g) =>
                                                   g.club_group_id ===
-                                                  selectedClubGroups[sid]
+                                                  selectedClubGroups[sid],
                                               )?.club_group_description || "",
                                           }
                                         : null
@@ -1153,7 +1153,7 @@ const AdmAttendanceEntry = () => {
                                         (club) => ({
                                           value: club.club_id,
                                           label: club.club_description,
-                                        })
+                                        }),
                                       ) || []
                                     }
                                     value={
@@ -1164,7 +1164,7 @@ const AdmAttendanceEntry = () => {
                                               studentClubOptions[sid]?.find(
                                                 (c) =>
                                                   c.club_id ===
-                                                  selectedClubs[sid]
+                                                  selectedClubs[sid],
                                               )?.club_description || "",
                                           }
                                         : null
@@ -1180,9 +1180,9 @@ const AdmAttendanceEntry = () => {
                                       !selectedClubGroups[sid]
                                         ? "Select Club Group first"
                                         : (studentClubOptions[sid] || [])
-                                            .length === 0
-                                        ? "No clubs available for this group"
-                                        : "Select Club"
+                                              .length === 0
+                                          ? "No clubs available for this group"
+                                          : "Select Club"
                                     }
                                     isDisabled={!selectedClubGroups[sid]}
                                     styles={{

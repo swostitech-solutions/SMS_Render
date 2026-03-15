@@ -792,7 +792,7 @@ function SelectedStudentTable({}) {
                           Student Name
                         </th>
                         <th>Admission No</th>
-                        <th>Barcode</th>
+                        <th>Roll no</th>
                         <th
                           style={{ paddingLeft: "50px", paddingRight: "50px" }}
                         >

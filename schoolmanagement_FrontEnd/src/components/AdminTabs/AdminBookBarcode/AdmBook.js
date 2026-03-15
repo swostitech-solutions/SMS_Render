@@ -225,7 +225,7 @@
 //                           <th>Sr No</th>
 //                           <th>Book Code</th>
 //                           <th>Book Name</th>
-//                           <th>BarCode</th>
+//                           <th>Roll no</th>
 //                           <th>Category</th>
 //                           <th>Sub-category</th>
 //                           <th>Select</th>
@@ -493,7 +493,7 @@
 //                           <th>Sr No</th>
 //                           <th>Book Code</th>
 //                           <th>Book Name</th>
-//                           <th>BarCode</th>
+//                           <th>Roll no</th>
 //                           <th>Category</th>
 //                           <th>Sub-category</th>
 //                           <th>Select</th>
@@ -762,7 +762,7 @@
 //                                   <th>Sr No</th>
 //                                   <th>Book Code</th>
 //                                   <th>Book Name</th>
-//                                   <th>BarCode</th>
+//                                   <th>Roll no</th>
 //                                   <th>Category</th>
 //                                   <th>Sub-category</th>
 //                                   <th>Select</th>
@@ -1149,7 +1149,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                           <th>Sr No</th>
                           <th>Book Code</th>
                           <th>Book Name</th>
-                          <th>BarCode</th>
+                          <th>Roll no</th>
                           <th>Category</th>
                           <th>Sub-category</th>
                           <th>Select</th>

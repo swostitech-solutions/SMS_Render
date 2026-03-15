@@ -894,14 +894,14 @@ const StudentFee = () => {
 
                       <div className="col-12 col-md-4 mb-1">
                         <label htmlFor="student-barcode" className="form-label">
-                          Student BarCode
+                          Roll No
                         </label>
                         <div className="d-flex align-items-center">
                           <input
                             type="text"
                             id="student-barcode"
                             className="form-control detail"
-                            placeholder="Enter student barcode"
+                            placeholder="Enter Roll No"
                             ref={barcodeRef}
                             value={selectedStudent.barcode}
                             onChange={(e) =>

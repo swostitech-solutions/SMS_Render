@@ -201,7 +201,7 @@ const AdmOtherDetails = ({ formData, setFormData, requiredErrors = {} }) => {
   return (
     <div className="container-fluid form-container">
       <div className="table-responsive">
-        <table className="table">
+        <table className="table table-bordered ">
           <thead>
             <tr>
               <th>S.No.</th>

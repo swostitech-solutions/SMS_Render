@@ -220,7 +220,7 @@ const AdmOtherDetails = ({ formData, setFormData, isDataLoading }) => {
   return (
     <form onSubmit={handleSubmit} className="container-fluid form-container">
       <div className="table-responsive">
-        <table className="table">
+        <table className="table table-bordered ">
           <thead>
             <tr>
               <th>S.No.</th>

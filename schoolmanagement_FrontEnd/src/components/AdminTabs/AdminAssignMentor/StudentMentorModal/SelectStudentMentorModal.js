@@ -558,14 +558,14 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
                     </div>
                     
                     <div className="col-12 col-md-3 mb-2">
-                      <label htmlFor="barcode" className="form-label">Student Barcode</label>
+                      <label htmlFor="barcode" className="form-label">Roll No</label>
                       <input
                         type="text"
                         name="barcode"
                         value={filters.barcode}
                         onChange={handleInputChange}
                         className="form-control detail"
-                        placeholder="Student Barcode"
+                        placeholder="Student Roll No"
                         style={{ height: "38px", padding: "0.375rem 0.75rem" }}
                       />
                     </div>
@@ -683,7 +683,7 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
                             <th>Section</th>
                             <th>Father Name</th>
                             <th>Mother Name</th>
-                            <th>Student Barcode</th>
+                            <th>Roll No</th>
                             <th>
                               Select
                               <br />
