@@ -232,7 +232,7 @@
 //                         <tr>
 //                           <th>Sr.No</th>
 //                           <th>Book Name</th>
-//                           <th>Book Code</th>
+//
 //                           <th>Accession No</th>
 //                           <th>Category</th>
 //                           <th>Sub Category</th>
@@ -755,22 +755,6 @@ const AdmBookSearch = () => {
                 <div className="col-12 custom-section-box" style={{ backgroundColor: "white" }}>
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
                     <div className="row flex-grow-1">
-                      <div className="col-12 col-md-3 mb-3">
-                        <label htmlFor="book-code" className="form-label">
-                          Book Code
-                        </label>
-                        <div className="d-flex align-items-center">
-                          <input
-                            type="text"
-                            id="book-code"
-                            className="form-control detail"
-                            placeholder="Enter book code"
-                            ref={studentNameRef}
-                            value={bookCode}
-                            onChange={(e) => setBookCode(e.target.value)}
-                          />
-                        </div>
-                      </div>
                       <div className="col-12 col-md-3 mb-0">
                         <label
                           htmlFor="book-accession-no"
@@ -961,7 +945,6 @@ const AdmBookSearch = () => {
                       <table className="table table-bordered mt-3">
                         <thead>
                           <tr>
-                            <th>Book Code</th>
                             <th>Book Accession No</th>
                             <th>Book Name</th>
                             <th>Author</th>
@@ -979,7 +962,6 @@ const AdmBookSearch = () => {
                         <tbody>
                           {tableData.map((book, index) => (
                             <tr key={index}>
-                              <td>{book.book_code}</td>
                               <td>{book.book_accession_no}</td>
                               <td>{book.book_name}</td>
                               <td>{book.author}</td>
@@ -1004,8 +986,7 @@ const AdmBookSearch = () => {
                       <table className="table table-bordered mt-3">
                         <thead>
                           <tr>
-                            <th>Sr No</th> 
-                            <th>Book Code</th>
+                            <th>Sr No</th>
                             <th>Book Accession No</th>
                             <th>Book Title</th>
                             <th>Author</th>
@@ -1023,8 +1004,7 @@ const AdmBookSearch = () => {
                         <tbody>
                           {tableData.map((book, index) => (
                             <tr key={index}>
-                              <td>{index + 1}</td> 
-                              <td>{book.book_code}</td>
+                              <td>{index + 1}</td>
                               <td>{book.bookBarcode}</td>
                               <td>{book.book_name}</td>
                               <td>{book.author}</td>
@@ -1060,7 +1040,6 @@ const AdmBookSearch = () => {
                         <thead>
                           <tr>
                             <th>Sr No</th>
-                            <th>Book Code</th>
                             <th>Book Accession No</th>
                             <th>Book Title</th>
                             <th>Author</th>
@@ -1080,7 +1059,6 @@ const AdmBookSearch = () => {
                             currentData.map((book, index) => (
                               <tr key={index}>
                                 <td>{offset + index + 1}</td>
-                                <td>{book.book_code}</td>
                                 <td>{book.bookBarcode}</td>
                                 <td>{book.book_name}</td>
                                 <td>{book.author}</td>

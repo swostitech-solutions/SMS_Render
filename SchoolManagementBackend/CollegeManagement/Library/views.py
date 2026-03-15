@@ -4256,9 +4256,9 @@ class LibraryStatisticsAPIView(ListAPIView):
                 books_qs = books_qs.filter(batch_id=branch_id)
             # Books are not filtered by academic year (they are permanent assets)
 
-            # Sum the total number of copies for all books instead of just counting unique books
-            total_books_sum = books_qs.aggregate(total=Sum('no_of_copies'))['total']
-            total_books = total_books_sum if total_books_sum else 0
+            # Sum the total number of copies for all books based purely on existing generated barcodes
+            # This ensures complete sync with the book search rows over loosely typed `no_of_copies` fields
+            total_books = LibraryBooksBarcode.objects.filter(book__in=books_qs, is_active=True).count()
 
             # 3. Total no of Titles (distinct book names/titles)
             total_titles = books_qs.values('book_name').distinct().count()

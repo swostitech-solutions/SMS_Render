@@ -9,7 +9,6 @@ const COLUMNS = [
   { key: "type",               label: "Book/Journal Type",   required: true,  hint: "Values: book or journal" },
   { key: "category_name",      label: "Category Name",        required: true,  hint: "Must match system category name exactly (case-insensitive)" },
   { key: "sub_category_name",  label: "Sub Category Name",    required: true,  hint: "Must match system sub-category name exactly (case-insensitive)" },
-  { key: "book_code",          label: "Book Code",            required: true,  hint: "Unique book identifier" },
   { key: "book_name",          label: "Book Title",           required: true,  hint: "Full title of the book" },
   { key: "publisher",          label: "Publisher",            required: false, hint: "" },
   { key: "author",             label: "Author",               required: false, hint: "" },
@@ -25,7 +24,6 @@ const COLUMNS = [
   { key: "bill_no",            label: "Bill No",              required: false, hint: "" },
   { key: "no_of_copies",       label: "No. of Copies",        required: true,  hint: "Positive whole number. E.g. 5" },
   { key: "bill_value",         label: "Cost / Bill Value",    required: false, hint: "Number. E.g. 500.00" },
-  { key: "concession",         label: "Concession",           required: false, hint: "Number. E.g. 50.00" },
   { key: "accession_status",   label: "Accession Status",     required: true,  hint: "Values: ACTIVE, INACTIVE, LOST, or DAMAGED" },
   { key: "accession_location", label: "Accession Location",   required: false, hint: "Must match system location name exactly (case-insensitive)" },
   { key: "remarks",            label: "Remarks",              required: false, hint: "" },
@@ -36,7 +34,6 @@ const SAMPLE_VALUES = [
   "book",
   "Science",
   "Physics",
-  "BC001",
   "Introduction to Physics",
   "Oxford University Press",
   "H.C. Verma",
@@ -52,7 +49,6 @@ const SAMPLE_VALUES = [
   "BILL-001",
   "5",
   "500",
-  "50",
   "ACTIVE",
   "Rack A",
   "First acquisition batch",
@@ -394,16 +390,6 @@ const BulkBookUpload = () => {
       locationMap[l.name.trim().toLowerCase()] = l;
     });
 
-    // Detect duplicate book codes WITHIN the file
-    const codeToRows = {};
-    rawRows.forEach((row, idx) => {
-      const code = String(row["Book Code"] || "").trim();
-      if (code) {
-        if (!codeToRows[code]) codeToRows[code] = [];
-        codeToRows[code].push(idx + 2); // Excel row (header = row 1)
-      }
-    });
-
     // ── Normalise any date Excel might output -> YYYY-MM-DD, or null if invalid ─
     //    Accepted inputs:
     //      DD-MM-YYYY        (what the user intends to type)
@@ -448,9 +434,6 @@ const BulkBookUpload = () => {
       const digits = str.replace(/[-\s]/g, "");
       return /^\d{10}$/.test(digits) || /^\d{13}$/.test(digits);
     };
-
-    // ── Book code allowed characters: letters, digits, dash, underscore ─────
-    const isValidBookCode = (str) => /^[A-Za-z0-9\-_/]+$/.test(str);
 
     return rawRows.map((row, idx) => {
       const errors   = [];
@@ -497,24 +480,6 @@ const BulkBookUpload = () => {
           );
         } else {
           subCategoryId = foundSub.id;
-        }
-      }
-
-      // book code
-      const bookCode = get("Book Code");
-      if (!bookCode) {
-        errors.push("Book Code is required");
-      } else {
-        if (!isValidBookCode(bookCode)) {
-          errors.push(`Book Code '${bookCode}' contains invalid characters. Allowed: letters, digits, dash (-), underscore (_), slash (/).`);
-        }
-        if (bookCode.length > 50) {
-          errors.push(`Book Code must be 50 characters or fewer (got: ${bookCode.length})`);
-        }
-        if (codeToRows[bookCode]?.length > 1) {
-          errors.push(
-            `Duplicate Book Code '${bookCode}' in rows: ${codeToRows[bookCode].join(", ")}`
-          );
         }
       }
 
@@ -615,22 +580,6 @@ const BulkBookUpload = () => {
         }
       }
 
-      // concession — must be non-negative and not exceed bill value
-      const concession = get("Concession");
-      if (concession) {
-        const cv = parseFloat(concession);
-        if (isNaN(cv)) {
-          errors.push(`Concession must be a number — got: '${concession}'`);
-        } else if (cv < 0) {
-          errors.push(`Concession cannot be negative — got: '${concession}'`);
-        } else if (billValue) {
-          const bv = parseFloat(billValue);
-          if (!isNaN(bv) && cv > bv) {
-            errors.push(`Concession (${cv}) cannot be greater than Cost / Bill Value (${bv})`);
-          }
-        }
-      }
-
       // ISBN — if provided, must be 10 or 13 digits
       const ISBN = get("ISBN");
       if (ISBN && !isValidISBN(ISBN)) {
@@ -672,7 +621,6 @@ const BulkBookUpload = () => {
         type:          type || "book",
         categoryId,
         subCategoryId,
-        bookCode,
         bookName,
         publisher,
         author,
@@ -688,7 +636,6 @@ const BulkBookUpload = () => {
         billNo:        get("Bill No"),
         noCopies,
         billValue,
-        concession,
         accessionStatus,
         locationId,
         remarks,
@@ -728,7 +675,6 @@ const BulkBookUpload = () => {
     const libraryBookdetails = {
       loginId,
       academicyearId: academicYearId,
-      book_code:          row.bookCode,
       book_name:          row.bookName,
       library_branch_Id:  row.branchId || null,
       book_category_Id:   row.categoryId,
@@ -756,7 +702,6 @@ const BulkBookUpload = () => {
       {
         loginId,
         academicyearId:   academicYearId,
-        book_code:        row.bookCode,
         book_name:        row.bookName,
         library_branch_Id: row.branchId || null,
         book_category_Id:  row.categoryId,
@@ -765,7 +710,6 @@ const BulkBookUpload = () => {
         purchase_from:    row.purchaseFrom || "",
         bill_no:          row.billNo       || "",
         bill_value:       row.billValue    ? row.billValue.toString()   : "0",
-        bill_concession:  row.concession   ? row.concession.toString()  : "0",
         no_of_copies:     row.noCopies.toString(),
       },
     ];
@@ -839,7 +783,6 @@ const BulkBookUpload = () => {
         await uploadSingleRow(row, orgId, branchId, academicYearId, loginId);
         results.push({
           excelRow: row.excelRow,
-          bookCode: row.bookCode,
           bookName: row.bookName,
           success:  true,
           error:    null,
@@ -847,7 +790,6 @@ const BulkBookUpload = () => {
       } catch (err) {
         results.push({
           excelRow: row.excelRow,
-          bookCode: row.bookCode,
           bookName: row.bookName,
           success:  false,
           error:    err.message,
@@ -867,8 +809,8 @@ const BulkBookUpload = () => {
     if (!failed.length) return;
 
     const wsData = [
-      ["Row (Excel)", "Book Code", "Book Title", "Error Details"],
-      ...failed.map((r) => [r.excelRow, r.bookCode, r.bookName, r.error]),
+      ["Row (Excel)", "Book Title", "Error Details"],
+      ...failed.map((r) => [r.excelRow, r. r.bookName, r.error]),
     ];
     const wb      = XLSX.utils.book_new();
     const ws      = XLSX.utils.aoa_to_sheet(wsData);
@@ -1082,7 +1024,6 @@ const BulkBookUpload = () => {
                                   >
                                     <tr>
                                       <th>Row</th>
-                                      <th>Book Code</th>
                                       <th>Book Title</th>
                                       <th>Category</th>
                                       <th>Sub Category</th>
@@ -1266,7 +1207,6 @@ const BulkBookUpload = () => {
                                   <tr>
                                     <th>#</th>
                                     <th>Excel Row</th>
-                                    <th>Book Code</th>
                                     <th>Book Title</th>
                                     <th>Result</th>
                                     <th>Error Details</th>
