@@ -22,7 +22,7 @@ jobs:
 
             echo "=== Pulling latest code ==="
             cd /var/www/schoolmanagement
-            git pull origin main
+            git reset --hard origin/main
 
             echo "=== Deploying Backend ==="
             cd SchoolManagementBackend/CollegeManagement
