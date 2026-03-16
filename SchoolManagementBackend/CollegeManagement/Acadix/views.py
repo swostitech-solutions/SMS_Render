@@ -20508,15 +20508,11 @@ class SearchStudentCourseListAPIView(ListAPIView):
             barcode = serializer.validated_data.get('barcode')
             father_name = serializer.validated_data.get('father_name')
             mother_name = serializer.validated_data.get('mother_name')
-            # <<<<<<< HEAD
             college_admission_no = serializer.validated_data.get('college_admission_no')
             hostel_availed = serializer.validated_data.get('hostel_availed')
-            # =======
-            #             college_admission_no = serializer.validated_data.get('college_admission_no')
             mentor_id = serializer.validated_data.get('mentor_id')
             teacher_id = serializer.validated_data.get('teacher_id')
             search_query = serializer.validated_data.get('search_query')
-            # >>>>>>> 98d3432918ff50c89ad218833c4ac8870395291d
 
             # filterdata = StudentCourse.objects.none()
 

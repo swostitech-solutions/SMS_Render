@@ -825,7 +825,7 @@ const handleSearch = async () => {
     const queryParams = new URLSearchParams({
       organization_id,
       branch_id,
-      paid: showUnpaidFee ? "false" : "true",
+      paid: showUnpaidFee ? "true" : "false",
     });
 
     // Optional filters — ONLY when selected
@@ -927,17 +927,16 @@ const fetchViewPDF = async (student_id, fee_applied_from) => {
       return;
     }
 
-    if (!fee_applied_from) {
-      alert("Fee Applied From is missing!");
-      return;
-    }
-
     if (!organization_id || !branch_id ) {
       alert("Organization / Branch  is missing!");
       return;
     }
 
-    const url = `${ApiUrl.apiurl}Transport/MonthlyElemetWiseStudentFees/?student_id=${student_id}&fee_applied_from_id=${fee_applied_from}&organization_id=${organization_id}&branch_id=${branch_id}`;
+    // Pass fee_applied_from_id only if it exists
+    let url = `${ApiUrl.apiurl}Transport/MonthlyElemetWiseStudentFees/?student_id=${student_id}&organization_id=${organization_id}&branch_id=${branch_id}`;
+    if (fee_applied_from) {
+      url += `&fee_applied_from_id=${fee_applied_from}`;
+    }
 
     console.log("PDF API URL:", url);
 

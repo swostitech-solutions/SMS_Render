@@ -765,7 +765,6 @@ const handleClear = () => {
                             className="form-control detail"
                             placeholder="Enter student name"
                             ref={studentNameRef}
-                            disabled
                           />
 
                           <button
@@ -814,7 +813,6 @@ const handleClear = () => {
                             className="form-control detail"
                             placeholder="Enter admission no"
                             ref={admissionNoRef}
-                            disabled
                           />
                         </div>
                       </div>
@@ -830,7 +828,6 @@ const handleClear = () => {
                             className="form-control detail"
                             placeholder="Enter Roll No"
                             ref={barcodeRef}
-                            disabled
                           />
                         </div>
                       </div>
