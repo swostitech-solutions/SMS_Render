@@ -570,6 +570,8 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
         academic_year_id: selectedAcademicYear?.value || "",
         semester_id: selectedSemester?.value || "",
         section_id: selectedSection?.value || "",
+        fatherName: filters.fatherName || "",
+        motherName: filters.motherName || "",
       });
 
       const url = `${
@@ -927,6 +929,8 @@ const handleClearFilters = () => {
                       <input
                         type="text"
                         name="fatherName"
+                        value={filters.fatherName}
+                        onChange={handleInputChange}
                         className="form-control detail"
                         placeholder="Father's Name"
                         style={{ height: "38px", padding: "0.375rem 0.75rem" }}
@@ -942,12 +946,14 @@ const handleClearFilters = () => {
                       <input
                         type="text"
                         name="motherName"
+                        value={filters.motherName}
+                        onChange={handleInputChange}
                         className="form-control detail"
                         placeholder="Mother's Name"
                         style={{ height: "38px", padding: "0.375rem 0.75rem" }}
                       />
                     </div>
-                    <div className="col-12 col-md-3 mb-2">
+                    {/* <div className="col-12 col-md-3 mb-2">
                       <label
                         htmlFor="school-admission-no"
                         className="form-label"
@@ -961,7 +967,7 @@ const handleClearFilters = () => {
                         placeholder="College Admission No"
                         style={{ height: "38px", padding: "0.375rem 0.75rem" }}
                       />
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Students Table */}

@@ -18248,7 +18248,7 @@ class StudentMessageHistoryFilterListAPIView(ListAPIView):
                         'section_id': studentCourseInstance.section.id,
                         'section_name': studentCourseInstance.section.section_name,
                         'enrollment_no': studentCourseInstance.enrollment_no,
-                        'studentName': f'{RegistrationInstance.first_name}{RegistrationInstance.middle_name}{RegistrationInstance.last_name}',
+                        'studentName': f"{RegistrationInstance.first_name} {RegistrationInstance.middle_name or ''} {RegistrationInstance.last_name or ''}".replace('  ', ' ').strip(),
                         'college_admission_no': RegistrationInstance.college_admission_no,
                         'registration_no': RegistrationInstance.registration_no,
                         'barcode': RegistrationInstance.barcode,

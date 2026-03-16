@@ -620,8 +620,6 @@ const AdmAttendanceEntry = () => {
                         <th>Sr.No</th>
                         <th>Session</th>
                         <th>Course</th>
-                        <th>Department</th>
-                        <th>Section</th>
                         <th>Student Name</th>
                         <th>ONMRC Registration No</th>
                         <th>Admission No</th>
@@ -646,12 +644,6 @@ const AdmAttendanceEntry = () => {
                             {/* Class */}
                             <td>{row.course_name}</td>
 
-                            {/* Department */}
-                            <td>{row.department_description}</td>
-
-                            {/* Section */}
-                            <td>{row.section_name}</td>
-
                             {/* Student Name */}
                             <td>{row.studentName}</td>
 
@@ -668,13 +660,13 @@ const AdmAttendanceEntry = () => {
                             <td>{row.fatherName}</td>
 
                             {/* Message Type */}
-                            <td>{row.messageType}</td>
+                            <td>{row.message_type_description}</td>
 
                             {/* Message Date */}
                             <td>{row.message_date}</td>
 
                             {/* Initiated By */}
-                            <td>{row.InitiatedBy}</td>
+                            <td>{row.initiated_by_description}</td>
 
                             {/* Initiated Remarks */}
                             <td>{row.initiated_remarks}</td>
@@ -690,7 +682,7 @@ const AdmAttendanceEntry = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="14" className="text-center">
+                          <td colSpan="13" className="text-center">
                             No data found
                           </td>
                         </tr>
