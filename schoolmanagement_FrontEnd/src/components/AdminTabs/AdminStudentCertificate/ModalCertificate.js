@@ -132,7 +132,21 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
       const data = await response.json();
 
       if (data.message === "success!!") {
-        setStudentData(data.data);
+        let results = data.data;
+
+        // Frontend filter as backup
+        if (filters.fatherName) {
+          results = results.filter(s => 
+            s.father_name && s.father_name.toLowerCase().includes(filters.fatherName.toLowerCase())
+          );
+        }
+        if (filters.motherName) {
+          results = results.filter(s => 
+            s.mother_name && s.mother_name.toLowerCase().includes(filters.motherName.toLowerCase())
+          );
+        }
+
+        setStudentData(results);
         setFullStudentData(data.data);
       } else {
         setStudentData([]);

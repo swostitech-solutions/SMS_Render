@@ -660,13 +660,13 @@ const AdmAttendanceEntry = () => {
                             <td>{row.fatherName}</td>
 
                             {/* Message Type */}
-                            <td>{row.message_type_description}</td>
+                            <td>{row.messageType}</td>
 
                             {/* Message Date */}
                             <td>{row.message_date}</td>
 
                             {/* Initiated By */}
-                            <td>{row.initiated_by_description}</td>
+                            <td>{row.InitiatedBy}</td>
 
                             {/* Initiated Remarks */}
                             <td>{row.initiated_remarks}</td>

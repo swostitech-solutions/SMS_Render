@@ -15699,7 +15699,7 @@ class StudentSearchBasedOnIdBarcodeCollegeAdmissionNo(ListAPIView):
                     # Get All Data For Specific Student ID On Student Fee Details Table
 
                     StudentFeeDetailData = StudentFeeDetail.objects.filter(student=StudentCourseInstance.student,
-                                                                           is_active=True, )
+                                                                           is_active=True, ).order_by('semester__display_order', 'id')
                     feestructuredetailsdata = []
                     element_discount_amount = ''
                     for item in StudentFeeDetailData:
@@ -18159,18 +18159,13 @@ class StudentMessageHistoryFilterListAPIView(ListAPIView):
             #     filterdata = filterdata.filter(message_date=fromto)
 
             if date_from:
-                # Convert fromdate to datetime object
-                date_from = datetime.strptime(date_from, "%Y-%m-%d")
                 studentMessageList = studentMessageList.filter(message_date__gte=date_from)
 
-                # If fromto is not provided, set it to current date
             if date_to:
-                date_to = datetime.strptime(date_to, "%Y-%m-%d")
                 studentMessageList = studentMessageList.filter(message_date__lte=date_to)
             else:
-                # If fromto is not provided, use the current date as fromto
-                date_to = datetime.now()
-                studentMessageList = studentMessageList.filter(message_date__lte=date_to)
+                # If date_to is not provided, use the current date as default
+                studentMessageList = studentMessageList.filter(message_date__lte=datetime.now().date())
 
             if message_type:
                 studentMessageList = studentMessageList.filter(message_type=message_type)
@@ -20607,66 +20602,42 @@ class SearchStudentCourseListAPIView(ListAPIView):
 
             # Specific field filters (only if search_query is not provided, or as additional filters)
             if student_name and not search_query:
-                print(f"DEBUG: student_name received: '{student_name}'")
-                name_parts = student_name.strip().split()
-                print(f"DEBUG: name_parts: {name_parts}, length: {len(name_parts)}")
-                print(f"DEBUG: studentCourseList count before name filter: {studentCourseList.count()}")
+                student_name = student_name.strip()
+                name_parts = student_name.split()
                 
                 if len(name_parts) == 1:
-                    first = name_parts[0].strip()
+                    first = name_parts[0]
                     studentCourseList = studentCourseList.filter(
                         Q(student__first_name__icontains=first) |
                         Q(student__middle_name__icontains=first) |
-                        Q(student__last_name__icontains=first),
-                        student__is_active=True
+                        Q(student__last_name__icontains=first)
                     )
-                elif len(name_parts) == 2:  # First + Last
-                    first, last = name_parts
-                    # Debug: Check what students have "sonali" in their name
-                    debug_students = studentCourseList.filter(
-                        Q(student__first_name__icontains=first) |
-                        Q(student__middle_name__icontains=first) |
-                        Q(student__last_name__icontains=first),
-                        student__is_active=True
-                    )[:5]
-                    for s in debug_students:
-                        print(f"DEBUG: Student found with '{first}': first_name='{s.student.first_name}', middle_name='{s.student.middle_name}', last_name='{s.student.last_name}'")
-                    
-                    # More flexible search: first word OR second word can be in ANY name field
+                elif len(name_parts) >= 2:  # First + Last (or more)
+                    first = name_parts[0]
+                    last = name_parts[-1]
                     studentCourseList = studentCourseList.filter(
-                        # Both terms somewhere in the name (more flexible)
                         (Q(student__first_name__icontains=first) | Q(student__middle_name__icontains=first) | Q(student__last_name__icontains=first)) &
-                        (Q(student__first_name__icontains=last) | Q(student__middle_name__icontains=last) | Q(student__last_name__icontains=last)),
-                        student__is_active=True
-                    )
-                    print(f"DEBUG: After 2-word filter, count: {studentCourseList.count()}")
-                elif len(name_parts) == 3:  # First + Middle + Last
-                    first, middle, last = name_parts
-                    studentCourseList = studentCourseList.filter(
-                        student__first_name__icontains=first,
-                        student__middle_name__icontains=middle,
-                        student__last_name__icontains=last,
-                        student__is_active=True
+                        (Q(student__first_name__icontains=last) | Q(student__middle_name__icontains=last) | Q(student__last_name__icontains=last))
                     )
 
             if college_admission_no and not search_query:
                 studentCourseList = studentCourseList.filter(
-                    student__college_admission_no__icontains=college_admission_no)
+                    student__college_admission_no__icontains=college_admission_no.strip())
 
             if admission_no and not search_query:
-                studentCourseList = studentCourseList.filter(student__admission_no__icontains=admission_no)
+                studentCourseList = studentCourseList.filter(student__admission_no__icontains=admission_no.strip())
 
             if registration_no and not search_query:
-                studentCourseList = studentCourseList.filter(student__registration_no=registration_no)
+                studentCourseList = studentCourseList.filter(student__registration_no=registration_no.strip())
 
             if barcode and not search_query:
-                studentCourseList = studentCourseList.filter(student__barcode__icontains=barcode)
+                studentCourseList = studentCourseList.filter(student__barcode__icontains=barcode.strip())
 
-            if father_name and not search_query:
-                studentCourseList = studentCourseList.filter(student__father_name__icontains=father_name)
+            if father_name and father_name.strip() and not search_query:
+                studentCourseList = studentCourseList.filter(student__father_name__icontains=father_name.strip())
 
-            if mother_name and not search_query:
-                studentCourseList = studentCourseList.filter(student__mother_name__icontains=mother_name)
+            if mother_name and mother_name.strip() and not search_query:
+                studentCourseList = studentCourseList.filter(student__mother_name__icontains=mother_name.strip())
 
             if hostel_availed:
                 studentCourseList = studentCourseList.filter(hostel_availed=hostel_availed.capitalize())
