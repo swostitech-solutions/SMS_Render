@@ -1,3 +1,4 @@
+import re
 from django.utils import timezone
 
 from django.db import DatabaseError
@@ -707,7 +708,14 @@ class GetLecturePeriodList(APIView):
             return Response({'message': 'Please provide required data !!!'}, status=status.HTTP_400_BAD_REQUEST)
         lecture_periods = LecturePeriod.objects.filter(organization=organization_id, branch=branch_id,is_active=True)
         serializer = LecturePeriod_Serializer(lecture_periods, many=True)
-        return Response(serializer.data)
+        data = serializer.data
+
+        def get_period_number(item):
+            match = re.search(r'\d+', item.get('lecture_period_name', ''))
+            return int(match.group()) if match else 0
+
+        sorted_data = sorted(data, key=get_period_number)
+        return Response(sorted_data)
 
 
 class LecturePlanCreateAPIView(CreateAPIView):
@@ -1047,33 +1055,33 @@ class ProfessorLectureUpdateAPIView(UpdateAPIView):
             instance.percentage_completed = serializer.validated_data.get('percentage_completed')
             instance.remarks = serializer.validated_data.get('remarks')
             instance.updated_by = serializer.validated_data.get('updated_by')
-            
+
             # Handle file upload if present
             if 'document_file' in request.FILES:
                 import os
                 import uuid
                 from django.conf import settings
-                
+
                 uploaded_file = request.FILES['document_file']
-                
+
                 # Create directory if it doesn't exist (use SWOSTITECH_CMS instead of media)
                 upload_dir = os.path.join('SWOSTITECH_CMS', 'lesson_plan_documents')
                 full_upload_dir = os.path.join(settings.BASE_DIR, upload_dir)
                 os.makedirs(full_upload_dir, exist_ok=True)
-                
+
                 # Generate unique filename using UUID
                 file_extension = os.path.splitext(uploaded_file.name)[1]
                 unique_filename = f"{uuid.uuid4()}{file_extension}"
-                
+
                 # Save file
                 file_path = os.path.join(full_upload_dir, unique_filename)
                 with open(file_path, 'wb+') as destination:
                     for chunk in uploaded_file.chunks():
                         destination.write(chunk)
-                
+
                 # Store relative path in database
                 instance.document_file = f'/SWOSTITECH_CMS/lesson_plan_documents/{unique_filename}'
-            
+
             instance.updated_at = timezone.now()
             instance.save()
 
