@@ -25,7 +25,7 @@ const LibrarySettings = () => {
       const branchId = localStorage.getItem("branchId") || "";
 
       const response = await fetch(
-        `${ApiUrl.apiurl}LIBRARYBOOK/LibraryParameterConfigurationList/?org_id=${orgId}&branch_id=${branchId}`
+        `${ApiUrl.apiurl}LIBRARYBOOK/LibraryParameterConfigurationList/?org_id=${orgId}&branch_id=${branchId}`,
       );
       const result = await response.json();
 
@@ -51,16 +51,47 @@ const LibrarySettings = () => {
 
   const validateFields = () => {
     const newErrors = {};
-    if (!settings.daysToReturn || String(settings.daysToReturn).trim() === "") newErrors.daysToReturn = "Number of days to return is required.";
-    else if (Number(settings.daysToReturn) <= 0) newErrors.daysToReturn = "Must be greater than 0.";
-    if (!settings.penaltyPerDay || String(settings.penaltyPerDay).trim() === "") newErrors.penaltyPerDay = "Penalty per day is required.";
-    else if (Number(settings.penaltyPerDay) < 0) newErrors.penaltyPerDay = "Cannot be negative.";
-    if (!settings.daysPriorMessage || String(settings.daysPriorMessage).trim() === "") newErrors.daysPriorMessage = "Number of days prior is required.";
-    else if (Number(settings.daysPriorMessage) <= 0) newErrors.daysPriorMessage = "Must be greater than 0.";
-    if (!settings.maxBooksStudent || String(settings.maxBooksStudent).trim() === "") newErrors.maxBooksStudent = "Max books for student is required.";
-    else if (Number(settings.maxBooksStudent) <= 0) newErrors.maxBooksStudent = "Must be greater than 0.";
-    if (!settings.maxBooksTeacher || String(settings.maxBooksTeacher).trim() === "") newErrors.maxBooksTeacher = "Max books for teacher is required.";
-    else if (Number(settings.maxBooksTeacher) <= 0) newErrors.maxBooksTeacher = "Must be greater than 0.";
+    if (
+      !settings.penaltyEnabled ||
+      (settings.penaltyEnabled !== "Yes" && settings.penaltyEnabled !== "No")
+    )
+      newErrors.penaltyEnabled = "Please select Yes or No for Enable Penalty.";
+    if (!settings.daysToReturn || String(settings.daysToReturn).trim() === "")
+      newErrors.daysToReturn = "Number of days to return is required.";
+    else if (Number(settings.daysToReturn) <= 0)
+      newErrors.daysToReturn = "Must be greater than 0.";
+    if (!settings.penaltyPerDay || String(settings.penaltyPerDay).trim() === "")
+      newErrors.penaltyPerDay = "Penalty per day is required.";
+    else if (Number(settings.penaltyPerDay) < 0)
+      newErrors.penaltyPerDay = "Cannot be negative.";
+    if (
+      !settings.sendMessageEnabled ||
+      (settings.sendMessageEnabled !== "Yes" &&
+        settings.sendMessageEnabled !== "No")
+    )
+      newErrors.sendMessageEnabled =
+        "Please select Yes or No for Enable Send Message.";
+    if (
+      !settings.daysPriorMessage ||
+      String(settings.daysPriorMessage).trim() === ""
+    )
+      newErrors.daysPriorMessage = "Number of days prior is required.";
+    else if (Number(settings.daysPriorMessage) <= 0)
+      newErrors.daysPriorMessage = "Must be greater than 0.";
+    if (
+      !settings.maxBooksStudent ||
+      String(settings.maxBooksStudent).trim() === ""
+    )
+      newErrors.maxBooksStudent = "Max books for student is required.";
+    else if (Number(settings.maxBooksStudent) <= 0)
+      newErrors.maxBooksStudent = "Must be greater than 0.";
+    if (
+      !settings.maxBooksTeacher ||
+      String(settings.maxBooksTeacher).trim() === ""
+    )
+      newErrors.maxBooksTeacher = "Max books for teacher is required.";
+    else if (Number(settings.maxBooksTeacher) <= 0)
+      newErrors.maxBooksTeacher = "Must be greater than 0.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -99,16 +130,22 @@ const LibrarySettings = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(updatedData),
-        }
+        },
       );
 
       const result = await response.json();
 
       if (result.message === "success") {
-        setSaveMsg({ type: "success", text: "Library settings updated successfully!" });
+        setSaveMsg({
+          type: "success",
+          text: "Library settings updated successfully!",
+        });
         fetchLibrarySettings(); // Refresh settings after update
       } else {
-        setSaveMsg({ type: "danger", text: "Failed to update settings. Please try again." });
+        setSaveMsg({
+          type: "danger",
+          text: "Failed to update settings. Please try again.",
+        });
       }
     } catch (error) {
       console.error("Error updating library settings:", error);
@@ -271,14 +308,17 @@ const LibrarySettings = () => {
               </p>
 
               <div className="row mt-3 mx-2">
-                <div className="col-12 custom-section-box" style={{ backgroundColor: "rgba(55, 123, 241, 0.1)" }}>
+                <div
+                  className="col-12 custom-section-box"
+                  style={{ backgroundColor: "rgba(55, 123, 241, 0.1)" }}
+                >
                   <h6
                     style={{
                       fontWeight: "600",
                       marginBottom: "30px",
                       borderBottom: "2px solid #a36d2f",
                       paddingBottom: "8px",
-                      display: "inline-block"
+                      display: "inline-block",
                     }}
                   >
                     Configurations
@@ -287,8 +327,12 @@ const LibrarySettings = () => {
                   {/* Enable Penalty on Return after Due Date */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Enable Penalty on Return after Due Date
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
+                        Enable Penalty on Return after Due Date{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-7">
@@ -303,7 +347,10 @@ const LibrarySettings = () => {
                             checked={settings.penaltyEnabled === "Yes"}
                             onChange={handleChange}
                           />
-                          <label className="form-check-label" htmlFor="penaltyYes">
+                          <label
+                            className="form-check-label"
+                            htmlFor="penaltyYes"
+                          >
                             Yes
                           </label>
                         </div>
@@ -317,19 +364,31 @@ const LibrarySettings = () => {
                             checked={settings.penaltyEnabled === "No"}
                             onChange={handleChange}
                           />
-                          <label className="form-check-label" htmlFor="penaltyNo">
+                          <label
+                            className="form-check-label"
+                            htmlFor="penaltyNo"
+                          >
                             No
                           </label>
                         </div>
                       </div>
+                      {errors.penaltyEnabled && (
+                        <small className="text-danger d-block mt-1">
+                          {errors.penaltyEnabled}
+                        </small>
+                      )}
                     </div>
                   </div>
 
                   {/* Number of Days to Return Book */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Number of Days to Return Book <span style={{ color: "red" }}>*</span>
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
+                        Number of Days to Return Book{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
@@ -342,14 +401,21 @@ const LibrarySettings = () => {
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
-                      {errors.daysToReturn && <small className="text-danger">{errors.daysToReturn}</small>}
+                      {errors.daysToReturn && (
+                        <small className="text-danger">
+                          {errors.daysToReturn}
+                        </small>
+                      )}
                     </div>
                   </div>
 
                   {/* Penalty per Day */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
                         Penalty per day <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
@@ -363,15 +429,23 @@ const LibrarySettings = () => {
                         min="0"
                         style={{ maxWidth: "300px" }}
                       />
-                      {errors.penaltyPerDay && <small className="text-danger">{errors.penaltyPerDay}</small>}
+                      {errors.penaltyPerDay && (
+                        <small className="text-danger">
+                          {errors.penaltyPerDay}
+                        </small>
+                      )}
                     </div>
                   </div>
 
                   {/* Enable Send Message for Book Return Due Date */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Enable Send Message for Book Return Due Date
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
+                        Enable Send Message for Book Return Due Date{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-7">
@@ -386,7 +460,10 @@ const LibrarySettings = () => {
                             checked={settings.sendMessageEnabled === "Yes"}
                             onChange={handleChange}
                           />
-                          <label className="form-check-label" htmlFor="messageYes">
+                          <label
+                            className="form-check-label"
+                            htmlFor="messageYes"
+                          >
                             Yes
                           </label>
                         </div>
@@ -400,19 +477,31 @@ const LibrarySettings = () => {
                             checked={settings.sendMessageEnabled === "No"}
                             onChange={handleChange}
                           />
-                          <label className="form-check-label" htmlFor="messageNo">
+                          <label
+                            className="form-check-label"
+                            htmlFor="messageNo"
+                          >
                             No
                           </label>
                         </div>
                       </div>
+                      {errors.sendMessageEnabled && (
+                        <small className="text-danger d-block mt-1">
+                          {errors.sendMessageEnabled}
+                        </small>
+                      )}
                     </div>
                   </div>
 
                   {/* Number Of Days prior to Send Message */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Number Of Days prior to Send Message <span style={{ color: "red" }}>*</span>
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
+                        Number Of Days prior to Send Message{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
@@ -425,15 +514,23 @@ const LibrarySettings = () => {
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
-                      {errors.daysPriorMessage && <small className="text-danger">{errors.daysPriorMessage}</small>}
+                      {errors.daysPriorMessage && (
+                        <small className="text-danger">
+                          {errors.daysPriorMessage}
+                        </small>
+                      )}
                     </div>
                   </div>
 
                   {/* Max. Books Allowed to be Issued to Student */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Max. Books Allowed to be Issued to Student <span style={{ color: "red" }}>*</span>
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
+                        Max. Books Allowed to be Issued to Student{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
@@ -446,15 +543,23 @@ const LibrarySettings = () => {
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
-                      {errors.maxBooksStudent && <small className="text-danger">{errors.maxBooksStudent}</small>}
+                      {errors.maxBooksStudent && (
+                        <small className="text-danger">
+                          {errors.maxBooksStudent}
+                        </small>
+                      )}
                     </div>
                   </div>
 
                   {/* Max. Books Allowed to be Issued to Teacher */}
                   <div className="row mb-3 align-items-center">
                     <div className="col-12 col-md-5 text-md-end">
-                      <label className="form-label mb-0" style={{ fontWeight: "500" }}>
-                        Max. Books Allowed to be Issued to Teacher <span style={{ color: "red" }}>*</span>
+                      <label
+                        className="form-label mb-0"
+                        style={{ fontWeight: "500" }}
+                      >
+                        Max. Books Allowed to be Issued to Teacher{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                     </div>
                     <div className="col-12 col-md-4">
@@ -467,7 +572,11 @@ const LibrarySettings = () => {
                         min="1"
                         style={{ maxWidth: "300px" }}
                       />
-                      {errors.maxBooksTeacher && <small className="text-danger">{errors.maxBooksTeacher}</small>}
+                      {errors.maxBooksTeacher && (
+                        <small className="text-danger">
+                          {errors.maxBooksTeacher}
+                        </small>
+                      )}
                     </div>
                   </div>
 
@@ -485,7 +594,10 @@ const LibrarySettings = () => {
                     </div>
                   </div>
                   {saveMsg.text && (
-                    <div className={`alert alert-${saveMsg.type} mt-3`} role="alert">
+                    <div
+                      className={`alert alert-${saveMsg.type} mt-3`}
+                      role="alert"
+                    >
                       {saveMsg.text}
                     </div>
                   )}
