@@ -173,27 +173,17 @@ const ModalStudent = ({ show, handleClose, onSelectStudent }) => {
       // );
       return (
         (!filters.studentName || nameMatches) &&
-        (!filters.admission_no ||
-          student.college_admission_no
-            ?.toString()
-            .includes(filters.admission_no)) &&
-        (!filters.registration_no ||
-          student.registration_no
-            ?.toString()
-            .includes(filters.registration_no)) &&
-        (!filters.barcode ||
-          student.barcode?.toString().includes(filters.barcode)) &&
-        (!filters.classId ||
-          student.batch_id?.toString() === filters.classId.toString()) &&
-        (!filters.section || student.section_name === filters.section) &&
-        (!filters.fatherName ||
-          student.father_name
-            ?.toLowerCase()
-            .includes(filters.fatherName.toLowerCase())) &&
-        (!filters.motherName ||
-          student.mother_name
-            ?.toLowerCase()
-            .includes(filters.motherName.toLowerCase()))
+        (!filters.admission_no || student.college_admission_no?.toString().includes(filters.admission_no)) &&
+        (!filters.registration_no || student.registration_no?.toString().includes(filters.registration_no)) &&
+        (!filters.barcode || student.barcode?.toString().includes(filters.barcode)) &&
+        (!selectedBatch || student.batch_id === selectedBatch) &&
+        (!selectedCourse || student.course_id === selectedCourse) &&
+        (!selectedDepartment || student.department_id === selectedDepartment) &&
+        (!selectedAcademicYear || student.academic_year_id === selectedAcademicYear) &&
+        (!selectedSemester || student.semester_id === selectedSemester) &&
+        (!selectedSection || student.section_id === selectedSection) &&
+        (!filters.fatherName || student.father_name?.toLowerCase().includes(filters.fatherName.toLowerCase())) &&
+        (!filters.motherName || student.mother_name?.toLowerCase().includes(filters.motherName.toLowerCase()))
       );
     });
 

@@ -139,9 +139,9 @@ const ModalConfirm = ({ show, handleClose, onSelectStudent }) => {
       if (filters.barcode)
         url += `&barcode=${encodeURIComponent(filters.barcode)}`;
       if (filters.fatherName)
-        url += `&fatherName=${encodeURIComponent(filters.fatherName)}`;
+        url += `&father_name=${encodeURIComponent(filters.fatherName)}`;
       if (filters.motherName)
-        url += `&motherName=${encodeURIComponent(filters.motherName)}`;
+        url += `&mother_name=${encodeURIComponent(filters.motherName)}`;
       if (filters.schoolAdmissionNo)
         url += `&college_admission_no=${encodeURIComponent(
           filters.schoolAdmissionNo

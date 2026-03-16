@@ -18235,6 +18235,8 @@ class StudentMessageHistoryFilterListAPIView(ListAPIView):
 
                     responsedata.append({
                         'studentId': RegistrationInstance.id,
+                        'batch_id': studentCourseInstance.batch.id if studentCourseInstance.batch else None,
+                        'batch_code': studentCourseInstance.batch.batch_code if studentCourseInstance.batch else None,
                         'course_id': studentCourseInstance.course.id,
                         'course_name': studentCourseInstance.course.course_name,
                         'department_id': studentCourseInstance.department.id,
@@ -27809,7 +27811,7 @@ class VerifyOTPView(APIView):
                     otp_obj = PasswordResetOTP.objects.filter(
                         user_login=user_login_instance, otp=otp, is_verified=False
                     ).latest("created_at")
-                except (UserLogin.DoesNotExist, PasswordResetOTP.DoesNotExist):
+                except ObjectDoesNotExist:
                     return Response({"error": "Invalid OTP"}, status=400)
                 if otp_obj.is_expired():
                     return Response({"error": "OTP expired"}, status=400)
@@ -27828,7 +27830,7 @@ class VerifyOTPView(APIView):
                     otp_obj = PasswordResetOTP.objects.filter(
                         user_login=user_login_instance, otp=otp, is_verified=False
                     ).latest("created_at")
-                except (UserLogin.DoesNotExist, PasswordResetOTP.DoesNotExist):
+                except ObjectDoesNotExist:
                     return Response({"error": "Invalid OTP"}, status=400)
 
                 if otp_obj.is_expired():
