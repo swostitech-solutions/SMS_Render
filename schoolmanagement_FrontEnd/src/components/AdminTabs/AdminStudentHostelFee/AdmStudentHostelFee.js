@@ -1214,14 +1214,17 @@ const AdmAttendanceEntry = () => {
 
                             {/* View Button */}
                             <td>
-                              <button
-                                className="btn btn-info btn-sm"
-                                onClick={() =>
-                                  fetchViewPDF(item.student_id, feePeriod)
-                                }
-                              >
-                                View
-                              </button>
+                              <td>
+                                <button
+                                  className="btn btn-info btn-sm"
+                                  onClick={() =>
+                                    fetchViewPDF(item.student_id, feePeriod)
+                                  }
+                                  disabled={Number(item.paid_fees) === 0} // ✅ disable when paid fees is 0
+                                >
+                                  View
+                                </button>
+                              </td>
                             </td>
                           </tr>
                         ))

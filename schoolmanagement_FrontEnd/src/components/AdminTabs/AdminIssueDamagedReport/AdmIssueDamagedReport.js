@@ -173,6 +173,7 @@ const AdmIssueDamagedReport = () => {
                                 { value: "both", label: "BOTH" },
                                 { value: "lost", label: "LOST" },
                                 { value: "damaged", label: "DAMAGED" },
+                                { value: "inactive", label: "INACTIVE" }, // <-- new option added
                               ]}
                               value={{
                                 value: bookStatus,
@@ -180,7 +181,7 @@ const AdmIssueDamagedReport = () => {
                               }}
                               onChange={(selectedOption) =>
                                 setBookStatus(
-                                  selectedOption ? selectedOption.value : ""
+                                  selectedOption ? selectedOption.value : "",
                                 )
                               }
                               isSearchable={false}
@@ -216,15 +217,23 @@ const AdmIssueDamagedReport = () => {
                       {loading ? (
                         <tr>
                           <td colSpan="12" className="text-center py-4">
-                            <div className="spinner-border text-primary" role="status">
-                              <span className="visually-hidden">Loading...</span>
+                            <div
+                              className="spinner-border text-primary"
+                              role="status"
+                            >
+                              <span className="visually-hidden">
+                                Loading...
+                              </span>
                             </div>
                             <p className="mt-2 mb-0">Loading data...</p>
                           </td>
                         </tr>
                       ) : error ? (
                         <tr>
-                          <td colSpan="12" className="text-center py-4 text-danger">
+                          <td
+                            colSpan="12"
+                            className="text-center py-4 text-danger"
+                          >
                             <i className="bi bi-exclamation-triangle me-2"></i>
                             {error}
                           </td>

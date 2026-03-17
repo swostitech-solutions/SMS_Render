@@ -26,7 +26,18 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
   });
 
   const [isInitialized, setIsInitialized] = useState(false);
-
+const qualificationOptions = [
+  { value: "PhD", label: "Ph.D." },
+  { value: "PDF", label: "Post-Doctoral Fellowship (PDF)" },
+  { value: "UGC_NET", label: "UGC-NET / CSIR-NET" },
+  { value: "SET_SLET", label: "SET / SLET" },
+  { value: "MPhil", label: "M.Phil." },
+  { value: "Postgraduate", label: "Postgraduate" },
+  { value: "4yr_bachelor_research", label: "4-Year Bachelor’s with Research" },
+  { value: "Undergraduate", label: "Undergraduate" },
+  { value: "Professor_of_Practice", label: "Professor of Practice" },
+  { value: "Other_Certification", label: "Other Professional Certification" },
+];
   // Simple handleChange - just update local form state, NO parent sync
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -264,16 +275,11 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
                   onChange={handleChange}
                 >
                   <option value="">Select</option>
-                  <option value="B.Sc">Ph.D.</option>
-                  <option value="M.Sc">Post-Doctoral Fellowship (PDF)</option>
-                  <option value="PhD">UGC-NET / CSIR-NET</option>
-                  <option value="PhD">SET / SLET</option>
-                  <option value="PhD">M.Phil.</option>
-                  <option value="PhD">Postgraduate</option>
-                  <option value="PhD">4-Year Bachelor’s with Research</option>
-                  <option value="PhD">Undergraduate</option>
-                  <option value="PhD">Professor of Practice</option>
-                  <option value="PhD">Other Professional Certification</option>
+                  {qualificationOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </td>
               <td>
@@ -342,7 +348,10 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
                   style={{ minWidth: "75px" }}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 100)) {
+                    if (
+                      val === "" ||
+                      (parseFloat(val) >= 0 && parseFloat(val) <= 100)
+                    ) {
                       handleChange(e);
                     }
                   }}
@@ -356,16 +365,11 @@ const App = ({ goToTab, educationData, setCourseDetailsInParent, setEducationDat
                   onChange={handleChange}
                 >
                   <option value="">Select</option>
-                  <option value="B.Sc">Ph.D.</option>
-                  <option value="M.Sc">Post-Doctoral Fellowship (PDF)</option>
-                  <option value="PhD">UGC-NET / CSIR-NET</option>
-                  <option value="PhD">SET / SLET</option>
-                  <option value="PhD">M.Phil.</option>
-                  <option value="PhD">Postgraduate</option>
-                  <option value="PhD">4-Year Bachelor’s with Research</option>
-                  <option value="PhD">Undergraduate</option>
-                  <option value="PhD">Professor of Practice</option>
-                  <option value="PhD">Other Professional Certification</option>
+                  {qualificationOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </td>
               <td>

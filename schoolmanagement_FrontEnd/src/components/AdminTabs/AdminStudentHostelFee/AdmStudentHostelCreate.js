@@ -942,23 +942,57 @@ const AdmStudentHostelCreate = () => {
     fetchRoutes();
   }, []);
   // When hostel changes
-  const handleHostelChange = (option) => {
-    setSelectedHostel(option);
-
-    // Reset dependent fields
+  // When Hostel changes → reset all dependent fields
+  useEffect(() => {
     setSelectedBlock(null);
     setSelectedFloor(null);
     setSelectedRoomType(null);
     setSelectedRoom(null);
     setSelectedBed(null);
 
-    // Reset dependent lists
     setBlockOptions([]);
     setFloorList([]);
     setRoomTypes([]);
     setRoomList([]);
     setBedList([]);
-  };
+  }, [selectedHostel]);
+
+  // When Block changes → reset Floor, Room Type, Room, Bed
+  useEffect(() => {
+    setSelectedFloor(null);
+    setSelectedRoomType(null);
+    setSelectedRoom(null);
+    setSelectedBed(null);
+
+    setFloorList([]);
+    setRoomTypes([]);
+    setRoomList([]);
+    setBedList([]);
+  }, [selectedBlock]);
+
+  // When Floor changes → reset Room, Bed
+  useEffect(() => {
+    setSelectedRoom(null);
+    setSelectedBed(null);
+
+    setRoomList([]);
+    setBedList([]);
+  }, [selectedFloor]);
+
+  // When Room Type changes → reset Room, Bed
+  useEffect(() => {
+    setSelectedRoom(null);
+    setSelectedBed(null);
+
+    setRoomList([]);
+    setBedList([]);
+  }, [selectedRoomType]);
+
+  // When Room changes → reset Bed
+  useEffect(() => {
+    setSelectedBed(null);
+    setBedList([]);
+  }, [selectedRoom]);
   const handleSearch = async () => {
     try {
       const academicSessionId = localStorage.getItem("academicSessionId") || "";
@@ -1052,6 +1086,9 @@ const AdmStudentHostelCreate = () => {
     setFloorList([]);
     setRoomList([]);
     setBedList([]);
+  };
+  const handleHostelChange = (option) => {
+    setSelectedHostel(option);
   };
 
   const handleSave = async () => {
@@ -1312,7 +1349,7 @@ const AdmStudentHostelCreate = () => {
                           className="detail"
                           options={hostelList}
                           value={selectedHostel}
-                          onChange={handleHostelChange}
+                          onChange={handleHostelChange} // ✅ defined now
                           placeholder="Select Hostel"
                         />
                       </div>
@@ -1396,6 +1433,6 @@ const AdmStudentHostelCreate = () => {
       </div>
     </div>
   );
-};;
+};;;
 
 export default AdmStudentHostelCreate;

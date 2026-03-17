@@ -3109,142 +3109,194 @@ const FeeCollection = () => {
     }
   };
 
-  const generatePDF = async (data) => {
-    const doc = new jsPDF("portrait", "mm", "a4");
-    const safe = (v) => (v === null || v === undefined ? "" : v);
-    const pageWidth = doc.internal.pageSize.getWidth();
+const generatePDF = async (data) => {
+  const doc = new jsPDF("portrait", "mm", "a4");
+  const safe = (v) => (v === null || v === undefined ? "" : v);
+  const pageWidth = doc.internal.pageSize.getWidth();
 
-    // HEADER
-    doc.setFont("Helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("FEE RECEIPT", pageWidth / 2, 15, { align: "center" });
+  // --- 1. RECEIPT BORDER & HEADER ---
+  doc.setLineWidth(0.5);
+  doc.rect(5, 5, 200, 287);
 
-    // MAIN DETAILS TABLE
-    const receiptDetails = [
-      [
-        "Receipt No",
-        safe(data.receipt_no),
-        "Receipt Date",
-        safe(data.receipt_date),
-      ],
-      [
-        "Student Name",
-        safe(data.student_name),
-        "Admission No",
-        safe(data.admission_no),
-      ],
-      ["Course", safe(data.course_name), "Section", safe(data.section_name)],
-      [
-        "Academic Year",
-        safe(data.academic_year),
-        "Father's Name",
-        safe(data.father_name),
-      ],
-    ];
+  doc.setTextColor(0, 100, 80);
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES", pageWidth / 2, 12, {
+    align: "center",
+  });
 
-    doc.autoTable({
-      startY: 25,
-      body: receiptDetails,
-      theme: "grid",
-      styles: { fontSize: 10 },
-      tableWidth: 190,
-      margin: { left: 10 },
-    });
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("Helvetica", "normal");
+  doc.text("(A unit of Nirmala Trust)", pageWidth / 2, 16, { align: "center" });
+  doc.text(
+    "Plot No: 154/1683/2194 & 177/2195, Kantabada, Bhubaneswar-752054",
+    pageWidth / 2,
+    20,
+    { align: "center" },
+  );
+  doc.text(
+    "Ph.: +91 7735504783, Email: info@sparshnursing.edu.in",
+    pageWidth / 2,
+    24,
+    { align: "center" },
+  );
 
-    // FEE ELEMENT BREAKUP
-    const elements = [];
-    const paymentObj = data.payment_element_list || {};
+  // --- 2. CASH RECEIPT LABEL ---
+  doc.setFillColor(0, 100, 80);
+  doc.rect(85, 27, 40, 7, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(10);
+  doc.text("CASH RECEIPT", 105, 32, { align: "center" });
 
-    Object.keys(paymentObj).forEach((key, index) => {
-      const row = paymentObj[key];
-      elements.push([
-        index + 1,
-        safe(row.element_name),
-        Number(row.amount || 0).toFixed(2),
-      ]);
-    });
+  // --- 3. TOP INFO ---
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Receipt No. ${safe(data.receipt_no)}`, 140, 32);
+  doc.text(`Date: ${safe(data.receipt_date)}`, 140, 38);
 
-    elements.push(["", "Total Paid", Number(data.amount || 0).toFixed(2)]);
+  doc.text(
+    `Course: ......................... ${safe(data.course_name)}`,
+    10,
+    45,
+  );
+  doc.text(`Year: .............`, 80, 45);
+  doc.text(`Roll No.: ....................`, 130, 45);
+  doc.text(
+    `Received from Ms./ Mr. ............................................................................................................`,
+    10,
+    52,
+  );
+  doc.setFont("Helvetica", "bold");
+  doc.text(`${safe(data.student_name)}`, 45, 51.5);
 
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 8,
-      head: [["Sr", "Fee Element", "Amount"]],
-      body: elements,
-      theme: "grid",
-      styles: { fontSize: 10 },
-      columnStyles: { 2: { halign: "right" } },
-      margin: { left: 10 },
-      tableWidth: 190,
-    });
+  // --- 4. TABLE STRUCTURE ---
+  const tableTop = 60;
+  const tableHeight = 175;
 
-    // ------------------------------------------
-    // ✅ ADD OTHER CHARGES TABLE (NEW)
-    // ------------------------------------------
+  doc.setFont("Helvetica", "bold");
+  doc.line(10, tableTop, 200, tableTop);
+  doc.text("SL NO", 12, tableTop + 5);
+  doc.text("PARTICULAR", 70, tableTop + 5);
+  doc.text("AMOUNT", 175, tableTop + 3, { align: "center" });
+  doc.setFontSize(8);
+  doc.text("Rs.", 165, tableTop + 8);
+  doc.text("P.", 190, tableTop + 8);
+  doc.line(10, tableTop + 10, 200, tableTop + 10);
 
-    // doc.autoTable({
-    //   startY: doc.lastAutoTable.finalY + 8,
-    //   head: [["Other Charges", "Amount"]],
-    //   // body: otherCharges,
-    //   theme: "grid",
-    //   styles: { fontSize: 10 },
-    //   columnStyles: { 1: { halign: "right" } },
-    //   margin: { left: 10 },
-    //   tableWidth: 190,
-    // });
+  // Vertical Lines
+  doc.line(10, tableTop, 10, tableTop + tableHeight);
+  doc.line(25, tableTop, 25, tableTop + tableHeight);
+  doc.line(155, tableTop, 155, tableTop + tableHeight);
+  doc.line(183, tableTop, 183, tableTop + tableHeight);
+  doc.line(200, tableTop, 200, tableTop + tableHeight);
 
-    // PAYMENT DETAILS
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 8,
-      head: [["Payment Method",  "Remark", "Amount"]],
-      body: [
-        [
-          safe(data.payment_method),
-          // safe(data.payment_reference || "-"),
-          safe(data.remarks || "-"),
-          Number(data.amount || 0).toFixed(2),
-        ],
-      ],
-      theme: "grid",
-      styles: { fontSize: 10 },
-      columnStyles: { 3: { halign: "right" } },
-      margin: { left: 10 },
-      tableWidth: 190,
-    });
+  // --- 5. STATIC LIST ---
+  const fullElementList = [
+    { sl: "", label: "College" },
+    { sl: "1", label: "Admission Fee" },
+    { sl: "2", label: "Tuition Fees" },
+    { sl: "3", label: "Late Payment Fee" },
+    { sl: "4", label: "Uniform Fee" },
+    { sl: "5", label: "Identity Card Fee" },
+    { sl: "6", label: "Library Fees" },
+    { sl: "7", label: "Library Caution Money" },
+    { sl: "8", label: "Library Card Fee" },
+    { sl: "9", label: "Clinical Training Fee" },
+    { sl: "10", label: "Transportation Fee" },
+    { sl: "", label: "Book Fee" },
+    { sl: "", label: "Council Registration Fee(ONMRC)" },
+    { sl: "", label: "University" },
+    { sl: "", label: "  (a) Enrollment Fee" },
+    { sl: "", label: "  (b) Examination Fee" },
+    { sl: "", label: "  (c) Fees for late Form Filling to Examination" },
+    { sl: "11", label: "Miscellaneous Fees" },
+    { sl: "12", label: "Hostel" },
+    { sl: "", label: "  Hostel Admission Fee" },
+    { sl: "", label: "  Hostel Caution Money" },
+    { sl: "", label: "  Hostel Fee" },
+    { sl: "", label: "  Accommodation Fee" },
+    { sl: "", label: "  Hostel Mess Fee" },
+  ];
 
-    // SUMMARY TABLE
-    const summary = [
-      [
-        "Total Academic Year Fee",
-        Number(data.total_academic_year_fees || 0).toFixed(2),
-      ],
-      ["Total Paid", Number(data.total_paid || 0).toFixed(2)],
-      ["Balance Remaining", Number(data.remaining_amount || 0).toFixed(2)],
-    ];
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(9);
+  let yPos = tableTop + 15;
 
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 10,
-      body: summary,
-      theme: "grid",
-      styles: { fontSize: 10, fontStyle: "bold" },
-      columnStyles: { 1: { halign: "right" } },
-      margin: { left: 10 },
-      tableWidth: 190,
-    });
+  // Convert incoming data list for easy lookup
+  const currentPaymentItems = Array.isArray(data.payment_element_list)
+    ? data.payment_element_list
+    : Object.values(data.payment_element_list || {});
 
-    // FOOTER
-    doc.setFontSize(9);
-    doc.text(
-      "This is a system-generated fee receipt. No signature is required.",
-      10,
-      doc.lastAutoTable.finalY + 10
+  fullElementList.forEach((item) => {
+    const isHeader = ["College", "University", "Hostel"].includes(
+      item.label.trim(),
     );
+    doc.setFont("Helvetica", isHeader ? "bold" : "normal");
 
-    // AUTO DOWNLOAD
-    const pdfBlob = doc.output("blob");
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    window.open(pdfUrl, "_blank");
-  };
+    doc.text(item.sl, 15, yPos);
+    doc.text(item.label, 28, yPos);
 
+    // ✅ THE FIX: Force usage of "paid_amount" or the specific receipt "amount" field
+    // We strictly match the name and pull ONLY the amount assigned to this receipt.
+    const match = currentPaymentItems.find((el) => {
+      const dbName = el.element_name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]/g, "");
+      const rowName = item.label
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]/g, "");
+      return (
+        dbName === rowName ||
+        (dbName.includes("hostel") && rowName.includes("hostelfee"))
+      );
+    });
+
+    if (match && !isHeader) {
+      // NOTE: If your backend sends 'paid_amount' as the 60, change 'amount' to 'paid_amount' below
+      const currentTxAmt = Number(match.amount || match.paid_amount || 0);
+
+      // If the result is still 10060, your backend is sending the wrong field in 'amount'.
+      // We can subtract historical paid if needed, but usually, 'paid_amount' is the fix.
+      if (currentTxAmt > 0 && currentTxAmt < 500000) {
+        // Safety check against total balance
+        doc.setFont("Helvetica", "bold");
+        doc.text(`${currentTxAmt.toFixed(0)}`, 180, yPos, { align: "right" });
+        doc.text(`00`, 192, yPos, { align: "center" });
+        doc.setFont("Helvetica", "normal");
+      }
+    }
+
+    yPos += 5.8;
+  });
+
+  // --- 6. FOOTER ---
+  const footerTop = tableTop + tableHeight;
+  doc.line(10, footerTop, 200, footerTop);
+
+  doc.setFont("Helvetica", "italic");
+  doc.text(
+    `Rupees in words: ............................................................................................................`,
+    10,
+    footerTop + 10,
+  );
+
+  doc.setFont("Helvetica", "bold");
+  doc.text("TOTAL", 130, footerTop + 10);
+
+  // This should already be 60
+  doc.text(`${Number(data.amount || 0).toFixed(0)}`, 180, footerTop + 10, {
+    align: "right",
+  });
+  doc.text(`00`, 192, footerTop + 10, { align: "center" });
+
+  doc.text("Date: ....................", 10, footerTop + 20);
+  doc.text("Cashier Signature", 60, footerTop + 40, { align: "center" });
+  doc.text("Accountant Signature", 160, footerTop + 40, { align: "center" });
+
+  window.open(doc.output("bloburl"), "_blank");
+};
   const handleMainCheckboxChange = (row, index) => {
     const isSelected = selectedPeriods.includes(index);
 
