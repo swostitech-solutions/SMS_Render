@@ -574,9 +574,8 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
         motherName: filters.motherName || "",
       });
 
-      const url = `${
-        ApiUrl.apiurl
-      }StudentCourse/StudentCourseRecordFilter/?${params.toString()}`;
+      const url = `${ApiUrl.apiurl
+        }StudentCourse/StudentCourseRecordFilter/?${params.toString()}`;
       console.log("Fetching student records from:", url);
 
       const response = await fetch(url, {
@@ -677,46 +676,46 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
 
 
 
-const handleClearFilters = () => {
-  // Reset filter input fields
-  setFilters({
-    studentName: "",
-    admissionNo: "",
-    barcode: "",
-    studentId: "",
-    classId: "",
-    section: "",
-    fatherName: "",
-    motherName: "",
-    schoolAdmissionNo: "",
-  });
+  const handleClearFilters = () => {
+    // Reset filter input fields
+    setFilters({
+      studentName: "",
+      admissionNo: "",
+      barcode: "",
+      studentId: "",
+      classId: "",
+      section: "",
+      fatherName: "",
+      motherName: "",
+      schoolAdmissionNo: "",
+    });
 
-  // Reset dropdown selections
-  setSelectedClass("");
-  setSelectedSection("");
-  setSelectedAcademicYear(null);
-  setSelectedSemester(null);
-  setSelectedSession(null);
-  setSelectedCourse(null);
-  setSelectedDepartment(null);
-  setSelectedSessionId(null);
+    // Reset dropdown selections
+    setSelectedClass("");
+    setSelectedSection("");
+    setSelectedAcademicYear(null);
+    setSelectedSemester(null);
+    setSelectedSession(null);
+    setSelectedCourse(null);
+    setSelectedDepartment(null);
+    setSelectedSessionId(null);
 
-  // Reset dependent dropdown lists (optional)
-  setSemesters([]);
-  setSections([]);
-  setSessions([]);
-  setCourses([]);
-  setDepartments([]);
-  setAcademicYears([]);
+    // Reset dependent dropdown lists (optional)
+    setSemesters([]);
+    setSections([]);
+    setSessions([]);
+    setCourses([]);
+    setDepartments([]);
+    setAcademicYears([]);
 
-  // Reset student table data
-  setStudentData(fullStudentData); // full list back
-  setShowTable(false); // hide table after clearing (optional)
+    // Reset student table data
+    setStudentData(fullStudentData); // full list back
+    setShowTable(false); // hide table after clearing (optional)
 
-  // Reset students fetch status
-  setStudentError("");
-  setStudentLoading(false);
-};
+    // Reset students fetch status
+    setStudentError("");
+    setStudentLoading(false);
+  };
 
 
   return (
@@ -919,55 +918,6 @@ const handleClearFilters = () => {
                         placeholder="Select Section"
                       />
                     </div>
-                    <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        Father's Name
-                      </label>
-                      <input
-                        type="text"
-                        name="fatherName"
-                        value={filters.fatherName}
-                        onChange={handleInputChange}
-                        className="form-control detail"
-                        placeholder="Father's Name"
-                        style={{ height: "38px", padding: "0.375rem 0.75rem" }}
-                      />
-                    </div>
-                    <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        Mother's Name
-                      </label>
-                      <input
-                        type="text"
-                        name="motherName"
-                        value={filters.motherName}
-                        onChange={handleInputChange}
-                        className="form-control detail"
-                        placeholder="Mother's Name"
-                        style={{ height: "38px", padding: "0.375rem 0.75rem" }}
-                      />
-                    </div>
-                    {/* <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        College Admission No
-                      </label>
-                      <input
-                        type="text"
-                        name="schoolAdmissionNo"
-                        className="form-control detail"
-                        placeholder="College Admission No"
-                        style={{ height: "38px", padding: "0.375rem 0.75rem" }}
-                      />
-                    </div> */}
                   </div>
 
                   {/* Students Table */}
@@ -986,8 +936,6 @@ const handleClearFilters = () => {
                               <th>Academic Year</th>
                               <th>Semester</th>
                               <th>Section</th>
-                              <th>Father Name</th>
-                              <th>Mother Name</th>
                               <th>Roll No</th>
                               <th>Actions</th>
                             </tr>
@@ -999,7 +947,7 @@ const handleClearFilters = () => {
                                 return (
                                   <tr key={offset + index}>
                                     <td>{s.student_name}</td>
-                                    <td>{s.registration_no }</td>
+                                    <td>{s.registration_no}</td>
                                     <td>{s.enrollment_no}</td>
                                     <td>{s.batch_code}</td>
                                     <td>{s.course_name}</td>
@@ -1007,8 +955,6 @@ const handleClearFilters = () => {
                                     <td>{s.academic_year_code}</td>
                                     <td>{s.semester_name}</td>
                                     <td>{s.section_name}</td>
-                                    <td>{s.father_name}</td>
-                                    <td>{s.mother_name}</td>
                                     <td>{s.barcode}</td>
                                     <td>
                                       <input
@@ -1024,7 +970,7 @@ const handleClearFilters = () => {
                               })
                             ) : (
                               <tr>
-                                <td colSpan="13" className="text-center">
+                                <td colSpan="11" className="text-center">
                                   No student data found
                                 </td>
                               </tr>

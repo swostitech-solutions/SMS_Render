@@ -74,9 +74,6 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
     barcode: "",
     classId: "",
     section: "",
-    fatherName: "",
-    motherName: "",
-    schoolAdmissionNo: "",
   });
 
 
@@ -117,12 +114,6 @@ const handleSearch = async () => {
       url += `&admission_no=${encodeURIComponent(filters.admissionNo)}`;
     if (filters.barcode)
       url += `&barcode=${encodeURIComponent(filters.barcode)}`;
-    if (filters.fatherName)
-      url += `&father_name=${encodeURIComponent(filters.fatherName)}`;
-    if (filters.motherName)
-      url += `&mother_name=${encodeURIComponent(filters.motherName)}`;
-    if (filters.schoolAdmissionNo)
-      url += `&college_admission_no=${encodeURIComponent(filters.schoolAdmissionNo)}`;
 
     // Dropdown filters
     if (selectedBatch) url += `&batch_id=${selectedBatch}`;
@@ -144,23 +135,6 @@ const handleSearch = async () => {
 
     if (data.message === "success!!") {
       let results = data.data;
-
-      // Frontend backup filter
-      if (filters.fatherName) {
-        results = results.filter(
-          (s) =>
-            s.father_name &&
-            s.father_name.toLowerCase().includes(filters.fatherName.toLowerCase())
-        );
-      }
-
-      if (filters.motherName) {
-        results = results.filter(
-          (s) =>
-            s.mother_name &&
-            s.mother_name.toLowerCase().includes(filters.motherName.toLowerCase())
-        );
-      }
 
       setStudentData(results);
       setFullStudentData(data.data);
@@ -213,9 +187,6 @@ const handleSearch = async () => {
       barcode: "",
       classId: "",
       section: "",
-      fatherName: "",
-      motherName: "",
-      schoolAdmissionNo: "",
     });
 
     // Reset dropdown selections
@@ -238,9 +209,6 @@ const handleSearch = async () => {
       barcode: "",
       classId: "",
       section: "",
-      fatherName: "",
-      motherName: "",
-      schoolAdmissionNo: "",
     });
     setSelectedSection("");
     setStudentData([]);
@@ -316,12 +284,8 @@ const handleSearch = async () => {
                   {/* Search Fields */}
                   <div className="row mt-3">
                     <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        {" "}
-                        Student Name{" "}
+                      <label htmlFor="studentName" className="form-label">
+                        Student Name
                       </label>
                       <input
                         type="text"
@@ -334,12 +298,8 @@ const handleSearch = async () => {
                       />
                     </div>
                     <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        {" "}
-                        Admission No{" "}
+                      <label htmlFor="admissionNo" className="form-label">
+                        Admission No
                       </label>
                       <input
                         type="text"
@@ -352,12 +312,8 @@ const handleSearch = async () => {
                       />
                     </div>
                     <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        {" "}
-                        Roll No{" "}
+                      <label htmlFor="barcode" className="form-label">
+                        Roll No
                       </label>
                       <input
                         type="text"
@@ -366,62 +322,6 @@ const handleSearch = async () => {
                         onChange={handleInputChange}
                         className="form-control detail"
                         placeholder="Roll No"
-                        style={{ height: "38px", padding: "0.375rem 0.75rem" }}
-                      />
-                    </div>
-                    <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        {" "}
-                        Father's Name{" "}
-                      </label>
-                      <input
-                        type="text"
-                        name="fatherName"
-                        value={filters.fatherName}
-                        onChange={handleInputChange}
-                        className="form-control detail"
-                        placeholder="Father's Name"
-                        style={{ height: "38px", padding: "0.375rem 0.75rem" }}
-                      />
-                    </div>
-                  </div>
-                  <div className="row mt-2">
-                    <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        {" "}
-                        Mother's Name{" "}
-                      </label>
-                      <input
-                        type="text"
-                        name="motherName"
-                        value={filters.motherName}
-                        onChange={handleInputChange}
-                        className="form-control detail"
-                        placeholder="Mother's Name"
-                        style={{ height: "38px", padding: "0.375rem 0.75rem" }}
-                      />
-                    </div>
-                    <div className="col-12 col-md-3 mb-2">
-                      <label
-                        htmlFor="school-admission-no"
-                        className="form-label"
-                      >
-                        {" "}
-                        School Admission No{" "}
-                      </label>
-                      <input
-                        type="text"
-                        name="schoolAdmissionNo"
-                        value={filters.schoolAdmissionNo}
-                        onChange={handleInputChange}
-                        className="form-control detail"
-                        placeholder="School Admission No"
                         style={{ height: "38px", padding: "0.375rem 0.75rem" }}
                       />
                     </div>
@@ -455,7 +355,8 @@ const handleSearch = async () => {
                         placeholder="Select Session"
                       />
                     </div>
-                    {/* Course */}
+                  </div>
+                  <div className="row mt-2">
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Course</label>
                       <Select
@@ -485,7 +386,6 @@ const handleSearch = async () => {
                         placeholder="Select Course"
                       />
                     </div>
-                    {/* Department */}
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Department</label>
                       <Select
@@ -514,8 +414,6 @@ const handleSearch = async () => {
                         placeholder="Select Department"
                       />
                     </div>
-
-                    {/* Academic Year */}
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Academic Year</label>
                       <Select
@@ -545,8 +443,6 @@ const handleSearch = async () => {
                         placeholder="Select Academic Year"
                       />
                     </div>
-
-                    {/* Semester */}
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Semester</label>
                       <Select
@@ -573,8 +469,6 @@ const handleSearch = async () => {
                         placeholder="Select Semester"
                       />
                     </div>
-
-                    {/* Section */}
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Section</label>
                       <Select
@@ -604,8 +498,8 @@ const handleSearch = async () => {
                     <table className="table table-bordered table-striped">
                       <thead>
                         <tr>
+                          <th>#</th>
                           <th>Student Name</th>
-                          <th>School Admission No</th>
                           <th>Admission No</th>
                           <th>Session</th>
                           <th>Course</th>
@@ -613,8 +507,6 @@ const handleSearch = async () => {
                           <th>Academic Year</th>
                           <th>Semester</th>
                           <th>Section</th>
-                          <th>Father Name</th>
-                          <th>Mother Name</th>
                           <th>Roll No</th>
                           <th>Actions</th>
                         </tr>
@@ -624,7 +516,6 @@ const handleSearch = async () => {
                           <tr key={index}>
                             <td>{offset + index + 1}</td>
                             <td>{student.student_name}</td>
-                            <td>{student.college_admission_no}</td>
                             <td>{student.enrollment_no}</td>
                             <td>{student.batch_code}</td>
                             <td>{student.course_name}</td>
@@ -632,8 +523,6 @@ const handleSearch = async () => {
                             <td>{student.academic_year_code}</td>
                             <td>{student.semester_name}</td>
                             <td>{student.section_name}</td>
-                            <td>{student.father_name}</td>
-                            <td>{student.mother_name}</td>
                             <td>{student.barcode}</td>
                             <td>
                               <button
