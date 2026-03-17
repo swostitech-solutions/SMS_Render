@@ -1246,6 +1246,28 @@ const FeeSearchPage = () => {
                 <div className="col-12 custom-section-box">
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
                     <div className="row flex-grow-1">
+                      {/* <div className="col-md-3 mb-3">
+                        <label htmlFor="period" className="form-label">
+                          Period
+                        </label>
+                        <Select
+                          className="detail"
+                          options={semesterOptions} // ← FIXED
+                          placeholder="Select Period"
+                          isClearable
+                          value={
+                            period
+                              ? semesterOptions.find(
+                                  (option) => option.value === period,
+                                )
+                              : null
+                          }
+                          onChange={(selectedOption) =>
+                            setPeriod(selectedOption?.value || null)
+                          }
+                        />
+                      </div> */}
+
                       <div className="col-md-3 mb-3">
                         <label htmlFor="student-name" className="form-label">
                           Student Name
@@ -1487,11 +1509,13 @@ const FeeSearchPage = () => {
                       <thead>
                         <tr>
                           <th>Sr No</th>
-
+                          <th>Period</th>
                           <th>Name</th>
+                          <th>Father's Name</th>
                           <th>Course</th>
                           <th>Section</th>
                           <th>Bar Code No</th>
+                          <th>College Admission No</th>
                           <th>Receipt Date</th>
                           <th>Receipt Amount</th>
                           <th>Discount Amount</th>
@@ -1507,9 +1531,11 @@ const FeeSearchPage = () => {
                             <td>{offset + index + 1}</td>
                             <td>{receipt.semester_description}</td>
                             <td>{receipt.student_name}</td>
+                            <td>{receipt.father_name}</td>
                             <td>{receipt.course_name}</td>
                             <td>{receipt.section_name}</td>
                             <td>{receipt.barcode}</td>
+                            <td>{receipt.college_admission_no}</td>
                             <td>
                               {new Date(
                                 receipt.receiptDate,
