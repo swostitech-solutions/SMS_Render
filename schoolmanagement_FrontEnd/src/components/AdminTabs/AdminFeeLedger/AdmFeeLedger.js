@@ -855,8 +855,6 @@ const AdmAttendanceEntry = () => {
         "Student Name": item.student_name || "",
         "Course": item.course_name || "",
         "Section": item.section_name || "",
-        "Father Name": item.fatherName || "",
-        "Mother Name": item.motherName || "",
         "Total Fees": item.total_fees || 0,
         "Fees Paid": item.total_paid || 0,
         "Discount": item.discount_fees || 0,
@@ -921,10 +919,26 @@ const AdmAttendanceEntry = () => {
       const result = await response.json();
 
       if (response.ok && result.message === "success!!") {
-        const studentIds = result.data.map((student) => student.studentId);
+        let filteredData = result.data;
+
+        // Apply filters locally to ensure they work as expected
+        if (showFees === "Z") {
+          // Show only students where total_fees is 0
+          filteredData = filteredData.filter(student => Number(student.total_fees || 0) === 0);
+        } else if (showFees === "F") {
+          // Show only students where total_fees > 0
+          filteredData = filteredData.filter(student => Number(student.total_fees || 0) > 0);
+        }
+
+        if (showBalanceFees) {
+          // Show only students with a balance > 0
+          filteredData = filteredData.filter(student => Number(student.remaining_fees || 0) > 0);
+        }
+
+        const studentIds = filteredData.map((student) => student.studentId);
 
         setSelectedStudentIds(studentIds);
-        setTableData(result.data);
+        setTableData(filteredData);
         setShowTable(true);
       } else {
         console.error("Failed to fetch data:", result.message);
@@ -1068,8 +1082,6 @@ const AdmAttendanceEntry = () => {
       "Student Name": item.student_name || "",
       Course: item.course_name || "",
       Section: item.section_name || "",
-      "Father Name": item.fatherName || "",
-      "Mother Name": item.motherName || "",
       "Total Fees": item.total_fees || 0,
       "Fees Paid": item.total_paid || 0,
       Discount: item.discount_fees || 0,
@@ -1590,8 +1602,6 @@ const AdmAttendanceEntry = () => {
                           <th>Roll no</th> */}
                           <th>Course</th>
                           <th>Section</th>
-                          <th>Father Name</th>
-                          <th>Mother Name</th>
                           <th>Total Fees</th>
                           <th>Fees Paid</th>
                           <th>Discount</th>
@@ -1618,8 +1628,6 @@ const AdmAttendanceEntry = () => {
                               <td>{item.barcode}</td> */}
                               <td>{item.course_name}</td>
                               <td>{item.section_name}</td>
-                              <td>{item.fatherName}</td>
-                              <td>{item.motherName}</td>
                               <td>{item.total_fees}</td>
                               <td>{item.total_paid}</td>
                               <td>{item.discount_fees}</td>
