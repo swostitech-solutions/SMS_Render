@@ -33,8 +33,6 @@ const AdmAttendanceEntry = () => {
   const [classOptions, setClassOptions] = useState([]);
   const [sectionOptions, setSectionOptions] = useState([]);
   const [showTable, setShowTable] = useState(false);
-  const [showBalanceFees, setShowBalanceFees] = useState(true);
-
   const [viewOption, setViewOption] = useState("viewReceipts");
   const [periodOptions, setPeriodOptions] = useState([]);
 
@@ -117,10 +115,9 @@ const AdmAttendanceEntry = () => {
     setToPeriod(null);
     setReport(null);
 
-    // RESET RADIO / CHECKBOX
+    // RESET RADIO
     setShowFees("F");
     setIsChecked(true);
-    setShowBalanceFees(true);
     setFeeAppFrom(null);
 
     // TABLE
@@ -904,7 +901,6 @@ const AdmAttendanceEntry = () => {
     if (report?.value) params.append("report", report.value);
 
     params.append("show_fees", showFees || "");
-    if (showBalanceFees) params.append("show_balance_fees", true);
 
     const apiUrl = `${ApiUrl.apiurl
       }FeeLedger/GetFeeLedgerBasedOnCondition/?${params.toString()}`;
@@ -1486,8 +1482,8 @@ const AdmAttendanceEntry = () => {
                       />
                     </div>
 
-                    {/* Radio Buttons Section */}
-                    <div className="col-12 col-md-8 mb-3 mt-3">
+                    {/* Fee Filter Section */}
+                    <div className="col-12 mb-3 mt-3">
                       <div
                         className="d-flex flex-wrap gap-3 justify-content-start align-items-start p-3"
                         style={{
@@ -1548,21 +1544,16 @@ const AdmAttendanceEntry = () => {
                             Show Students with Zero Fees Only
                           </label>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="col-12 col-md-4 mb-1">
-                      <div className="d-flex flex-row p-3">
-                        <div className="form-check">
+                        <div className="form-check me-3">
                           <input
                             className="form-check-input"
-                            type="checkbox"
+                            type="radio"
                             name="flexRadioDefault"
                             id="flexRadioDefault4"
-                            checked={showBalanceFees} // Bind state to checkbox
-                            onChange={(e) =>
-                              setShowBalanceFees(e.target.checked)
-                            } // Update state on toggle
+                            value="B"
+                            checked={showFees === "B"}
+                            onChange={(e) => setShowFees(e.target.value)}
                           />
                           <label
                             className="form-check-label"

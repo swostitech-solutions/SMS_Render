@@ -22592,10 +22592,8 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
             to_semester = request.query_params.get('to_semester')
             report = request.query_params.get('report')
             show_fees = request.query_params.get('show_fees')
-            show_balance_fees = request.query_params.get('show_balance_fees')
-
             # organization_id,branch_id,batch_id,course_id,department_id,semester_id,section_id,student_id,status_data,
-            # from_semester,to_semester,report,show_fees,show_balance_fees
+            # from_semester,to_semester,report,show_fees
 
             # Validate academic year ID
             # if not academicyearId:
@@ -22640,44 +22638,6 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                     filterdata = filterdata.filter(student__status__iexact="ACTIVE")
                 elif status_data.upper() in ['FALSE', '0', 'INACTIVE']:
                     filterdata = filterdata.filter(student__status__iexact="INACTIVE")
-
-            if show_fees:
-                filterdata_ids = filterdata.all().values_list('id', flat=True)
-                # GET ALL STUDENT ID INTO STUDENT FEE DETAILS
-                fee_student_ids = StudentFeeDetail.objects.filter(
-                    student_course__in=filterdata_ids,
-                    organization=organization_id,
-                    branch=branch_id,
-
-                    # academic_year=academic_year_id,
-                    is_active=True
-                ).values_list('student_id', flat=True)
-
-
-
-                if show_fees.upper() == "F":
-
-                    # Keep only students who have fee details
-
-                    filterdata = filterdata.filter(student_id__in=fee_student_ids)
-
-
-                elif show_fees.upper() == "A":
-                    # Do nothing, retain all students
-                    pass
-
-                elif show_fees.upper() == "Z":
-                    # Exclude students who have fee detailS
-                    zero_fee_student_list = []
-                    for item in filterdata_ids:
-                        student_amount = StudentFeeDetail.objects.filter(student_course_id=item).aggregate(total=Sum('element_amount'))['total']
-                        if student_amount == 0:
-                            zero_fee_student_list.append(item)
-                        # student_amount = StudentFeeDetail.objects.filter(student_course_id=item).values_list('element_amount',flat=True)
-                    filterdata = filterdata.filter(id__in = zero_fee_student_list)
-
-                    # StudentFeeDetail.objects.filter()
-                    # filterdata = filterdata.exclude(student_id__in=fee_student_ids)
 
             if filterdata:
                 responsedata = []
@@ -22847,9 +22807,15 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                         'semester_wise_details': semester_wise_details
                     })
 
-                # Logic to filter records where remaining_fees > 0 if showbalancefees is true
-                if show_balance_fees and show_balance_fees.lower() in ['true', '1']:
+                selected_fee_mode = (show_fees or 'F').upper()
+                if selected_fee_mode == 'F':
+                    responsedata = [data for data in responsedata if data['total_fees'] > 0]
+                elif selected_fee_mode == 'Z':
+                    responsedata = [data for data in responsedata if data['total_fees'] == 0]
+                elif selected_fee_mode == 'B':
                     responsedata = [data for data in responsedata if data['remaining_fees'] > 0]
+                elif selected_fee_mode == 'A':
+                    pass
 
                 if responsedata:
                     return Response({"message": "success!!", "data": responsedata}, status=status.HTTP_200_OK)
@@ -23256,6 +23222,7 @@ class GetStudentFeesDetailsPDFBasedOnStudentId(ListAPIView):
                 for stdfees in studentfeedetailsrecord:
                     semester_id = None
                     semester_name = None
+                    semester_display_order = None
                     
                     # PRIORITY 1: use semester field (Most reliable)
                     if stdfees.semester:
@@ -23263,6 +23230,7 @@ class GetStudentFeesDetailsPDFBasedOnStudentId(ListAPIView):
                             semesterInstance = stdfees.semester
                             semester_id = semesterInstance.id
                             semester_name = semesterInstance.semester_description
+                            semester_display_order = semesterInstance.display_order
                         except Exception:
                             pass
 
@@ -23272,17 +23240,21 @@ class GetStudentFeesDetailsPDFBasedOnStudentId(ListAPIView):
                             semesterInstance = stdfees.fee_applied_from
                             semester_id = semesterInstance.id
                             semester_name = semesterInstance.semester_description
+                            semester_display_order = semesterInstance.display_order
                         except Exception:
                             pass
                     
                     # Fallback string if still nothing
                     if not semester_name:
-                         semester_name = "-"
+                        semester_name = "-"
+                    if semester_display_order is None:
+                        semester_display_order = 999999
 
                     data = {
                         'element_name': stdfees.element_name,
                         'fee_applied_from': semester_id,
                         'semester_name': semester_name,
+                        'semester_display_order': semester_display_order,
                         'total_amount': stdfees.element_amount,
                         'paid_amount': stdfees.paid_amount,
                         'remaining_amount': f'{stdfees.element_amount - stdfees.paid_amount}'
@@ -23295,6 +23267,17 @@ class GetStudentFeesDetailsPDFBasedOnStudentId(ListAPIView):
                         total_paid += stdfees.paid_amount
 
                     feesdetails.append(data)
+
+                feesdetails.sort(
+                    key=lambda fee: (
+                        fee.get('semester_display_order', 999999),
+                        fee.get('semester_name') or '',
+                        fee.get('element_name') or '',
+                    )
+                )
+
+                for fee in feesdetails:
+                    fee.pop('semester_display_order', None)
 
             # make response data
             name_part = filter(None, [
@@ -23639,10 +23622,10 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
             # )
 
             finalresponsedata = []
-            receiptNoList = []
-            receiptDateList = []
 
             for stdId in studentIds:
+                receiptNoList = []
+                receiptDateList = []
 
                 # Initialize dictionaries for aggregating the amounts
                 elementList = {}  # To store the amounts for each element name
@@ -23651,37 +23634,50 @@ class GetStudentFeeBalanceReceiptListAPIView(ListAPIView):
                 discountFees = 0
                 # student class instance
                 try:
-                    student_course_instance = StudentCourse.objects.get(student_id=stdId, is_active=True)
+                    student_course_instance = StudentCourse.objects.get(
+                        organization=organization_id,
+                        branch=branch_id,
+                        student_id=stdId,
+                        is_active=True
+                    )
                 except ObjectDoesNotExist:
                     return Response({'message': 'student course Not Found!!'}, status=status.HTTP_404_NOT_FOUND)
 
                 try:
                     # Query the StudentFeeDetail model for the student
                     student_fee_details_records = StudentFeeDetail.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
                         student_id=stdId,
-                        fee_applied_from__in=semester_list_filtered,
-                        is_active=True  # Only include active records
-                    )
+                        is_active=True
+                    ).filter(
+                        Q(fee_applied_from__in=semester_list_filtered) |
+                        Q(semester__in=semester_list_filtered)
+                    ).distinct()
+                    # Only include active records
 
                     if student_fee_details_records.exists():
 
                         for fee_record in student_fee_details_records:
+                            fee_amount = fee_record.element_amount or 0
+                            fee_paid = fee_record.paid_amount or 0
+
                             # Check element exist in element list or not
                             if fee_record.element_name not in elementList:
-                                elementList[fee_record.element_name] = fee_record.element_amount
+                                elementList[fee_record.element_name] = fee_amount
                             else:
-                                elementList[fee_record.element_name] += fee_record.element_amount
+                                elementList[fee_record.element_name] += fee_amount
 
                             # Check if element_name is "DISCOUNT"
                             if fee_record.element_name == "DISCOUNT":
-                                discountFees += fee_record.element_amount
+                                discountFees += fee_amount
 
                             if fee_record.element_name == "PREVIOUS YEAR FEES":
                                 continue
 
                             else:
-                                totalFees += fee_record.element_amount
-                                paidFees += fee_record.paid_amount
+                                totalFees += fee_amount
+                                paidFees += fee_paid
 
                             # Receipt Details Retrieval
                             try:
