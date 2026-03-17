@@ -97,46 +97,39 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const rowsPerPage = 10;
 
-  const filteredStudentData = useMemo(() => {
-    if (!searchQuery) return studentData;
-    const lowerQuery = searchQuery.toLowerCase();
-    return studentData.filter((student) => {
-      const basic = student?.studentBasicDetails;
-      const address = student?.addressDetails?.[0] || {};
-      if (!basic) return false;
+ const filteredStudentData = useMemo(() => {
+   if (!searchQuery) return studentData;
 
-      const searchStr = `
-        ${basic.first_name || ""} 
-        ${basic.middle_name || ""} 
-        ${basic.last_name || ""}
-        ${basic.registration_no || ""}
-        ${basic.admission_no || ""}
-        ${basic.batch_description || ""}
-        ${basic.course_name || ""}
-        ${basic.department_description || ""}
-        ${basic.academic_year_description || ""}
-        ${basic.semester_description || ""}
-        ${basic.section_name || ""}
-        ${basic.father_name || ""}
-        ${basic.mother_name || ""}
-        ${basic.religion_name || ""}
-        ${basic.barcode || ""}
-        ${basic.category_name || ""}
-        ${address.present_address || ""}
-        ${address.present_city || ""}
-        ${address.present_state || ""}
-        ${address.present_country || ""}
-        ${address.present_pincode || ""}
-        ${address.permanent_address || ""}
-        ${address.permanent_city || ""}
-        ${address.permanent_state || ""}
-        ${address.permanent_country || ""}
-        ${address.permanent_pincode || ""}
-      `.toLowerCase();
+   const lowerQuery = searchQuery.trim().toLowerCase();
 
-      return searchStr.includes(lowerQuery);
-    });
-  }, [studentData, searchQuery]);
+   return studentData.filter((student) => {
+     const basic = student?.studentBasicDetails;
+     const address = student?.addressDetails?.[0] || {};
+     if (!basic) return false;
+
+     const fullName = [basic.first_name, basic.middle_name, basic.last_name]
+       .filter(Boolean)
+       .join(" ")
+       .toLowerCase();
+
+     // Split search words (ONLY ONCE ✅)
+     const queryWords = lowerQuery.split(" ").filter(Boolean);
+
+     // Name match
+     const isNameMatch = queryWords.every((word) => fullName.includes(word));
+
+     // Other fields match
+     const isOtherMatch = `
+      ${basic.registration_no || ""}
+      ${basic.admission_no || ""}
+      ${basic.barcode || ""}
+    `
+       .toLowerCase()
+       .includes(lowerQuery);
+
+     return isNameMatch || isOtherMatch;
+   });
+ }, [studentData, searchQuery]);
 
   // Calculate total pages
   const totalPages = Math.ceil(filteredStudentData.length / rowsPerPage);
@@ -1294,7 +1287,7 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
                           <input
                             type="text"
                             className="form-control detail"
-                            placeholder="Search: name, admission no, session, course, address, city, state, barcode..."
+                            placeholder="Search: name, admission no, session, course, address, city, state ..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                           />

@@ -11,6 +11,7 @@ import useFetchAcademicYearByFilter from "../../hooks/useFetchAcademicYearByFilt
 import useFetchSemesterByFilter from "../../hooks/useFetchSemesterByFilter";
 import useFetchSectionByFilter from "../../hooks/useFetchSectionByFilter";
 import { ApiUrl } from "../../../ApiUrl";
+import ReactPaginate from "react-paginate";
 
 const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
 
@@ -86,97 +87,117 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
       [name]: value,
     }));
   };
+const [currentPage, setCurrentPage] = useState(0);
+const itemsPerPage = 10;
+const offset = currentPage * itemsPerPage;
 
+const currentStudents = studentData.slice(offset, offset + itemsPerPage);
+
+const pageCount = Math.ceil(studentData.length / itemsPerPage);
+
+const handlePageClick = (event) => {
+  setCurrentPage(event.selected);
+};
   // Trigger modal open logic (you might have this somewhere else in your code)
   const handleOpen = () => {
     setIsModalOpen(true);
   };
 
-  const handleSearch = async () => {
-    try {
-      const orgId = sessionStorage.getItem("organization_id");
-      const brId = sessionStorage.getItem("branch_id");
+const handleSearch = async () => {
+  try {
+    const orgId = sessionStorage.getItem("organization_id");
+    const brId = sessionStorage.getItem("branch_id");
 
-      let url = `${ApiUrl.apiurl}StudentCourse/StudentCourseRecordFilter/?organization_id=${orgId}&branch_id=${brId}`;
+    let url = `${ApiUrl.apiurl}StudentCourse/StudentCourseRecordFilter/?organization_id=${orgId}&branch_id=${brId}`;
 
-      // Dynamically append text filters
-      if (filters.studentName)
-        url += `&student_name=${encodeURIComponent(filters.studentName)}`;
-      if (filters.admissionNo)
-        url += `&admission_no=${encodeURIComponent(filters.admissionNo)}`;
-      if (filters.barcode)
-        url += `&barcode=${encodeURIComponent(filters.barcode)}`;
-      if (filters.fatherName)
-        url += `&father_name=${encodeURIComponent(filters.fatherName)}`;
-      if (filters.motherName)
-        url += `&mother_name=${encodeURIComponent(filters.motherName)}`;
-      if (filters.schoolAdmissionNo)
-        url += `&college_admission_no=${encodeURIComponent(filters.schoolAdmissionNo)}`;
+    // Text filters
+    if (filters.studentName)
+      url += `&student_name=${encodeURIComponent(filters.studentName)}`;
+    if (filters.admissionNo)
+      url += `&admission_no=${encodeURIComponent(filters.admissionNo)}`;
+    if (filters.barcode)
+      url += `&barcode=${encodeURIComponent(filters.barcode)}`;
+    if (filters.fatherName)
+      url += `&father_name=${encodeURIComponent(filters.fatherName)}`;
+    if (filters.motherName)
+      url += `&mother_name=${encodeURIComponent(filters.motherName)}`;
+    if (filters.schoolAdmissionNo)
+      url += `&college_admission_no=${encodeURIComponent(filters.schoolAdmissionNo)}`;
 
-      // Dynamically append dropdown filters
-      if (selectedBatch) url += `&batch_id=${selectedBatch}`;
-      if (selectedCourse) url += `&course_id=${selectedCourse}`;
-      if (selectedDepartment) url += `&department_id=${selectedDepartment}`;
-      if (selectedAcademicYear) url += `&academic_year_id=${selectedAcademicYear}`;
-      if (selectedSemester) url += `&semester_id=${selectedSemester}`;
-      if (selectedSection) url += `&section_id=${selectedSection}`;
+    // Dropdown filters
+    if (selectedBatch) url += `&batch_id=${selectedBatch}`;
+    if (selectedCourse) url += `&course_id=${selectedCourse}`;
+    if (selectedDepartment) url += `&department_id=${selectedDepartment}`;
+    if (selectedAcademicYear) url += `&academic_year_id=${selectedAcademicYear}`;
+    if (selectedSemester) url += `&semester_id=${selectedSemester}`;
+    if (selectedSection) url += `&section_id=${selectedSection}`;
 
-      console.log("🔍 Certificate Search URL:", url);
+    console.log("🔍 Certificate Search URL:", url);
 
-      const response = await fetch(url);
+    const response = await fetch(url);
 
-      if (!response.ok) {
-        throw new Error("Error fetching student record");
-      }
-
-      const data = await response.json();
-
-      if (data.message === "success!!") {
-        let results = data.data;
-
-        // Frontend filter as backup
-        if (filters.fatherName) {
-          results = results.filter(s => 
-            s.father_name && s.father_name.toLowerCase().includes(filters.fatherName.toLowerCase())
-          );
-        }
-        if (filters.motherName) {
-          results = results.filter(s => 
-            s.mother_name && s.mother_name.toLowerCase().includes(filters.motherName.toLowerCase())
-          );
-        }
-
-        setStudentData(results);
-        setFullStudentData(data.data);
-      } else {
-        setStudentData([]);
-        setFullStudentData([]);
-        console.warn("No student data found.");
-      }
-
-    } catch (error) {
-      console.error("API ERROR:", error);
+    if (!response.ok) {
+      throw new Error("Error fetching student record");
     }
-  };
 
+    const data = await response.json();
+
+    if (data.message === "success!!") {
+      let results = data.data;
+
+      // Frontend backup filter
+      if (filters.fatherName) {
+        results = results.filter(
+          (s) =>
+            s.father_name &&
+            s.father_name.toLowerCase().includes(filters.fatherName.toLowerCase())
+        );
+      }
+
+      if (filters.motherName) {
+        results = results.filter(
+          (s) =>
+            s.mother_name &&
+            s.mother_name.toLowerCase().includes(filters.motherName.toLowerCase())
+        );
+      }
+
+      setStudentData(results);
+      setFullStudentData(data.data);
+
+      // ✅ IMPORTANT FIX (Pagination reset)
+      setCurrentPage(0);
+
+    } else {
+      setStudentData([]);
+      setFullStudentData([]);
+      console.warn("No student data found.");
+    }
+  } catch (error) {
+    console.error("API ERROR:", error);
+  }
+};
   const handleSelectStudent = (student) => {
 
-    const formattedStudent = {
-      studentBasicDetails: {
-        id: student.student_id,
-        first_name: student.student_name,
-        middle_name: "",
-        last_name: "",
-        admission_no: student.college_admission_no,
-        school_admission_no: student.college_admission_no,
-        barcode: student.barcode,
-        classname: student.course_name,
-        sectionname: student.section_name,
-        father_name: student.father_name,
-        mother_name: student.mother_name,
-        rollno: student.enrollment_no
-      }
-    };
+ const formattedStudent = {
+  studentBasicDetails: {
+    id: student.student_id,
+    first_name: student.student_name,
+    admission_no: student.college_admission_no,
+    barcode: student.barcode,
+    father_name: student.father_name,
+    mother_name: student.mother_name,
+    rollno: student.enrollment_no,
+
+    // ✅ ADD THESE (IMPORTANT)
+    batch_id: student.batch_id,
+    course_id: student.course_id,
+    department_id: student.department_id,
+    academic_year_id: student.academic_year_id,
+    semester_id: student.semester_id,
+    section_id: student.section
+  }
+};
 
     localStorage.setItem("selectedCertificateStudentId", student.student_id);
 
@@ -206,6 +227,7 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
     setSelectedSection(null);
 
     setStudentData(fullStudentData);
+    setCurrentPage(0);
   };
 
   // Reset everything when modal is closed
@@ -239,9 +261,7 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
       aria-labelledby="contained-modal-title-vcenter"
       centered
     >
-      <Modal.Header
-        closeButton onClick={handleClose}
-      ></Modal.Header>
+      <Modal.Header closeButton onClick={handleClose}></Modal.Header>
 
       <Modal.Body>
         <div className="container-fluid">
@@ -264,7 +284,7 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                       className="col-12  d-flex
                       flex-wrap
                       gap-2"
-                    // style={{ border: "1px solid #ccc" }}
+                      // style={{ border: "1px solid #ccc" }}
                     >
                       <button
                         type="button"
@@ -408,10 +428,20 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Session</label>
                       <Select
-                        options={BatchList?.map(b => ({ value: b.id, label: b.batch_description })) || []}
+                        options={
+                          BatchList?.map((b) => ({
+                            value: b.id,
+                            label: b.batch_description,
+                          })) || []
+                        }
                         value={
-                          BatchList?.find(b => b.id === selectedBatch)
-                            ? { value: selectedBatch, label: BatchList.find(b => b.id === selectedBatch)?.batch_description }
+                          BatchList?.find((b) => b.id === selectedBatch)
+                            ? {
+                                value: selectedBatch,
+                                label: BatchList.find(
+                                  (b) => b.id === selectedBatch,
+                                )?.batch_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -429,10 +459,20 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Course</label>
                       <Select
-                        options={CourseList?.map(c => ({ value: c.id, label: c.course_name })) || []}
+                        options={
+                          CourseList?.map((c) => ({
+                            value: c.id,
+                            label: c.course_name,
+                          })) || []
+                        }
                         value={
-                          CourseList?.find(c => c.id === selectedCourse)
-                            ? { value: selectedCourse, label: CourseList.find(c => c.id === selectedCourse)?.course_name }
+                          CourseList?.find((c) => c.id === selectedCourse)
+                            ? {
+                                value: selectedCourse,
+                                label: CourseList.find(
+                                  (c) => c.id === selectedCourse,
+                                )?.course_name,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -449,10 +489,20 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Department</label>
                       <Select
-                        options={BranchList?.map(d => ({ value: d.id, label: d.department_description })) || []}
+                        options={
+                          BranchList?.map((d) => ({
+                            value: d.id,
+                            label: d.department_description,
+                          })) || []
+                        }
                         value={
-                          BranchList?.find(d => d.id === selectedDepartment)
-                            ? { value: selectedDepartment, label: BranchList.find(d => d.id === selectedDepartment)?.department_description }
+                          BranchList?.find((d) => d.id === selectedDepartment)
+                            ? {
+                                value: selectedDepartment,
+                                label: BranchList.find(
+                                  (d) => d.id === selectedDepartment,
+                                )?.department_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -469,10 +519,22 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Academic Year</label>
                       <Select
-                        options={AcademicYearList?.map(a => ({ value: a.id, label: a.academic_year_description })) || []}
+                        options={
+                          AcademicYearList?.map((a) => ({
+                            value: a.id,
+                            label: a.academic_year_description,
+                          })) || []
+                        }
                         value={
-                          AcademicYearList?.find(a => a.id === selectedAcademicYear)
-                            ? { value: selectedAcademicYear, label: AcademicYearList.find(a => a.id === selectedAcademicYear)?.academic_year_description }
+                          AcademicYearList?.find(
+                            (a) => a.id === selectedAcademicYear,
+                          )
+                            ? {
+                                value: selectedAcademicYear,
+                                label: AcademicYearList.find(
+                                  (a) => a.id === selectedAcademicYear,
+                                )?.academic_year_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -488,10 +550,20 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Semester</label>
                       <Select
-                        options={SemesterList?.map(s => ({ value: s.id, label: s.semester_description })) || []}
+                        options={
+                          SemesterList?.map((s) => ({
+                            value: s.id,
+                            label: s.semester_description,
+                          })) || []
+                        }
                         value={
-                          SemesterList?.find(s => s.id === selectedSemester)
-                            ? { value: selectedSemester, label: SemesterList.find(s => s.id === selectedSemester)?.semester_description }
+                          SemesterList?.find((s) => s.id === selectedSemester)
+                            ? {
+                                value: selectedSemester,
+                                label: SemesterList.find(
+                                  (s) => s.id === selectedSemester,
+                                )?.semester_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -506,10 +578,20 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Section</label>
                       <Select
-                        options={SectionList?.map(s => ({ value: s.id, label: s.section_name })) || []}
+                        options={
+                          SectionList?.map((s) => ({
+                            value: s.id,
+                            label: s.section_name,
+                          })) || []
+                        }
                         value={
-                          SectionList?.find(s => s.id === selectedSection)
-                            ? { value: selectedSection, label: SectionList.find(s => s.id === selectedSection)?.section_name }
+                          SectionList?.find((s) => s.id === selectedSection)
+                            ? {
+                                value: selectedSection,
+                                label: SectionList.find(
+                                  (s) => s.id === selectedSection,
+                                )?.section_name,
+                              }
                             : null
                         }
                         onChange={(opt) => setSelectedSection(opt?.value || "")}
@@ -538,8 +620,9 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {studentData.map((student, index) => (
+                        {currentStudents.map((student, index) => (
                           <tr key={index}>
+                            <td>{offset + index + 1}</td>
                             <td>{student.student_name}</td>
                             <td>{student.college_admission_no}</td>
                             <td>{student.enrollment_no}</td>
@@ -564,6 +647,22 @@ const ModalCertificate = ({ show, onSelectStudent, handleClose }) => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                  <div className="d-flex justify-content-center mt-3">
+                    <ReactPaginate
+                      previousLabel={"← Previous"}
+                      nextLabel={"Next →"}
+                      pageCount={pageCount}
+                      onPageChange={handlePageClick}
+                      containerClassName={"pagination"}
+                      pageClassName={"page-item"}
+                      pageLinkClassName={"page-link"}
+                      previousClassName={"page-item"}
+                      previousLinkClassName={"page-link"}
+                      nextClassName={"page-item"}
+                      nextLinkClassName={"page-link"}
+                      activeClassName={"active"}
+                    />
                   </div>
                 </div>
               </div>

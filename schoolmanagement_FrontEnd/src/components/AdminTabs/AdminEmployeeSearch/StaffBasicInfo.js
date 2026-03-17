@@ -90,55 +90,88 @@ const StaffInfo = ({
   const hasInitialized = React.useRef(false);
 
   // Update formData and frontCover when basicInfoData changes (only once in edit mode)
-  useEffect(() => {
-    if (basicInfoData === null) {
-      hasInitialized.current = false;
-      setFormData({
-        employeeId: "",
-        orgId: "",
-        branchId: "",
-        location: "JAYDEV VIHAR",
-        employeeCode: "",
-        nuid: "",
-        title: "",
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        dob: "",
-        placeOfBirth: "",
-        maritalStatus: "",
-        bloodGroup: "",
-        nationality: "",
-        religion: "",
-        gender: "",
-        motherTongue: "",
-        employeeType: "",
-        email: "",
-        officeEmail: "",
-        phoneNumber: "",
-        emergencyContactNumber: "",
-        status: "ACTIVE",
-        createdBy: "",
-        profilePicture: null,
-      });
-      setFrontCover(null);
-    } else if (basicInfoData && Object.keys(basicInfoData).length > 0 && basicInfoData.firstName && !hasInitialized.current) {
-      console.log("📝 Initializing StaffBasicInfo with basicInfoData (one-time):", basicInfoData);
-      hasInitialized.current = true;  // Mark as initialized
-      setFormData(basicInfoData);
+ useEffect(() => {
+   if (hasInitialized.current) return;
 
-      // Update profile picture preview if available
-      // Priority: preview from new upload > existing DB path
-      if (basicInfoData.profilePicturePreview && typeof basicInfoData.profilePicturePreview === 'string') {
-        setFrontCover(basicInfoData.profilePicturePreview);
-      } else if (basicInfoData.profile_photo_path || basicInfoData.profilePicture) {
-        const picUrl = basicInfoData.profile_photo_path || basicInfoData.profilePicture;
-        if (typeof picUrl === 'string' && picUrl.length > 0) {
-          setFrontCover(picUrl);
-        }
-      }
-    }
-  }, [basicInfoData]);
+   // ✅ WAIT until all dropdown data is loaded
+   if (
+     !employeeDetails ||
+     bloodGroups.length === 0 ||
+     nationalities.length === 0 ||
+     religions.length === 0 ||
+     languages.length === 0
+   ) {
+     return;
+   }
+
+   console.log("🔥 Mapping after dropdown data loaded");
+
+   const bloodGroupObj = bloodGroups.find(
+     (bg) =>
+       bg.id === parseInt(employeeDetails.blood_group) ||
+       (bg.blood_name || "").toLowerCase().trim() ===
+         (employeeDetails.blood_group || "").toString().toLowerCase().trim(),
+   );
+
+   const nationalityObj = nationalities.find(
+     (n) =>
+       n.id === parseInt(employeeDetails.nationality) ||
+       (n.nationality_name || "").toLowerCase().trim() ===
+         (employeeDetails.nationality || "").toString().toLowerCase().trim(),
+   );
+
+   const religionObj = religions.find(
+     (r) =>
+       r.id === parseInt(employeeDetails.religion) ||
+       (r.religion_name || "").toLowerCase().trim() ===
+         (employeeDetails.religion || "").toString().toLowerCase().trim(),
+   );
+
+   const motherTongueObj = languages.find(
+     (l) =>
+       l.id === parseInt(employeeDetails.mother_tongue) ||
+       (l.mother_tongue_name || "").toLowerCase().trim() ===
+         (employeeDetails.mother_tongue || "").toString().toLowerCase().trim(),
+   );
+
+   hasInitialized.current = true;
+
+   setFormData((prev) => ({
+     ...prev,
+     employeeId: employeeDetails.id || "",
+     employeeCode: employeeDetails.employee_code || "",
+     title: employeeDetails.title || "",
+     firstName: employeeDetails.first_name || "",
+     middleName: employeeDetails.middle_name || "",
+     lastName: employeeDetails.last_name || "",
+     dob: employeeDetails.date_of_birth || "",
+     placeOfBirth: employeeDetails.place_of_birth || "",
+     maritalStatus: employeeDetails.marital_status || "",
+
+     // ✅ FIXED mapping
+     bloodGroup: bloodGroupObj ? bloodGroupObj.id : "",
+     nationality: nationalityObj ? nationalityObj.id : "",
+     religion: religionObj ? religionObj.id : "",
+     motherTongue: motherTongueObj ? motherTongueObj.id : "",
+
+     gender: employeeDetails.gender_id
+       ? parseInt(employeeDetails.gender_id)
+       : "",
+
+     employeeType:
+       employeeDetails.employee_type_id || employeeDetails.employee_type || "",
+
+     email: employeeDetails.email || "",
+     officeEmail: employeeDetails.office_email || "",
+     phoneNumber: employeeDetails.phone_number || "",
+     emergencyContactNumber: employeeDetails.emergency_contact_number || "",
+
+     status: employeeDetails.is_active ? "ACTIVE" : "INACTIVE",
+     profilePicture: employeeDetails.profile || "",
+   }));
+
+   setFrontCover(employeeDetails.profile || "");
+ }, [employeeDetails, bloodGroups, nationalities, religions, languages]);
 
   // Sync data to parent whenever formData or frontCover changes
   useEffect(() => {

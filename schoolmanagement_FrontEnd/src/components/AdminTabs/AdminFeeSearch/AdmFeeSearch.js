@@ -1225,7 +1225,7 @@ const FeeSearchPage = () => {
                     }}
                     onClick={() => navigate("/admin/dashboard")}
 
-                  // onClick={handleCloseButton}
+                    // onClick={handleCloseButton}
                   >
                     Close
                   </button>
@@ -1258,8 +1258,8 @@ const FeeSearchPage = () => {
                           value={
                             period
                               ? semesterOptions.find(
-                                (option) => option.value === period
-                              )
+                                  (option) => option.value === period,
+                                )
                               : null
                           }
                           onChange={(selectedOption) =>
@@ -1526,9 +1526,9 @@ const FeeSearchPage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {receiptsData.map((receipt, index) => (
+                        {currentReceipts.map((receipt, index) => (
                           <tr key={receipt.receiptId}>
-                            <td>{index + 1}</td>
+                            <td>{offset + index + 1}</td>
                             <td>{receipt.semester_description}</td>
                             <td>{receipt.student_name}</td>
                             <td>{receipt.father_name}</td>
@@ -1538,7 +1538,7 @@ const FeeSearchPage = () => {
                             <td>{receipt.college_admission_no}</td>
                             <td>
                               {new Date(
-                                receipt.receiptDate
+                                receipt.receiptDate,
                               ).toLocaleDateString()}
                             </td>
                             <td>{receipt.amount}</td>
@@ -1572,7 +1572,11 @@ const FeeSearchPage = () => {
                               </a>
                             </td>
 
-                            <td>{receipt.remarks || receipt.cancellation_remarks || "-"}</td>
+                            <td>
+                              {receipt.remarks ||
+                                receipt.cancellation_remarks ||
+                                "-"}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1665,7 +1669,10 @@ const FeeSearchPage = () => {
 
                         {/* Role Name — auto-filled, read-only */}
                         <div className="form-group mb-2">
-                          <label htmlFor="cancelRoleName" className="form-label fw-semibold">
+                          <label
+                            htmlFor="cancelRoleName"
+                            className="form-label fw-semibold"
+                          >
                             Role Name
                           </label>
                           <input
@@ -1674,13 +1681,19 @@ const FeeSearchPage = () => {
                             className="form-control"
                             value={cancelledByRole}
                             disabled
-                            style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed" }}
+                            style={{
+                              backgroundColor: "#f8f9fa",
+                              cursor: "not-allowed",
+                            }}
                           />
                         </div>
 
                         {/* Cancelled By — non-teaching staff name, read-only */}
                         <div className="form-group mb-2">
-                          <label htmlFor="cancelledByName" className="form-label fw-semibold">
+                          <label
+                            htmlFor="cancelledByName"
+                            className="form-label fw-semibold"
+                          >
                             Cancelled By
                           </label>
                           <input
@@ -1689,14 +1702,21 @@ const FeeSearchPage = () => {
                             className="form-control"
                             value={cancelledByName}
                             disabled
-                            style={{ backgroundColor: "#f8f9fa", cursor: "not-allowed" }}
+                            style={{
+                              backgroundColor: "#f8f9fa",
+                              cursor: "not-allowed",
+                            }}
                           />
                         </div>
 
                         {/* Cancellation Remark */}
                         <div className="form-group mt-2">
-                          <label htmlFor="cancelRemark" className="form-label fw-semibold">
-                            Cancellation Remark <span className="text-danger">*</span>
+                          <label
+                            htmlFor="cancelRemark"
+                            className="form-label fw-semibold"
+                          >
+                            Cancellation Remark{" "}
+                            <span className="text-danger">*</span>
                           </label>
                           <textarea
                             id="cancelRemark"
@@ -1777,7 +1797,7 @@ const FeeSearchPage = () => {
                                 paymentMethodOptions.find(
                                   (option) =>
                                     option.value ===
-                                    selectedReceipt.paymentMethodId
+                                    selectedReceipt.paymentMethodId,
                                 ) || null
                               }
                               onChange={(selectedOption) => {
@@ -1796,7 +1816,8 @@ const FeeSearchPage = () => {
                                   paymentMethodId: selectedValue,
                                   paymentMethodLabel: selectedLabel, // Store label for conditional rendering
                                   // Reset bank and account for ALL payment method changes
-                                  bankId: selectedLabel === "cash" ? null : null,
+                                  bankId:
+                                    selectedLabel === "cash" ? null : null,
                                   bankdetailsId: null,
                                   accountNumber: "",
                                 }));
@@ -1822,14 +1843,20 @@ const FeeSearchPage = () => {
                           {selectedReceipt.paymentMethodLabel === "cheque" && (
                             <>
                               <div className="form-group">
-                                <label className="form-label">Cheque Number</label>
+                                <label className="form-label">
+                                  Cheque Number
+                                </label>
                                 <input
                                   type="text"
                                   className="form-control detail"
                                   value={chequeNumber}
                                   onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '');
-                                    if (value.length <= 6) setChequeNumber(value);
+                                    const value = e.target.value.replace(
+                                      /\D/g,
+                                      "",
+                                    );
+                                    if (value.length <= 6)
+                                      setChequeNumber(value);
                                   }}
                                   maxLength="6"
                                   placeholder="Enter Cheque Number (6 digits)"
@@ -1837,23 +1864,31 @@ const FeeSearchPage = () => {
                               </div>
 
                               <div className="form-group">
-                                <label className="form-label">Cheque Bank Name</label>
+                                <label className="form-label">
+                                  Cheque Bank Name
+                                </label>
                                 <input
                                   type="text"
                                   className="form-control detail"
                                   value={chequeBankName}
-                                  onChange={(e) => setChequeBankName(e.target.value)}
+                                  onChange={(e) =>
+                                    setChequeBankName(e.target.value)
+                                  }
                                   placeholder="Cheque Bank Name"
                                 />
                               </div>
 
                               <div className="form-group">
-                                <label className="form-label">Cheque Branch Name</label>
+                                <label className="form-label">
+                                  Cheque Branch Name
+                                </label>
                                 <input
                                   type="text"
                                   className="form-control detail"
                                   value={chequeBranchName}
-                                  onChange={(e) => setChequeBranchName(e.target.value)}
+                                  onChange={(e) =>
+                                    setChequeBranchName(e.target.value)
+                                  }
                                   placeholder="Cheque Branch Name"
                                 />
                               </div>
@@ -1870,7 +1905,10 @@ const FeeSearchPage = () => {
                                   className="form-control detail"
                                   value={ddNumber}
                                   onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '');
+                                    const value = e.target.value.replace(
+                                      /\D/g,
+                                      "",
+                                    );
                                     if (value.length <= 6) setDdNumber(value);
                                   }}
                                   maxLength="6"
@@ -1879,12 +1917,16 @@ const FeeSearchPage = () => {
                               </div>
 
                               <div className="form-group">
-                                <label className="form-label">Issuing Bank</label>
+                                <label className="form-label">
+                                  Issuing Bank
+                                </label>
                                 <input
                                   type="text"
                                   className="form-control detail"
                                   value={ddIssuingBank}
-                                  onChange={(e) => setDdIssuingBank(e.target.value)}
+                                  onChange={(e) =>
+                                    setDdIssuingBank(e.target.value)
+                                  }
                                   placeholder="Issuing Bank"
                                 />
                               </div>
@@ -1892,7 +1934,9 @@ const FeeSearchPage = () => {
                           )}
 
                           {/* UPI Fields */}
-                          {selectedReceipt.paymentMethodLabel?.includes("upi") && (
+                          {selectedReceipt.paymentMethodLabel?.includes(
+                            "upi",
+                          ) && (
                             <div className="form-group">
                               <label className="form-label">UTR No</label>
                               <input
@@ -1900,7 +1944,10 @@ const FeeSearchPage = () => {
                                 className="form-control detail"
                                 value={upiUtrNo}
                                 onChange={(e) => {
-                                  const value = e.target.value.replace(/\D/g, '');
+                                  const value = e.target.value.replace(
+                                    /\D/g,
+                                    "",
+                                  );
                                   if (value.length <= 22) setUpiUtrNo(value);
                                 }}
                                 maxLength="22"
@@ -1910,47 +1957,60 @@ const FeeSearchPage = () => {
                           )}
 
                           {/* RTGS/NEFT Fields */}
-                          {(selectedReceipt.paymentMethodLabel?.includes("rtgs") ||
-                            selectedReceipt.paymentMethodLabel?.includes("neft")) && (
-                              <>
-                                <div className="form-group">
-                                  <label className="form-label">UTR No</label>
-                                  <input
-                                    type="text"
-                                    className="form-control detail"
-                                    value={rtgsUtrNo}
-                                    onChange={(e) => {
-                                      const value = e.target.value.replace(/\D/g, '');
-                                      if (value.length <= 22) setRtgsUtrNo(value);
-                                    }}
-                                    maxLength="22"
-                                    placeholder="Enter UTR No (22 digits)"
-                                  />
-                                </div>
+                          {(selectedReceipt.paymentMethodLabel?.includes(
+                            "rtgs",
+                          ) ||
+                            selectedReceipt.paymentMethodLabel?.includes(
+                              "neft",
+                            )) && (
+                            <>
+                              <div className="form-group">
+                                <label className="form-label">UTR No</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={rtgsUtrNo}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(
+                                      /\D/g,
+                                      "",
+                                    );
+                                    if (value.length <= 22) setRtgsUtrNo(value);
+                                  }}
+                                  maxLength="22"
+                                  placeholder="Enter UTR No (22 digits)"
+                                />
+                              </div>
 
-                                <div className="form-group">
-                                  <label className="form-label">Sender Bank</label>
-                                  <input
-                                    type="text"
-                                    className="form-control detail"
-                                    value={rtgsSenderBank}
-                                    onChange={(e) => setRtgsSenderBank(e.target.value)}
-                                    placeholder="Sender Bank"
-                                  />
-                                </div>
+                              <div className="form-group">
+                                <label className="form-label">
+                                  Sender Bank
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={rtgsSenderBank}
+                                  onChange={(e) =>
+                                    setRtgsSenderBank(e.target.value)
+                                  }
+                                  placeholder="Sender Bank"
+                                />
+                              </div>
 
-                                <div className="form-group">
-                                  <label className="form-label">Account No</label>
-                                  <input
-                                    type="text"
-                                    className="form-control detail"
-                                    value={rtgsAccountNo}
-                                    onChange={(e) => setRtgsAccountNo(e.target.value)}
-                                    placeholder="Account No"
-                                  />
-                                </div>
-                              </>
-                            )}
+                              <div className="form-group">
+                                <label className="form-label">Account No</label>
+                                <input
+                                  type="text"
+                                  className="form-control detail"
+                                  value={rtgsAccountNo}
+                                  onChange={(e) =>
+                                    setRtgsAccountNo(e.target.value)
+                                  }
+                                  placeholder="Account No"
+                                />
+                              </div>
+                            </>
+                          )}
 
                           {/* Bank Name Dropdown */}
                           <div className="form-group">
@@ -1962,7 +2022,7 @@ const FeeSearchPage = () => {
                               value={
                                 bankOptions.find(
                                   (bank) =>
-                                    bank.value === selectedReceipt.bankId
+                                    bank.value === selectedReceipt.bankId,
                                 ) || null
                               }
                               onChange={handleBankSelect}
@@ -1970,9 +2030,13 @@ const FeeSearchPage = () => {
                               placeholder="Select Bank"
                               isClearable
                               isDisabled={
-                                paymentMethodOptions.find(
-                                  (option) => option.value === selectedReceipt.paymentMethodId
-                                )?.label?.toLowerCase() === "cash"
+                                paymentMethodOptions
+                                  .find(
+                                    (option) =>
+                                      option.value ===
+                                      selectedReceipt.paymentMethodId,
+                                  )
+                                  ?.label?.toLowerCase() === "cash"
                               }
                             />
                           </div>
@@ -1986,7 +2050,9 @@ const FeeSearchPage = () => {
                               name="accountNumber"
                               value={
                                 accountDetails.find(
-                                  (account) => account.value === selectedReceipt.bankdetailsId
+                                  (account) =>
+                                    account.value ===
+                                    selectedReceipt.bankdetailsId,
                                 ) || null
                               }
                               onChange={handleAccountSelect}
@@ -1994,9 +2060,13 @@ const FeeSearchPage = () => {
                               placeholder="Select Account"
                               isClearable
                               isDisabled={
-                                paymentMethodOptions.find(
-                                  (option) => option.value === selectedReceipt.paymentMethodId
-                                )?.label?.toLowerCase() === "cash"
+                                paymentMethodOptions
+                                  .find(
+                                    (option) =>
+                                      option.value ===
+                                      selectedReceipt.paymentMethodId,
+                                  )
+                                  ?.label?.toLowerCase() === "cash"
                               }
                             />
                           </div>
@@ -2050,7 +2120,7 @@ const FeeSearchPage = () => {
                       <tbody>
                         {currentReceipts.map((receipt, index) => (
                           <tr key={receipt.receiptId}>
-                            <td>{index + 1}</td>
+                            <td>{offset + index + 1}</td>
                             <td>{receipt.semester_description}</td>
                             <td>{receipt.student_name}</td>
                             <td>{receipt.father_name}</td>
@@ -2060,7 +2130,7 @@ const FeeSearchPage = () => {
                             <td>{receipt.college_admission_no}</td>
                             <td>
                               {new Date(
-                                receipt.receiptDate
+                                receipt.receiptDate,
                               ).toLocaleDateString()}
                             </td>
                             <td>{receipt.amount}</td>

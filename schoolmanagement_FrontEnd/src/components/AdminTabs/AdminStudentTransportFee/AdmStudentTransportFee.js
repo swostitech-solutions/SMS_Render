@@ -1355,44 +1355,40 @@ const generatePDF = (data) => {
                       <th>View</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {currentItems.length > 0 ? (
-                      currentItems.map((item, index) => (
-                        <tr key={index}>
-                          <td>{offset + index + 1}</td>
-                          <td>{item.student_name}</td>
-                          <td>{item.course_name}</td>
-                          <td>{item.section_name}</td>
-                          <td>{item.father_name}</td>
-                          <td>{item.pick_up_point}</td>
-                          <td>{item.total_fees}</td>
-                          <td>{item.paid_fees}</td>
-                          <td>
-                            {(item.total_fees || 0) - (item.paid_fees || 0)}
-                          </td>
-                          <td>
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={() =>
-                                fetchViewPDF(
-                                  item.student_id,
-                                  item.fee_applied_from
-                                )
-                              }
-                            >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="10" className="text-center">
-                          No Data Found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                <tbody>
+  {currentItems.length > 0 ? (
+    currentItems.map((item, index) => (
+      <tr key={index}>
+        <td>{offset + index + 1}</td>
+        <td>{item.student_name}</td>
+        <td>{item.course_name}</td>
+        <td>{item.section_name}</td>
+        <td>{item.father_name}</td>
+        <td>{item.pick_up_point}</td>
+        <td>{item.total_fees}</td>
+        <td>{item.paid_fees}</td>
+        <td>{(item.total_fees || 0) - (item.paid_fees || 0)}</td>
+        <td>
+          <button
+            className="btn btn-info btn-sm"
+            onClick={() =>
+              fetchViewPDF(item.student_id, item.fee_applied_from)
+            }
+            disabled={(item.paid_fees || 0) === 0} // ✅ Disable if Fees Paid is 0
+          >
+            View
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="10" className="text-center">
+        No Data Found
+      </td>
+    </tr>
+  )}
+</tbody>
                 </table>
               </div>
 

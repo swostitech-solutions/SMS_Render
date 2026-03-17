@@ -179,7 +179,7 @@ const AdmStudentHostelCreate = () => {
 
         if (!branch_id || !organization_id) {
           console.error(
-            "Branch ID or Organization ID not found in session storage."
+            "Branch ID or Organization ID not found in session storage.",
           );
           return;
         }
@@ -192,7 +192,7 @@ const AdmStudentHostelCreate = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`, // attach token
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -242,7 +242,7 @@ const AdmStudentHostelCreate = () => {
         }
 
         console.log(
-          `Fetching courses for organization_id=${organization_id}, branch_id=${branch_id}, batch_id=${batch_id}`
+          `Fetching courses for organization_id=${organization_id}, branch_id=${branch_id}, batch_id=${batch_id}`,
         );
 
         const response = await fetch(
@@ -253,7 +253,7 @@ const AdmStudentHostelCreate = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -307,7 +307,7 @@ const AdmStudentHostelCreate = () => {
         }
 
         console.log(
-          `Fetching departments for organization_id=${organization_id}, branch_id=${branch_id}, batch_id=${batch_id}, course_id=${course_id}`
+          `Fetching departments for organization_id=${organization_id}, branch_id=${branch_id}, batch_id=${batch_id}, course_id=${course_id}`,
         );
 
         const response = await fetch(
@@ -318,13 +318,13 @@ const AdmStudentHostelCreate = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`
+            `Network response not ok: ${response.status} - ${errorText}`,
           );
         }
 
@@ -414,7 +414,7 @@ const AdmStudentHostelCreate = () => {
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`
+            `Network response not ok: ${response.status} - ${errorText}`,
           );
         }
 
@@ -503,7 +503,7 @@ const AdmStudentHostelCreate = () => {
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`
+            `Network response not ok: ${response.status} - ${errorText}`,
           );
         }
 
@@ -599,7 +599,7 @@ const AdmStudentHostelCreate = () => {
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`
+            `Network response not ok: ${response.status} - ${errorText}`,
           );
         }
 
@@ -698,7 +698,7 @@ const AdmStudentHostelCreate = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`, // ✅ TOKEN PASSED
             },
-          }
+          },
         );
         const data = await res.json();
 
@@ -706,7 +706,7 @@ const AdmStudentHostelCreate = () => {
           data.map((item) => ({
             value: item.id,
             label: item.block_name,
-          }))
+          })),
         );
       } catch (error) {
         console.error("Error fetching block list:", error);
@@ -744,7 +744,7 @@ const AdmStudentHostelCreate = () => {
           data.map((floor) => ({
             value: floor.id,
             label: floor.floor_number,
-          }))
+          })),
         );
       } catch (error) {
         console.error("Error fetching floors:", error);
@@ -774,7 +774,7 @@ const AdmStudentHostelCreate = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`, // ✅ TOKEN PASSED
             },
-          }
+          },
         );
         const data = await response.json();
 
@@ -782,7 +782,7 @@ const AdmStudentHostelCreate = () => {
           data.map((item) => ({
             value: item.id,
             label: item.room_type,
-          }))
+          })),
         );
       } catch (error) {
         console.error("Error fetching Room Types:", error);
@@ -920,7 +920,7 @@ const AdmStudentHostelCreate = () => {
         }
 
         const response = await fetch(
-          `/api/Transport/routemasterlist/${orgId}/${branchId}/`
+          `/api/Transport/routemasterlist/${orgId}/${branchId}/`,
         );
 
         if (!response.ok) {
@@ -941,7 +941,24 @@ const AdmStudentHostelCreate = () => {
 
     fetchRoutes();
   }, []);
+  // When hostel changes
+  const handleHostelChange = (option) => {
+    setSelectedHostel(option);
 
+    // Reset dependent fields
+    setSelectedBlock(null);
+    setSelectedFloor(null);
+    setSelectedRoomType(null);
+    setSelectedRoom(null);
+    setSelectedBed(null);
+
+    // Reset dependent lists
+    setBlockOptions([]);
+    setFloorList([]);
+    setRoomTypes([]);
+    setRoomList([]);
+    setBedList([]);
+  };
   const handleSearch = async () => {
     try {
       const academicSessionId = localStorage.getItem("academicSessionId") || "";
@@ -964,7 +981,7 @@ const AdmStudentHostelCreate = () => {
       if (sectionId) queryParams.append("section_id", sectionId);
 
       const response = await fetch(
-        `${ApiUrl.apiurl}HOSTEL/GetStudentHostelList/?${queryParams.toString()}`
+        `${ApiUrl.apiurl}HOSTEL/GetStudentHostelList/?${queryParams.toString()}`,
       );
 
       const data = await response.json();
@@ -987,7 +1004,7 @@ const AdmStudentHostelCreate = () => {
 
     try {
       const response = await fetch(
-        `${ApiUrl.apiurl}HOSTEL/HostelDetailsRetereiveByStudent/${student.student_id}`
+        `${ApiUrl.apiurl}HOSTEL/HostelDetailsRetereiveByStudent/${student.student_id}`,
       );
       const data = await response.json();
       if (data.message === "success") {
@@ -1094,7 +1111,7 @@ const AdmStudentHostelCreate = () => {
             Authorization: `Bearer ${token}`, // ✅ TOKEN PASSED
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const result = await response.json();
@@ -1295,7 +1312,7 @@ const AdmStudentHostelCreate = () => {
                           className="detail"
                           options={hostelList}
                           value={selectedHostel}
-                          onChange={(option) => setSelectedHostel(option)}
+                          onChange={handleHostelChange}
                           placeholder="Select Hostel"
                         />
                       </div>
@@ -1379,6 +1396,6 @@ const AdmStudentHostelCreate = () => {
       </div>
     </div>
   );
-};
+};;
 
 export default AdmStudentHostelCreate;

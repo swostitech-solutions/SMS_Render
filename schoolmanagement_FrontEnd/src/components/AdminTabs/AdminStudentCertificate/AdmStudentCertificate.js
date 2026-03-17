@@ -782,14 +782,22 @@ const handleClear = () => {
                         show={showStudentSelectionModal}
                         handleClose={handleModalClose}
                         onSelectStudent={(student) => {
-                          const studentDetails = student.studentBasicDetails;
+                          const s = student.studentBasicDetails;
 
-                          setSelectedStudentData(studentDetails);
+                          setSelectedStudentData(s);
 
-                          admissionNoRef.current.value =
-                            studentDetails.admission_no;
-                          barcodeRef.current.value = studentDetails.barcode;
-                          studentNameRef.current.value = `${studentDetails.first_name} ${studentDetails.middle_name || ""} ${studentDetails.last_name}`;
+                          // ✅ Input fields
+                          admissionNoRef.current.value = s.admission_no || "";
+                          barcodeRef.current.value = s.rollno || "";
+                          studentNameRef.current.value = `${s.first_name || ""} ${s.middle_name || ""} ${s.last_name || ""}`;
+
+                          // ✅ IMPORTANT: Dropdown mapping
+                          setSelectedBatch(s.batch_id || null);
+                          setSelectedCourse(s.course_id || null);
+                          setSelectedDepartment(s.department_id || null);
+                          setSelectedAcademicYear(s.academic_year_id || null);
+                          setSelectedSemester(s.semester_id || null);
+                          setSelectedSection(s.section_id || null);
 
                           // Remove stored filters
                           localStorage.removeItem("selectedCertificateClassId");

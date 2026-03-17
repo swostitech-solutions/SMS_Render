@@ -3195,11 +3195,11 @@ const FeeCollection = () => {
     // PAYMENT DETAILS
     doc.autoTable({
       startY: doc.lastAutoTable.finalY + 8,
-      head: [["Payment Method", "Reference", "Remark", "Amount"]],
+      head: [["Payment Method",  "Remark", "Amount"]],
       body: [
         [
           safe(data.payment_method),
-          safe(data.payment_reference || "-"),
+          // safe(data.payment_reference || "-"),
           safe(data.remarks || "-"),
           Number(data.amount || 0).toFixed(2),
         ],
@@ -4323,7 +4323,7 @@ const FeeCollection = () => {
                     </div>
 
                     {/* Reference */}
-                    <div className="col-md-3">
+                    {/* <div className="col-md-3">
                       <label htmlFor="reference" className="form-label">
                         Reference
                       </label>
@@ -4334,7 +4334,7 @@ const FeeCollection = () => {
                         value={remark}
                         onChange={(e) => setRemark(e.target.value)}
                       />
-                    </div>
+                    </div> */}
 
                     {/* Remark */}
                     <div className="col-md-3">

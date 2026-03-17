@@ -378,9 +378,13 @@ const AdmAttendanceEntry = () => {
       } else {
         await api.post(url, requestBody);
       }
+alert(
+  isEdit
+    ? "Expense updated successfully!"
+    : "Expense entry saved successfully!",
+);
 
-      setSaveMsg({ type: "success", text: isEdit ? "Expense updated successfully!" : "Expense entry saved successfully!" });
-      setTimeout(() => navigate("/admin/search-expense"), 1500);
+navigate("/admin/search-expense");
     } catch (error) {
       console.error("Error saving expense entry:", error);
       const errorMessage = error.response?.data?.message || "An error occurred while saving expense entry.";
