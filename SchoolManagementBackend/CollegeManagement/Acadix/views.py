@@ -786,6 +786,12 @@ class RegisterUserLoginAPIView(CreateAPIView):
                     if user_type == 'PARENT':
                         # Registration Instance
                         Registrationinstance = StudentRegistration.objects.get(id=user.reference_id)
+                        student_status = (Registrationinstance.status or 'ACTIVE').upper()
+                        if not Registrationinstance.is_active or student_status != 'ACTIVE':
+                            return Response(
+                                {'message': 'Your login is inactive. Please contact the administrator.'},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
                         # print(Registrationinstance,type(Registrationinstance))
 
                         # UserType Instance
@@ -897,6 +903,21 @@ class RegisterUserLoginAPIView(CreateAPIView):
                         }
                         return Response({'message': 'Logged in  Successfully', 'data': data}, status=status.HTTP_200_OK)
                     elif user_type == 'STUDENT':
+                        try:
+                            student_registration = StudentRegistration.objects.get(id=user.reference_id)
+                        except StudentRegistration.DoesNotExist:
+                            return Response(
+                                {'message': 'Student record not found. Please contact the administrator.'},
+                                status=status.HTTP_404_NOT_FOUND
+                            )
+
+                        student_status = (student_registration.status or 'ACTIVE').upper()
+                        if not student_registration.is_active or student_status != 'ACTIVE':
+                            return Response(
+                                {'message': 'Your login is inactive. Please contact the administrator.'},
+                                status=status.HTTP_403_FORBIDDEN
+                            )
+
                         student = user.user_type
                         data = {
                             "organization_id": user.organization.id,
@@ -19829,6 +19850,7 @@ class StudentCircularListAPIView(ListAPIView):
             student_id = request.query_params.get('student_id')
             circular_date = request.query_params.get('circular_date')
             initiatedBy = request.query_params.get('initiatedBy')
+            approved_only = request.query_params.get('approved_only')
 
             if organization_id and branch_id:
                 try:
@@ -19878,6 +19900,9 @@ class StudentCircularListAPIView(ListAPIView):
 
             if initiatedBy:
                 student_circular_instance = student_circular_instance.filter(initiated_by=initiatedBy)
+
+            if approved_only and approved_only.strip().upper() in ['Y', 'YES', 'TRUE', '1', 'A']:
+                student_circular_instance = student_circular_instance.filter(circular_status='A', is_cancelled=False)
 
             if student_circular_instance:
                 responsedata = []
@@ -22765,6 +22790,34 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                         remaining_fees = Decimal('0.00')
                         semester_wise_details = {}
 
+                    receipt_remarks_queryset = StudentFeeReceiptHeader.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        batch=item.batch.id,
+                        course=item.course.id,
+                        department=item.department.id,
+                        academic_year=item.academic_year.id,
+                        student=RegistrationInstance.id,
+                        is_active=True
+                    ).exclude(remarks__isnull=True).exclude(remarks__exact='').order_by('-created_at')
+
+                    if semester_id:
+                        receipt_remarks_queryset = receipt_remarks_queryset.filter(semester=semester_id)
+                    elif from_semester and to_semester:
+                        receipt_remarks_queryset = receipt_remarks_queryset.filter(
+                            semester__id__range=[from_semester, to_semester]
+                        )
+                    elif from_semester:
+                        receipt_remarks_queryset = receipt_remarks_queryset.filter(semester__id__gte=from_semester)
+                    elif to_semester:
+                        receipt_remarks_queryset = receipt_remarks_queryset.filter(semester__id__lte=to_semester)
+
+                    remarks_list = []
+                    for remark_text in receipt_remarks_queryset.values_list('remarks', flat=True):
+                        cleaned_remark = (remark_text or '').strip()
+                        if cleaned_remark and cleaned_remark not in remarks_list:
+                            remarks_list.append(cleaned_remark)
+
                     # Get student name
                     name_part = filter(None, [
                         RegistrationInstance.first_name,
@@ -22803,6 +22856,7 @@ class StudentFeeLedgerFilterListAPIView(ListAPIView):
                         'total_fees': total_fees,
                         'total_paid': total_paid_fees,
                         'discount_fees': discount_fees,
+                        'remarks': ', '.join(remarks_list),
                         'remaining_fees': remaining_fees,
                         'semester_wise_details': semester_wise_details
                     })

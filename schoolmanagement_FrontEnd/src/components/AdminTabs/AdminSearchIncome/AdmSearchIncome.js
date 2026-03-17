@@ -680,7 +680,7 @@ const AdmAttendanceEntry = () => {
                         )}
                       </div>
 
-                      <div className="col-12 col-md-3 mb-1">
+                      {/* <div className="col-12 col-md-3 mb-1">
                         <label htmlFor="party-reference" className="form-label">
                           Party Reference
                         </label>
@@ -694,7 +694,7 @@ const AdmAttendanceEntry = () => {
                             onChange={(e) => setPartyReference(e.target.value)}
                           />
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>

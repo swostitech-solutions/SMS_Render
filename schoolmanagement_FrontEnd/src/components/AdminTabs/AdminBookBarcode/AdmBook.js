@@ -837,7 +837,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
 
   const bookNameRef = useRef();
-  const bookCodeRef = useRef();
   const bookAccessionNoRef = useRef();
 
   // Pagination state
@@ -877,7 +876,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
       // Pass the complete book object with all availability fields
       onSelectBook({
         id: book.id,
-        bookCode: book.bookCode,
         bookName: book.bookName,
         barcode: book.barcode,
         categoryId: book.categoryId,
@@ -941,7 +939,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
       // Clear refs (need to do this after render, so use timeout)
       setTimeout(() => {
         if (bookNameRef.current) bookNameRef.current.value = "";
-        if (bookCodeRef.current) bookCodeRef.current.value = "";
         if (bookAccessionNoRef.current) bookAccessionNoRef.current.value = "";
       }, 0);
     }
@@ -950,7 +947,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   // Search/Filter function
   const handleSearch = () => {
     const bookName = bookNameRef.current?.value?.toLowerCase() || "";
-    const bookCode = bookCodeRef.current?.value?.toLowerCase() || "";
     const bookAccessionNo = bookAccessionNoRef.current?.value || "";
     const categoryId = selectedCategory?.value;
     const subCategoryId = selectedSubCategory?.value;
@@ -959,10 +955,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
       // Filter by book name
       const nameMatch = !bookName ||
         book.bookName?.toLowerCase().includes(bookName);
-
-      // Filter by book code
-      const codeMatch = !bookCode ||
-        book.bookCode?.toString().toLowerCase().includes(bookCode);
 
       // Filter by barcode/accession no
       const barcodeMatch = !bookAccessionNo ||
@@ -980,7 +972,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
         book.subcategory_id === subCategoryId ||
         book.subcategoryName?.toLowerCase() === selectedSubCategory?.label?.toLowerCase();
 
-      return nameMatch && codeMatch && barcodeMatch && categoryMatch && subCategoryMatch;
+      return nameMatch && barcodeMatch && categoryMatch && subCategoryMatch;
     });
 
     setBookData(filteredData);
@@ -989,7 +981,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   const handleClear = () => {
     // Clear input fields
     if (bookNameRef.current) bookNameRef.current.value = "";
-    if (bookCodeRef.current) bookCodeRef.current.value = "";
     if (bookAccessionNoRef.current) bookAccessionNoRef.current.value = "";
 
     // Clear dropdown selections
@@ -1079,18 +1070,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                           />
                         </div>
                         <div className="col-12 col-md-3 mb-2">
-                          <label htmlFor="book-code" className="form-label">
-                            Book Code
-                          </label>
-                          <input
-                            type="text"
-                            id="book-code"
-                            className="form-control detail"
-                            placeholder="Enter Book Code"
-                            ref={bookCodeRef}
-                          />
-                        </div>
-                        <div className="col-12 col-md-3 mb-2">
                           <label htmlFor="category" className="form-label">
                             Category
                           </label>
@@ -1147,7 +1126,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                       <thead>
                         <tr>
                           <th>Sr No</th>
-                          <th>Book Code</th>
                           <th>Book Name</th>
                           <th>Roll no</th>
                           <th>Category</th>
@@ -1158,7 +1136,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                       <tbody>
                         {bookData.length === 0 ? (
                           <tr>
-                            <td colSpan="7" className="text-center">
+                            <td colSpan="6" className="text-center">
                               No books found
                             </td>
                           </tr>
@@ -1166,7 +1144,6 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                           currentItems.map((book, index) => (
                             <tr key={book.id}>
                               <td>{offset + index + 1}</td>
-                              <td>{book.bookCode}</td>
                               <td>{book.bookName}</td>
                               <td>{book.barcode}</td>
                               <td>{book.categoryName}</td>

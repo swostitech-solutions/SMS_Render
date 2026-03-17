@@ -5149,10 +5149,6 @@ const BookForm = () => {
       newErrors.book_name = "Book Name is required";
       isValid = false;
     }
-    if (!bookStatus || !bookStatus.value) {
-      newErrors.book_status = "Book Status is required";
-      isValid = false;
-    }
     if (!bookCategory) {
       newErrors.book_category_Id = "Book Category is required";
       isValid = false;
@@ -5359,8 +5355,6 @@ const BookForm = () => {
     if (!bookSubCategory) fieldErrors.bookSubCategory = "Sub Category is required.";
     // if (!bookDetails?.book_code) fieldErrors.book_code = "Book Code is required.";
     if (!bookDetails?.book_name) fieldErrors.book_name = "Book Title is required.";
-    if (!bookStatus?.value) fieldErrors.bookStatus = "Book Status is required.";
-
     const isUpdate = !!bookDetails.id;
 
     // Per-row purchase validation
@@ -5443,7 +5437,7 @@ const BookForm = () => {
       library_branch_Id: bookDetails.library_branch_id,
       book_category_Id: bookCategory || 1,
       book_sub_category_Id: bookSubCategory || 1,
-      book_status: "Active",
+      book_status: "ACTIVE",
       total_no_of_copies: parseInt(bookDetails.total_no_of_copies) || 1,
       publisher: bookDetails.publisher,
       author: bookDetails.author || "",
@@ -5953,6 +5947,7 @@ const BookForm = () => {
                         </Form.Group>
                       </Col>
 
+                      {/*
                       <Col>
                         <Form.Group controlId="bookStatus">
                           <Form.Label>
@@ -5978,6 +5973,7 @@ const BookForm = () => {
                           )}
                         </Form.Group>
                       </Col>
+                      */}
                     </Row>
                   </div>
                 </div>

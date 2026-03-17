@@ -55,12 +55,6 @@ const COLUMNS = [
     hint: "Must match system branch name exactly (case-insensitive)",
   },
   {
-    key: "book_status",
-    label: "Book Status",
-    required: true,
-    hint: "Values: ACTIVE or INACTIVE",
-  },
-  {
     key: "purchase_date",
     label: "Purchase Date",
     required: false,
@@ -109,7 +103,6 @@ const SAMPLE_VALUES = [
   "2nd",
   "450",
   "Main Library",
-  "ACTIVE",
   "01-01-2024",
   "National Book Store",
   "BILL-001",
@@ -452,7 +445,6 @@ const BulkBookUpload = () => {
     validRows.push([]);
     validRows.push(["=== FIXED ENUM VALUES ==="]);
     validRows.push(["Book/Journal Type", "book, journal"]);
-    validRows.push(["Book Status", "ACTIVE, INACTIVE"]);
     validRows.push(["Accession Status", "ACTIVE, INACTIVE, LOST, DAMAGED"]);
 
     const ws3 = XLSXStyle.utils.aoa_to_sheet(validRows);
@@ -727,16 +719,6 @@ const BulkBookUpload = () => {
           `Publisher must be 255 characters or fewer (got: ${publisher.length})`,
         );
 
-      // book status
-      const bookStatus = getU("Book Status");
-      if (!bookStatus) {
-        errors.push("Book Status is required");
-      } else if (!["ACTIVE", "INACTIVE"].includes(bookStatus)) {
-        errors.push(
-          `Book Status must be ACTIVE or INACTIVE — got: '${bookStatus}'`,
-        );
-      }
-
       // no_of_copies — must be a strict positive INTEGER (no decimals)
       const noCopiesStr = get("No. of Copies");
       let noCopies = 0;
@@ -890,7 +872,6 @@ const BulkBookUpload = () => {
         edition: get("Edition"),
         pages,
         branchId,
-        bookStatus,
         purchaseDate: normalizedPurchaseDate, // already YYYY-MM-DD or ""
         purchaseFrom: get("Purchased From"),
         billNo: get("Bill No"),
@@ -945,7 +926,7 @@ const BulkBookUpload = () => {
       library_branch_Id: row.branchId || null,
       book_category_Id: row.categoryId,
       book_sub_category_Id: row.subCategoryId,
-      book_status: row.bookStatus,
+      book_status: "ACTIVE",
       total_no_of_copies: row.noCopies,
       publisher: row.publisher || "",
       author: row.author || "",
@@ -986,7 +967,7 @@ const BulkBookUpload = () => {
       (_, i) => ({
         barcode: startBarcode
           ? (parseInt(startBarcode, 10) + i).toString()
-          : `AUTO_${row.bookCode}_${i + 1}`,
+          : `AUTO_${row.bookName || "BOOK"}_${i + 1}`,
         book_barcode_status: row.accessionStatus,
         org_id: orgId,
         branch_id: branchId,
@@ -1399,7 +1380,6 @@ const BulkBookUpload = () => {
                                       <th>Category</th>
                                       <th>Sub Category</th>
                                       <th>Copies</th>
-                                      <th>Status</th>
                                       <th style={{ minWidth: "280px" }}>
                                         Validation
                                       </th>
@@ -1414,13 +1394,6 @@ const BulkBookUpload = () => {
                                         }
                                       >
                                         <td>{row.excelRow}</td>
-                                        <td>
-                                          {row.bookCode || (
-                                            <em className="text-muted">
-                                              empty
-                                            </em>
-                                          )}
-                                        </td>
                                         <td>
                                           {row.bookName || (
                                             <em className="text-muted">
@@ -1451,7 +1424,6 @@ const BulkBookUpload = () => {
                                           )}
                                         </td>
                                         <td>{row.noCopies || 0}</td>
-                                        <td>{row.bookStatus || "—"}</td>
                                         <td>
                                           {row.isValid ? (
                                             <span className="text-success fw-bold">
@@ -1692,3 +1664,4 @@ const BulkBookUpload = () => {
 };
 
 export default BulkBookUpload;
+

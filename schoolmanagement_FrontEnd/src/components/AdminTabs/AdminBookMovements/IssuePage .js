@@ -43,7 +43,7 @@ const IssuePage = () => {
 
     // Get book barcode IDs from rows that have books selected
     const bookBarcodeIds = rows
-      .filter((row) => row.bookCode && row.bookBarcodeId) // Only include rows with books selected
+      .filter((row) => row.bookName && row.bookBarcodeId) // Only include rows with books selected
       .map((row) => row.bookBarcodeId);
 
     // Check if we're issuing to student or staff
@@ -56,7 +56,7 @@ const IssuePage = () => {
     const fieldErrors = {};
     if (!hasStudent && !hasStaff) fieldErrors.studentTeacher = "Please select either a student or a teacher to issue books.";
     if (!issueDateValue) fieldErrors.issueDate = "Issue Date is required.";
-    if (bookBarcodeIds.length === 0) fieldErrors.books = "Please select at least one book with an accession number.";
+    if (bookBarcodeIds.length === 0) fieldErrors.books = "Please select at least one book title.";
     if (Object.keys(fieldErrors).length > 0) {
       console.log("academicYearId", academicYearId, "createdBy", createdBy, "issueDateValue", issueDateValue, "bookBarcodeIds", bookBarcodeIds);
       setErrors((prev) => ({ ...prev, ...fieldErrors }));
@@ -124,7 +124,6 @@ const IssuePage = () => {
       {
         id: rows.length + 1,
         bookBarcodeId: null, // Actual book barcode ID from database
-        bookCode: "",
         bookName: "",
         barcode: "",
         categoryName: "",
@@ -186,7 +185,6 @@ const IssuePage = () => {
       Array.from({ length: 6 }, (_, index) => ({
         id: index + 1,
         bookBarcodeId: null,
-        bookCode: "",
         bookName: "",
         barcode: "",
         categoryName: "",
@@ -218,7 +216,6 @@ const IssuePage = () => {
     Array.from({ length: 6 }, (_, index) => ({
       id: index + 1,
       bookBarcodeId: null, // Actual book barcode ID from database
-      bookCode: "",
       bookName: "",
       barcode: "",
       categoryName: "",
@@ -230,7 +227,7 @@ const IssuePage = () => {
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [showBookModal, setShowBookModal] = useState(false);
   const handleBookSelection = (selectedBook) => {
-    const { id, bookCode, bookName, barcode, categoryName, subcategoryName, bookBarcodeStatus, availableCopies, totalCopies, isAvailable } =
+    const { id, bookName, barcode, categoryName, subcategoryName, bookBarcodeStatus, availableCopies, totalCopies, isAvailable } =
       selectedBook;
 
     console.log("=== SELECTED BOOK FROM MODAL ===", selectedBook);
@@ -242,7 +239,6 @@ const IssuePage = () => {
           ? {
             ...row,
             bookBarcodeId: id, // Store the actual book barcode ID from database
-            bookCode: bookCode || "",
             bookName: bookName || "",
             barcode: barcode || "",
             categoryName: categoryName || "",
@@ -310,7 +306,6 @@ const IssuePage = () => {
                     ...row,
                     bookBarcodeId: null,
                     barcode: "",
-                    bookCode: "",
                     bookName: "",
                     categoryName: "",
                     subcategoryName: "",
@@ -332,7 +327,6 @@ const IssuePage = () => {
                     ...row,
                     bookBarcodeId: null,
                     barcode: "",
-                    bookCode: "",
                     bookName: "",
                     categoryName: "",
                     subcategoryName: "",
@@ -350,7 +344,6 @@ const IssuePage = () => {
                   ...row,
                   bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
                   barcode: matchedBook.barcode || enteredBarcode,
-                  bookCode: matchedBook.bookCode || "",
                   bookName: matchedBook.bookName || "",
                   categoryName: matchedBook.categoryName || "",
                   subcategoryName: matchedBook.subcategoryName || "",
@@ -376,7 +369,6 @@ const IssuePage = () => {
                 ...row,
                 bookBarcodeId: null,
                 barcode: "",
-                bookCode: "",
                 bookName: "",
                 categoryName: "",
                 subcategoryName: "",
@@ -1146,8 +1138,7 @@ const IssuePage = () => {
                     <thead>
                       <tr>
                         <th>Sr No</th>
-                        <th>Book Code</th>
-                        <th>Book Name</th>
+                        <th>Book Title</th>
                         <th>Book Accession No</th>
                         <th>Category</th>
                         <th>Sub-Category</th>
@@ -1164,11 +1155,10 @@ const IssuePage = () => {
                             <div className="d-flex align-items-center">
                               <Form.Control
                                 type="text"
-                                name="bookCode"
+                                name="bookName"
                                 className="form-control detail me-2"
-                                value={row.bookCode}
-                              // onChange={(e) => updateBookCode(row.id, e)}
-                              // className="me-2"
+                                value={row.bookName}
+                                readOnly
                               />
                               <button
                                 type="button"
@@ -1188,15 +1178,6 @@ const IssuePage = () => {
                             />
                           </td>
 
-                          <td>
-                            <Form.Control
-                              type="text"
-                              className="form-control detail"
-                              name="bookName"
-                              value={row.bookName}
-                              onChange={(e) => handleInputChange(row.id, e)}
-                            />
-                          </td>
                           <td>
                             <Form.Control
                               type="text"

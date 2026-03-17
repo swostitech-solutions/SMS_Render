@@ -311,6 +311,7 @@ function AdmFeeReport() {
         row["Total Fees"] = item.total_fees || 0;
         row["Fees Paid"] = item.total_paid || 0;
         row["Discount"] = item.discount_fees || 0;
+        row["Remarks"] = item.remarks || "-";
         row["Balance"] = item.remaining_fees || 0;
 
         return row;
@@ -519,6 +520,7 @@ function AdmFeeReport() {
                                   <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Total Fees</th>
                                   <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Fees Paid</th>
                                   <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Discount</th>
+                                  <th rowSpan="2" className="align-middle" style={{ minWidth: "180px" }}>Remarks</th>
                                   <th rowSpan="2" className="align-middle" style={{ width: "100px" }}>Balance</th>
                                 </tr>
                                 {studentHeaders.length > 0 && (
@@ -551,6 +553,7 @@ function AdmFeeReport() {
                                   <td className="fw-bold">{item.total_fees || 0}</td>
                                   <td className="fw-bold text-success">{item.total_paid || 0}</td>
                                   <td className="fw-bold text-info">{item.discount_fees || 0}</td>
+                                  <td>{item.remarks || "-"}</td>
                                   <td className="fw-bold text-danger">{item.remaining_fees || 0}</td>
                                 </tr>
                               </tbody>

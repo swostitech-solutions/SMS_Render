@@ -1660,14 +1660,6 @@ class ExpenseUpdateAPIView(UpdateAPIView):
                         ExpenseDetailsInstance.updated_by = ExpenseHeaderadd.get('updated_by')
                         ExpenseDetailsInstance.save()
 
-            # Check if we're creating a new payment (switching methods) or updating existing
-            is_creating_new_payment = (
-                    (PaymentBasedOnCash and (PaymentBasedOnCash.get('payment_detail_id') == 0 or PaymentBasedOnCash.get(
-                        'payment_detail_id') is None)) or
-                    (PaymentBasedOnBank and (PaymentBasedOnBank.get('payment_detail_id') == 0 or PaymentBasedOnBank.get(
-                        'payment_detail_id') is None))
-            )
-
             # Collect payment_detail_ids that are being updated (to preserve them)
             payment_detail_ids_to_preserve = set()
             if PaymentBasedOnCash and PaymentBasedOnCash.get('payment_detail_id') and PaymentBasedOnCash.get(
@@ -1677,8 +1669,9 @@ class ExpenseUpdateAPIView(UpdateAPIView):
                     'payment_detail_id') > 0:
                 payment_detail_ids_to_preserve.add(PaymentBasedOnBank.get('payment_detail_id'))
 
-            # When creating a new payment (switching methods), deactivate all existing payments
-            # When updating existing payment, only deactivate others
+            # Deactivate only payment details that are no longer present in the request.
+            # This preserves existing payment rows when edit mode adds a new method
+            # such as adding Bank to an expense that already has Cash.
             existing_payments = ExpensePayment.objects.filter(
                 ExpenseHeaderId=ExpenseInstance,
                 is_active=True
@@ -1691,10 +1684,9 @@ class ExpenseUpdateAPIView(UpdateAPIView):
                     is_active=True
                 )
 
-                # Deactivate payment details that are NOT being updated
-                # If creating new payment, deactivate all. If updating, preserve the one being updated.
+                # Deactivate payment details that are NOT being updated.
                 for payment_detail in payment_details:
-                    if is_creating_new_payment or payment_detail.payment_detail_id not in payment_detail_ids_to_preserve:
+                    if payment_detail.payment_detail_id not in payment_detail_ids_to_preserve:
                         payment_detail.is_active = False
                         payment_detail.updated_by = ExpenseHeaderadd.get('updated_by')
                         payment_detail.save()
@@ -2572,7 +2564,7 @@ class IncomeSearchListAPIView(ListAPIView):
                     organization_id=organization, 
                     batch_id__in=possible_batches,
                     is_active=True
-                )
+                ).order_by('-created_at', '-income_id')
                 
                 # Optionally apply academic_year_id filter if it's explicitly strictly required, 
                 # but often 'batch_id' (resolved) is sufficient and more reliable. 
@@ -3296,12 +3288,26 @@ class ExpenseLedgerListAPIView(ListAPIView):
                 if ExpenseLedgerFilterRecords:
 
                     for record in ExpenseLedgerFilterRecords:
+                        payment_methods = []
+                        payment_details = ExpensePaymentDetail.objects.filter(
+                            ExpensePaymentId__ExpenseHeaderId=record.expense_header,
+                            is_active=True
+                        ).values_list('payment_method', flat=True)
+
+                        for method in payment_details:
+                            if method and method not in payment_methods:
+                                payment_methods.append(method)
+
                         data = {
                             'id': record.expense_detail_id,
                             'expenseHeaderId': record.expense_header.expense_header_id,
                             'date': record.expense_header.date,
                             'type': 'pmnt',
-                            'payment_method': PaymentMethodInstance.payment_method if PaymentMethodInstance else 'Cash',
+                            'payment_method': (
+                                PaymentMethodInstance.payment_method
+                                if PaymentMethodInstance
+                                else ", ".join(payment_methods) if payment_methods else 'N/A'
+                            ),
                             'remarks': record.remarks,
                             'total_amount': record.expense_header.total_amount,
                             'paid_amount': record.expense_header.paid_amount

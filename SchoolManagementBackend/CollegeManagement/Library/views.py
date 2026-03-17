@@ -1326,7 +1326,7 @@ class LibraryBookCreateAPIView(CreateAPIView):
                 book_category=book_category_instance,
                 book_sub_category=book_sub_category_instance,
                 library_branch=Library_branch_instance,
-                book_status=libraryBookdetails.get('book_status'),
+                book_status=libraryBookdetails.get('book_status') or 'ACTIVE',
                 no_of_copies=libraryBookdetails.get('total_no_of_copies'),
                 organization=organization_instance,
                 batch=branch_instance,
@@ -2095,7 +2095,7 @@ class LibraryBookUpdateAPIView(APIView):
             bookInstance.book_category = bookcategoryInstance
             bookInstance.book_sub_category = booksubcategoryInstance
             bookInstance.library_branch = librarybranchInstance
-            bookInstance.book_status = libraryBookdetails.get('book_status')
+            bookInstance.book_status = libraryBookdetails.get('book_status') or bookInstance.book_status or 'ACTIVE'
             bookInstance.no_of_copies = libraryBookdetails.get('no_of_copies')
             bookInstance.organization = organizationInstance
             bookInstance.batch = branchInstance
