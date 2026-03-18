@@ -329,7 +329,7 @@ export default function BasicTabs() {
       newErrors.present_state = "Present State is required";
     }
     if (!formData.present_city) {
-      newErrors.present_city = "Present City / District is required";
+      newErrors.present_city = "Present District is required";
     }
     if (!formData.present_pincode?.trim()) {
       newErrors.present_pincode = "Present Pincode is required";
@@ -344,7 +344,7 @@ export default function BasicTabs() {
       newErrors.permanent_state = "Permanent State is required";
     }
     if (!formData.permanent_city) {
-      newErrors.permanent_city = "Permanent City / District is required";
+      newErrors.permanent_city = "Permanent District is required";
     }
     if (!formData.permanent_pincode?.trim()) {
       newErrors.permanent_pincode = "Permanent Pincode is required";

@@ -233,13 +233,28 @@ function SelectedStudentTable({}) {
 
     const organization_id = Number(sessionStorage.getItem("organization_id"));
     const branch_id = Number(sessionStorage.getItem("branch_id"));
-    const batch_id = selectedStudents[0]?.batch_id || 1;
-    const course_id = selectedStudents[0]?.course_id || 1;
-    const department_id = selectedStudents[0]?.department_id || 1;
-    const semester_id = selectedStudents[0]?.semester_id || 1;
-    const section_id = selectedStudents[0]?.section || 1;
-    const academic_year_id = selectedStudents[0]?.academic_year_id || 1;
+    const batch_id = selectedStudents[0]?.batch_id;
+    const course_id = selectedStudents[0]?.course_id;
+    const department_id = selectedStudents[0]?.department_id;
+    const semester_id = selectedStudents[0]?.semester_id;
+    const section_id = selectedStudents[0]?.section_id || selectedStudents[0]?.section;
+    const academic_year_id =
+      selectedStudents[0]?.academic_year_id || selectedStudents[0]?.academicyear_id;
     const login_id = Number(sessionStorage.getItem("userId"));
+
+    if (
+      !batch_id ||
+      !course_id ||
+      !department_id ||
+      !semester_id ||
+      !section_id ||
+      !academic_year_id
+    ) {
+      alert(
+        "Selected student is missing class/session IDs. Please add the student again and try."
+      );
+      return;
+    }
 
     const student_ids = [];
     const message_list = [];
@@ -300,11 +315,11 @@ function SelectedStudentTable({}) {
 
       const data = await response.json();
 
-      if (data.message === "message send successfully!!") {
+      if (response.ok && data.message === "message send successfully!!") {
         alert("Message Sent Successfully!");
         handleClear();
       } else {
-        alert("Failed to send message.");
+        alert(data.message || data.error || "Failed to send message.");
       }
     } catch (error) {
       console.error("SEND ERROR:", error);
@@ -402,10 +417,17 @@ function SelectedStudentTable({}) {
       const newStudents = filtered.map((s) => ({
         student_id: s.student_id,
         student_name: s.student_name,
+        batch_id: s.batch_id,
         batch_code: s.batch_code,
+        course_id: s.course_id,
         course_name: s.course_name,
+        department_id: s.department_id,
         department_code: s.department_code,
+        academic_year_id: s.academic_year_id || s.academicyear_id,
+        academic_year_code: s.academic_year_code,
+        semester_id: s.semester_id,
         semester_name: s.semester_name,
+        section_id: s.section_id || s.section,
         section_name: s.section_name,
         enrollment_no: s.enrollment_no,
         college_admission_no: s.college_admission_no,

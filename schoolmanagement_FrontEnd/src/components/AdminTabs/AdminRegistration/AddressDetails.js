@@ -317,7 +317,7 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
 
                   <div className="col-6 mb-2">
                     <label htmlFor="present_city" className="form-label">
-                      City / District<span style={{ color: "red" }}>*</span>
+                      District<span style={{ color: "red" }}>*</span>
                     </label>
                     <Select
                       id="present_city"
@@ -329,7 +329,7 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
                           ? "Loading cities..."
                           : errorCities
                             ? "Error loading cities"
-                            : "Select City / District"
+                            : "Select District"
                       }
                       isLoading={loadingCities}
                       options={
@@ -556,7 +556,7 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
 
               <div className="col-6 mb-2">
                 <label htmlFor="permanent_city" className="form-label">
-                  City / District<span style={{ color: "red" }}>*</span>
+                  District<span style={{ color: "red" }}>*</span>
                 </label>
                 <Select
                   id="permanent_city"
@@ -568,7 +568,7 @@ const ParentDetailsForm = ({ formData, setFormData, requiredErrors = {} }) => {
                       ? "Loading cities..."
                       : errorCities
                         ? "Error loading cities"
-                        : "Select City / District"
+                        : "Select District"
                   }
                   isLoading={loadingCities}
                   options={

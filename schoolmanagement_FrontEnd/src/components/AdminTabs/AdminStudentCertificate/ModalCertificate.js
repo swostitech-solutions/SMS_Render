@@ -516,7 +516,7 @@ const handleSearch = async () => {
                           <tr key={index}>
                             <td>{offset + index + 1}</td>
                             <td>{student.student_name}</td>
-                            <td>{student.enrollment_no}</td>
+                            <td>{student.college_admission_no}</td>
                             <td>{student.batch_code}</td>
                             <td>{student.course_name}</td>
                             <td>{student.department_code}</td>
