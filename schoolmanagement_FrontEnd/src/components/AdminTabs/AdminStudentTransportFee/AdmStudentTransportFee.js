@@ -52,53 +52,48 @@ const AdmAttendanceEntry = () => {
            motherName: "",
            schoolAdmissionNo: "",
          });
- const handleClear = () => {
-   // Basic Student Filters
-   setStudentId("");
-   setStudentName("");
-   setSelectedStudent({
-     name: "",
-     barcode: "",
-     admissionNo: "",
-     fatherName: "",
-     motherName: "",
-     schoolAdmissionNo: "",
-   });
+const handleClear = () => {
+  // Remove stored student
+  localStorage.removeItem("selectedClubStudentId");
 
-   // Class / Section
-   setClassId(null);
-   setSectionId(null);
+  setStudentId("");
+  setStudentName("");
+  setSelectedStudent({
+    name: "",
+    barcode: "",
+    admissionNo: "",
+    fatherName: "",
+    motherName: "",
+    schoolAdmissionNo: "",
+  });
 
-   // Fee / Transport
-   setSelectedFeePeriod("");
-   setFeePeriod(null);
-   setPickupPoint(null);
-   setPickupPoints([]);
-   setTransportData([]);
-   setShowUnpaid(false);
-   setShowUnpaidFee(false);
+  setClassId(null);
+  setSectionId(null);
 
-   // Academic Year & Other Dropdown Levels
-   setSelectedAcademicYear(null);
-   setAcademicYears([]);
-   setSelectedSemester(null);
-   setSemesters([]);
-   setSelectedSection(null);
-   setSections([]);
-   setSelectedSession(null);
-   setSessions([]);
-   setSelectedCourse(null);
-   setCourses([]);
-   setSelectedDepartment(null);
-   setDepartments([]);
-   setSelectedSessionId(null);
+  setSelectedFeePeriod("");
+  setFeePeriod(null);
+  setPickupPoint(null);
+  setPickupPoints([]);
+  setTransportData([]);
+  setShowUnpaid(false);
+  setShowUnpaidFee(false);
 
-   // Student Details
-   setStudentDetails(null);
+  setSelectedAcademicYear(null);
+  setAcademicYears([]);
+  setSelectedSemester(null);
+  setSemesters([]);
+  setSelectedSection(null);
+  setSections([]);
+  setSelectedSession(null);
+  setSessions([]);
+  setSelectedCourse(null);
+  setCourses([]);
+  setSelectedDepartment(null);
+  setDepartments([]);
+  setSelectedSessionId(null);
 
-   // Modal reset (if needed)
-   // setShowModal(false);
- };
+  setStudentDetails(null);
+};
 
   const handleClose = () => {
     navigate("/admin/dashboard");
@@ -821,47 +816,45 @@ const handleSearch = async () => {
     const organization_id = sessionStorage.getItem("organization_id") || 1;
     const branch_id = sessionStorage.getItem("branch_id") || 1;
 
-    // Mandatory params — ALWAYS sent
     const queryParams = new URLSearchParams({
       organization_id,
       branch_id,
       paid: showUnpaidFee ? "true" : "false",
     });
 
-    // Optional filters — ONLY when selected
-    if (selectedSession?.value)
-      queryParams.append("batch_id", selectedSession.value);
+    // ✅ PRIORITY: if student selected → ignore other filters
+    if (studentId) {
+      queryParams.append("student_id", studentId);
+    } else {
+      // apply filters ONLY when student not selected
+      if (selectedSession?.value)
+        queryParams.append("batch_id", selectedSession.value);
 
-    if (selectedCourse?.value)
-      queryParams.append("course_id", selectedCourse.value);
+      if (selectedCourse?.value)
+        queryParams.append("course_id", selectedCourse.value);
 
-    if (selectedDepartment?.value)
-      queryParams.append("department_id", selectedDepartment.value);
+      if (selectedDepartment?.value)
+        queryParams.append("department_id", selectedDepartment.value);
 
-    if (selectedAcademicYear?.value)
-      queryParams.append("academic_year_id", selectedAcademicYear.value);
+      if (selectedAcademicYear?.value)
+        queryParams.append("academic_year_id", selectedAcademicYear.value);
 
-    if (selectedSemester?.value)
-      queryParams.append("semester_id", selectedSemester.value);
+      if (selectedSemester?.value)
+        queryParams.append("semester_id", selectedSemester.value);
 
-    if (selectedSection?.value)
-      queryParams.append("section_id", selectedSection.value);
+      if (selectedSection?.value)
+        queryParams.append("section_id", selectedSection.value);
+    }
 
     if (pickupPoint) queryParams.append("pickup_point_id", pickupPoint);
 
     if (selectedFeePeriod)
       queryParams.append("fee_applied_from", selectedFeePeriod);
 
-    if (studentId) queryParams.append("student_id", studentId);
-
-    // Final URL
-    const finalUrl = `${
-      ApiUrl.apiurl
-    }Transport/TransportChargesCalculateBasedOnStudent/?${queryParams.toString()}`;
+    const finalUrl = `${ApiUrl.apiurl}Transport/TransportChargesCalculateBasedOnStudent/?${queryParams.toString()}`;
 
     console.log("FINAL URL:", finalUrl);
 
-    // API CALL
     const response = await fetch(finalUrl, {
       method: "GET",
       headers: {
@@ -871,7 +864,6 @@ const handleSearch = async () => {
     });
 
     const result = await response.json();
-    console.log("Transport API Response:", result);
 
     if (result.message === "success" && Array.isArray(result.data)) {
       setTransportData(result.data);
@@ -880,13 +872,12 @@ const handleSearch = async () => {
       setTransportData([]);
     }
   } catch (error) {
-    console.error("Error fetching transport fee data:", error);
+    console.error("Error:", error);
     setTransportData([]);
   } finally {
     setLoading(false);
   }
 };
-
 
   const exportToExcel = () => {
   if (!transportData || transportData.length === 0) {

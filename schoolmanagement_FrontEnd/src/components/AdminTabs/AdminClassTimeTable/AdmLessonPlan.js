@@ -560,11 +560,22 @@ const AdmLessonPlan = () => {
                           options={mentors}
                           className="detail"
                           value={selectedMentor}
-                          onChange={(opt) => { setSelectedMentor(opt); if (errors.selectedMentor) setErrors((prev) => ({ ...prev, selectedMentor: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedMentor(opt);
+                            if (errors.selectedMentor)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedMentor: "",
+                              }));
+                          }}
                           placeholder="Select Teacher"
                           classNamePrefix="teacher-dropdown"
                         />
-                        {errors.selectedMentor && <small className="text-danger">{errors.selectedMentor}</small>}
+                        {errors.selectedMentor && (
+                          <small className="text-danger">
+                            {errors.selectedMentor}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-3 mb-3">
@@ -576,11 +587,22 @@ const AdmLessonPlan = () => {
                           options={sessionOptions}
                           className="detail"
                           value={selectedSession}
-                          onChange={(opt) => { setSelectedSession(opt); if (errors.selectedSession) setErrors((prev) => ({ ...prev, selectedSession: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedSession(opt);
+                            if (errors.selectedSession)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedSession: "",
+                              }));
+                          }}
                           placeholder="Select Session"
                           classNamePrefix="session-dropdown"
                         />
-                        {errors.selectedSession && <small className="text-danger">{errors.selectedSession}</small>}
+                        {errors.selectedSession && (
+                          <small className="text-danger">
+                            {errors.selectedSession}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-3 mb-3">
@@ -592,11 +614,22 @@ const AdmLessonPlan = () => {
                           options={courseOptions}
                           className="detail"
                           value={selectedCourse}
-                          onChange={(opt) => { setSelectedCourse(opt); if (errors.selectedCourse) setErrors((prev) => ({ ...prev, selectedCourse: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedCourse(opt);
+                            if (errors.selectedCourse)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedCourse: "",
+                              }));
+                          }}
                           placeholder="Select Course"
                           classNamePrefix="course-dropdown"
                         />
-                        {errors.selectedCourse && <small className="text-danger">{errors.selectedCourse}</small>}
+                        {errors.selectedCourse && (
+                          <small className="text-danger">
+                            {errors.selectedCourse}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-3 mb-3">
@@ -608,11 +641,22 @@ const AdmLessonPlan = () => {
                           options={branchOptions}
                           className="detail"
                           value={selectedBranch}
-                          onChange={(opt) => { setSelectedBranch(opt); if (errors.selectedBranch) setErrors((prev) => ({ ...prev, selectedBranch: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedBranch(opt);
+                            if (errors.selectedBranch)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedBranch: "",
+                              }));
+                          }}
                           placeholder="Select Branch"
                           classNamePrefix="branch-dropdown"
                         />
-                        {errors.selectedBranch && <small className="text-danger">{errors.selectedBranch}</small>}
+                        {errors.selectedBranch && (
+                          <small className="text-danger">
+                            {errors.selectedBranch}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-3 mb-3">
@@ -624,11 +668,22 @@ const AdmLessonPlan = () => {
                           options={academicYearOptions}
                           className="detail"
                           value={selectedAcademicYear}
-                          onChange={(opt) => { setSelectedAcademicYear(opt); if (errors.selectedAcademicYear) setErrors((prev) => ({ ...prev, selectedAcademicYear: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedAcademicYear(opt);
+                            if (errors.selectedAcademicYear)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedAcademicYear: "",
+                              }));
+                          }}
                           placeholder="Select Academic Year"
                           classNamePrefix="academic-year-dropdown"
                         />
-                        {errors.selectedAcademicYear && <small className="text-danger">{errors.selectedAcademicYear}</small>}
+                        {errors.selectedAcademicYear && (
+                          <small className="text-danger">
+                            {errors.selectedAcademicYear}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-3 mb-3">
@@ -640,11 +695,22 @@ const AdmLessonPlan = () => {
                           options={semesterOptions}
                           className="detail"
                           value={selectedSemester}
-                          onChange={(opt) => { setSelectedSemester(opt); if (errors.selectedSemester) setErrors((prev) => ({ ...prev, selectedSemester: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedSemester(opt);
+                            if (errors.selectedSemester)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedSemester: "",
+                              }));
+                          }}
                           placeholder="Select Semester"
                           classNamePrefix="semester-dropdown"
                         />
-                        {errors.selectedSemester && <small className="text-danger">{errors.selectedSemester}</small>}
+                        {errors.selectedSemester && (
+                          <small className="text-danger">
+                            {errors.selectedSemester}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-md-3 mb-3">
@@ -656,11 +722,22 @@ const AdmLessonPlan = () => {
                           options={sectionOptions}
                           className="detail"
                           value={selectedSection}
-                          onChange={(opt) => { setSelectedSection(opt); if (errors.selectedSection) setErrors((prev) => ({ ...prev, selectedSection: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedSection(opt);
+                            if (errors.selectedSection)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedSection: "",
+                              }));
+                          }}
                           placeholder="Select Section"
                           classNamePrefix="section-dropdown"
                         />
-                        {errors.selectedSection && <small className="text-danger">{errors.selectedSection}</small>}
+                        {errors.selectedSection && (
+                          <small className="text-danger">
+                            {errors.selectedSection}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-3">
@@ -672,11 +749,22 @@ const AdmLessonPlan = () => {
                           options={subjectOptions}
                           className="detail"
                           value={selectedSubject}
-                          onChange={(opt) => { setSelectedSubject(opt); if (errors.selectedSubject) setErrors((prev) => ({ ...prev, selectedSubject: "" })); }}
+                          onChange={(opt) => {
+                            setSelectedSubject(opt);
+                            if (errors.selectedSubject)
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedSubject: "",
+                              }));
+                          }}
                           placeholder="Select Subject"
                           classNamePrefix="subject-dropdown"
                         />
-                        {errors.selectedSubject && <small className="text-danger">{errors.selectedSubject}</small>}
+                        {errors.selectedSubject && (
+                          <small className="text-danger">
+                            {errors.selectedSubject}
+                          </small>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -704,25 +792,36 @@ const AdmLessonPlan = () => {
                               min="1"
                               className={`form-control detail${rowErrors[index]?.lectureNo ? " is-invalid" : ""}`}
                               value={row.lectureNo}
-                              onKeyDown={(e) => ["e", "E", "+", "-", "."].includes(e.key) && e.preventDefault()}
+                              placeholder="Enter lecture No"
+                              onKeyDown={(e) =>
+                                ["e", "E", "+", "-", "."].includes(e.key) &&
+                                e.preventDefault()
+                              }
                               onChange={(e) =>
                                 handleChange(index, "lectureNo", e.target.value)
                               }
                             />
-                            {rowErrors[index]?.lectureNo && <small className="text-danger">{rowErrors[index].lectureNo}</small>}
+                            {rowErrors[index]?.lectureNo && (
+                              <small className="text-danger">
+                                {rowErrors[index].lectureNo}
+                              </small>
+                            )}
                           </td>
                           <td>
                             <input
-                              type="number"
-                              min="1"
+                              type="text" // ✅ changed
                               className={`form-control detail${rowErrors[index]?.moduleNo ? " is-invalid" : ""}`}
                               value={row.moduleNo}
-                              onKeyDown={(e) => ["e", "E", "+", "-", "."].includes(e.key) && e.preventDefault()}
+                              placeholder="Enter module (e.g. M1, A2)"
                               onChange={(e) =>
                                 handleChange(index, "moduleNo", e.target.value)
                               }
                             />
-                            {rowErrors[index]?.moduleNo && <small className="text-danger">{rowErrors[index].moduleNo}</small>}
+                            {rowErrors[index]?.moduleNo && (
+                              <small className="text-danger">
+                                {rowErrors[index].moduleNo}
+                              </small>
+                            )}
                           </td>
                           <td>
                             <input
@@ -734,7 +833,11 @@ const AdmLessonPlan = () => {
                                 handleChange(index, "topic", e.target.value)
                               }
                             />
-                            {rowErrors[index]?.topic && <small className="text-danger">{rowErrors[index].topic}</small>}
+                            {rowErrors[index]?.topic && (
+                              <small className="text-danger">
+                                {rowErrors[index].topic}
+                              </small>
+                            )}
                           </td>
                           <td>
                             <input
@@ -745,11 +848,15 @@ const AdmLessonPlan = () => {
                                 handleChange(
                                   index,
                                   "proposedDate",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
-                            {rowErrors[index]?.proposedDate && <small className="text-danger">{rowErrors[index].proposedDate}</small>}
+                            {rowErrors[index]?.proposedDate && (
+                              <small className="text-danger">
+                                {rowErrors[index].proposedDate}
+                              </small>
+                            )}
                           </td>
                           <td style={{ whiteSpace: "nowrap" }}>
                             {index === rows.length - 1 ? (
@@ -772,7 +879,11 @@ const AdmLessonPlan = () => {
                       ))}
                     </tbody>
                   </table>
-                  {errors.rows && <small className="text-danger d-block mt-1">{errors.rows}</small>}
+                  {errors.rows && (
+                    <small className="text-danger d-block mt-1">
+                      {errors.rows}
+                    </small>
+                  )}
                 </div>
               </div>
             </div>
