@@ -300,12 +300,16 @@ function SelectedStudentTable({}) {
 
       const data = await response.json();
 
-      if (data.message === "message send successfully!!") {
-        alert("Message Sent Successfully!");
-        handleClear();
-      } else {
-        alert("Failed to send message.");
-      }
+     if (data.message === "message send successfully!!") {
+       alert("Message Sent Successfully!");
+
+       handleClear();
+
+       // ✅ REDIRECT HERE
+       navigate("/admin/student-message");
+     } else {
+       alert("Failed to send message.");
+     }
     } catch (error) {
       console.error("SEND ERROR:", error);
       alert("Something went wrong while sending message.");
@@ -352,7 +356,7 @@ function SelectedStudentTable({}) {
     const barcode = filterState.barcode?.trim();
 
     if (!admissionNo && !barcode) {
-      alert("Please enter College Admission No OR Barcode");
+      alert("Please enter College Admission No OR Roll No");
       return;
     }
 
@@ -669,7 +673,7 @@ function SelectedStudentTable({}) {
                       <div className="col-12 col-md-3 mb-4">
                         <div className="mb-3">
                           <label htmlFor="barcode" className="form-label">
-                            Barcode
+                            Roll No
                           </label>
                           <input
                             type="text"
@@ -792,7 +796,7 @@ function SelectedStudentTable({}) {
                           Student Name
                         </th>
                         <th>Admission No</th>
-                        <th>Roll no</th>
+                        <th>Roll No</th>
                         <th
                           style={{ paddingLeft: "50px", paddingRight: "50px" }}
                         >
