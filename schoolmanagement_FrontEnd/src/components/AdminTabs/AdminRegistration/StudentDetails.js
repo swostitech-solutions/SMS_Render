@@ -1153,23 +1153,23 @@ const AdmAttendanceEntry = ({
                       )}
                     </div>
 
-                    <div className="col-12 col-md-4 mb-2">
-                      <label htmlFor="dob" className="form-label">
-                        Date Of Birth <span style={{ color: "red" }}>*</span>
-                      </label>
-                      <input
-                        type="date"
-                        id="dob"
-                        className="form-control detail"
-                        name="dob"
-                        value={formData.dob || ""}
-                        onChange={handleInputChange}
-                        disabled={isDisabled}
-                      />
-                      {requiredErrors.dob && (
-                        <small style={{ color: "red" }}>{requiredErrors.dob}</small>
-                      )}
-                    </div>
+                   <div className="col-12 col-md-4 mb-2">
+  <label htmlFor="dob" className="form-label">
+    Date Of Birth <span style={{ color: "red" }}>*</span>
+  </label>
+  <input
+    type="date"
+    id="dob"
+    className="form-control detail"
+    name="dob"
+    value={formData.dob || ""}
+    onChange={handleInputChange}
+    disabled={isDisabled}
+  />
+  {requiredErrors.dob && (
+    <small style={{ color: "red" }}>{requiredErrors.dob}</small>
+  )}
+</div>
 
                     {/* <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="rollno" className="form-label">
@@ -1656,20 +1656,21 @@ const AdmAttendanceEntry = ({
                       )}
                     </div>
 
-                    <div className="col-12 col-md-4 mb-4">
-                      <label htmlFor="date-of-birth" className="form-label">
-                        Date Of Join
-                      </label>
-                      <input
-                        type="date"
-                        id="date-of-birth"
-                        className="form-control detail"
-                        name="dob"
-                        value={formData.dob || ""}
-                        onChange={handleInputChange}
-                        disabled={isDisabled}
-                      />
-                    </div>
+                   {/* Date of Join */}
+<div className="col-12 col-md-4 mb-4">
+  <label htmlFor="doj" className="form-label">
+    Date Of Join
+  </label>
+  <input
+    type="date"
+    id="doj"
+    className="form-control detail"
+    name="doj"   
+    value={formData.doj || ""} 
+    onChange={handleInputChange}
+    disabled={isDisabled}
+  />
+</div>
 
                     <div className="col-12 col-md-4 mb-2">
                       <label
