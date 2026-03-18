@@ -16171,84 +16171,51 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
 
                         pending_amount = total_payment_amount - total_paid_amount
 
-                        if discount_fee > pending_amount:
-
-                            # Insert record in student fee details DB
-                            studentFeeDetailsInsertfeesInstance = StudentFeeDetail.objects.create(
-                                student=studentcourseInstance.student,
-                                student_course=studentcourseInstance,
-                                fee_group=None,
-                                fee_structure_details=None,
-                                element_name="DISCOUNT",
-                                fee_applied_from=semesterInstance,
-                                semester=semesterInstance,
-                                paid='Y',
-                                academic_year=studentcourseInstance.academic_year,
-                                organization=studentcourseInstance.organization,
-                                branch=studentcourseInstance.branch,
-                                department=studentcourseInstance.department,
-                                multiplying_factor=1,
-                                element_amount=-pending_amount,
-                                total_element_period_amount=-pending_amount,
-                                paid_amount=-pending_amount,
-                                remarks="",
-                                reverse_flag="",
-                                created_by=login_id,
-                                updated_by=login_id,
-
-                            )
-
-                            # Insert Record into StdFeeReceiptDetail
-
-                            stdfeereceiptInstance = StudentFeeReceiptDetail.objects.create(
-                                receipt=StudentFeeReceiptHeaderInstance,
-                                fee_detail=studentFeeDetailsInsertfeesInstance,
-                                amount=-pending_amount,
-                                discount_amount=-pending_amount,
-                                created_by=login_id
-                            )
-                            stdfeereceiptInstance.save()
-
-                            discount_fee -= pending_amount
+                        # Skip semesters that are already fully settled.
+                        if pending_amount <= 0:
                             continue
 
-                        elif discount_fee < pending_amount:
+                        discount_to_apply = min(discount_fee, pending_amount)
+                        if discount_to_apply <= 0:
+                            break
 
-                            # Insert record in student fee details DB
-                            studentFeeDetailsInsertfeesInstance = StudentFeeDetail.objects.create(
-                                student=studentcourseInstance.student,
-                                student_course=studentcourseInstance,
-                                fee_group=None,
-                                fee_structure_details=None,
-                                element_name="DISCOUNT",
-                                fee_applied_from=semesterInstance,
-                                semester = semesterInstance,
-                                paid='Y',
-                                academic_year=studentcourseInstance.academic_year,
-                                organization=studentcourseInstance.organization,
-                                branch=studentcourseInstance.branch,
-                                department=studentcourseInstance.department,
-                                multiplying_factor=1,
-                                element_amount=-discount_fee,
-                                total_element_period_amount=-discount_fee,
-                                paid_amount=-discount_fee,
-                                remarks="",
-                                reverse_flag="",
-                                created_by=login_id,
-                                updated_by=login_id,
+                        # Insert record in student fee details DB
+                        studentFeeDetailsInsertfeesInstance = StudentFeeDetail.objects.create(
+                            student=studentcourseInstance.student,
+                            student_course=studentcourseInstance,
+                            fee_group=None,
+                            fee_structure_details=None,
+                            element_name="DISCOUNT",
+                            fee_applied_from=semesterInstance,
+                            semester=semesterInstance,
+                            paid='Y',
+                            academic_year=studentcourseInstance.academic_year,
+                            organization=studentcourseInstance.organization,
+                            branch=studentcourseInstance.branch,
+                            department=studentcourseInstance.department,
+                            multiplying_factor=1,
+                            element_amount=-discount_to_apply,
+                            total_element_period_amount=-discount_to_apply,
+                            paid_amount=-discount_to_apply,
+                            remarks="",
+                            reverse_flag="",
+                            created_by=login_id,
+                            updated_by=login_id,
 
-                            )
+                        )
 
-                            # Insert Record into StdFeeReceiptDetail
-                            stdfeereceiptInstance = StudentFeeReceiptDetail.objects.create(
-                                receipt=StudentFeeReceiptHeaderInstance,
-                                fee_detail=studentFeeDetailsInsertfeesInstance,
-                                amount=-discount_fee,
-                                discount_amount=-discount_fee,
-                                created_by=login_id
-                            )
-                            stdfeereceiptInstance.save()
-                            discount_fee -= discount_fee
+                        # Insert Record into StdFeeReceiptDetail
+                        stdfeereceiptInstance = StudentFeeReceiptDetail.objects.create(
+                            receipt=StudentFeeReceiptHeaderInstance,
+                            fee_detail=studentFeeDetailsInsertfeesInstance,
+                            amount=-discount_to_apply,
+                            discount_amount=-discount_to_apply,
+                            created_by=login_id
+                        )
+                        stdfeereceiptInstance.save()
+
+                        discount_fee -= discount_to_apply
+                        if discount_fee <= 0:
                             break
 
                 if late_fee:
@@ -16591,8 +16558,8 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                     fee_periods.append(studentfeedetailsInstance.semester.semester_description)
 
                     element_name = studentfeedetailsInstance.element_name
-                    paid_amount = studentfeedetailsInstance.paid_amount
-                    # paid_amount = studentfeedetailsInstance.paid_amount + grand_Paid_Amount
+                    # Use the current receipt line amount instead of cumulative paid_amount.
+                    paid_amount = abs(item.amount) if element_name == "DISCOUNT" else item.amount
 
                     # Update paid_element dictionary
                     if element_name in paid_element:

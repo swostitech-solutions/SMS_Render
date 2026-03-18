@@ -12,6 +12,7 @@ import { useLocation } from "react-router-dom";
 import { ApiUrl } from "../../../ApiUrl";
 import html2pdf from "html2pdf.js";
 import { useNavigate } from "react-router-dom";
+import { openFeeReceiptPdf } from "../AdminFeeSearch/feeReceiptPdf";
 
 
 
@@ -502,6 +503,9 @@ const handleReceiptLinkClick = async (receiptNo) => {
     const result = await response.json();
 
     if (response.ok && result.receipt_data) {
+      openFeeReceiptPdf(result.receipt_data);
+      return;
+
       // Helper function to format date
       const formatReceiptDate = (isoDate) => {
         if (!isoDate) return "";

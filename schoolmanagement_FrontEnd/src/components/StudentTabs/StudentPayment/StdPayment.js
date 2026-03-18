@@ -14,6 +14,7 @@ import useStudentDetails from "../../hooks/useStudentDetails";
 import useStudentFeeFilterData from "../../hooks/useStudentFeeFilterData";
 import useStudentFeeReceipts from "../../hooks/useStudentFeeReceipts";
 import api from "../../../utils/api";
+import { openFeeReceiptPdf } from "../../AdminTabs/AdminFeeSearch/feeReceiptPdf";
 
 const StdPayment = () => {
   const navigate = useNavigate();
@@ -219,11 +220,11 @@ const StdPayment = () => {
   );
 
   // Handle receipt link click
-  const handleReceiptClick = async (receiptId) => {
-    if (!receiptId) return;
+  const handleReceiptClick = async (receiptNo) => {
+    if (!receiptNo) return;
 
     try {
-      setSelectedReceipt(receiptId);
+      setSelectedReceipt(receiptNo);
 
       const orgId =
         localStorage.getItem("orgId") ||
@@ -231,21 +232,18 @@ const StdPayment = () => {
       const branchId =
         localStorage.getItem("branchId") || sessionStorage.getItem("branch_id");
 
-      const response = await api.get(
-        "FeeReceipt/GetFeeReceiptBasedOnReceiptId/",
-        {
-          params: {
-            receipt_id: receiptId,
-            organization_id: orgId,
-            branch_id: branchId,
-          },
-        }
-      );
+      const response = await api.get("FeeReceipt/GetFeeReceiptsBasedOnReceiptNo/", {
+        params: {
+          receipt_no: receiptNo,
+          organization_id: orgId,
+          branch_id: branchId,
+        },
+      });
 
       const result = response.data;
-      if (result && result.data) {
-        setReceiptDetails(result.data);  // Access the nested 'data' property
-        setShowReceiptModal(true);
+      if (result && result.receipt_data) {
+        openFeeReceiptPdf(result.receipt_data);
+        return;
       }
     } catch (err) {
       console.error("Error fetching receipt details:", err);
@@ -833,11 +831,7 @@ const StdPayment = () => {
                                   <Button
                                     variant="link"
                                     size="sm"
-                                    onClick={() =>
-                                      handleReceiptClick(
-                                        receipt.receipt_id || receipt.id
-                                      )
-                                    }
+                                    onClick={() => handleReceiptClick(receipt.receipt_no)}
                                     style={{
                                       color: "#007bff",
                                       textDecoration: "underline",
