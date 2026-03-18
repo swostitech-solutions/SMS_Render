@@ -3622,6 +3622,8 @@ const generatePDF = async (data) => {
 
   useEffect(() => {
     if (selectedFeeDetails.length > 0) {
+      setIsUserInput(false);
+
       // Sum up all the balance amounts from the selectedFeeDetails array
       const totalBalanceAmount = selectedFeeDetails.reduce(
         (total, feeDetail) => total + (feeDetail.balance || 0),
@@ -3637,6 +3639,7 @@ const generatePDF = async (data) => {
   // Handler for updating the amount field
   const handleAmountChange = (event) => {
     const value = parseFloat(event.target.value) || 0; // Ensure the value is a number (default to 0 if invalid)
+    setIsUserInput(true);
     setSelectedAmount(value);
     setPaidAmount(value); // Update Paid Amount when Amount changes
   };
@@ -3654,6 +3657,7 @@ const generatePDF = async (data) => {
 
   const handlePaidAmountChange = (e) => {
     const newPaidAmount = parseFloat(e.target.value) || 0;
+    setIsUserInput(true);
     setPaidAmount(newPaidAmount);
   };
 

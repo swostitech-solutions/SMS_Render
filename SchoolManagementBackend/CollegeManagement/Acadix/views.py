@@ -16133,51 +16133,30 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
 
                 StudentPaymentInstance.save()
 
-                # Total amount paid by Student
+                # Total amount settled in this receipt (cash + successfully applied discount)
                 grand_Paid_Amount = total_amount
+                applied_discount_amount = Decimal('0.00')
 
                 # Insert object for particular student
 
                 if discount_fee:
-                    grand_Paid_Amount = grand_Paid_Amount + discount_fee
-                    semester_ids_sorted = list(sorted(set(semester_ids)))  # in future need to be sort based on date
+                    remaining_discount_fee = Decimal(discount_fee)
 
-                    for semester_id in semester_ids_sorted:
-                        # print(prd)
-                        total_payment_amount = 0
-                        total_paid_amount = 0
-                        # pending_payment_amount=0
+                    for fee_detail in fee_detail_list:
+                        pending_amount = (fee_detail.element_amount or Decimal('0.00')) - (
+                            fee_detail.paid_amount or Decimal('0.00')
+                        )
 
-                        # Get period month instance
-                        semesterInstance = Semester.objects.get(id=semester_id, is_active=True)
-                        studentfeedetailsrecord = StudentFeeDetail.objects.filter(student=student_id,
-                                                                                  fee_applied_from=semesterInstance.id,
-                                                                                  is_active=True)
-                        # print(studentfeedetailsrecord)
-                        # print(studentfeedetailsrecord)
-
-                        for feedetailsId in student_fee_details_ids:
-                            try:
-                                # Use get() to fetch the specific student fee detail
-                                matching_record = studentfeedetailsrecord.get(id=feedetailsId)
-
-                                # Add element_amount and paid_amount to the totals
-                                total_payment_amount += matching_record.element_amount
-                                total_paid_amount += matching_record.paid_amount
-                            except StudentFeeDetail.DoesNotExist:
-                                # Log the missing record and continue with the remaining IDs
-                                # print(f"Student Fee Detail with id {feedetailsId} does not exist. Skipping.")
-                                continue  # Skip to the next ID
-
-                        pending_amount = total_payment_amount - total_paid_amount
-
-                        # Skip semesters that are already fully settled.
                         if pending_amount <= 0:
                             continue
 
-                        discount_to_apply = min(discount_fee, pending_amount)
+                        discount_to_apply = min(remaining_discount_fee, pending_amount)
                         if discount_to_apply <= 0:
                             break
+
+                        discount_semester = fee_detail.semester or fee_detail.fee_applied_from
+                        if not discount_semester:
+                            continue
 
                         # Insert record in student fee details DB
                         studentFeeDetailsInsertfeesInstance = StudentFeeDetail.objects.create(
@@ -16186,8 +16165,8 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                             fee_group=None,
                             fee_structure_details=None,
                             element_name="DISCOUNT",
-                            fee_applied_from=semesterInstance,
-                            semester=semesterInstance,
+                            fee_applied_from=discount_semester,
+                            semester=discount_semester,
                             paid='Y',
                             academic_year=studentcourseInstance.academic_year,
                             organization=studentcourseInstance.organization,
@@ -16214,9 +16193,12 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                         )
                         stdfeereceiptInstance.save()
 
-                        discount_fee -= discount_to_apply
-                        if discount_fee <= 0:
+                        applied_discount_amount += discount_to_apply
+                        remaining_discount_fee -= discount_to_apply
+                        if remaining_discount_fee <= 0:
                             break
+
+                    grand_Paid_Amount = grand_Paid_Amount + applied_discount_amount
 
                 if late_fee:
                     if grand_Paid_Amount > late_fee:
