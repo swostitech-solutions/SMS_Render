@@ -328,6 +328,7 @@ const handleSearch = async () => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Session</label>
                       <Select
+                        className="detail"
                         options={
                           BatchList?.map((b) => ({
                             value: b.id,
@@ -360,6 +361,7 @@ const handleSearch = async () => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Course</label>
                       <Select
+                        className="detail"
                         options={
                           CourseList?.map((c) => ({
                             value: c.id,
@@ -389,6 +391,7 @@ const handleSearch = async () => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Department</label>
                       <Select
+                        className="detail"
                         options={
                           BranchList?.map((d) => ({
                             value: d.id,
@@ -446,6 +449,7 @@ const handleSearch = async () => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Semester</label>
                       <Select
+                        className="detail"
                         options={
                           SemesterList?.map((s) => ({
                             value: s.id,
@@ -472,6 +476,7 @@ const handleSearch = async () => {
                     <div className="col-12 col-md-3 mb-2">
                       <label className="form-label">Section</label>
                       <Select
+                        className="detail"
                         options={
                           SectionList?.map((s) => ({
                             value: s.id,
@@ -498,7 +503,7 @@ const handleSearch = async () => {
                     <table className="table table-bordered table-striped">
                       <thead>
                         <tr>
-                          <th>#</th>
+                          <th>Sr No</th>
                           <th>Student Name</th>
                           <th>Admission No</th>
                           <th>Session</th>
