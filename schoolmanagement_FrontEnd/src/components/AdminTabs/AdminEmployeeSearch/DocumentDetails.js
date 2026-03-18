@@ -630,7 +630,7 @@ const App = ({ goToTab, documentDetails, setDocumentDetails }) => {
                 <th>Document</th>
                 <th>Valid From</th>
                 <th>Valid To</th>
-                <th>Enabled</th>
+                {/* <th>Enabled</th> */}
                 <th></th>
               </tr>
             </thead>
@@ -664,14 +664,14 @@ const App = ({ goToTab, documentDetails, setDocumentDetails }) => {
 
                   <td>{row.validFrom}</td>
                   <td>{row.validTo}</td>
-                  <td>
+                  {/* <td>
                     <input
                       type="checkbox"
                       checked={row.enabled}
                       disabled
                       className="form-check-input"
                     />
-                  </td>
+                  </td> */}
                   <td>
                     <button
                       className="btn btn-danger btn-sm"
@@ -744,7 +744,7 @@ const App = ({ goToTab, documentDetails, setDocumentDetails }) => {
                     onChange={handleInputChange}
                   />
                 </td>
-                <td>
+                {/* <td>
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -752,7 +752,7 @@ const App = ({ goToTab, documentDetails, setDocumentDetails }) => {
                     checked={formData.enabled}
                     onChange={handleInputChange}
                   />
-                </td>
+                </td> */}
                 <td>
                   <button className="btn btn-primary" onClick={handleAddRow}>
                     Add

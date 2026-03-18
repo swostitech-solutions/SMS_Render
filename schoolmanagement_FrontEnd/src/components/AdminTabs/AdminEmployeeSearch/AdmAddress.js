@@ -349,88 +349,102 @@ const ParentDetailsForm = ({
 
   // Fetch states when a country is selected
   useEffect(() => {
-    if (selectedCountry) {
-      const fetchStates = async () => {
-        try {
-          const apiURL = `${ApiUrl.apiurl}State/GetStateListBasedOnCountryId/${selectedCountry.value}`;
-          const response = await fetch(apiURL);
-          const result = await response.json();
-
-          if (result.message === "success") {
-            setStates(result.data); // Set states data
-          }
-        } catch (err) {
-          // You said no error handling required
-        }
-      };
-
-      fetchStates();
+    if (!selectedCountry) {
+      setStates([]);
+      setCities([]);
+      return;
     }
+
+    const fetchStates = async () => {
+      try {
+        const apiURL = `${ApiUrl.apiurl}State/GetStateListBasedOnCountryId/${selectedCountry.value}`;
+        const response = await fetch(apiURL);
+        const result = await response.json();
+
+        if (result.message === "success") {
+          setStates(result.data); // Set states data
+        }
+      } catch (err) {
+        // You said no error handling required
+      }
+    };
+
+    fetchStates();
   }, [selectedCountry]);
 
 
   // Fetch cities when a state is selected
   useEffect(() => {
-    if (selectedState) {
-      const fetchCities = async () => {
-        try {
-          const apiURL = `${ApiUrl.apiurl}City/GetCityListBasedOnStateId/${selectedState.value}`;
-          const response = await fetch(apiURL);
-          const result = await response.json();
-
-          if (result.message === "success") {
-            setCities(result.data); // Set the cities data
-          }
-        } catch (err) {
-          // No error handling required as per your request
-        }
-      };
-
-      fetchCities();
+    if (!selectedState) {
+      setCities([]);
+      return;
     }
+
+    const fetchCities = async () => {
+      try {
+        const apiURL = `${ApiUrl.apiurl}City/GetCityListBasedOnStateId/${selectedState.value}`;
+        const response = await fetch(apiURL);
+        const result = await response.json();
+
+        if (result.message === "success") {
+          setCities(result.data); // Set the cities data
+        }
+      } catch (err) {
+        // No error handling required as per your request
+      }
+    };
+
+    fetchCities();
   }, [selectedState]);
 
 
   // Fetch permanent states when permanent country is selected
   useEffect(() => {
-    if (selectedPermanentCountry) {
-      const fetchPermanentStates = async () => {
-        try {
-          const apiURL = `${ApiUrl.apiurl}State/GetStateListBasedOnCountryId/${selectedPermanentCountry.value}`;
-          const response = await fetch(apiURL);
-          const result = await response.json();
-
-          if (result.message === "success") {
-            setPermanentStates(result.data);
-          }
-        } catch (err) {
-          // No error handling required
-        }
-      };
-
-      fetchPermanentStates();
+    if (!selectedPermanentCountry) {
+      setPermanentStates([]);
+      setPermanentCities([]);
+      return;
     }
+
+    const fetchPermanentStates = async () => {
+      try {
+        const apiURL = `${ApiUrl.apiurl}State/GetStateListBasedOnCountryId/${selectedPermanentCountry.value}`;
+        const response = await fetch(apiURL);
+        const result = await response.json();
+
+        if (result.message === "success") {
+          setPermanentStates(result.data);
+        }
+      } catch (err) {
+        // No error handling required
+      }
+    };
+
+    fetchPermanentStates();
   }, [selectedPermanentCountry]);
 
   // Fetch permanent cities when permanent state is selected
   useEffect(() => {
-    if (selectedPermanentState) {
-      const fetchPermanentCities = async () => {
-        try {
-          const apiURL = `${ApiUrl.apiurl}City/GetCityListBasedOnStateId/${selectedPermanentState.value}`;
-          const response = await fetch(apiURL);
-          const result = await response.json();
-
-          if (result.message === "success") {
-            setPermanentCities(result.data);
-          }
-        } catch (err) {
-          // No error handling required
-        }
-      };
-
-      fetchPermanentCities();
+    if (!selectedPermanentState) {
+      setPermanentCities([]);
+      return;
     }
+
+    const fetchPermanentCities = async () => {
+      try {
+        const apiURL = `${ApiUrl.apiurl}City/GetCityListBasedOnStateId/${selectedPermanentState.value}`;
+        const response = await fetch(apiURL);
+        const result = await response.json();
+
+        if (result.message === "success") {
+          setPermanentCities(result.data);
+        }
+      } catch (err) {
+        // No error handling required
+      }
+    };
+
+    fetchPermanentCities();
   }, [selectedPermanentState]);
 
   // Sync address form data to parent on every change
@@ -521,6 +535,34 @@ const ParentDetailsForm = ({
       setSelectedPermanentDistrict(null);
       setSelectedPermanentCountry(null);
     }
+  };
+
+  const handleResidenceCountryChange = (selectedOption) => {
+    setSelectedCountry(selectedOption);
+    setSelectedState(null);
+    setSelectedResidenceDistrict(null);
+    setStates([]);
+    setCities([]);
+  };
+
+  const handleResidenceStateChange = (selectedOption) => {
+    setSelectedState(selectedOption);
+    setSelectedResidenceDistrict(null);
+    setCities([]);
+  };
+
+  const handlePermanentCountryChange = (selectedOption) => {
+    setSelectedPermanentCountry(selectedOption);
+    setSelectedPermanentState(null);
+    setSelectedPermanentDistrict(null);
+    setPermanentStates([]);
+    setPermanentCities([]);
+  };
+
+  const handlePermanentStateChange = (selectedOption) => {
+    setSelectedPermanentState(selectedOption);
+    setSelectedPermanentDistrict(null);
+    setPermanentCities([]);
   };
 
 
@@ -818,9 +860,7 @@ const ParentDetailsForm = ({
                       label: country.country_name,
                     }))}
                     value={selectedCountry}
-                    onChange={(selectedOption) =>
-                      setSelectedCountry(selectedOption)
-                    }
+                    onChange={handleResidenceCountryChange}
                   />
                   {requiredErrors.residenceCountry && (
                     <small className="text-danger">{requiredErrors.residenceCountry}</small>
@@ -839,9 +879,7 @@ const ParentDetailsForm = ({
                       value: state.id,
                       label: state.state_name,
                     }))}
-                    onChange={(selectedOption) =>
-                      setSelectedState(selectedOption)
-                    }
+                    onChange={handleResidenceStateChange}
                     value={selectedState}
                     isDisabled={!selectedCountry} // Disable if no country is selected
                   />
@@ -967,9 +1005,7 @@ const ParentDetailsForm = ({
                       label: country.country_name,
                     }))}
                     value={selectedPermanentCountry}
-                    onChange={(selectedOption) =>
-                      setSelectedPermanentCountry(selectedOption)
-                    }
+                    onChange={handlePermanentCountryChange}
                     isDisabled={formValues.sameAsResidence}
                   />
                   {requiredErrors.permanentCountry && (
@@ -989,9 +1025,7 @@ const ParentDetailsForm = ({
                       value: state.id,
                       label: state.state_name,
                     }))}
-                    onChange={(selectedOption) =>
-                      setSelectedPermanentState(selectedOption)
-                    }
+                    onChange={handlePermanentStateChange}
                     value={selectedPermanentState}
                     isDisabled={!selectedPermanentCountry || formValues.sameAsResidence}
                   />

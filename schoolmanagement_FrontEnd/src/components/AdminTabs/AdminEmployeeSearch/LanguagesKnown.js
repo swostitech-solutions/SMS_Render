@@ -26,6 +26,7 @@ const App = ({
     "SANTALI",
     "KASHMIRI",
     "SANSKRIT",
+    "OTHERS",
   ];
 
   // Mapping language to code dynamically
@@ -47,6 +48,7 @@ const App = ({
     MAITHILI: "15",
     SANTALI: "16",
     KASHMIRI: "17",
+    OTHERS: "18",
   };
 
   // Initialize selectedLanguages from parent if available (handles when user navigates back)
@@ -97,6 +99,7 @@ const App = ({
         MAITHILI: "15",
         SANTALI: "16",
         KASHMIRI: "17",
+        OTHERS: "18",
       };
       const codes = newLanguages.map((lang) => codemap[lang]).join(",");
       setLanguageData({
