@@ -957,6 +957,7 @@ const BulkBookUpload = () => {
         purchase_from: row.purchaseFrom || "",
         bill_no: row.billNo || "",
         bill_value: row.billValue ? row.billValue.toString() : "0",
+        bill_concession: "0",
         no_of_copies: row.noCopies.toString(),
       },
     ];
