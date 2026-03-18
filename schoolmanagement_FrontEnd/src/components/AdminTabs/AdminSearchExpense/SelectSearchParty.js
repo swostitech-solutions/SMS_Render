@@ -479,35 +479,8 @@ const SelectStudentModal = ({ show, handleClose, onSelect }) => {
                         onChange={handleInputChange}
                       />
                     </div>
-                    <div className="col-12 col-md-3 mb-1">
-                      <span className="me-3" style={{ fontWeight: "700" }}>
-                        {/* Send SMS to: */}
-                      </span>
-                      <div className="d-flex flex-row me-2">
-                        <div className="form-check">
-                          {/* <input
-                            className="form-check-input"
-                            type="checkbox"
-                            // name="flexRadioDefault"
-                            id="flexRadioDefault3"
-                            onChange={() => setIsActive(!isActive)}
-                          /> */}
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="activeFilter"
-                            checked={isActive}
-                            onChange={() => setIsActive(!isActive)}
-                          />
-                          <label
-                            className="form-check-label"
-                            htmlFor="flexRadioDefault3"
-                          >
-                            Active
-                          </label>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Active filter intentionally hidden in UI.
+                        Keep default `isActive=true` so search continues to fetch active parties only. */}
                   </div>
 
                   {/* Results Table */}

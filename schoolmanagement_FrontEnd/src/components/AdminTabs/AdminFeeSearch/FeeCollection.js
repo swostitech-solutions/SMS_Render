@@ -2271,6 +2271,7 @@ import DatePicker from "react-datepicker";
 import { ApiUrl } from "../../../ApiUrl";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { openFeeReceiptPdf } from "./feeReceiptPdf";
 
 const FeeCollection = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -3110,6 +3111,9 @@ const FeeCollection = () => {
   };
 
 const generatePDF = async (data) => {
+  openFeeReceiptPdf(data);
+  return;
+
   const doc = new jsPDF("portrait", "mm", "a4");
   const safe = (v) => (v === null || v === undefined ? "" : v);
   const pageWidth = doc.internal.pageSize.getWidth();

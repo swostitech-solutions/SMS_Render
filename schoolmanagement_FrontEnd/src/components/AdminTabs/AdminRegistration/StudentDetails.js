@@ -1128,6 +1128,8 @@ const AdmAttendanceEntry = ({
                         options={[
                           { value: "Regular", label: "Regular" },
                           { value: "Irregular", label: "Irregular" },
+                          { value: "Government", label: "Government" },
+                          { value: "Management", label: "Management" },
                         ]}
                         value={
                           formData.admission_type
