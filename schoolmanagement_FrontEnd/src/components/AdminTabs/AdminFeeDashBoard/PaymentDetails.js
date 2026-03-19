@@ -471,10 +471,16 @@ const FeeDetails = () => {
   };
 
 
-  const handlePrint = () => {
-    window.print();
-  };
+ const handlePrint = () => {
+   const originalTitle = document.title;
+   document.title = "Fee Report"; // 👈 change title
 
+   window.print();
+
+   setTimeout(() => {
+     document.title = originalTitle; // restore after print
+   }, 500);
+ };
   // Calculate totals for display
   const totalReceiptAmt = filteredFeeData.reduce(
     (total, row) => total + (parseFloat(row.amount) || 0),
