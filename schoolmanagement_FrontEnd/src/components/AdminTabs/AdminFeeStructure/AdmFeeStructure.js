@@ -998,7 +998,6 @@ const handleSave = async () => {
     setErrors({});
 
     // Validation
-    if (!selectedCategory) return alert("Please select a category.");
     if (!selectedNewExisting) return alert("Please select New/Existing.");
     if (!version.trim()) return alert("Please enter Version");
     if (feeStructure.length === 0)
@@ -1302,8 +1301,9 @@ if (!response.ok) {
                 className="detail"
                 options={categoryOptions}
                 value={selectedCategory} // Bind to the selectedCategory state
-                placeholder="Select Category"
+                placeholder="Select Category (Optional)"
                 classNamePrefix="react-select"
+                isClearable
                 onChange={(selectedOption) => {
                   setSelectedCategory(selectedOption); // Update selected category
                 }}

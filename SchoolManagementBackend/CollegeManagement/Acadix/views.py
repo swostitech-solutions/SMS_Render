@@ -7775,7 +7775,7 @@ class FeeStructureMasterCreateAPIView(CreateAPIView):
                     'course_id': FeeStructureMaster_instance.course.id,
                     'enabled': FeeStructureMaster_instance.enabled,
                     'version_no': FeeStructureMaster_instance.version_no,
-                    'category_code': FeeStructureMaster_instance.category.category_code,
+                    'category_code': FeeStructureMaster_instance.category.category_code if FeeStructureMaster_instance.category else None,
                     'new_existing': FeeStructureMaster_instance.new_existing,
                 }
             }
@@ -12232,12 +12232,38 @@ class StudentRegistrationUpdateAPIView(UpdateAPIView, UtilityGroupMixin):
                                                                                     student_course_instance.semester)
                         student_course_instance.section = student_basic_detail.get('section',
                                                                                    student_course_instance.section)
+                        student_course_instance.student_status = instance.status or student_course_instance.student_status
+                        student_course_instance.house = instance.house or student_course_instance.house
+                        student_course_instance.updated_by = student_basic_detail.get('updated_by',
+                                                                                     student_course_instance.updated_by)
 
                         # if student_basic_detail.get('student_status'):
                         #     instance.student_status = student_basic_detail.get('student_status', instance.student_status)
                         #     student_course_instance.student
 
                         student_course_instance.save()
+                    else:
+                        StudentCourse.objects.create(
+                            organization=instance.organization,
+                            branch=instance.branch,
+                            academic_year=instance.academic_year,
+                            student=instance,
+                            batch=instance.batch,
+                            course=instance.course,
+                            department=instance.department,
+                            semester=instance.semester,
+                            section=instance.section,
+                            fee_group=None,
+                            fee_applied_from=None,
+                            enrollment_no=instance.enrollment_no,
+                            house=instance.house if instance.house else House.objects.first(),
+                            transport_availed=False,
+                            route_id=None,
+                            choice_semester="",
+                            student_status=instance.status or "ACTIVE",
+                            created_by=instance.created_by,
+                            updated_by=student_basic_detail.get('updated_by', instance.updated_by)
+                        )
 
                 if profile_pic:
                     instance.profile_pic.save(profile_pic.name, profile_pic)
@@ -13105,11 +13131,14 @@ class StudentRegistrationBasedOnIdAPIView(RetrieveAPIView):
             except AcademicYear.DoesNotExist:
                 raise NotFound("The Academic year ID was not found.")
 
-            try:
-                feeDetails = StudentCourse.objects.get(student=student_instance.id, is_active=True)
-            except StudentCourse.DoesNotExist:
-                return Response({"message": "The student ID was not found in StudentCourse."},
-                                status=status.HTTP_400_BAD_REQUEST)
+            feeDetails = StudentCourse.objects.filter(
+                student=student_instance.id,
+                is_active=True
+            ).order_by('-id').first()
+            if not feeDetails:
+                feeDetails = StudentCourse.objects.filter(
+                    student=student_instance.id
+                ).order_by('-id').first()
 
             try:
                 courseInstance = Course.objects.get(id=student_instance.course.id)
@@ -13123,7 +13152,7 @@ class StudentRegistrationBasedOnIdAPIView(RetrieveAPIView):
                 # raise NotFound("The Section ID was not found.")
 
             try:
-                if feeDetails.fee_group:
+                if feeDetails and feeDetails.fee_group:
                     feemasterInstance = FeeStructureMaster.objects.get(id=feeDetails.fee_group.id)
                 else:
                     feemasterInstance = None
@@ -13131,7 +13160,7 @@ class StudentRegistrationBasedOnIdAPIView(RetrieveAPIView):
                 return Response({"message": "The fee_group ID was not found."}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                if feeDetails.fee_applied_from:
+                if feeDetails and feeDetails.fee_applied_from:
                     semesterInstance = Semester.objects.get(id=feeDetails.fee_applied_from.id)
                 else:
                     semesterInstance = None
@@ -13177,7 +13206,7 @@ class StudentRegistrationBasedOnIdAPIView(RetrieveAPIView):
 
             # Process transport details
             transportDetails = {}
-            if feeDetails.transport_availed:
+            if feeDetails and feeDetails.transport_availed:
                 import ast
                 choice_semester = feeDetails.choice_semester
                 if choice_semester:
@@ -25705,50 +25734,89 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
             to_date = serializers.validated_data.get('to_date')
             student_id = serializers.validated_data.get('student_id')
 
-            if organization_id and branch_id:
-                try:
-                    studentAttendanceList = Attendance.objects.filter(organization=organization_id, branch=branch_id,
-                                                                      is_active=True).order_by('-updated_at')
-                except Attendance.DoesNotExist:
-                    return Response({"message": "student attendance record not found !!!"},
-                                    status=status.HTTP_404_NOT_FOUND)
-            else:
+            if not (organization_id and branch_id):
                 return Response({"message": "organization_id and branch_id is required !!!"},
                                 status=status.HTTP_404_NOT_FOUND)
 
+            # Build the current active class roster first, then overlay saved attendance.
+            studentRecord = StudentCourse.objects.filter(
+                organization=organization_id,
+                branch=branch_id,
+                is_active=True,
+                student__is_active=True
+            ).exclude(student__status__iexact='INACTIVE').select_related(
+                'organization', 'branch', 'batch', 'course', 'department',
+                'academic_year', 'semester', 'section', 'student'
+            ).order_by('student__first_name', 'student__middle_name', 'student__last_name')
+
             if batch_id:
-                studentAttendanceList = studentAttendanceList.filter(batch=batch_id)
+                studentRecord = studentRecord.filter(batch=batch_id)
 
             if course_id:
-                studentAttendanceList = studentAttendanceList.filter(course=course_id)
+                studentRecord = studentRecord.filter(course=course_id)
 
             if department_id:
-                studentAttendanceList = studentAttendanceList.filter(department=department_id)
+                studentRecord = studentRecord.filter(department=department_id)
 
             if academic_year_id:
-                studentAttendanceList = studentAttendanceList.filter(academic_year=academic_year_id)
+                studentRecord = studentRecord.filter(academic_year=academic_year_id)
 
             if semester_id:
-                studentAttendanceList = studentAttendanceList.filter(semester=semester_id)
+                studentRecord = studentRecord.filter(semester=semester_id)
 
             if section_id:
-                studentAttendanceList = studentAttendanceList.filter(section=section_id)
-
-            if date:
-                studentAttendanceList = studentAttendanceList.filter(attendance_date=date)
-
-            if from_date and not to_date:
-                studentAttendanceList = studentAttendanceList.filter(attendance_date__range=(from_date,datetime.now()))
-            if not from_date and to_date:
-                studentAttendanceList = studentAttendanceList.filter(attendance_date__lte=to_date)
-
-            if from_date and to_date:
-                studentAttendanceList = studentAttendanceList.filter(attendance_date__range=(from_date,to_date))
+                studentRecord = studentRecord.filter(section=section_id)
 
             if student_id:
-                studentAttendanceList =  studentAttendanceList.filter(student_id=student_id)
+                studentRecord = studentRecord.filter(student_id=student_id)
 
-            student_attendance_first_lecture = studentAttendanceList.filter(lecture_period=1)
+            if not studentRecord.exists():
+                return Response({'message': 'No Record Found'}, status=status.HTTP_404_NOT_FOUND)
+
+            attendanceBaseList = Attendance.objects.filter(
+                organization=organization_id,
+                branch=branch_id,
+                is_active=True
+            ).select_related(
+                'organization', 'branch', 'batch', 'course', 'department',
+                'academic_year', 'semester', 'section', 'student'
+            )
+
+            if batch_id:
+                attendanceBaseList = attendanceBaseList.filter(batch=batch_id)
+
+            if course_id:
+                attendanceBaseList = attendanceBaseList.filter(course=course_id)
+
+            if department_id:
+                attendanceBaseList = attendanceBaseList.filter(department=department_id)
+
+            if academic_year_id:
+                attendanceBaseList = attendanceBaseList.filter(academic_year=academic_year_id)
+
+            if semester_id:
+                attendanceBaseList = attendanceBaseList.filter(semester=semester_id)
+
+            if section_id:
+                attendanceBaseList = attendanceBaseList.filter(section=section_id)
+
+            if date:
+                attendanceBaseList = attendanceBaseList.filter(attendance_date=date)
+
+            if from_date and not to_date:
+                attendanceBaseList = attendanceBaseList.filter(attendance_date__range=(from_date, datetime.now()))
+            if not from_date and to_date:
+                attendanceBaseList = attendanceBaseList.filter(attendance_date__lte=to_date)
+
+            if from_date and to_date:
+                attendanceBaseList = attendanceBaseList.filter(attendance_date__range=(from_date, to_date))
+
+            if student_id:
+                attendanceBaseList = attendanceBaseList.filter(student_id=student_id)
+
+            student_attendance_first_lecture = attendanceBaseList.filter(lecture_period=1)
+
+            studentAttendanceList = attendanceBaseList
 
             if lecture_period_id:
                 studentAttendanceList = studentAttendanceList.filter(lecture_period=lecture_period_id)
@@ -25793,219 +25861,52 @@ class StudentAttendanceSearchListAPIView(ListAPIView):
             # except:
             #     AttendanceRecord=[]
 
+            attendance_by_student = {item.student_id: item for item in studentAttendanceList}
+            first_lecture_sms_by_student = {item.student_id: item.is_sms_sent for item in student_attendance_first_lecture}
+
             ResponseData = []
+            for record in studentRecord:
+                attendance_item = attendance_by_student.get(record.student_id)
+                student_name = " ".join(filter(None, [
+                    record.student.first_name,
+                    record.student.middle_name,
+                    record.student.last_name
+                ]))
 
-            if studentAttendanceList:
-                if student_attendance_first_lecture:
-                    for item,first_item in zip(studentAttendanceList,student_attendance_first_lecture):
+                data = {
+                    "id": attendance_item.id if attendance_item else None,
+                    "organization_id": record.organization.id,
+                    "organization": record.organization.organization_code,
+                    "branch_id": record.branch.id,
+                    "branch": record.branch.branch_name,
+                    "batch_id": record.batch.id,
+                    "batch": record.batch.batch_code,
+                    "course_id": record.course.id,
+                    "course_name": record.course.course_name,
+                    "department_id": record.department.id,
+                    "department": record.department.department_description,
+                    "academic_year_id": record.academic_year.id,
+                    "academic_year": record.academic_year.academic_year_code,
+                    "semester_id": record.semester.id,
+                    "semester": record.semester.semester_description,
+                    "section_id": record.section.id,
+                    "section_name": record.section.section_name,
+                    "attendance_date": attendance_item.attendance_date if attendance_item else date,
+                    "student_id": record.student.id,
+                    "registration_no": record.student.registration_no,
+                    "student_name": student_name,
+                    "college_admission_no": record.student.college_admission_no,
+                    "barcode": record.student.barcode,
+                    "primary_guardian": record.student.primary_guardian,
+                    "enrollment_no": record.enrollment_no,
+                    "present": attendance_item.present if attendance_item else '',
+                    "remarks": attendance_item.remarks if attendance_item else "",
+                    "is_sms_sent": first_lecture_sms_by_student.get(record.student_id, False),
+                    "father_contact_number": attendance_item.father_contact_number if attendance_item and attendance_item.father_contact_number else record.student.father_contact_number,
+                    "mother_contact_number": attendance_item.mother_contact_number if attendance_item and attendance_item.mother_contact_number else record.student.mother_contact_number
+                }
 
-                        try:
-
-                            StudentCourseInstance = StudentCourse.objects.get(student=item.student.id, is_active=True)
-                        except:
-                            return Response({'message': 'Student course record not found'},
-                                            status=status.HTTP_404_NOT_FOUND)
-
-                        data = {
-                            "id": item.id,
-                            "organization_id": item.organization.id,
-                            "organization": item.organization.organization_code,
-                            "branch_id": item.branch.id,
-                            "branch": item.branch.branch_name,
-                            "batch_id": item.batch.id,
-                            "batch": item.batch.batch_code,
-                            "course_id": item.course.id,
-                            "course_name": item.course.course_name,
-                            "department_id": item.department.id,
-                            "department": item.department.department_description,
-                            "academic_year_id": item.academic_year.id,
-                            "academic_year": item.academic_year.academic_year_code,
-                            "semester_id": item.semester.id,
-                            "semester": item.semester.semester_description,
-                            "section_id": item.section.id,
-                            "section_name": item.section.section_name,
-                            # "class_period_id": item.class_period_id.id,
-                            # "class_period": item.class_period_id.period_name,
-                            # "subject_id": item.subject_id.id,
-                            # "subjectname": item.subject_id.subject_code,
-                            # "teacher_id": item.teacher_id.id,
-                            # "teachername": item.teacher_id.first_name,
-                            "attendance_date": item.attendance_date,
-                            "student_id": item.student.id,
-                            "registration_no": item.student.registration_no,
-                            "student_name": f"{item.student.first_name} {item.student.last_name}",
-                            "college_admission_no": item.student.college_admission_no,
-                            "barcode": item.student.barcode,
-                            "primary_guardian": item.student.primary_guardian,
-                            "enrollment_no": StudentCourseInstance.enrollment_no,
-                            "present": item.present,
-                            "remarks": item.remarks,
-                            "is_sms_sent": first_item.is_sms_sent if first_item else False,
-                            # "is_sms_sent": item.is_sms_sent,
-                            "father_contact_number": item.father_contact_number,  # this data i fetch on attendance
-                            "mother_contact_number": item.mother_contact_number
-                        }
-
-                        ResponseData.append(data)
-                else:
-                    for item in studentAttendanceList:
-
-                        try:
-
-                            StudentCourseInstance = StudentCourse.objects.get(student=item.student.id, is_active=True)
-                        except:
-                            return Response({'message': 'Student course record not found'},
-                                            status=status.HTTP_404_NOT_FOUND)
-
-                        data = {
-                            "id": item.id,
-                            "organization_id": item.organization.id,
-                            "organization": item.organization.organization_code,
-                            "branch_id": item.branch.id,
-                            "branch": item.branch.branch_name,
-                            "batch_id": item.batch.id,
-                            "batch": item.batch.batch_code,
-                            "course_id": item.course.id,
-                            "course_name": item.course.course_name,
-                            "department_id": item.department.id,
-                            "department": item.department.department_description,
-                            "academic_year_id": item.academic_year.id,
-                            "academic_year": item.academic_year.academic_year_code,
-                            "semester_id": item.semester.id,
-                            "semester": item.semester.semester_description,
-                            "section_id": item.section.id,
-                            "section_name": item.section.section_name,
-                            # "class_period_id": item.class_period_id.id,
-                            # "class_period": item.class_period_id.period_name,
-                            # "subject_id": item.subject_id.id,
-                            # "subjectname": item.subject_id.subject_code,
-                            # "teacher_id": item.teacher_id.id,
-                            # "teachername": item.teacher_id.first_name,
-                            "attendance_date": item.attendance_date,
-                            "student_id": item.student.id,
-                            "registration_no": item.student.registration_no,
-                            "student_name": " ".join(filter(None, [item.student.first_name, item.student.last_name])),
-                            "college_admission_no": item.student.college_admission_no,
-                            "barcode": item.student.barcode,
-                            "primary_guardian": item.student.primary_guardian,
-                            "enrollment_no": StudentCourseInstance.enrollment_no,
-                            "present": item.present,
-                            "remarks": item.remarks,
-                            "is_sms_sent": False,
-                            # "is_sms_sent": item.is_sms_sent,
-                            "father_contact_number": item.father_contact_number,  # this data i fetch on attendance
-                            "mother_contact_number": item.mother_contact_number
-                        }
-
-                        ResponseData.append(data)
-            else:
-
-                try:
-                    studentRecord = StudentCourse.objects.filter(academic_year=academic_year_id, course=course_id,
-                                                                 section=section_id, is_active=True)
-                except:
-                    return Response({'message': 'Record Not Found!'}, status=status.HTTP_404_NOT_FOUND)
-
-                if studentRecord:
-                    if student_attendance_first_lecture:
-                        for record,first_item in zip(studentRecord,student_attendance_first_lecture):
-                            academicyearInstance = AcademicYear.objects.get(id=academic_year_id, is_active=True)
-
-                            courseInstance = Course.objects.get(id=course_id, is_active=True)
-
-                            sectionInstance = Section.objects.get(id=section_id, is_active=True)
-
-                            data = {
-                                "organization_id": record.organization.id,
-                                "organization": record.organization.organization_code,
-                                "branch_id": record.branch.id,
-                                "branch": record.branch.branch_name,
-                                "batch_id": record.batch.id,
-                                "batch": record.batch.batch_code,
-                                "course_id": record.course.id,
-                                "course_name": record.course.course_name,
-                                "department_id": record.department.id,
-                                "department": record.department.department_description,
-                                "academic_year_id": record.academic_year.id,
-                                "academic_year": record.academic_year.academic_year_code,
-                                "semester_id": record.semester.id,
-                                "semester": record.semester.semester_description,
-                                "section_id": record.section.id,
-                                "section_name": record.section.section_name,
-                                "student_id": record.student.id,
-                                "student_name": " ".join(filter(None, [record.student.first_name, record.student.last_name])),
-                                "college_admission_no": record.student.college_admission_no,
-                                "barcode": record.student.barcode,
-                                "primary_guardian": record.student.primary_guardian,
-                                "enrollment_no": record.enrollment_no,
-                                "registration_no": record.student.registration_no,
-                                "present": '',
-                                # "present": 'P',
-                                "remarks": "",
-                                "father_contact_number": record.student.father_contact_number,
-                                "mother_contact_number": record.student.mother_contact_number,
-                                "attendance_date": date,
-                                "is_sms_sent": first_item.is_sms_sent if first_item else False
-                                # "academic_year_id": academic_year_id,
-                                # "academicyear": academicyearInstance.academic_year_code,
-                                # "course_id": courseInstance.id,
-                                # "course_name": courseInstance.course_name,
-                                # "section_id": sectionInstance.id,
-                                # "section_name": sectionInstance.section_name
-                            }
-
-                            ResponseData.append(data)
-                    else:
-                        for record in studentRecord:
-                            academicyearInstance = AcademicYear.objects.get(id=academic_year_id, is_active=True)
-
-                            courseInstance = Course.objects.get(id=course_id, is_active=True)
-
-                            sectionInstance = Section.objects.get(id=section_id, is_active=True)
-
-                            data = {
-                                "organization_id": record.organization.id,
-                                "organization": record.organization.organization_code,
-                                "branch_id": record.branch.id,
-                                "branch": record.branch.branch_name,
-                                "batch_id": record.batch.id,
-                                "batch": record.batch.batch_code,
-                                "course_id": record.course.id,
-                                "course_name": record.course.course_name,
-                                "department_id": record.department.id,
-                                "department": record.department.department_description,
-                                "academic_year_id": record.academic_year.id,
-                                "academic_year": record.academic_year.academic_year_code,
-                                "semester_id": record.semester.id,
-                                "semester": record.semester.semester_description,
-                                "section_id": record.section.id,
-                                "section_name": record.section.section_name,
-                                "student_id": record.student.id,
-                                "student_name": " ".join(filter(None, [record.student.first_name, record.student.last_name])),
-                                "college_admission_no": record.student.college_admission_no,
-                                "barcode": record.student.barcode,
-                                "primary_guardian": record.student.primary_guardian,
-                                "enrollment_no": record.enrollment_no,
-                                "registration_no": record.student.registration_no,
-                                "present": '',
-                                # "present": 'P',
-                                "remarks": "",
-                                "father_contact_number": record.student.father_contact_number,
-                                "mother_contact_number": record.student.mother_contact_number,
-                                "attendance_date": date,
-                                "is_sms_sent": False
-                                # "academic_year_id": academic_year_id,
-                                # "academicyear": academicyearInstance.academic_year_code,
-                                # "course_id": courseInstance.id,
-                                # "course_name": courseInstance.course_name,
-                                # "section_id": sectionInstance.id,
-                                # "section_name": sectionInstance.section_name
-                            }
-
-                            ResponseData.append(data)
-
-                else:
-                    return Response({'message': 'No Record Found'}, status=status.HTTP_404_NOT_FOUND)
+                ResponseData.append(data)
 
             return Response({'message': 'success', 'data': ResponseData}, status=status.HTTP_200_OK)
 
