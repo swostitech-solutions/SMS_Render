@@ -109,7 +109,7 @@ const StdPayment = () => {
     return "-";
   };
 
-  // Group fees by semester_id only - all fees in the same semester are grouped together
+  // Group fees by semester_id and collapse duplicate fee heads within a semester.
   const groupedFees = useMemo(() => {
     if (!feedetails || feedetails.length === 0) return [];
 
@@ -131,14 +131,72 @@ const StdPayment = () => {
       groups[groupKey].subFees.push(fee);
     });
 
+    const dedupeSubFees = (subFees) => {
+      const dedupedMap = {};
+
+      subFees.forEach((subFee) => {
+        const elementName = (subFee.element_name || "").trim().toUpperCase();
+        const dedupeKey = [
+          subFee.semester_id ?? "",
+          subFee.academic_year_id ?? "",
+          elementName,
+        ].join("|");
+
+        const elementAmount = parseFloat(subFee.element_amount || 0);
+        const paidAmount = parseFloat(subFee.paid_amount || 0);
+        const discountAmount = parseFloat(
+          subFee.discount || subFee.element_discount_amount || 0
+        );
+        const candidateBalance = elementAmount - paidAmount;
+
+        if (!dedupedMap[dedupeKey]) {
+          dedupedMap[dedupeKey] = {
+            ...subFee,
+            element_amount: elementAmount,
+            paid_amount: paidAmount,
+            discount: discountAmount,
+          };
+          return;
+        }
+
+        const existing = dedupedMap[dedupeKey];
+        const existingAmount = parseFloat(existing.element_amount || 0);
+        const existingPaid = parseFloat(existing.paid_amount || 0);
+        const existingDiscount = parseFloat(
+          existing.discount || existing.element_discount_amount || 0
+        );
+        const existingBalance = existingAmount - existingPaid;
+
+        // Keep the strongest representative row instead of summing duplicates.
+        const candidateScore =
+          candidateBalance + paidAmount + discountAmount + elementAmount;
+        const existingScore =
+          existingBalance + existingPaid + existingDiscount + existingAmount;
+
+        if (candidateScore > existingScore) {
+          dedupedMap[dedupeKey] = {
+            ...subFee,
+            element_amount: elementAmount,
+            paid_amount: paidAmount,
+            discount: discountAmount,
+          };
+        }
+      });
+
+      return Object.values(dedupedMap);
+    };
+
     // Calculate totals for each group (excluding sub-fees where all values are zero)
     return Object.values(groups).map((group) => {
-      const totals = group.subFees
+      const normalizedSubFees = dedupeSubFees(group.subFees);
+      const totals = normalizedSubFees
         .filter((subFee) => {
           // Exclude sub-fees where total, paid, and discount are all zero
           const elementAmount = parseFloat(subFee.element_amount || 0);
           const paidAmount = parseFloat(subFee.paid_amount || 0);
-          const discountAmount = parseFloat(subFee.discount || 0);
+          const discountAmount = parseFloat(
+            subFee.discount || subFee.element_discount_amount || 0
+          );
           return !(elementAmount === 0 && paidAmount === 0 && discountAmount === 0);
         })
         .reduce(
@@ -158,6 +216,7 @@ const StdPayment = () => {
 
       return {
         ...group,
+        subFees: normalizedSubFees,
         ...totals,
       };
     });
