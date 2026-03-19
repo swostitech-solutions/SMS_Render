@@ -121,51 +121,84 @@ const AdmLessonPlan = () => {
     setRowErrors({});
   };
 
-  const handleAddRow = () => {
-    const lastIndex = rows.length - 1;
-    const lastRow = rows[lastIndex];
-    const newRowErrors = {};
-    if (!lastRow.lectureNo || isNaN(Number(lastRow.lectureNo)) || Number(lastRow.lectureNo) < 1) newRowErrors.lectureNo = "Required";
-    if (!lastRow.moduleNo || isNaN(Number(lastRow.moduleNo)) || Number(lastRow.moduleNo) < 1) newRowErrors.moduleNo = "Required";
-    if (!lastRow.topic.trim()) newRowErrors.topic = "Required";
-    if (!lastRow.proposedDate) newRowErrors.proposedDate = "Required";
-    if (Object.keys(newRowErrors).length > 0) {
-      setRowErrors((prev) => ({ ...prev, [lastIndex]: newRowErrors }));
-      return;
-    }
-    setRowErrors((prev) => { const updated = { ...prev }; delete updated[lastIndex]; return updated; });
-    setRows([
-      ...rows,
-      { lectureNo: "", moduleNo: "", topic: "", proposedDate: "" },
-    ]);
-  };
+const handleAddRow = () => {
+  const lastIndex = rows.length - 1;
+  const lastRow = rows[lastIndex];
+  const newRowErrors = {};
+
+  // Lecture No (number validation)
+  if (
+    !lastRow.lectureNo ||
+    isNaN(Number(lastRow.lectureNo)) ||
+    Number(lastRow.lectureNo) < 1
+  ) {
+    newRowErrors.lectureNo = "Required";
+  }
+
+  // ✅ FIXED: Module No should NOT be numeric
+  if (!lastRow.moduleNo || !lastRow.moduleNo.trim()) {
+    newRowErrors.moduleNo = "Required";
+  }
+
+  if (!lastRow.topic || !lastRow.topic.trim()) {
+    newRowErrors.topic = "Required";
+  }
+
+  if (!lastRow.proposedDate) {
+    newRowErrors.proposedDate = "Required";
+  }
+
+  if (Object.keys(newRowErrors).length > 0) {
+    setRowErrors((prev) => ({
+      ...prev,
+      [lastIndex]: newRowErrors,
+    }));
+    return;
+  }
+
+  // Clear error
+  setRowErrors((prev) => {
+    const updated = { ...prev };
+    delete updated[lastIndex];
+    return updated;
+  });
+
+  // Add new row
+  setRows([
+    ...rows,
+    { lectureNo: "", moduleNo: "", topic: "", proposedDate: "" },
+  ]);
+};
 
   const handleRemoveRow = (index) => {
     const updatedRows = rows.filter((_, i) => i !== index);
     setRows(updatedRows.length > 0 ? updatedRows : [{ lectureNo: "", moduleNo: "", topic: "", proposedDate: "" }]);
     setRowErrors((prev) => { const updated = { ...prev }; delete updated[index]; return updated; });
   };
+const handleChange = (index, field, value) => {
+  const updatedRows = [...rows];
+  updatedRows[index][field] = value;
+  setRows(updatedRows);
 
-  const handleChange = (index, field, value) => {
-    const updatedRows = [...rows];
-    updatedRows[index][field] = value;
-    setRows(updatedRows);
-    if (rowErrors[index]?.[field]) {
-      setRowErrors((prev) => ({
-        ...prev,
-        [index]: { ...prev[index], [field]: "" },
-      }));
+  // ✅ FIX: rowErrors is an object, not array
+  setRowErrors((prev) => {
+    const updated = { ...prev };
+
+    if (updated[index]) {
+      updated[index] = {
+        ...updated[index],
+        [field]: "", // clear error for this field
+      };
+
+      // remove empty error object
+      if (Object.values(updated[index]).every((v) => !v)) {
+        delete updated[index];
+      }
     }
-    // Clear the rows error if any row is now complete
-    if (errors.rows) {
-      const hasComplete = updatedRows.some(
-        (r) => r.lectureNo && !isNaN(Number(r.lectureNo)) && Number(r.lectureNo) >= 1 &&
-               r.moduleNo && !isNaN(Number(r.moduleNo)) && Number(r.moduleNo) >= 1 &&
-               r.topic && r.topic.trim() && r.proposedDate
-      );
-      if (hasComplete) setErrors((prev) => ({ ...prev, rows: "" }));
-    }
-  };
+
+    return updated;
+  });
+};
 
   // Populate Session dropdown
   useEffect(() => {
@@ -412,9 +445,15 @@ const AdmLessonPlan = () => {
     if (!selectedSection) newErrors.selectedSection = "Section is required";
     if (!selectedSubject) newErrors.selectedSubject = "Subject is required";
     const validRows = rows.filter(
-      (row) => row.lectureNo && !isNaN(Number(row.lectureNo)) && Number(row.lectureNo) >= 1 &&
-               row.moduleNo && !isNaN(Number(row.moduleNo)) && Number(row.moduleNo) >= 1 &&
-               row.topic && row.topic.trim() && row.proposedDate
+      (row) =>
+        row.lectureNo &&
+        !isNaN(Number(row.lectureNo)) &&
+        Number(row.lectureNo) >= 1 &&
+        row.moduleNo &&
+        row.moduleNo.trim() &&
+        row.topic &&
+        row.topic.trim() &&
+        row.proposedDate,
     );
     if (validRows.length === 0) newErrors.rows = "Please enter at least one complete row with Lecture No, Module No, Topic and Proposed Date.";
     setErrors(newErrors);
@@ -425,9 +464,15 @@ const AdmLessonPlan = () => {
     if (!validateFields()) return;
 
     const validRows = rows.filter(
-      (row) => row.lectureNo && !isNaN(Number(row.lectureNo)) && Number(row.lectureNo) >= 1 &&
-               row.moduleNo && !isNaN(Number(row.moduleNo)) && Number(row.moduleNo) >= 1 &&
-               row.topic && row.topic.trim() && row.proposedDate
+      (row) =>
+        row.lectureNo &&
+        !isNaN(Number(row.lectureNo)) &&
+        Number(row.lectureNo) >= 1 &&
+        row.moduleNo &&
+        row.moduleNo.trim() &&
+        row.topic &&
+        row.topic.trim() &&
+        row.proposedDate,
     );
 
     const orgId = sessionStorage.getItem("organization_id");
@@ -447,7 +492,7 @@ const AdmLessonPlan = () => {
       professor_id: selectedMentor.value,
       lecture_details: validRows.map((row) => ({
         lecture_no: Number(row.lectureNo),
-        module_no: Number(row.moduleNo),
+        module_no: row.moduleNo,
         topic_name: row.topic.trim(),
         propose_date: row.proposedDate,
       })),

@@ -57,15 +57,17 @@ const AdmIssueDamagedReport = () => {
   };
 
   // Handle the Search button click
-  const handleSearch = () => {
-    if (bookStatus === "both") {
-      fetchData("b"); // both
-    } else if (bookStatus === "lost") {
-      fetchData("l"); // lost
-    } else if (bookStatus === "damaged") {
-      fetchData("d"); // damaged
-    }
-  };
+const handleSearch = () => {
+  if (bookStatus === "both") {
+    fetchData("b"); // both
+  } else if (bookStatus === "lost") {
+    fetchData("l"); // lost
+  } else if (bookStatus === "damaged") {
+    fetchData("d"); // damaged
+  } else if (bookStatus === "inactive") {
+    fetchData("i"); // ✅ inactive (NEW)
+  }
+};
 
   // Handle the Export to Excel button click
   const handleExportToExcel = () => {
