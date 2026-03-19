@@ -1064,7 +1064,7 @@ const FeeSearchPage = () => {
         doc.rect(85, 27, 40, 7, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
-        doc.text("CASH RECEIPT", 105, 32, { align: "center" });
+        doc.text(" RECEIPT", 105, 32, { align: "center" });
 
         doc.setTextColor(0, 0, 0);
         doc.text(`Receipt No. ${safe(data.receipt_no)}`, 140, 32);

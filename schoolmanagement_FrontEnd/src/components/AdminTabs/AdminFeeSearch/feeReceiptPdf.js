@@ -296,7 +296,7 @@ export const openFeeReceiptPdf = (receiptData) => {
   doc.setTextColor(255, 255, 255);
   doc.setFont("Helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("CASH RECEIPT", 105, 32, { align: "center" });
+  doc.text("RECEIPT", 105, 32, { align: "center" });
 
   doc.setTextColor(0, 0, 0);
   doc.setFont("Helvetica", "normal");
