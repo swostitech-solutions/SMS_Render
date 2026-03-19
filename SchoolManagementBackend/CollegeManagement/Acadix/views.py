@@ -11972,17 +11972,17 @@ class StudentRegistrationListAPIView(ListAPIView):
                     if feeDetails.exists():
 
                         for item in feeDetails:
-                            if item.fee_group.id == None or item.fee_applied_from.id == None:
+                            if not item.fee_group or not item.fee_applied_from:
                                 continue
-                            else:
-                                feedata = {
-                                    'fee_group_id': item.fee_group.id,
-                                    'fee_group': item.fee_group.fee_structure_code,
-                                    'fee_applied_from_id': item.fee_applied_from.id,
-                                    'semester': item.fee_applied_from.semester_description
-                                }
 
-                                feeDetailslist.append(feedata)
+                            feedata = {
+                                'fee_group_id': item.fee_group.id,
+                                'fee_group': item.fee_group.fee_structure_code,
+                                'fee_applied_from_id': item.fee_applied_from.id,
+                                'semester': item.fee_applied_from.semester_description
+                            }
+
+                            feeDetailslist.append(feedata)
 
                     # Manually serialize the sibilingsDetails data
                     sibilinglist = []
