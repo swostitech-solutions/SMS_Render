@@ -5,6 +5,11 @@ import { useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import * as XLSX from "xlsx";
 
+const toNumber = (value) => Number(value || 0);
+const getDiscountAmount = (item) => Math.abs(toNumber(item.discount_fees));
+const getActualPaidAmount = (item) => toNumber(item.total_paid) - getDiscountAmount(item);
+const getRemainingAmount = (item) => toNumber(item.total_fees) - toNumber(item.total_paid);
+
 function AdmFeeReport() {
   const navigate = useNavigate();
 
@@ -309,10 +314,10 @@ function AdmFeeReport() {
         });
 
         row["Total Fees"] = item.total_fees || 0;
-        row["Fees Paid"] = item.total_paid || 0;
+        row["Fees Paid"] = getActualPaidAmount(item);
         row["Discount"] = item.discount_fees || 0;
         row["Remarks"] = item.remarks || "-";
-        row["Balance"] = item.remaining_fees || 0;
+        row["Balance"] = getRemainingAmount(item);
 
         return row;
       });
@@ -551,10 +556,10 @@ function AdmFeeReport() {
                                     <td className="text-muted border-end-0">No specific fees applied</td>
                                   )}
                                   <td className="fw-bold">{item.total_fees || 0}</td>
-                                  <td className="fw-bold text-success">{item.total_paid || 0}</td>
+                                  <td className="fw-bold text-success">{getActualPaidAmount(item)}</td>
                                   <td className="fw-bold text-info">{item.discount_fees || 0}</td>
                                   <td>{item.remarks || "-"}</td>
-                                  <td className="fw-bold text-danger">{item.remaining_fees || 0}</td>
+                                  <td className="fw-bold text-danger">{getRemainingAmount(item)}</td>
                                 </tr>
                               </tbody>
                             </table>
