@@ -428,7 +428,7 @@ class LecturePeriod(models.Model):
 
 
 class CourseDepartmentSubject(models.Model):
-    subject_code = models.CharField(max_length=50, null=False, blank=False)
+    subject_code = models.CharField(max_length=255, null=False, blank=False)
     subject_description = models.CharField(max_length=200, null=True, blank=True)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)

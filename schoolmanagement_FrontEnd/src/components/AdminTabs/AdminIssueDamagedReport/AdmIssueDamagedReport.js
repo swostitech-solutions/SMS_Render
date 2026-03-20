@@ -6,13 +6,18 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import ReactPaginate from "react-paginate";
 
-// Import xlsx library
-
 const AdmIssueDamagedReport = () => {
   const navigate = useNavigate();
-  const [bookStatus, setBookStatus] = useState("both");
-  const [tableData, setTableData] = useState([]);
+  const statusOptions = [
+    { value: "ALL", label: "ALL" },
+    { value: "ACTIVE", label: "ACTIVE" },
+    { value: "INACTIVE", label: "INACTIVE" },
+    { value: "LOST", label: "LOST" },
+    { value: "DAMAGED", label: "DAMAGED" },
+  ];
 
+  const [bookStatus, setBookStatus] = useState("ALL");
+  const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -26,15 +31,14 @@ const AdmIssueDamagedReport = () => {
     setCurrentPage(selected);
   };
 
-  // Function to fetch data based on book status
   const fetchData = (status) => {
     const url = `${ApiUrl.apiurl}LIBRARYBOOK/LostDamagedlist/?flag=${status}`;
     setLoading(true);
     setError(null);
+    setCurrentPage(0);
 
     fetch(url)
       .then((response) => {
-        // Check if response is OK (status 200-299)
         if (!response.ok) {
           throw new Error(`Server error: ${response.status}`);
         }
@@ -48,45 +52,41 @@ const AdmIssueDamagedReport = () => {
         }
         setLoading(false);
       })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        setError("Unable to fetch data. The server may be experiencing issues. Please try again later.");
+      .catch((fetchError) => {
+        console.error("Error fetching data:", fetchError);
+        setError(
+          "Unable to fetch data. The server may be experiencing issues. Please try again later.",
+        );
         setTableData([]);
         setLoading(false);
       });
   };
 
-  // Handle the Search button click
-const handleSearch = () => {
-  if (bookStatus === "both") {
-    fetchData("b"); // both
-  } else if (bookStatus === "lost") {
-    fetchData("l"); // lost
-  } else if (bookStatus === "damaged") {
-    fetchData("d"); // damaged
-  } else if (bookStatus === "inactive") {
-    fetchData("i"); // ✅ inactive (NEW)
-  }
-};
+  const handleSearch = () => {
+    fetchData(bookStatus);
+  };
 
-  // Handle the Export to Excel button click
+  const handleClear = () => {
+    setBookStatus("ALL");
+    setTableData([]);
+    setError(null);
+    setCurrentPage(0);
+  };
+
   const handleExportToExcel = () => {
-
     if (!tableData || tableData.length === 0) {
       alert("No data available to export!");
       return;
     }
-    const ws = XLSX.utils.json_to_sheet(tableData); // Convert table data to worksheet
-    const wb = XLSX.utils.book_new(); // Create a new workbook
-    XLSX.utils.book_append_sheet(wb, ws, "Books"); // Append worksheet to the workbook
 
-    // Write the workbook to an Excel file
+    const ws = XLSX.utils.json_to_sheet(tableData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Books");
     XLSX.writeFile(wb, "Accession_List_Report.xlsx");
   };
 
-  // Initial data fetch for 'both' book status
   React.useEffect(() => {
-    fetchData("b");
+    fetchData("ALL");
   }, []);
 
   return (
@@ -124,7 +124,7 @@ const handleSearch = () => {
                     style={{
                       width: "150px",
                     }}
-                    onClick={handleExportToExcel} // Export to Excel functionality
+                    onClick={handleExportToExcel}
                   >
                     Export to Excel
                   </button>
@@ -134,7 +134,7 @@ const handleSearch = () => {
                     style={{
                       width: "150px",
                     }}
-                    onClick={() => setTableData([])} // Clear table data
+                    onClick={handleClear}
                   >
                     Clear
                   </button>
@@ -171,19 +171,15 @@ const handleSearch = () => {
                               name="bookStatus"
                               className="detail"
                               classNamePrefix="react-select"
-                              options={[
-                                { value: "both", label: "BOTH" },
-                                { value: "lost", label: "LOST" },
-                                { value: "damaged", label: "DAMAGED" },
-                                { value: "inactive", label: "INACTIVE" }, // <-- new option added
-                              ]}
-                              value={{
-                                value: bookStatus,
-                                label: bookStatus.toUpperCase(),
-                              }}
+                              options={statusOptions}
+                              value={
+                                statusOptions.find(
+                                  (option) => option.value === bookStatus,
+                                ) || statusOptions[0]
+                              }
                               onChange={(selectedOption) =>
                                 setBookStatus(
-                                  selectedOption ? selectedOption.value : "",
+                                  selectedOption ? selectedOption.value : "ALL",
                                 )
                               }
                               isSearchable={false}

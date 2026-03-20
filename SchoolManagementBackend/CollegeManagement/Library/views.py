@@ -3671,40 +3671,30 @@ class GetLostDamageBookListAPIView(ListAPIView):
     def list(self, request, *args, **kwargs):
         try:
             flag = request.query_params.get('flag')
+            normalized_flag = (flag or 'A').strip().upper()
 
-            filterdata = LibraryBooksBarcode.objects.none()
+            status_map = {
+                'A': ["ACTIVE", "Active", "active", "AVAILABLE", "Available", "available",
+                      "INACTIVE", "Inactive", "inactive", "LOST", "Lost", "lost",
+                      "DAMAGED", "Damaged", "damaged", "DAMAGE", "Damage", "damage"],
+                'ALL': ["ACTIVE", "Active", "active", "AVAILABLE", "Available", "available",
+                        "INACTIVE", "Inactive", "inactive", "LOST", "Lost", "lost",
+                        "DAMAGED", "Damaged", "damaged", "DAMAGE", "Damage", "damage"],
+                'B': ["LOST", "Lost", "lost", "DAMAGED", "Damaged", "damaged", "DAMAGE", "Damage", "damage"],
+                'BOTH': ["LOST", "Lost", "lost", "DAMAGED", "Damaged", "damaged", "DAMAGE", "Damage", "damage"],
+                'ACTIVE': ["ACTIVE", "Active", "active", "AVAILABLE", "Available", "available"],
+                'INACTIVE': ["INACTIVE", "Inactive", "inactive"],
+                'LOST': ["LOST", "Lost", "lost"],
+                'L': ["LOST", "Lost", "lost"],
+                'DAMAGED': ["DAMAGED", "Damaged", "damaged", "DAMAGE", "Damage", "damage"],
+                'D': ["DAMAGED", "Damaged", "damaged", "DAMAGE", "Damage", "damage"],
+            }
 
-            if flag == 'B' or flag == 'b':
-
-                try:
-                    filterdata = LibraryBooksBarcode.objects.filter(
-                        book_barcode_status__in=["damage", "Damage", "DAMAGE", "DAMAGED", "lost", "Lost", "LOST"],
-                        is_active=True
-                    )
-                except Exception as e:
-                    print(f"Error filtering both: {str(e)}")
-                    filterdata = None
-
-            elif flag == 'L' or flag == 'l':
-                try:
-                    filterdata = LibraryBooksBarcode.objects.filter(
-                        book_barcode_status__in=["lost", "LOST", "Lost"],
-                        is_active=True
-                    )
-                except Exception as e:
-                    print(f"Error filtering lost: {str(e)}")
-                    filterdata = None
-
-            elif flag == 'D' or flag == 'd':
-
-                try:
-                    filterdata = LibraryBooksBarcode.objects.filter(
-                        book_barcode_status__in=["damage", "DAMAGE", "Damage", "DAMAGED"],
-                        is_active=True
-                    )
-                except Exception as e:
-                    print(f"Error filtering damaged: {str(e)}")
-                    filterdata = None
+            statuses = status_map.get(normalized_flag, status_map['A'])
+            filterdata = LibraryBooksBarcode.objects.filter(
+                book_barcode_status__in=statuses,
+                is_active=True
+            )
 
             if filterdata:
                 finalresponseData = []
