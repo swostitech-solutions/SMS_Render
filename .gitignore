@@ -13,6 +13,10 @@ __pycache__/
 *.so
 .Python
 
+
+_vendor_psycopg
+
+
 # Virtual Environment
 venv/
 env/
