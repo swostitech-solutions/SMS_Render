@@ -40,6 +40,10 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.contrib.auth.models import update_last_login
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from Swostitech_Acadix import settings
 from Transport.models import RouteDetail, RouteMaster, PickupPoint
@@ -86,6 +90,45 @@ from .utils import send_otp_email, generate_otp
 
 
 # Create your views here.
+
+
+def normalize_password_value(value):
+    return re.sub(r"\s+", "", (value or "").lower())
+
+
+class NormalizedTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        normalized_password = normalize_password_value(attrs.get("password"))
+        normalized_attrs = {
+            **attrs,
+            "password": normalized_password,
+        }
+
+        try:
+            return super().validate(normalized_attrs)
+        except Exception:
+            username = normalized_attrs.get(self.username_field)
+            user = UserLogin.objects.filter(user_name=username).first()
+
+            if not user:
+                raise
+
+            stored_plain_password = normalize_password_value(user.plain_password)
+            if stored_plain_password != normalized_password or not user.is_active:
+                raise
+
+            refresh = self.get_token(user)
+            data = {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+            if api_settings.UPDATE_LAST_LOGIN:
+                update_last_login(None, user)
+
+            return data
+
+
+class NormalizedTokenObtainPairView(TokenObtainPairView):
+    serializer_class = NormalizedTokenObtainPairSerializer
+
 
 class UserTypeCreateView(CreateAPIView):
     queryset = UserType.objects.all()
@@ -768,12 +811,24 @@ class RegisterUserLoginAPIView(CreateAPIView):
 
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
+            normalized_password = normalize_password_value(password)
             organization_id = serializer.validated_data['organization_id']
             branch_id = serializer.validated_data['branch_id']
 
             # Check Authenticate username and password
 
-            user = authenticate(username=username, password=password)
+            user = authenticate(username=username, password=normalized_password)
+
+            if user is None:
+                user = UserLogin.objects.filter(user_name=username).select_related(
+                    'organization', 'branch', 'user_type'
+                ).first()
+                if user:
+                    stored_plain_password = normalize_password_value(user.plain_password)
+                    if stored_plain_password == normalized_password and user.is_active:
+                        pass
+                    else:
+                        user = None
 
             # print('Auth')
             if user is not None and user.is_active:

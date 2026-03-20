@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.http import JsonResponse
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
+from Acadix.views import NormalizedTokenObtainPairView
 
 def health_check(request):
     return JsonResponse({"status": "ok"})
@@ -47,7 +48,7 @@ urlpatterns = [
     # path('',include('REPORT_CARD.urls')),
     path('',include('INVENTORY.urls')),
 
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # login
+    path('api/token/', NormalizedTokenObtainPairView.as_view(), name='token_obtain_pair'),  # login
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')  # refresh
 ]
 from django.conf import settings
