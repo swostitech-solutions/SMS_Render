@@ -23,8 +23,12 @@ from Acadix.views import NormalizedTokenObtainPairView
 def health_check(request):
     return JsonResponse({"status": "ok"})
 
+def render_admin_health_check(request):
+    return JsonResponse({"status": "ok", "admin_url": "/backend-admin/"})
+
 urlpatterns = [
     path('health/', health_check, name='health_check'),
+    path('admin/', render_admin_health_check, name='render_admin_health_check'),
     path('backend-admin/', admin.site.urls),
     path('',include('Acadix.urls')),
     path('',include('Transport.urls')),

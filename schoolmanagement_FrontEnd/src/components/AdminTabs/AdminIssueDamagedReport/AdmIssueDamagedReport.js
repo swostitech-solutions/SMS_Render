@@ -79,7 +79,19 @@ const AdmIssueDamagedReport = () => {
       return;
     }
 
-    const ws = XLSX.utils.json_to_sheet(tableData);
+    const exportData = tableData.map((book, index) => ({
+      "Sr.No": index + 1,
+      "Book Name": book.book_name,
+      "Book Code": book.book_code,
+      "Accession No.": book.barcode,
+      Category: book.category,
+      "Sub Category": book.subCategory,
+      Publisher: book.publisher,
+      "Author Name": book.author,
+      "Accession Status": book.book_status,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Books");
     XLSX.writeFile(wb, "Accession_List_Report.xlsx");
@@ -163,7 +175,7 @@ const AdmIssueDamagedReport = () => {
                             className="form-label me-3 mb-0"
                             style={{ whiteSpace: "nowrap", fontWeight: "bold" }}
                           >
-                            Book Status
+                            Accession Status
                           </label>
                           <div className="flex-grow-1">
                             <Select
@@ -201,20 +213,17 @@ const AdmIssueDamagedReport = () => {
                         <th>Book Name</th>
                         <th>Book Code</th>
                         <th>Accession No.</th>
-                        <th>ISBN No</th>
                         <th>Category</th>
                         <th>Sub Category</th>
                         <th>Publisher</th>
                         <th>Author Name</th>
-                        <th>Publish Year</th>
-                        <th>Library Branch</th>
-                        <th>Book Status</th>
+                        <th>Accession Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan="12" className="text-center py-4">
+                          <td colSpan="9" className="text-center py-4">
                             <div
                               className="spinner-border text-primary"
                               role="status"
@@ -228,17 +237,14 @@ const AdmIssueDamagedReport = () => {
                         </tr>
                       ) : error ? (
                         <tr>
-                          <td
-                            colSpan="12"
-                            className="text-center py-4 text-danger"
-                          >
+                          <td colSpan="9" className="text-center py-4 text-danger">
                             <i className="bi bi-exclamation-triangle me-2"></i>
                             {error}
                           </td>
                         </tr>
                       ) : tableData.length === 0 ? (
                         <tr>
-                          <td colSpan="12" className="text-center py-4">
+                          <td colSpan="9" className="text-center py-4">
                             No records found
                           </td>
                         </tr>
@@ -249,13 +255,10 @@ const AdmIssueDamagedReport = () => {
                             <td>{book.book_name}</td>
                             <td>{book.book_code}</td>
                             <td>{book.barcode}</td>
-                            <td>{book.isbnNo}</td>
                             <td>{book.category}</td>
                             <td>{book.subCategory}</td>
                             <td>{book.publisher}</td>
                             <td>{book.author}</td>
-                            <td>{book.publish_year}</td>
-                            <td>{book.library_branch}</td>
                             <td>{book.book_status}</td>
                           </tr>
                         ))
