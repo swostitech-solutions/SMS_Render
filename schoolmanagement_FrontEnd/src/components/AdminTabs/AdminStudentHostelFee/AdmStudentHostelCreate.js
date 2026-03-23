@@ -702,12 +702,16 @@ const AdmStudentHostelCreate = () => {
         );
         const data = await res.json();
 
-        setBlockOptions(
-          data.map((item) => ({
-            value: item.id,
-            label: item.block_name,
-          })),
-        );
+        if (Array.isArray(data)) {
+          setBlockOptions(
+            data.map((item) => ({
+              value: item.id,
+              label: item.block_name,
+            })),
+          );
+        } else {
+          setBlockOptions([]);
+        }
       } catch (error) {
         console.error("Error fetching block list:", error);
         setBlockOptions([]);
@@ -740,12 +744,16 @@ const AdmStudentHostelCreate = () => {
         });
         const data = await response.json();
 
-        setFloorList(
-          data.map((floor) => ({
-            value: floor.id,
-            label: floor.floor_number,
-          })),
-        );
+        if (Array.isArray(data)) {
+          setFloorList(
+            data.map((floor) => ({
+              value: floor.id,
+              label: floor.floor_number,
+            })),
+          );
+        } else {
+          setFloorList([]);
+        }
       } catch (error) {
         console.error("Error fetching floors:", error);
         setFloorList([]);
@@ -756,12 +764,13 @@ const AdmStudentHostelCreate = () => {
   }, [selectedHostel, selectedBlock]);
 
   useEffect(() => {
-    if (!selectedHostel?.value) {
-      setRoomTypes([]);
-      return;
-    }
-
     const fetchRoomTypes = async () => {
+      if (!selectedFloor?.value || !selectedHostel?.value) {
+        setRoomTypes([]);
+        setSelectedRoomType(null);
+        return;
+      }
+
       try {
         const organization_id = sessionStorage.getItem("organization_id") || 1;
         const branch_id = sessionStorage.getItem("branch_id") || 1;
@@ -778,12 +787,16 @@ const AdmStudentHostelCreate = () => {
         );
         const data = await response.json();
 
-        setRoomTypes(
-          data.map((item) => ({
-            value: item.id,
-            label: item.room_type,
-          })),
-        );
+        if (Array.isArray(data)) {
+          setRoomTypes(
+            data.map((item) => ({
+              value: item.id,
+              label: item.room_type,
+            })),
+          );
+        } else {
+          setRoomTypes([]);
+        }
       } catch (error) {
         console.error("Error fetching Room Types:", error);
         setRoomTypes([]);
@@ -791,7 +804,7 @@ const AdmStudentHostelCreate = () => {
     };
 
     fetchRoomTypes();
-  }, [selectedHostel]);
+  }, [selectedHostel, selectedFloor]);
 
   useEffect(() => {
     if (
@@ -943,56 +956,14 @@ const AdmStudentHostelCreate = () => {
   }, []);
   // When hostel changes
   // When Hostel changes → reset all dependent fields
-  useEffect(() => {
-    setSelectedBlock(null);
-    setSelectedFloor(null);
-    setSelectedRoomType(null);
-    setSelectedRoom(null);
-    setSelectedBed(null);
-
-    setBlockOptions([]);
-    setFloorList([]);
-    setRoomTypes([]);
-    setRoomList([]);
-    setBedList([]);
-  }, [selectedHostel]);
 
   // When Block changes → reset Floor, Room Type, Room, Bed
-  useEffect(() => {
-    setSelectedFloor(null);
-    setSelectedRoomType(null);
-    setSelectedRoom(null);
-    setSelectedBed(null);
-
-    setFloorList([]);
-    setRoomTypes([]);
-    setRoomList([]);
-    setBedList([]);
-  }, [selectedBlock]);
 
   // When Floor changes → reset Room, Bed
-  useEffect(() => {
-    setSelectedRoom(null);
-    setSelectedBed(null);
-
-    setRoomList([]);
-    setBedList([]);
-  }, [selectedFloor]);
 
   // When Room Type changes → reset Room, Bed
-  useEffect(() => {
-    setSelectedRoom(null);
-    setSelectedBed(null);
-
-    setRoomList([]);
-    setBedList([]);
-  }, [selectedRoomType]);
 
   // When Room changes → reset Bed
-  useEffect(() => {
-    setSelectedBed(null);
-    setBedList([]);
-  }, [selectedRoom]);
   const handleSearch = async () => {
     try {
       const academicSessionId = localStorage.getItem("academicSessionId") || "";
@@ -1089,6 +1060,17 @@ const AdmStudentHostelCreate = () => {
   };
   const handleHostelChange = (option) => {
     setSelectedHostel(option);
+    setSelectedBlock(null);
+    setSelectedFloor(null);
+    setSelectedRoomType(null);
+    setSelectedRoom(null);
+    setSelectedBed(null);
+
+    setBlockOptions([]);
+    setFloorList([]);
+    setRoomTypes([]);
+    setRoomList([]);
+    setBedList([]);
   };
 
   const handleSave = async () => {
@@ -1363,7 +1345,17 @@ const AdmStudentHostelCreate = () => {
                           placeholder="Select Block"
                           options={blockOptions}
                           value={selectedBlock}
-                          onChange={(option) => setSelectedBlock(option)}
+                          onChange={(option) => {
+                            setSelectedBlock(option);
+                            setSelectedFloor(null);
+                            setSelectedRoomType(null);
+                            setSelectedRoom(null);
+                            setSelectedBed(null);
+                            setFloorList([]);
+                            setRoomTypes([]);
+                            setRoomList([]);
+                            setBedList([]);
+                          }}
                         />
                       </div>
                       <div className="col-12 col-md-3 mb-2">
@@ -1373,7 +1365,15 @@ const AdmStudentHostelCreate = () => {
                         <Select
                           options={floorList}
                           value={selectedFloor}
-                          onChange={(option) => setSelectedFloor(option)}
+                          onChange={(option) => {
+                            setSelectedFloor(option);
+                            setSelectedRoomType(null);
+                            setSelectedRoom(null);
+                            setSelectedBed(null);
+                            setRoomTypes([]);
+                            setRoomList([]);
+                            setBedList([]);
+                          }}
                           placeholder="Select Floor No"
                           className="detail"
                         />
@@ -1387,7 +1387,13 @@ const AdmStudentHostelCreate = () => {
                           placeholder="Select Room Type"
                           options={roomTypes}
                           value={selectedRoomType}
-                          onChange={(option) => setSelectedRoomType(option)}
+                          onChange={(option) => {
+                            setSelectedRoomType(option);
+                            setSelectedRoom(null);
+                            setSelectedBed(null);
+                            setRoomList([]);
+                            setBedList([]);
+                          }}
                         />
                       </div>
                       <div className="col-12 col-md-3 mb-2">
@@ -1398,7 +1404,11 @@ const AdmStudentHostelCreate = () => {
                           className="detail"
                           options={roomList}
                           value={selectedRoom}
-                          onChange={(option) => setSelectedRoom(option)}
+                          onChange={(option) => {
+                            setSelectedRoom(option);
+                            setSelectedBed(null);
+                            setBedList([]);
+                          }}
                           placeholder="Select Room"
                         />
                       </div>
