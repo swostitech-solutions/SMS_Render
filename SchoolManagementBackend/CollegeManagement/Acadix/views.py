@@ -92,29 +92,19 @@ from .utils import send_otp_email, generate_otp
 # Create your views here.
 
 
-def normalize_password_value(value):
-    return re.sub(r"\s+", "", (value or "").lower())
-
-
 class NormalizedTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        normalized_password = normalize_password_value(attrs.get("password"))
-        normalized_attrs = {
-            **attrs,
-            "password": normalized_password,
-        }
-
         try:
-            return super().validate(normalized_attrs)
+            return super().validate(attrs)
         except Exception:
-            username = normalized_attrs.get(self.username_field)
+            username = attrs.get(self.username_field)
             user = UserLogin.objects.filter(user_name=username).first()
 
             if not user:
                 raise
 
-            stored_plain_password = normalize_password_value(user.plain_password)
-            if stored_plain_password != normalized_password or not user.is_active:
+            provided_password = attrs.get("password") or ""
+            if user.plain_password != provided_password or not user.is_active:
                 raise
 
             refresh = self.get_token(user)
@@ -811,21 +801,19 @@ class RegisterUserLoginAPIView(CreateAPIView):
 
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
-            normalized_password = normalize_password_value(password)
             organization_id = serializer.validated_data['organization_id']
             branch_id = serializer.validated_data['branch_id']
 
             # Check Authenticate username and password
 
-            user = authenticate(username=username, password=normalized_password)
+            user = authenticate(username=username, password=password)
 
             if user is None:
                 user = UserLogin.objects.filter(user_name=username).select_related(
                     'organization', 'branch', 'user_type'
                 ).first()
                 if user:
-                    stored_plain_password = normalize_password_value(user.plain_password)
-                    if stored_plain_password == normalized_password and user.is_active:
+                    if user.plain_password == password and user.is_active:
                         pass
                     else:
                         user = None

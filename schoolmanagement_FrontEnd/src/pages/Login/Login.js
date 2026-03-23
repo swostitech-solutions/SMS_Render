@@ -16,9 +16,6 @@ import { ApiUrl } from "../../ApiUrl";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 
 
-const normalizePassword = (value = "") => value.toLowerCase().replace(/\s+/g, "");
-
-
 const Login = ({ onLogin }) => {
   // const [formData, setFormData] = useState({
   //   username: "",
@@ -151,7 +148,7 @@ const Login = ({ onLogin }) => {
     const { name, value } = event.target;
     setFormData({
       ...formData,
-      [name]: name === "password" ? normalizePassword(value) : value,
+      [name]: value,
     });
   };
   const togglePasswordVisibility = () => {
@@ -279,7 +276,7 @@ const Login = ({ onLogin }) => {
   const handleLogin = async () => {
     try {
       setLoading(true);
-      const normalizedPassword = normalizePassword(formData.password);
+      const enteredPassword = formData.password;
 
       const selectedInstitute = formData.institute;
 
@@ -296,7 +293,7 @@ const Login = ({ onLogin }) => {
         },
         body: JSON.stringify({
           username: formData.username,
-          password: normalizedPassword,
+          password: enteredPassword,
           organization_id: selectedInstitute.organization_id,
           branch_id: selectedInstitute.branch_id,
         }),
@@ -378,7 +375,7 @@ const Login = ({ onLogin }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_name: formData.username,
-          password: normalizedPassword,
+          password: enteredPassword,
         }),
       });
 
