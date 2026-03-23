@@ -244,9 +244,19 @@ const handleClear = () => {
     }
 
     const academicYearId = localStorage.getItem("academicSessionId");
-    const orgId = localStorage.getItem("orgId");
-    const branchId = localStorage.getItem("branchId");
+    const orgId =
+      localStorage.getItem("orgId") || sessionStorage.getItem("organization_id");
+    const branchId =
+      localStorage.getItem("branchId") || sessionStorage.getItem("branch_id");
     const studentId = localStorage.getItem("selectedCertificateStudentId");
+
+    if (!orgId || !branchId) {
+      alert(
+        "Your session seems to be expired or incomplete. Please login again and try once more.",
+      );
+      navigate("/login");
+      return;
+    }
 
     try {
       const apiUrl = `${ApiUrl.apiurl}StudentCertificate/GetDetailsBasedOnDocumentTypeStudentId/?academic_year_id=${academicYearId}&organization_id=${orgId}&branch_id=${branchId}&document_type=${documentType}&student_id=${studentId}`;
