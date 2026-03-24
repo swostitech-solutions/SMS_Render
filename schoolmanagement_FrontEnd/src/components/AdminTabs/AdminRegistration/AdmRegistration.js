@@ -98,36 +98,64 @@ const AdmAttendanceEntry = ({ formData, setFormData }) => {
   const rowsPerPage = 10;
 
  const filteredStudentData = useMemo(() => {
-   if (!searchQuery) return studentData;
+   if (!searchQuery?.trim()) return studentData;
 
    const lowerQuery = searchQuery.trim().toLowerCase();
+   const queryWords = lowerQuery.split(/\s+/).filter(Boolean);
 
    return studentData.filter((student) => {
-     const basic = student?.studentBasicDetails;
+     const basic = student?.studentBasicDetails || {};
      const address = student?.addressDetails?.[0] || {};
-     if (!basic) return false;
+     if (!Object.keys(basic).length && !Object.keys(address).length) return false;
 
      const fullName = [basic.first_name, basic.middle_name, basic.last_name]
        .filter(Boolean)
        .join(" ")
        .toLowerCase();
 
-     // Split search words (ONLY ONCE ✅)
-     const queryWords = lowerQuery.split(" ").filter(Boolean);
+     const searchableText = [
+       fullName,
+       basic.registration_no,
+       basic.admission_no,
+       basic.school_admission_no,
+       basic.barcode,
+       basic.rollno,
+       basic.roll_no,
+       basic.father_name,
+       basic.mother_name,
+       basic.gender_name,
+       basic.gender,
+       basic.religion_name,
+       basic.category_name,
+       basic.batch_description,
+       basic.course_name,
+       basic.department_description,
+       basic.academic_year_description,
+       basic.semester_description,
+       basic.section_name,
+       basic.organization_description,
+       basic.branch_name,
+       address.present_address,
+       address.present_city,
+       address.present_state,
+       address.present_country,
+       address.present_pincode,
+       address.permanent_address,
+       address.permanent_city,
+       address.permanent_state,
+       address.permanent_country,
+       address.permanent_pincode,
+     ]
+       .filter(Boolean)
+       .join(" ")
+       .toLowerCase();
 
-     // Name match
      const isNameMatch = queryWords.every((word) => fullName.includes(word));
+     const isSearchableFieldMatch = queryWords.every((word) =>
+       searchableText.includes(word)
+     );
 
-     // Other fields match
-     const isOtherMatch = `
-      ${basic.registration_no || ""}
-      ${basic.admission_no || ""}
-      ${basic.barcode || ""}
-    `
-       .toLowerCase()
-       .includes(lowerQuery);
-
-     return isNameMatch || isOtherMatch;
+     return isNameMatch || isSearchableFieldMatch;
    });
  }, [studentData, searchQuery]);
 
