@@ -672,50 +672,87 @@ const SelectStudentModal = ({ show, handleClose, onSelectStudent }) => {
   };
 
 
+const handleClearFilters = () => {
+  setFilters({
+    studentName: "",
+    admissionNo: "",
+    barcode: "",
+    studentId: "",
+    classId: "",
+    section: "",
+    fatherName: "",
+    motherName: "",
+    schoolAdmissionNo: "",
+  });
+
+  setSelectedClass("");
+  setSelectedSection("");
+  setSelectedAcademicYear(null);
+  setSelectedSemester(null);
+  setSelectedSession(null);
+  setSelectedCourse(null);
+  setSelectedDepartment(null);
+  setSelectedSessionId(null);
+
+  // Reset dependent dropdowns only
+  setSemesters([]);
+  setSections([]);
+  setCourses([]);
+  setDepartments([]);
+  setAcademicYears([]);
+
+  // ❌ DO NOT CLEAR sessions
+  // setSessions([]);
+
+  setStudentData(fullStudentData);
+  setShowTable(false);
+
+  setStudentError("");
+  setStudentLoading(false);
+};
 
 
 
+  // const handleClearFilters = () => {
+  //   // Reset filter input fields
+  //   setFilters({
+  //     studentName: "",
+  //     admissionNo: "",
+  //     barcode: "",
+  //     studentId: "",
+  //     classId: "",
+  //     section: "",
+  //     fatherName: "",
+  //     motherName: "",
+  //     schoolAdmissionNo: "",
+  //   });
 
-  const handleClearFilters = () => {
-    // Reset filter input fields
-    setFilters({
-      studentName: "",
-      admissionNo: "",
-      barcode: "",
-      studentId: "",
-      classId: "",
-      section: "",
-      fatherName: "",
-      motherName: "",
-      schoolAdmissionNo: "",
-    });
+  //   // Reset dropdown selections
+  //   setSelectedClass("");
+  //   setSelectedSection("");
+  //   setSelectedAcademicYear(null);
+  //   setSelectedSemester(null);
+  //   setSelectedSession(null);
+  //   setSelectedCourse(null);
+  //   setSelectedDepartment(null);
+  //   setSelectedSessionId(null);
 
-    // Reset dropdown selections
-    setSelectedClass("");
-    setSelectedSection("");
-    setSelectedAcademicYear(null);
-    setSelectedSemester(null);
-    setSelectedSession(null);
-    setSelectedCourse(null);
-    setSelectedDepartment(null);
-    setSelectedSessionId(null);
+  //   // Reset dependent dropdown lists (optional)
+  //   setSemesters([]);
+  //   setSections([]);
+  //   setSessions([]);
+  //   setCourses([]);
+  //   setDepartments([]);
+  //   setAcademicYears([]);
 
-    // Reset dependent dropdown lists (optional)
-    setSemesters([]);
-    setSections([]);
-    setSessions([]);
-    setCourses([]);
-    setDepartments([]);
-    setAcademicYears([]);
+  //   // Reset student table data
+  //   setStudentData(fullStudentData); // full list back
+  //   setShowTable(false); // hide table after clearing (optional)
 
-    // Reset student table data
-    setStudentData(fullStudentData); // full list back
-    setShowTable(false); // hide table after clearing (optional)
-
-    // Reset students fetch status
-    setStudentError("");
-    setStudentLoading(false);
-  };
+  //   // Reset students fetch status
+  //   setStudentError("");
+  //   setStudentLoading(false);
+  // };
 
 
   return (

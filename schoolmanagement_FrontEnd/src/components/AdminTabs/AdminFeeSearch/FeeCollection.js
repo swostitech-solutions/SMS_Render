@@ -3100,7 +3100,13 @@ const FeeCollection = () => {
 
       if (response.ok && result.message?.includes("Success")) {
         alert("Fee receipt created successfully!");
-        await generatePDF(result.receipt_data);
+        const receiptData = {
+          ...result.receipt_data,
+          academic_year_code: result.receipt_data.academic_year_code || selectedAcademicYear?.label || "",
+          department_name: result.receipt_data.department_name || selectedDepartment?.label || "",
+          semester_name: result.receipt_data.semester_name || selectedSemester?.label || "",
+        };
+        await generatePDF(receiptData);
         handleClear();
       } else {
         alert(result?.message || JSON.stringify(result));

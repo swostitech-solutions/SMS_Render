@@ -704,7 +704,24 @@ const AdmAttendanceEntry = ({
                         disabled
                       />{" "}
                     </div>
-
+                    <div className="col-12 col-md-3 mb-3">
+                      <label htmlFor="barcode" className="form-label">
+                        Roll No
+                      </label>
+                      <input
+                        type="text"
+                        id="barcode"
+                        className="form-control detail"
+                        placeholder="Enter Roll No"
+                        name="barcode"
+                        value={formData.barcode}
+                        onChange={handleInputChange}
+                        // disabled
+                      />
+                      {errors.barcode && (
+                        <small style={{ color: "red" }}>{errors.barcode}</small>
+                      )}
+                    </div>
                     <div className="col-12 col-md-5  ">
                       <label htmlFor="student-name" className="form-label">
                         {" "}
@@ -727,7 +744,9 @@ const AdmAttendanceEntry = ({
                           </small>
                         )}
                         {!errors.first_name && requiredErrors.first_name && (
-                          <small style={{ color: "red" }}>{requiredErrors.first_name}</small>
+                          <small style={{ color: "red" }}>
+                            {requiredErrors.first_name}
+                          </small>
                         )}
                         <input
                           type="text"
@@ -758,7 +777,9 @@ const AdmAttendanceEntry = ({
                           </small>
                         )}
                         {!errors.last_name && requiredErrors.last_name && (
-                          <small style={{ color: "red" }}>{requiredErrors.last_name}</small>
+                          <small style={{ color: "red" }}>
+                            {requiredErrors.last_name}
+                          </small>
                         )}
                       </div>
                     </div>
@@ -784,23 +805,23 @@ const AdmAttendanceEntry = ({
                         options={
                           Array.isArray(genders)
                             ? genders.map((g) => ({
-                              value: g.id,
-                              label: g.gender_name, // ✅ uses API field
-                            }))
+                                value: g.id,
+                                label: g.gender_name, // ✅ uses API field
+                              }))
                             : []
                         }
                         value={
                           formData?.gender
                             ? genders
-                              .map((g) => ({
-                                value: g.id,
-                                label: g.gender_name,
-                              }))
-                              .find(
-                                (opt) =>
-                                  Number(opt.value) ===
-                                  Number(formData.gender)
-                              ) || null
+                                .map((g) => ({
+                                  value: g.id,
+                                  label: g.gender_name,
+                                }))
+                                .find(
+                                  (opt) =>
+                                    Number(opt.value) ===
+                                    Number(formData.gender),
+                                ) || null
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -813,7 +834,9 @@ const AdmAttendanceEntry = ({
                         }
                       />
                       {requiredErrors.gender && (
-                        <small style={{ color: "red" }}>{requiredErrors.gender}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.gender}
+                        </small>
                       )}
                     </div>
 
@@ -866,11 +889,11 @@ const AdmAttendanceEntry = ({
                         value={
                           BatchList?.find((b) => b.id === selectedSession)
                             ? {
-                              value: selectedSession,
-                              label: BatchList.find(
-                                (b) => b.id === selectedSession
-                              )?.batch_description,
-                            }
+                                value: selectedSession,
+                                label: BatchList.find(
+                                  (b) => b.id === selectedSession,
+                                )?.batch_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -891,7 +914,9 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Session"
                       />
                       {requiredErrors.batch && (
-                        <small style={{ color: "red" }}>{requiredErrors.batch}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.batch}
+                        </small>
                       )}
                     </div>
 
@@ -906,11 +931,11 @@ const AdmAttendanceEntry = ({
                         value={
                           CourseList?.find((c) => c.id === selectedCourse)
                             ? {
-                              value: selectedCourse,
-                              label: CourseList.find(
-                                (c) => c.id === selectedCourse
-                              )?.course_name,
-                            }
+                                value: selectedCourse,
+                                label: CourseList.find(
+                                  (c) => c.id === selectedCourse,
+                                )?.course_name,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -931,7 +956,9 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Course"
                       />
                       {requiredErrors.course && (
-                        <small style={{ color: "red" }}>{requiredErrors.course}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.course}
+                        </small>
                       )}
                     </div>
 
@@ -946,11 +973,11 @@ const AdmAttendanceEntry = ({
                         value={
                           BranchList?.find((d) => d.id === selectedDepartment)
                             ? {
-                              value: selectedDepartment,
-                              label: BranchList.find(
-                                (d) => d.id === selectedDepartment
-                              )?.department_description,
-                            }
+                                value: selectedDepartment,
+                                label: BranchList.find(
+                                  (d) => d.id === selectedDepartment,
+                                )?.department_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -971,7 +998,9 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Department"
                       />
                       {requiredErrors.department && (
-                        <small style={{ color: "red" }}>{requiredErrors.department}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.department}
+                        </small>
                       )}
                     </div>
 
@@ -985,14 +1014,14 @@ const AdmAttendanceEntry = ({
                         isDisabled={false}
                         value={
                           AcademicYearList?.find(
-                            (y) => y.id === Number(selectedAcademicYear)
+                            (y) => y.id === Number(selectedAcademicYear),
                           )
                             ? {
-                              value: selectedAcademicYear,
-                              label: AcademicYearList.find(
-                                (y) => y.id === Number(selectedAcademicYear)
-                              )?.academic_year_description,
-                            }
+                                value: selectedAcademicYear,
+                                label: AcademicYearList.find(
+                                  (y) => y.id === Number(selectedAcademicYear),
+                                )?.academic_year_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -1013,7 +1042,9 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Academic Year"
                       />
                       {requiredErrors.academic_year && (
-                        <small style={{ color: "red" }}>{requiredErrors.academic_year}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.academic_year}
+                        </small>
                       )}
                     </div>
 
@@ -1028,11 +1059,11 @@ const AdmAttendanceEntry = ({
                         value={
                           SemesterList?.find((s) => s.id === selectedSemester)
                             ? {
-                              value: selectedSemester,
-                              label: SemesterList.find(
-                                (s) => s.id === selectedSemester
-                              )?.semester_description,
-                            }
+                                value: selectedSemester,
+                                label: SemesterList.find(
+                                  (s) => s.id === selectedSemester,
+                                )?.semester_description,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -1053,7 +1084,9 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Semester"
                       />
                       {requiredErrors.semester && (
-                        <small style={{ color: "red" }}>{requiredErrors.semester}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.semester}
+                        </small>
                       )}
                     </div>
 
@@ -1068,11 +1101,11 @@ const AdmAttendanceEntry = ({
                         value={
                           SectionList?.find((s) => s.id === selectedSection)
                             ? {
-                              value: selectedSection,
-                              label: SectionList.find(
-                                (s) => s.id === selectedSection
-                              )?.section_name,
-                            }
+                                value: selectedSection,
+                                label: SectionList.find(
+                                  (s) => s.id === selectedSection,
+                                )?.section_name,
+                              }
                             : null
                         }
                         onChange={(opt) => {
@@ -1093,13 +1126,16 @@ const AdmAttendanceEntry = ({
                         placeholder="Select Section"
                       />
                       {requiredErrors.addmitted_section && (
-                        <small style={{ color: "red" }}>{requiredErrors.addmitted_section}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.addmitted_section}
+                        </small>
                       )}
                     </div>
 
                     <div className="col-12 col-md-4 mb-4">
                       <label htmlFor="date_of_admission" className="form-label">
-                        Date Of Admission <span style={{ color: "red" }}>*</span>
+                        Date Of Admission{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -1111,7 +1147,9 @@ const AdmAttendanceEntry = ({
                         disabled={isDisabled}
                       />
                       {requiredErrors.date_of_admission && (
-                        <small style={{ color: "red" }}>{requiredErrors.date_of_admission}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.date_of_admission}
+                        </small>
                       )}
                     </div>
 
@@ -1134,9 +1172,9 @@ const AdmAttendanceEntry = ({
                         value={
                           formData.admission_type
                             ? {
-                              value: formData.admission_type,
-                              label: formData.admission_type,
-                            }
+                                value: formData.admission_type,
+                                label: formData.admission_type,
+                              }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1149,27 +1187,31 @@ const AdmAttendanceEntry = ({
                         }
                       />
                       {requiredErrors.admission_type && (
-                        <small style={{ color: "red" }}>{requiredErrors.admission_type}</small>
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.admission_type}
+                        </small>
                       )}
                     </div>
 
-                   <div className="col-12 col-md-4 mb-2">
-  <label htmlFor="dob" className="form-label">
-    Date Of Birth <span style={{ color: "red" }}>*</span>
-  </label>
-  <input
-    type="date"
-    id="dob"
-    className="form-control detail"
-    name="dob"
-    value={formData.dob || ""}
-    onChange={handleInputChange}
-    disabled={isDisabled}
-  />
-  {requiredErrors.dob && (
-    <small style={{ color: "red" }}>{requiredErrors.dob}</small>
-  )}
-</div>
+                    <div className="col-12 col-md-4 mb-2">
+                      <label htmlFor="dob" className="form-label">
+                        Date Of Birth <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <input
+                        type="date"
+                        id="dob"
+                        className="form-control detail"
+                        name="dob"
+                        value={formData.dob || ""}
+                        onChange={handleInputChange}
+                        disabled={isDisabled}
+                      />
+                      {requiredErrors.dob && (
+                        <small style={{ color: "red" }}>
+                          {requiredErrors.dob}
+                        </small>
+                      )}
+                    </div>
 
                     {/* <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="rollno" className="form-label">
@@ -1190,25 +1232,6 @@ const AdmAttendanceEntry = ({
                       )}
                     </div> */}
 
-                    <div className="col-12 col-md-4 mb-4">
-                      <label htmlFor="barcode" className="form-label">
-                        Roll No
-                      </label>
-                      <input
-                        type="text"
-                        id="barcode"
-                        className="form-control detail"
-                        placeholder="Enter Roll No"
-                        name="barcode"
-                        value={formData.barcode}
-                        onChange={handleInputChange}
-                      // disabled
-                      />
-                      {errors.barcode && (
-                        <small style={{ color: "red" }}>{errors.barcode}</small>
-                      )}
-                    </div>
-
                     <div className="col-12 col-md-4 mb-2">
                       <label htmlFor="registration-no" className="form-label">
                         ONMRC Registration No
@@ -1221,7 +1244,7 @@ const AdmAttendanceEntry = ({
                         name="registration_no"
                         value={formData.registration_no}
                         onChange={handleInputChange}
-                      // disabled
+                        // disabled
                       />
                       {errors.registration_no && (
                         <small style={{ color: "red" }}>
@@ -1321,23 +1344,24 @@ const AdmAttendanceEntry = ({
                         options={
                           Array.isArray(religions)
                             ? religions.map((religion) => ({
-                              value: religion.id, // store id
-                              label: religion.religion_name, // show readable name
-                            }))
+                                value: religion.id, // store id
+                                label: religion.religion_name, // show readable name
+                              }))
                             : []
                         }
                         value={
                           formData.religion
                             ? {
-                              value: Number(formData.religion),
-                              label:
-                                formData.religion_label ||
-                                religions.find(
-                                  (r) =>
-                                    Number(r.id) === Number(formData.religion)
-                                )?.religion_name ||
-                                "Select Religion",
-                            }
+                                value: Number(formData.religion),
+                                label:
+                                  formData.religion_label ||
+                                  religions.find(
+                                    (r) =>
+                                      Number(r.id) ===
+                                      Number(formData.religion),
+                                  )?.religion_name ||
+                                  "Select Religion",
+                              }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1372,21 +1396,22 @@ const AdmAttendanceEntry = ({
                         options={
                           Array.isArray(categories)
                             ? categories.map((cat) => ({
-                              value: cat.id,
-                              label: cat.category_name,
-                            }))
+                                value: cat.id,
+                                label: cat.category_name,
+                              }))
                             : []
                         }
                         value={
                           formData?.category
                             ? {
-                              value: formData.category,
-                              label:
-                                categories.find(
-                                  (c) =>
-                                    Number(c.id) === Number(formData.category)
-                                )?.category_name || "Select Category",
-                            }
+                                value: formData.category,
+                                label:
+                                  categories.find(
+                                    (c) =>
+                                      Number(c.id) ===
+                                      Number(formData.category),
+                                  )?.category_name || "Select Category",
+                              }
                             : null
                         }
                         onChange={(selectedOption) => {
@@ -1409,10 +1434,10 @@ const AdmAttendanceEntry = ({
 
                           // ✅ Keep previously stored IDs intact
                           const orgId = localStorage.getItem(
-                            "selectedOrganizationId"
+                            "selectedOrganizationId",
                           );
                           const yearId = localStorage.getItem(
-                            "selectedAcademicYearId"
+                            "selectedAcademicYearId",
                           );
                           const courseId =
                             localStorage.getItem("selectedCourseId");
@@ -1420,18 +1445,18 @@ const AdmAttendanceEntry = ({
                           if (orgId)
                             localStorage.setItem(
                               "selectedOrganizationId",
-                              orgId
+                              orgId,
                             );
                           if (yearId)
                             localStorage.setItem(
                               "selectedAcademicYearId",
-                              yearId
+                              yearId,
                             );
                           if (courseId)
                             localStorage.setItem("selectedCourseId", courseId);
                           localStorage.setItem(
                             "selectedCategoryId",
-                            value || ""
+                            value || "",
                           );
 
                           console.log(
@@ -1441,12 +1466,12 @@ const AdmAttendanceEntry = ({
                               yearId,
                               courseId,
                               categoryId: value,
-                            }
+                            },
                           );
 
                           // ✅ Trigger FeeGroup reload
                           window.dispatchEvent(
-                            new Event("feeGroupDependenciesChanged")
+                            new Event("feeGroupDependenciesChanged"),
                           );
                         }}
                       />
@@ -1472,20 +1497,22 @@ const AdmAttendanceEntry = ({
                         options={
                           Array.isArray(languages)
                             ? languages.map((lang) => ({
-                              value: lang.id, // send ID to backend
-                              label: lang.mother_tongue_name, // ✅ Correct field name from API
-                            }))
+                                value: lang.id, // send ID to backend
+                                label: lang.mother_tongue_name, // ✅ Correct field name from API
+                              }))
                             : []
                         }
                         value={
                           formData.language
                             ? {
-                              value: formData.language,
-                              label:
-                                languages.find(
-                                  (l) => Number(l.id) === Number(formData.language)
-                                )?.mother_tongue_name || "Select Language", // ✅ Correct field name
-                            }
+                                value: formData.language,
+                                label:
+                                  languages.find(
+                                    (l) =>
+                                      Number(l.id) ===
+                                      Number(formData.language),
+                                  )?.mother_tongue_name || "Select Language", // ✅ Correct field name
+                              }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1519,23 +1546,23 @@ const AdmAttendanceEntry = ({
                         options={
                           Array.isArray(bloodGroups)
                             ? bloodGroups.map((bg) => ({
-                              value: bg.id, // ✅ backend ID
-                              label: bg.blood_name, // ✅ readable name
-                            }))
+                                value: bg.id, // ✅ backend ID
+                                label: bg.blood_name, // ✅ readable name
+                              }))
                             : []
                         }
                         value={
                           formData.blood_group_id
                             ? {
-                              value: formData.blood_group_id,
-                              label:
-                                formData.blood_group_name ||
-                                bloodGroups.find(
-                                  (b) =>
-                                    b.id === Number(formData.blood_group_id)
-                                )?.blood_name ||
-                                "",
-                            }
+                                value: formData.blood_group_id,
+                                label:
+                                  formData.blood_group_name ||
+                                  bloodGroups.find(
+                                    (b) =>
+                                      b.id === Number(formData.blood_group_id),
+                                  )?.blood_name ||
+                                  "",
+                              }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1569,22 +1596,22 @@ const AdmAttendanceEntry = ({
                         options={
                           Array.isArray(nationalities)
                             ? nationalities.map((nat) => ({
-                              value: String(nat.id), // ✅ ensure string
-                              label: nat.nationality_name,
-                            }))
+                                value: String(nat.id), // ✅ ensure string
+                                label: nat.nationality_name,
+                              }))
                             : []
                         }
                         value={
                           formData.nationality
                             ? {
-                              value: String(formData.nationality),
-                              label:
-                                nationalities.find(
-                                  (n) =>
-                                    String(n.id) ===
-                                    String(formData.nationality)
-                                )?.nationality_name || "Select Nationality",
-                            }
+                                value: String(formData.nationality),
+                                label:
+                                  nationalities.find(
+                                    (n) =>
+                                      String(n.id) ===
+                                      String(formData.nationality),
+                                  )?.nationality_name || "Select Nationality",
+                              }
                             : null
                         }
                         onChange={(selectedOption) =>
@@ -1656,21 +1683,21 @@ const AdmAttendanceEntry = ({
                       )}
                     </div>
 
-                   {/* Date of Join */}
-<div className="col-12 col-md-4 mb-4">
-  <label htmlFor="doj" className="form-label">
-    Date Of Join
-  </label>
-  <input
-    type="date"
-    id="doj"
-    className="form-control detail"
-    name="doj"   
-    value={formData.doj || ""} 
-    onChange={handleInputChange}
-    disabled={isDisabled}
-  />
-</div>
+                    {/* Date of Join */}
+                    <div className="col-12 col-md-4 mb-4">
+                      <label htmlFor="doj" className="form-label">
+                        Date Of Join
+                      </label>
+                      <input
+                        type="date"
+                        id="doj"
+                        className="form-control detail"
+                        name="doj"
+                        value={formData.doj || ""}
+                        onChange={handleInputChange}
+                        disabled={isDisabled}
+                      />
+                    </div>
 
                     <div className="col-12 col-md-4 mb-2">
                       <label

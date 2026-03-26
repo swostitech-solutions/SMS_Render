@@ -269,6 +269,8 @@ import Select from "react-select";
 import useFetchBookCategories from "../../hooks/useFetchBookCategories";
 import useFetchBookSubCategories from "../../hooks/useFetchBookSubCategories";
 import ReactPaginate from "react-paginate";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const AdmBookSearch = () => {
   const [showModal, setShowModal] = useState(false);
@@ -688,7 +690,47 @@ const AdmBookSearch = () => {
   const handleNew = () => {
     navigate("/admbookMaster");
   };
+const handleExportToExcel = () => {
+  if (!tableData || tableData.length === 0) {
+    alert("No data to export");
+    return;
+  }
 
+  // Format data for Excel
+  const formattedData = tableData.map((book, index) => ({
+    "Sr No": index + 1,
+    "Book Accession No": book.bookBarcode,
+    "Book Title": book.book_name,
+    Author: book.author,
+    Category: book.book_category,
+    "Sub Category": book.book_sub_category,
+    Branch: book.library_branch,
+    Location: book.locationName,
+    ISBN: book.ISBN,
+    "Type of Book": book.type,
+    Publisher: book.publisher,
+    "Publish Year": book.publish_year,
+  }));
+
+  // Create worksheet
+  const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Books");
+
+  // Generate Excel file
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const data = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+  });
+
+  saveAs(data, "Book_List.xlsx");
+};
   return (
     <div className="container-fluid">
       <div className="row">
@@ -748,11 +790,22 @@ const AdmBookSearch = () => {
                   >
                     Close
                   </button>
+                  <button
+                    type="button"
+                    className="btn btn-success me-2"
+                    style={{ width: "150px" }}
+                    onClick={handleExportToExcel}
+                  >
+                    Export Excel
+                  </button>
                 </div>
               </div>
 
               <div className="row mt-3 mx-2">
-                <div className="col-12 custom-section-box" style={{ backgroundColor: "white" }}>
+                <div
+                  className="col-12 custom-section-box"
+                  style={{ backgroundColor: "white" }}
+                >
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
                     <div className="row flex-grow-1">
                       <div className="col-12 col-md-3 mb-0">
@@ -821,8 +874,8 @@ const AdmBookSearch = () => {
                           value={
                             bookCategory
                               ? categoryOptions.find(
-                                (option) => option.value === bookCategory
-                              )
+                                  (option) => option.value === bookCategory,
+                                )
                               : null
                           }
                         />
@@ -845,8 +898,8 @@ const AdmBookSearch = () => {
                           value={
                             bookSubCategory
                               ? subCategoryOptions.find(
-                                (option) => option.value === bookSubCategory
-                              )
+                                  (option) => option.value === bookSubCategory,
+                                )
                               : null
                           }
                           isDisabled={!subCategoryOptions.length} // Disable if no sub-categories
@@ -868,8 +921,8 @@ const AdmBookSearch = () => {
                           value={
                             location
                               ? locations.find(
-                                (option) => option.value === location
-                              ) // Find the selected option by ID
+                                  (option) => option.value === location,
+                                ) // Find the selected option by ID
                               : null
                           }
                         />
@@ -886,8 +939,8 @@ const AdmBookSearch = () => {
                           value={
                             branch
                               ? branches.find(
-                                (option) => option.value === branch
-                              )
+                                  (option) => option.value === branch,
+                                )
                               : null
                           } // Match selected branch ID to options
                           onChange={handleBranchChange} // Handle branch selection
@@ -924,8 +977,8 @@ const AdmBookSearch = () => {
                           value={
                             typeofBooks
                               ? bookJournalOptions.find(
-                                (option) => option.value === typeofBooks
-                              )
+                                  (option) => option.value === typeofBooks,
+                                )
                               : null
                           }
                           onChange={handleOptionChange}
