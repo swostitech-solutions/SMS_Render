@@ -432,6 +432,13 @@ const Login = ({ onLogin }) => {
                 className="beautiful-face mx-auto d-block"
                 style={{ width: "300px", height: "100px", marginTop: "10px" }}
               />
+              <div
+                className="text-center"
+                style={{ fontSize: "0.9rem", lineHeight: 1.4, marginTop: "8px" }}
+              >
+                <div>info@sparshnursing.in</div>
+                <div>0674-2300666 / 7735504783</div>
+              </div>
               <Card.Body>
                 <Card.Title className="text-center fw-bold">Login</Card.Title>
                 <Form onSubmit={handleSubmit}>
