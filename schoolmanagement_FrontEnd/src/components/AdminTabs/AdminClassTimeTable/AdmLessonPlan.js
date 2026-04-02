@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ApiUrl } from "../../../ApiUrl";
 import Select from "react-select";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./AdmLessonPlan.css";
 import useFetchSessionList from "../../hooks/fetchSessionList";
 import useFetchCourseByFilter from "../../hooks/useFetchCourses";
@@ -13,6 +13,9 @@ import useFetchSectionByFilter from "../../hooks/useFetchSectionByFilter";
 
 const AdmLessonPlan = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editPlan = location.state?.lessonPlan || null;
+  const editPlanId = editPlan?.LESSON_PLAN_ID || editPlan?.lecture_plan_id || null;
 
   // Get org and branch from sessionStorage
   const organizationId = sessionStorage.getItem("organization_id");
@@ -45,6 +48,8 @@ const AdmLessonPlan = () => {
 
   const [topicOptions, setTopicOptions] = useState([]);
   const [errors, setErrors] = useState({});
+  const isEditMode = Boolean(editPlanId);
+  const [isEditPrefillDone, setIsEditPrefillDone] = useState(false);
 
   // Custom Hooks with dependencies
   const { BatchList, loading: loadingBatch } = useFetchSessionList(organizationId, branchId);
@@ -320,6 +325,96 @@ const handleChange = (index, field, value) => {
     fetchMentors();
   }, []);
 
+  useEffect(() => {
+    if (!isEditMode || isEditPrefillDone || !editPlan) return;
+
+    if (mentors.length > 0 && editPlan.professor_id && !selectedMentor) {
+      const mentor = mentors.find((m) => String(m.value) === String(editPlan.professor_id));
+      if (mentor) setSelectedMentor(mentor);
+    }
+
+    if (sessionOptions.length > 0 && editPlan.batch_id && !selectedSession) {
+      const session = sessionOptions.find((s) => String(s.value) === String(editPlan.batch_id));
+      if (session) setSelectedSession(session);
+    }
+
+    if (courseOptions.length > 0 && editPlan.course_id && !selectedCourse) {
+      const course = courseOptions.find((c) => String(c.value) === String(editPlan.course_id));
+      if (course) setSelectedCourse(course);
+    }
+
+    if (branchOptions.length > 0 && editPlan.department_id && !selectedBranch) {
+      const dept = branchOptions.find((b) => String(b.value) === String(editPlan.department_id));
+      if (dept) setSelectedBranch(dept);
+    }
+
+    if (academicYearOptions.length > 0 && editPlan.academic_year_id && !selectedAcademicYear) {
+      const ay = academicYearOptions.find((a) => String(a.value) === String(editPlan.academic_year_id));
+      if (ay) setSelectedAcademicYear(ay);
+    }
+
+    if (semesterOptions.length > 0 && editPlan.semester_id && !selectedSemester) {
+      const sem = semesterOptions.find((s) => String(s.value) === String(editPlan.semester_id));
+      if (sem) setSelectedSemester(sem);
+    }
+
+    if (sectionOptions.length > 0 && editPlan.section_id && !selectedSection) {
+      const sec = sectionOptions.find((s) => String(s.value) === String(editPlan.section_id));
+      if (sec) setSelectedSection(sec);
+    }
+
+    if (subjectOptions.length > 0 && editPlan.subject_id && !selectedSubject) {
+      const subject = subjectOptions.find((s) => String(s.value) === String(editPlan.subject_id));
+      if (subject) setSelectedSubject(subject);
+    }
+
+    if (rows.length === 1 && !rows[0].lectureNo && editPlan.lecture_no) {
+      setRows([
+        {
+          lectureNo: String(editPlan.lecture_no || ""),
+          moduleNo: editPlan.module_no || "",
+          topic: editPlan.topic_details || "",
+          proposedDate: editPlan.proposedDate || editPlan.proposed_date || "",
+        },
+      ]);
+    }
+
+    const allLoaded =
+      selectedMentor &&
+      selectedSession &&
+      selectedCourse &&
+      selectedBranch &&
+      selectedAcademicYear &&
+      selectedSemester &&
+      selectedSection &&
+      selectedSubject;
+
+    if (allLoaded) {
+      setIsEditPrefillDone(true);
+    }
+  }, [
+    isEditMode,
+    isEditPrefillDone,
+    editPlan,
+    mentors,
+    sessionOptions,
+    courseOptions,
+    branchOptions,
+    academicYearOptions,
+    semesterOptions,
+    sectionOptions,
+    subjectOptions,
+    rows,
+    selectedMentor,
+    selectedSession,
+    selectedCourse,
+    selectedBranch,
+    selectedAcademicYear,
+    selectedSemester,
+    selectedSection,
+    selectedSubject,
+  ]);
+
   // Fetch Subjects - requires all dropdown selections
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -436,14 +531,16 @@ const handleChange = (index, field, value) => {
 
   const validateFields = () => {
     const newErrors = {};
-    if (!selectedMentor) newErrors.selectedMentor = "Teacher is required";
-    if (!selectedSession) newErrors.selectedSession = "Session is required";
-    if (!selectedCourse) newErrors.selectedCourse = "Course is required";
-    if (!selectedBranch) newErrors.selectedBranch = "Department is required";
-    if (!selectedAcademicYear) newErrors.selectedAcademicYear = "Academic Year is required";
-    if (!selectedSemester) newErrors.selectedSemester = "Semester is required";
-    if (!selectedSection) newErrors.selectedSection = "Section is required";
-    if (!selectedSubject) newErrors.selectedSubject = "Subject is required";
+    if (!isEditMode) {
+      if (!selectedMentor) newErrors.selectedMentor = "Teacher is required";
+      if (!selectedSession) newErrors.selectedSession = "Session is required";
+      if (!selectedCourse) newErrors.selectedCourse = "Course is required";
+      if (!selectedBranch) newErrors.selectedBranch = "Department is required";
+      if (!selectedAcademicYear) newErrors.selectedAcademicYear = "Academic Year is required";
+      if (!selectedSemester) newErrors.selectedSemester = "Semester is required";
+      if (!selectedSection) newErrors.selectedSection = "Section is required";
+      if (!selectedSubject) newErrors.selectedSubject = "Subject is required";
+    }
     const validRows = rows.filter(
       (row) =>
         row.lectureNo &&
@@ -461,54 +558,106 @@ const handleChange = (index, field, value) => {
   };
 
   const handleSave = async () => {
-    if (!validateFields()) return;
-
-    const validRows = rows.filter(
-      (row) =>
-        row.lectureNo &&
-        !isNaN(Number(row.lectureNo)) &&
-        Number(row.lectureNo) >= 1 &&
-        row.moduleNo &&
-        row.moduleNo.trim() &&
-        row.topic &&
-        row.topic.trim() &&
-        row.proposedDate,
-    );
-
     const orgId = sessionStorage.getItem("organization_id");
     const branchId = sessionStorage.getItem("branch_id");
     const userId = sessionStorage.getItem("userId");
 
-    const payload = {
-      organization_id: parseInt(orgId),
-      branch_id: parseInt(branchId),
-      batch_id: selectedSession.value,
-      course_id: selectedCourse.value,
-      department_id: selectedBranch.value,
-      academic_year_id: selectedAcademicYear.value,
-      semester_id: selectedSemester.value,
-      section_id: selectedSection.value,
-      subject_id: selectedSubject.value,
-      professor_id: selectedMentor.value,
-      lecture_details: validRows.map((row) => ({
-        lecture_no: Number(row.lectureNo),
-        module_no: row.moduleNo,
-        topic_name: row.topic.trim(),
-        propose_date: row.proposedDate,
-      })),
-      created_by: parseInt(userId),
+    const requestHeaders = {
+      "Content-Type": "application/json",
     };
 
-    console.log("Save Payload:", payload);
-
     try {
+      if (isEditMode && editPlanId) {
+        const row = rows[0] || {};
+        const fallbackLectureNo = editPlan.lecture_no;
+        const fallbackProposedDate = editPlan.proposedDate || editPlan.proposed_date || "";
+        const fallbackTaughtDate = editPlan.taught_date || fallbackProposedDate;
+        const fallbackPercentage = editPlan.percentage_completed || "";
+        const fallbackRemarks = editPlan.remarks || "";
+
+        const resolvedLectureNo = Number(row.lectureNo || fallbackLectureNo);
+        const resolvedModuleNo = String(row.moduleNo ?? "");
+        const resolvedTopic = String(row.topic ?? "").trim();
+        const resolvedProposedDate = row.proposedDate || fallbackProposedDate;
+
+        const updatePayload = {
+          updated_by: parseInt(userId),
+          lecture_no: resolvedLectureNo,
+          module_no: resolvedModuleNo,
+          topic_name: resolvedTopic,
+          propose_date: resolvedProposedDate,
+          taught_date: fallbackTaughtDate,
+          percentage_completed: fallbackPercentage,
+          remarks: fallbackRemarks,
+        };
+
+        const updateResponse = await fetch(
+          `${ApiUrl.apiurl}LECTURE_PLAN/GetProfessorLecturePlanUpdate/?organization_id=${orgId}&branch_id=${branchId}&lecture_plan_id=${editPlanId}`,
+          {
+            method: "PUT",
+            headers: requestHeaders,
+            body: JSON.stringify(updatePayload),
+          }
+        );
+
+        if (!updateResponse.ok) {
+          const errorText = await updateResponse.text();
+          console.error("Update API Error Response:", errorText);
+          alert(`Failed to update lesson plan. Server error: ${updateResponse.status}`);
+          return;
+        }
+
+        const updateResult = await updateResponse.json();
+        if (updateResult.message === "success") {
+          alert("Lesson Plan Updated Successfully!");
+          navigate("/admin/lesson-plan-list");
+        } else {
+          alert("Failed to update lesson plan: " + (updateResult.error || updateResult.message || "Unknown error"));
+        }
+        return;
+      }
+
+      if (!validateFields()) return;
+
+      const validRows = rows.filter(
+        (row) =>
+          row.lectureNo &&
+          !isNaN(Number(row.lectureNo)) &&
+          Number(row.lectureNo) >= 1 &&
+          row.moduleNo &&
+          row.moduleNo.trim() &&
+          row.topic &&
+          row.topic.trim() &&
+          row.proposedDate,
+      );
+
+      const payload = {
+        organization_id: parseInt(orgId),
+        branch_id: parseInt(branchId),
+        batch_id: selectedSession.value,
+        course_id: selectedCourse.value,
+        department_id: selectedBranch.value,
+        academic_year_id: selectedAcademicYear.value,
+        semester_id: selectedSemester.value,
+        section_id: selectedSection.value,
+        subject_id: selectedSubject.value,
+        professor_id: selectedMentor.value,
+        lecture_details: validRows.map((row) => ({
+          lecture_no: Number(row.lectureNo),
+          module_no: row.moduleNo,
+          topic_name: row.topic.trim(),
+          propose_date: row.proposedDate,
+        })),
+        created_by: parseInt(userId),
+      };
+
+      console.log("Save Payload:", payload);
+
       const response = await fetch(
         `${ApiUrl.apiurl}LECTURE_PLAN/LecturePlanCreate/?organization_id=${orgId}&branch_id=${branchId}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: requestHeaders,
           body: JSON.stringify(payload),
         }
       );

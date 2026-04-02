@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/LECTURE_PLAN/GetProfessorLecturePlanList/',views.GetProfessorLecturePlanListAPIView.as_view(),name='GetTeacherlessonplanlist'),
     path('api/TERM_SUBJECT_LIST/GetTermSubjectList/',views.GetSubjectListBasedOnTermListAPIView.as_view(),name='GettermBasedOnSubjectlist'),
     path('api/LECTURE_PLAN/GetProfessorLecturePlanUpdate/',views.ProfessorLectureUpdateAPIView.as_view(),name='GetTeacherlessonplanupdate'),
+    path('api/LECTURE_PLAN/DeleteLecturePlan/',views.DeleteLecturePlanAPIView.as_view(),name='DeleteLecturePlan'),
     path('api/LECTURE_PLAN/GetProfessorLecturePlanSearchList/',views.TeacherLessonPlanSearchCriteriaListAPIView.as_view(),name='Professorlecturesearchlist'),
 
     ]

@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.response import Response
@@ -1027,92 +1027,143 @@ class GetSubjectListBasedOnTermListAPIView(ListAPIView):
 
 
 class ProfessorLectureUpdateAPIView(UpdateAPIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = LecturePlan.objects.filter(is_active=True)
     serializer_class = LecturePlanUpdateSerializer
 
-    # Set lookup field to match your primary key
-    # lookup_field = "LESSON_PLAN_ID"
-
     def update(self, request, *args, **kwargs):
         try:
-            # Determine if this is a partial update
-            # partial = kwargs.pop('partial', False)
+            lecture_plan_id = request.query_params.get('lecture_plan_id')
+            instance = LecturePlan.objects.get(lecture_plan_id=lecture_plan_id, is_active=True)
 
-            # Fetch the record based on LESSON_PLAN_ID (from URL)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+
+            validated = serializer.validated_data
+            raw_data = request.data
+            updated_fields = {}
+
+            raw_lecture_no = raw_data.get('lecture_no', None)
+            if raw_lecture_no not in [None, '']:
+                updated_fields['lecture_no'] = int(raw_lecture_no)
+
+            if 'module_no' in raw_data:
+                updated_fields['module_no'] = str(raw_data.get('module_no') or '')[:100]
+
+            raw_propose_date = raw_data.get('propose_date', None)
+            if raw_propose_date:
+                updated_fields['proposed_date'] = raw_propose_date
+
+            raw_topic_name = str(raw_data.get('topic_name') or '').strip()
+            resolved_topic_name = raw_topic_name if raw_topic_name else str(validated.get('topic_name') or '').strip()
+            if resolved_topic_name:
+                topic_instance, _ = SubjectTopic.objects.get_or_create(
+                    topic_name=resolved_topic_name[:1000],
+                    organization=instance.organization,
+                    branch=instance.branch,
+                    batch=instance.batch,
+                    course=instance.course,
+                    department=instance.department,
+                    academic_year=instance.academic_year,
+                    semester=instance.semester,
+                    section=instance.section,
+                    subject=instance.subject,
+                    defaults={
+                        'is_active': True,
+                        'created_by': validated.get('updated_by') or instance.created_by,
+                    }
+                )
+                updated_fields['topic'] = topic_instance
+
+            if 'taught_date' in validated:
+                updated_fields['taught_date'] = validated.get('taught_date')
+            if 'percentage_completed' in validated:
+                updated_fields['percentage_completed'] = (validated.get('percentage_completed') or '')[:100]
+            if 'remarks' in validated:
+                updated_fields['remarks'] = (validated.get('remarks') or '')[:500]
+
+            updated_fields['updated_by'] = validated.get('updated_by') or instance.updated_by or instance.created_by
+            updated_fields['updated_at'] = timezone.now()
+
+            LecturePlan.objects.filter(lecture_plan_id=instance.lecture_plan_id, is_active=True).update(**updated_fields)
+            instance.refresh_from_db()
+
+            return Response({
+                'message': 'success',
+                'data': {
+                    'lecture_plan_id': instance.lecture_plan_id,
+                    'lecture_no': instance.lecture_no,
+                    'module_no': instance.module_no,
+                    'topic_details': instance.topic.topic_name if instance.topic else None,
+                    'proposed_date': instance.proposed_date,
+                    'taught_date': instance.taught_date,
+                    'percentage_completed': instance.percentage_completed,
+                    'remarks': instance.remarks,
+                }
+            }, status=status.HTTP_200_OK)
+
+        except LecturePlan.DoesNotExist:
+            return Response({'message': 'Record not found'}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except DatabaseError as e:
+            self.log_exception(request, str(e))
+            return Response({'error': 'A database error occurred.' + str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            self.log_exception(request, str(e))
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def log_exception(self, request, error_message):
+        try:
+            ExceptionTrack.objects.create(
+                request=str(request)[:90],
+                process_name='GetTeacherlessonplanupdate'[:90],
+                message=str(error_message)[:90],
+            )
+        except Exception:
+            pass
+
+
+class DeleteLecturePlanAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def delete(self, request, *args, **kwargs):
+        try:
             organization_id = request.query_params.get('organization_id')
             branch_id = request.query_params.get('branch_id')
             lecture_plan_id = request.query_params.get('lecture_plan_id')
-            instance = LecturePlan.objects.get(lecture_plan_id=lecture_plan_id,is_active=True)
-            # instance = self.get_object()
 
-            # Validate and update data
-            serializer = self.get_serializer(instance, data=request.data)
-            serializer.is_valid(raise_exception=True)
+            if not organization_id or not branch_id or not lecture_plan_id:
+                return Response({'message': 'organization_id, branch_id and lecture_plan_id are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Update The record
-            instance.taught_date = serializer.validated_data.get('taught_date')
-            instance.percentage_completed = serializer.validated_data.get('percentage_completed')
-            instance.remarks = serializer.validated_data.get('remarks')
-            instance.updated_by = serializer.validated_data.get('updated_by')
+            lesson_plan = LecturePlan.objects.get(
+                lecture_plan_id=lecture_plan_id,
+                organization_id=organization_id,
+                branch_id=branch_id,
+                is_active=True,
+            )
+            lesson_plan.is_active = False
+            lesson_plan.updated_at = timezone.now()
+            lesson_plan.save(update_fields=['is_active', 'updated_at'])
 
-            # Handle file upload if present
-            if 'document_file' in request.FILES:
-                import os
-                import uuid
-                from django.conf import settings
+            return Response({'message': 'success'}, status=status.HTTP_200_OK)
 
-                uploaded_file = request.FILES['document_file']
-
-                # Create directory if it doesn't exist (use SWOSTITECH_CMS instead of media)
-                upload_dir = os.path.join('SWOSTITECH_CMS', 'lesson_plan_documents')
-                full_upload_dir = os.path.join(settings.BASE_DIR, upload_dir)
-                os.makedirs(full_upload_dir, exist_ok=True)
-
-                # Generate unique filename using UUID
-                file_extension = os.path.splitext(uploaded_file.name)[1]
-                unique_filename = f"{uuid.uuid4()}{file_extension}"
-
-                # Save file
-                file_path = os.path.join(full_upload_dir, unique_filename)
-                with open(file_path, 'wb+') as destination:
-                    for chunk in uploaded_file.chunks():
-                        destination.write(chunk)
-
-                # Store relative path in database
-                instance.document_file = f'/SWOSTITECH_CMS/lesson_plan_documents/{unique_filename}'
-
-            instance.updated_at = timezone.now()
-            instance.save()
-
-            return Response({'message': 'success', }, status=status.HTTP_200_OK)
-
-
-        except Http404:
+        except LecturePlan.DoesNotExist:
             return Response({'message': 'Record not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        except ValidationError as e:
-            return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
-
-        except DatabaseError as e:
-            self.log_exception(request, str(e))
-            return Response({'error': 'A database error occurred.' + str(e)},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
         except Exception as e:
-            self.log_exception(request, str(e))
-            return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def log_exception(self, request, error_message):
-        ExceptionTrack.objects.create(
-            request=str(request),
-            process_name='GetTeacherlessonplanupdate',
-            message=error_message,
-        )
+            try:
+                ExceptionTrack.objects.create(
+                    request=str(request)[:90],
+                    process_name='DeleteLecturePlan'[:90],
+                    message=str(e)[:90],
+                )
+            except Exception:
+                pass
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class TeacherLessonPlanSearchCriteriaListAPIView(ListAPIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = LecturePlanListSearchCriteriaSerializer
 
     def list(self, request, *args, **kwargs):
@@ -1172,6 +1223,14 @@ class TeacherLessonPlanSearchCriteriaListAPIView(ListAPIView):
 
                         data = {
                             'LESSON_PLAN_ID': item.lecture_plan_id,
+                            'batch_id': item.batch_id,
+                            'course_id': item.course_id,
+                            'department_id': item.department_id,
+                            'academic_year_id': item.academic_year_id,
+                            'semester_id': item.semester_id,
+                            'section_id': item.section_id,
+                            'subject_id': item.subject_id,
+                            'professor_id': item.professor_id,
                             'professor_name': professor_name,
                             'lecture_no': item.lecture_no,
                             'module_no': item.module_no,
@@ -1206,13 +1265,11 @@ class TeacherLessonPlanSearchCriteriaListAPIView(ListAPIView):
             return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def log_exception(self, request, error_message):
-
-        ExceptionTrack.objects.create(
-
-            request=str(request),
-
-            process_name='Teacherlessonsearchlist',
-
-            message=error_message,
-
-        )
+        try:
+            ExceptionTrack.objects.create(
+                request=str(request)[:90],
+                process_name='Teacherlessonsearchlist'[:90],
+                message=str(error_message)[:90],
+            )
+        except Exception:
+            pass

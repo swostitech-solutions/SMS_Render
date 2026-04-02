@@ -27175,6 +27175,9 @@ class StudentsListAPIView(ListAPIView):
 
 
 class GetBranchData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         # organization_id = request.query_params.get('organization_id')
@@ -27186,6 +27189,9 @@ class GetBranchData(APIView):
 
 
 class GetBatchData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
@@ -27201,6 +27207,9 @@ class GetBatchData(APIView):
 
 
 class GetCourseData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
@@ -27226,6 +27235,9 @@ class GetCourseData(APIView):
 
 
 class GetDepartmentData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
@@ -27261,6 +27273,9 @@ class GetDepartmentData(APIView):
 
 
 class GetAcademicYearData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
@@ -27308,6 +27323,9 @@ class GetAcademicYearData(APIView):
 
 
 class GetAcademicYearByOrgBranch(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     """
     GET: Fetch all available academic sessions (academic years) filtered by organization and branch.
 
@@ -27389,6 +27407,9 @@ class GetAcademicYearByOrgBranch(APIView):
 
 
 class GetSemesterData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
@@ -27447,6 +27468,9 @@ class GetSemesterData(APIView):
 
 
 class GetSemesterDataByDepartment(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')
@@ -27464,6 +27488,9 @@ class GetSemesterDataByDepartment(APIView):
 
 
 class GetSectionData(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
         organization_id = request.query_params.get('organization_id')
         branch_id = request.query_params.get('branch_id')

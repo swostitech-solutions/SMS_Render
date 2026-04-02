@@ -131,11 +131,14 @@ class GetSubjectListBasedOnTermSerializer(serializers.Serializer):
     # term_id = serializers.IntegerField(required=True,allow_null=False)
 
 class LecturePlanUpdateSerializer(serializers.Serializer):
-    # LESSON_PLAN_ID = serializers.IntegerField(required=True,allow_null=False)
-    taught_date = serializers.DateField(required=True)
-    percentage_completed = serializers.CharField(max_length=100,allow_null=True,allow_blank=True)
-    remarks = serializers.CharField(max_length=500,required=False,allow_blank=True,allow_null=True)
-    updated_by = serializers.IntegerField(required=True,allow_null=False)
+    lecture_no = serializers.IntegerField(required=False, allow_null=True)
+    module_no = serializers.CharField(max_length=100, required=False, allow_null=True, allow_blank=True)
+    topic_name = serializers.CharField(max_length=1000, required=False, allow_null=True, allow_blank=True)
+    propose_date = serializers.DateField(required=False, allow_null=True)
+    taught_date = serializers.DateField(required=False, allow_null=True)
+    percentage_completed = serializers.CharField(max_length=100, required=False, allow_null=True, allow_blank=True)
+    remarks = serializers.CharField(max_length=500, required=False, allow_blank=True, allow_null=True)
+    updated_by = serializers.IntegerField(required=False, allow_null=True)
 
 class LecturePlanListSearchCriteriaSerializer(serializers.Serializer):
 
