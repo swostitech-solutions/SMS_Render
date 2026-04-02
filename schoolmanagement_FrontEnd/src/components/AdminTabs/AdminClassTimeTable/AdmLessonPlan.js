@@ -571,7 +571,6 @@ const handleChange = (index, field, value) => {
         const row = rows[0] || {};
         const fallbackLectureNo = editPlan.lecture_no;
         const fallbackProposedDate = editPlan.proposedDate || editPlan.proposed_date || "";
-        const fallbackTaughtDate = editPlan.taught_date || fallbackProposedDate;
         const fallbackPercentage = editPlan.percentage_completed || "";
         const fallbackRemarks = editPlan.remarks || "";
 
@@ -586,7 +585,6 @@ const handleChange = (index, field, value) => {
           module_no: resolvedModuleNo,
           topic_name: resolvedTopic,
           propose_date: resolvedProposedDate,
-          taught_date: fallbackTaughtDate,
           percentage_completed: fallbackPercentage,
           remarks: fallbackRemarks,
         };
