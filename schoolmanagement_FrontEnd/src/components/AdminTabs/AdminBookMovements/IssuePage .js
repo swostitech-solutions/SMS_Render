@@ -187,6 +187,7 @@ const IssuePage = () => {
         bookBarcodeId: null,
         bookName: "",
         barcode: "",
+        author: "",
         categoryName: "",
         subcategoryName: "",
         availableCopies: undefined,
@@ -218,6 +219,7 @@ const IssuePage = () => {
       bookBarcodeId: null, // Actual book barcode ID from database
       bookName: "",
       barcode: "",
+      author: "",
       categoryName: "",
       subcategoryName: "",
       availableCopies: undefined,
@@ -241,6 +243,7 @@ const IssuePage = () => {
             bookBarcodeId: id, // Store the actual book barcode ID from database
             bookName: bookName || "",
             barcode: barcode || "",
+            author: selectedBook.author || "",
             categoryName: categoryName || "",
             subcategoryName: subcategoryName || "",
             availableCopies: availableCopies,
@@ -306,6 +309,7 @@ const IssuePage = () => {
                     ...row,
                     bookBarcodeId: null,
                     barcode: "",
+                    author: "",
                     bookName: "",
                     categoryName: "",
                     subcategoryName: "",
@@ -327,6 +331,7 @@ const IssuePage = () => {
                     ...row,
                     bookBarcodeId: null,
                     barcode: "",
+                    author: "",
                     bookName: "",
                     categoryName: "",
                     subcategoryName: "",
@@ -344,6 +349,7 @@ const IssuePage = () => {
                   ...row,
                   bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
                   barcode: matchedBook.barcode || enteredBarcode,
+                  author: matchedBook.author || "",
                   bookName: matchedBook.bookName || "",
                   categoryName: matchedBook.categoryName || "",
                   subcategoryName: matchedBook.subcategoryName || "",
@@ -369,6 +375,7 @@ const IssuePage = () => {
                 ...row,
                 bookBarcodeId: null,
                 barcode: "",
+                author: "",
                 bookName: "",
                 categoryName: "",
                 subcategoryName: "",
@@ -1140,6 +1147,7 @@ const IssuePage = () => {
                         <th>Sr No</th>
                         <th>Book Title</th>
                         <th>Book Accession No</th>
+                        <th>Author</th>
                         <th>Category</th>
                         <th>Sub-Category</th>
                         <th>Available Copies</th>
@@ -1189,6 +1197,15 @@ const IssuePage = () => {
                             {rowErrors[row.id] && (
                               <small className="text-danger">{rowErrors[row.id]}</small>
                             )}
+                          </td>
+                          <td>
+                            <Form.Control
+                              type="text"
+                              name="author"
+                              className="form-control detail"
+                              value={row.author}
+                              onChange={(e) => handleInputChange(row.id, e)}
+                            />
                           </td>
                           <td>
                             <Form.Control

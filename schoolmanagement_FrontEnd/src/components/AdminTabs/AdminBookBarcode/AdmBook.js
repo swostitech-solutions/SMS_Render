@@ -880,6 +880,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
         id: book.id,
         bookName: book.bookName,
         barcode: book.barcode,
+        author: book.author,
         categoryId: book.categoryId,
         categoryName: book.categoryName,
         subcategoryId: book.subcategoryId,
@@ -1139,6 +1140,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                           <th>Sr No</th>
                           <th>Book Name</th>
                           <th>Book Accession No</th>
+                          <th>Author</th>
                           <th>Category</th>
                           <th>Sub-category</th>
                           <th>Select</th>
@@ -1147,7 +1149,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                       <tbody>
                         {bookData.length === 0 ? (
                           <tr>
-                            <td colSpan="6" className="text-center">
+                            <td colSpan="7" className="text-center">
                               No books found
                             </td>
                           </tr>
@@ -1157,6 +1159,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                               <td>{offset + index + 1}</td>
                               <td>{book.bookName}</td>
                               <td>{book.barcode}</td>
+                              <td>{book.author}</td>
                               <td>{book.categoryName}</td>
                               <td>{book.subcategoryName}</td>
                               <td>
