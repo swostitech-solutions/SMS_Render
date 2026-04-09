@@ -2,12 +2,13 @@ name: Deploy to Hostinger VPS
 
 on:
   push:
-    branches: [main]
+    branches: [main, preprod]
 
 jobs:
-  deploy:
-    name: Deploy to VPS
+  deploy-production:
+    name: Deploy Production
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -47,3 +48,48 @@ jobs:
             echo "Frontend deployed"
 
             echo "=== Deployment complete ==="
+
+  deploy-preprod:
+    name: Deploy Preproduction
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/preprod'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          timeout: 120s
+          command_timeout: 15m
+          script: |
+            set -e
+
+            echo "=== Pulling latest preprod code ==="
+            cd /var/www/schoolmanagement-preprod
+            git fetch --all --prune
+            git checkout preprod || git checkout -b preprod origin/preprod
+            git reset --hard origin/preprod
+
+            echo "=== Deploying Preprod Backend ==="
+            cd /var/www/schoolmanagement-preprod/SchoolManagementBackend/CollegeManagement
+            source venv/bin/activate
+            pip install -r requirements.txt --quiet
+            python manage.py collectstatic --no-input
+            python manage.py migrate --no-input
+            sudo systemctl restart schoolmanagement-preprod.service
+            echo "Preprod backend deployed"
+
+            echo "=== Deploying Preprod Frontend ==="
+            cd /var/www/schoolmanagement-preprod/schoolmanagement_FrontEnd
+            export REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL_PREPROD }}"
+            export CI=false
+            export GENERATE_SOURCEMAP=false
+            npm ci --silent
+            node --max-old-space-size=4096 ./node_modules/react-scripts/scripts/build.js
+            rm -rf /var/www/schoolmanagement-preprod-frontend/build
+            cp -r build /var/www/schoolmanagement-preprod-frontend/build
+            sudo systemctl reload nginx
+            echo "Preprod frontend deployed"
+
+            echo "=== Preprod deployment complete ==="
