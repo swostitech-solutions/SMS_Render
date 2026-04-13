@@ -4202,7 +4202,7 @@ const generatePDF = async (data) => {
                                         {aggregatedFeeDetails
                                           .filter(
                                             (detail) =>
-                                              detail.period === row.period
+                                              detail.period === row.period,
                                           )
                                           .map((item, subIndex) => (
                                             <tr key={subIndex}>
@@ -4216,20 +4216,20 @@ const generatePDF = async (data) => {
                                               <td>{item.balance}</td>
                                               <td>
                                                 {parseFloat(item.balance) >
-                                                  0 ? (
+                                                0 ? (
                                                   <input
                                                     type="checkbox"
                                                     checked={selectedFeeDetails.some(
                                                       (detail) =>
                                                         detail.period ===
-                                                        row.period &&
+                                                          row.period &&
                                                         detail.element_name ===
-                                                        item.element_name
+                                                          item.element_name,
                                                     )}
                                                     onChange={() =>
                                                       handleNestedCheckboxChange(
                                                         item,
-                                                        row
+                                                        row,
                                                       )
                                                     }
                                                   />
@@ -4310,7 +4310,9 @@ const generatePDF = async (data) => {
                             <React.Fragment key={index}>
                               {aggregatedFeeDetails
                                 .filter(
-                                  (detail) => detail.period === row.period && detail.paid_amount > 0
+                                  (detail) =>
+                                    detail.period === row.period &&
+                                    detail.paid_amount > 0,
                                 )
                                 .map((item, subIndex) => (
                                   <tr key={subIndex}>
@@ -4346,7 +4348,8 @@ const generatePDF = async (data) => {
                         placeholder="Select Method"
                         value={
                           paymentMethodOptions.find(
-                            (option) => option.value === selectedPaymentMethodId
+                            (option) =>
+                              option.value === selectedPaymentMethodId,
                           ) || null
                         }
                         onChange={(selectedOption) => {
@@ -4356,8 +4359,13 @@ const generatePDF = async (data) => {
                           setSelectedPaymentMethodId(newValue);
 
                           // Clear bank/account when Cash selected (ID 2) OR if label is 'Cash'
-                          const label = selectedOption ? selectedOption.label : "";
-                          if (newValue === 2 || label.toLowerCase() === "cash") {
+                          const label = selectedOption
+                            ? selectedOption.label
+                            : "";
+                          if (
+                            newValue === 2 ||
+                            label.toLowerCase() === "cash"
+                          ) {
                             setSelectedBankId(null);
                             setSelectedAccountId(null);
                           }
@@ -4386,7 +4394,10 @@ const generatePDF = async (data) => {
                             className="form-control detail"
                             value={chequeNumber}
                             onChange={(e) => {
-                             const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                              const value = e.target.value.replace(
+                                /[^a-zA-Z0-9]/g,
+                                "",
+                              );
                               if (value.length <= 6) setChequeNumber(value);
                             }}
                             maxLength="6"
@@ -4395,7 +4406,10 @@ const generatePDF = async (data) => {
                         </div>
 
                         <div className="col-md-3">
-                          <label className="form-label"> Cheque Bank Name</label>
+                          <label className="form-label">
+                            {" "}
+                            Cheque Bank Name
+                          </label>
                           <input
                             type="text"
                             className="form-control detail"
@@ -4406,12 +4420,17 @@ const generatePDF = async (data) => {
                         </div>
 
                         <div className="col-md-3">
-                          <label className="form-label">  Cheque Branch Name</label>
+                          <label className="form-label">
+                            {" "}
+                            Cheque Branch Name
+                          </label>
                           <input
                             type="text"
                             className="form-control detail"
                             value={chequeBranchName}
-                            onChange={(e) => setChequeBranchName(e.target.value)}
+                            onChange={(e) =>
+                              setChequeBranchName(e.target.value)
+                            }
                             placeholder="Cheque Branch Name"
                           />
                         </div>
@@ -4428,7 +4447,10 @@ const generatePDF = async (data) => {
                             className="form-control detail"
                             value={ddNumber}
                             onChange={(e) => {
-                            const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                              const value = e.target.value.replace(
+                                /[^a-zA-Z0-9]/g,
+                                "",
+                              );
                               if (value.length <= 6) setDdNumber(value);
                             }}
                             maxLength="6"
@@ -4458,7 +4480,10 @@ const generatePDF = async (data) => {
                           className="form-control detail"
                           value={upiUtrNo}
                           onChange={(e) => {
-                           const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                            const value = e.target.value
+                              .replace(/[^a-zA-Z0-9]/g, "") // allow only letters + numbers
+                              .toUpperCase(); // 🔥 convert to uppercase
+
                             if (value.length <= 22) setUpiUtrNo(value);
                           }}
                           maxLength="22"
@@ -4470,49 +4495,48 @@ const generatePDF = async (data) => {
                     {/* RTGS/NEFT Fields */}
                     {(selectedPaymentMethodLabel.includes("rtgs") ||
                       selectedPaymentMethodLabel.includes("neft")) && (
-                        <>
-                          <div className="col-md-3">
-                            <label className="form-label">UTR No</label>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={rtgsUtrNo}
-                              onChange={(e) => {
-                              const value = e.target.value.replace(
-                                /[^a-zA-Z0-9]/g,
-                                "",
-                              );
-                                if (value.length <= 22) setRtgsUtrNo(value);
-                              }}
-                              maxLength="22"
-                              placeholder="Enter UTR No (22 digits)"
-                            />
-                          </div>
+                      <>
+                        <div className="col-md-3">
+                          <label className="form-label">UTR No</label>
+                          <input
+                            type="text"
+                            className="form-control detail"
+                            value={rtgsUtrNo}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/[^a-zA-Z0-9]/g, "")
+                                .toUpperCase(); // 🔥 important
 
-                          <div className="col-md-3">
-                            <label className="form-label">Sender Bank</label>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={rtgsSenderBank}
-                              onChange={(e) => setRtgsSenderBank(e.target.value)}
-                              placeholder="Sender Bank"
-                            />
-                          </div>
+                              if (value.length <= 22) setRtgsUtrNo(value);
+                            }}
+                            maxLength="22"
+                            placeholder="Enter UTR No (22 digits)"
+                          />
+                        </div>
 
+                        <div className="col-md-3">
+                          <label className="form-label">Sender Bank</label>
+                          <input
+                            type="text"
+                            className="form-control detail"
+                            value={rtgsSenderBank}
+                            onChange={(e) => setRtgsSenderBank(e.target.value)}
+                            placeholder="Sender Bank"
+                          />
+                        </div>
 
-                          <div className="col-md-3">
-                            <label className="form-label">Account No</label>
-                            <input
-                              type="text"
-                              className="form-control detail"
-                              value={rtgsAccountNo}
-                              onChange={(e) => setRtgsAccountNo(e.target.value)}
-                              placeholder="Account No"
-                            />
-                          </div>
-                        </>
-                      )}
+                        <div className="col-md-3">
+                          <label className="form-label">Account No</label>
+                          <input
+                            type="text"
+                            className="form-control detail"
+                            value={rtgsAccountNo}
+                            onChange={(e) => setRtgsAccountNo(e.target.value)}
+                            placeholder="Account No"
+                          />
+                        </div>
+                      </>
+                    )}
 
                     {/* Bank Name */}
                     <div className="col-md-3">
@@ -4527,13 +4551,13 @@ const generatePDF = async (data) => {
                         value={
                           selectedBankId
                             ? bankOptions.find(
-                              (option) => option.value === selectedBankId
-                            )
+                                (option) => option.value === selectedBankId,
+                              )
                             : null
                         }
                         onChange={(selectedOption) =>
                           setSelectedBankId(
-                            selectedOption ? selectedOption.value : null
+                            selectedOption ? selectedOption.value : null,
                           )
                         }
                         isDisabled={selectedPaymentMethodLabel === "cash"}
@@ -4556,18 +4580,17 @@ const generatePDF = async (data) => {
                         value={
                           selectedAccountId
                             ? accountNumberOptions.find(
-                              (option) => option.value === selectedAccountId
-                            )
+                                (option) => option.value === selectedAccountId,
+                              )
                             : null
                         }
                         onChange={(selectedOption) =>
                           setSelectedAccountId(
-                            selectedOption ? selectedOption.value : null
+                            selectedOption ? selectedOption.value : null,
                           )
                         }
                       />
                     </div>
-
 
                     {/* Reference Date */}
                     <div className="col-md-3">
