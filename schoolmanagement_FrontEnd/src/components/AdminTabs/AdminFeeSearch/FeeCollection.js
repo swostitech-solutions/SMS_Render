@@ -4386,7 +4386,7 @@ const generatePDF = async (data) => {
                             className="form-control detail"
                             value={chequeNumber}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '');
+                             const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
                               if (value.length <= 6) setChequeNumber(value);
                             }}
                             maxLength="6"
@@ -4428,7 +4428,7 @@ const generatePDF = async (data) => {
                             className="form-control detail"
                             value={ddNumber}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '');
+                            const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
                               if (value.length <= 6) setDdNumber(value);
                             }}
                             maxLength="6"
@@ -4458,7 +4458,7 @@ const generatePDF = async (data) => {
                           className="form-control detail"
                           value={upiUtrNo}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
+                           const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
                             if (value.length <= 22) setUpiUtrNo(value);
                           }}
                           maxLength="22"
@@ -4478,7 +4478,10 @@ const generatePDF = async (data) => {
                               className="form-control detail"
                               value={rtgsUtrNo}
                               onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
+                              const value = e.target.value.replace(
+                                /[^a-zA-Z0-9]/g,
+                                "",
+                              );
                                 if (value.length <= 22) setRtgsUtrNo(value);
                               }}
                               maxLength="22"

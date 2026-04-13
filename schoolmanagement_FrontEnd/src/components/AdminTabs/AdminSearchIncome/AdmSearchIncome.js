@@ -339,15 +339,15 @@ const handleView = async (incomeId) => {
     const doc = new jsPDF();
 
     // Set logo path
-    const logoPath = "/SynergyLogo.gif"; // Relative path inside public folder
+    // const logoPath = "/SynergyLogo.gif"; // Relative path inside public folder
 
     // Add college name
     doc.setFontSize(16);
-    doc.text("Synergy College", 80, 20); // Adjust position as needed
+    doc.text("Sparsh College of Nursing and Allied Sciences", 80, 20); // Adjust position as needed
 
     // Add logo
     const img = new Image();
-    img.src = logoPath;
+    // img.src = logoPath;
     img.onload = () => {
       doc.addImage(img, "PNG", 15, 10, 30, 20); // X, Y, Width, Height
 

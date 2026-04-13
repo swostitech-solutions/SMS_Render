@@ -9347,36 +9347,71 @@ class GetStudentBasedOnCourseSection(ListAPIView):
             organization_id = serializer.validated_data.get('organization_id')
             branch_id = serializer.validated_data.get('branch_id')
             batch_id = serializer.validated_data.get('batch_id')
+            batch_ids_list = serializer.validated_data.get('batch_ids')
             # course_id = serializer.validated_data.get('course_id')
             course_ids_list = serializer.validated_data.get('course_ids')
             # department_id = serializer.validated_data.get('department_id')
             department_ids_list = serializer.validated_data.get('department_ids')
             academic_year_id = serializer.validated_data.get('academic_year_id')
+            academic_year_ids_list = serializer.validated_data.get('academic_year_ids')
             semester_ids_list = serializer.validated_data.get('semester_ids')
             # semester_id = serializer.validated_data.get('semester_id')
             # semester_id = serializer.validated_data.get('section_id')
             section_ids_list = serializer.validated_data.get('section_ids')
 
-            # print(class_ids_list,type(class_ids_list))
+            def parse_id_list(value):
+                if value in (None, ''):
+                    return []
 
-            # Convert class_ids to a list of integers by stripping brackets and splitting by comma
-            if isinstance(course_ids_list, list):
-                course_ids_list = [int(i) for i in course_ids_list[0].split(',')]
-            if isinstance(department_ids_list, list):
-                department_ids_list = [int(i) for i in department_ids_list[0].split(',')]
-            if isinstance(semester_ids_list, list):
-                semester_ids_list = [int(i) for i in semester_ids_list[0].split(',')]
-            if isinstance(section_ids_list, list):
-                section_ids_list = [int(i) for i in section_ids_list[0].split(',')]
+                if isinstance(value, int):
+                    return [value]
+
+                if isinstance(value, str):
+                    value = value.split(',')
+
+                if isinstance(value, list):
+                    parsed_values = []
+                    for item in value:
+                        if item in (None, ''):
+                            continue
+                        if isinstance(item, int):
+                            parsed_values.append(item)
+                        elif isinstance(item, str):
+                            parsed_values.extend(
+                                int(part.strip())
+                                for part in item.split(',')
+                                if part and part.strip()
+                            )
+                        else:
+                            parsed_values.append(int(item))
+                    return parsed_values
+
+                return [int(value)]
+
+            batch_ids_list = parse_id_list(batch_ids_list)
+            if not batch_ids_list and batch_id is not None:
+                batch_ids_list = [int(batch_id)]
+
+            course_ids_list = parse_id_list(course_ids_list)
+            department_ids_list = parse_id_list(department_ids_list)
+            academic_year_ids_list = parse_id_list(academic_year_ids_list)
+            if not academic_year_ids_list and academic_year_id is not None:
+                academic_year_ids_list = [int(academic_year_id)]
+            semester_ids_list = parse_id_list(semester_ids_list)
+            section_ids_list = parse_id_list(section_ids_list)
 
             try:
-                student_list = StudentCourse.objects.filter(organization=organization_id, branch=branch_id,
-                                                            batch=batch_id, academic_year=academic_year_id,
-                                                            course__in=course_ids_list,
-                                                            department__in=department_ids_list
-                                                            , semester__in=semester_ids_list,
-                                                            section__in=section_ids_list,
-                                                            is_active=True)
+                student_list = StudentCourse.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    batch__in=batch_ids_list,
+                    academic_year__in=academic_year_ids_list,
+                    course__in=course_ids_list,
+                    department__in=department_ids_list,
+                    semester__in=semester_ids_list,
+                    section__in=section_ids_list,
+                    is_active=True
+                )
             except:
                 student_list = []
 
