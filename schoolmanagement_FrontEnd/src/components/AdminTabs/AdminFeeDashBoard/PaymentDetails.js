@@ -19,6 +19,12 @@ import { openFeeReceiptPdf } from "../AdminFeeSearch/feeReceiptPdf";
 
 const FeeDetails = () => {
   const navigate = useNavigate();
+  const pdfHeaderLines = [
+    "SPARSH COLLEGE OF NURSING & ALLIED SCIENCES",
+    "(A unit of Nirmala Trust)",
+    "Plot No: 154/1683/2194 & 177/2195, Kantabada, Bhubaneswar-752054",
+    "Ph.: +91 7735504783, Email: info@sparshnursing.edu.in",
+  ];
 
   const [searchTerm, setSearchTerm] = useState("");
   const location = useLocation();
@@ -388,14 +394,27 @@ const FeeDetails = () => {
     header.style.marginBottom = "20px";
 
     const collegeName = document.createElement("h3");
-    collegeName.textContent = "Vinayak Vidya Mandir Sr. Sec. School";
+    collegeName.textContent = pdfHeaderLines[0];
     collegeName.style.margin = "0";
     collegeName.style.fontWeight = "bold";
+    collegeName.style.color = "#0a6b67";
+    collegeName.style.fontSize = "28px";
+    collegeName.style.letterSpacing = "0.5px";
+
+    const trustLine = document.createElement("p");
+    trustLine.textContent = pdfHeaderLines[1];
+    trustLine.style.margin = "4px 0 0";
+    trustLine.style.fontSize = "14px";
 
     const address = document.createElement("p");
-    address.textContent = "Kumashpur, SONIPAT, HARYANA-131021";
-    address.style.margin = "0";
+    address.textContent = pdfHeaderLines[2];
+    address.style.margin = "4px 0 0";
     address.style.fontSize = "14px";
+
+    const contact = document.createElement("p");
+    contact.textContent = pdfHeaderLines[3];
+    contact.style.margin = "4px 0 0";
+    contact.style.fontSize = "14px";
 
     const dateRange = document.createElement("p");
     const fromDateStr = startDate
@@ -408,7 +427,9 @@ const FeeDetails = () => {
     dateRange.style.fontWeight = "bold";
 
     header.appendChild(collegeName);
+    header.appendChild(trustLine);
     header.appendChild(address);
+    header.appendChild(contact);
     header.appendChild(dateRange);
 
     // Create hidden container and append header + table

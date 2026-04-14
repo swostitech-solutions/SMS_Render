@@ -926,13 +926,13 @@ const AdmAttendanceEntry = () => {
         console.error("Failed to fetch data:", result.message);
         setSelectedStudentIds([]);
         setTableData([]);
-        setShowTable(false);
+        setShowTable(true);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
       setSelectedStudentIds([]);
       setTableData([]);
-      setShowTable(false);
+      setShowTable(true);
     }
   };
 
