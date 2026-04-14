@@ -1201,21 +1201,41 @@ const AdmAttendanceEntry = () => {
 
     // ========== FEE DETAILS ==========
 
-    const feeDetails = data.feesdetails.map((fee) => [
-      fee.semester_name,
-      fee.element_name,
-      fee.total_amount,
-      fee.paid_amount,
-      fee.remaining_amount,
-    ]);
+const feeDetails = data.feesdetails.map((fee) => {
+  const total = Number(fee.total_amount) || 0;
+  const paid = Number(fee.paid_amount) || 0;
+
+  let discount = 0;
+
+  if (fee.element_name === "DISCOUNT") {
+    discount = Math.abs(total); // ✅ FIX HERE
+  }
+
+  let rowBalance = total - paid - discount;
+
+  if (rowBalance < 0) rowBalance = 0;
+
+  return [fee.semester_name, fee.element_name, total, paid, rowBalance];
+});
 
     // Totals rows
-    const totalRows = [
-      ["", "", "", "Total Fees", data.total_fees],
-      ["", "", "", "Total Paid", data.total_paid],
-      ["", "", "", "Total Discount", data.total_discount],
-      ["", "", "", "Balance", data.remaining_amount],
-    ];
+const totalFees = Number(data.total_fees) || 0;
+const totalPaid = Number(data.total_paid) || 0;
+const totalDiscount = Math.abs(
+  Number(data.discount_fees) || Number(data.total_discount) || 0,
+);
+
+// ✅ Correct balance
+let balance = totalFees - totalDiscount - totalPaid;
+
+if (balance < 0) balance = 0;
+
+const totalRows = [
+  ["", "", "", "Total Fees", totalFees],
+  ["", "", "", "Total Paid", totalPaid],
+  ["", "", "", "Total Discount", totalDiscount],
+  ["", "", "", "Balance", balance],
+];
 
     feeDetails.push(...totalRows);
 
