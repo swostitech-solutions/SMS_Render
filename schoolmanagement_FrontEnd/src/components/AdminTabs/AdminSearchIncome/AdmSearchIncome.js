@@ -334,64 +334,72 @@ const handleView = async (incomeId) => {
       return;
     }
 
-    const doc = new jsPDF();
+    const doc = new jsPDF("portrait", "mm", "a4");
 
-    // Set logo path
-    // const logoPath = "/SynergyLogo.gif"; // Relative path inside public folder
-
-    // Add college name
     doc.setFontSize(16);
-    doc.text("Sparsh College of Nursing and Allied Sciences", 80, 20); // Adjust position as needed
+    doc.setFont("helvetica", "bold");
+    doc.text("SPARSH COLLEGE OF NURSING & ALLIED SCIENCES", 105, 15, {
+      align: "center",
+    });
 
-    // Add logo
-    const img = new Image();
-    // img.src = logoPath;
-    img.onload = () => {
-      doc.addImage(img, "PNG", 15, 10, 30, 20); // X, Y, Width, Height
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("(A unit of Nirmala Trust)", 105, 21, { align: "center" });
+    doc.text(
+      "Plot No: 154/1683/2194 & 177/2195, Kantabada, Bhubaneswar-752054",
+      105,
+      27,
+      { align: "center" }
+    );
+    doc.text(
+      "Ph.: +91 7735504783, Email: info@sparshnursing.edu.in",
+      105,
+      33,
+      { align: "center" }
+    );
 
-      // Define table headers
-      const headers = [
-        [
-          "Income No",
-          "Date",
-          "Party Name",
-          "Payment Method",
-          "Bank Name",
-          "Account No",
-          "Amount",
-        ],
-      ];
+    const headers = [
+      [
+        "Income No",
+        "Date",
+        "Party Name",
+        "Payment Method",
+        "Bank Name",
+        "Account No",
+        "Amount",
+      ],
+    ];
 
-      // Map searchResults into a format suitable for PDF
-      const data = searchResults.map((income) => [
-        income.income_no,
-        income.income_date,
-        income.partyName,
-        income.payment_method,
-        income.bankName || "N/A",
-        income.account_name ? income.account_name : "N/A",
-        income.amount.toFixed(2),
-      ]);
+    const data = searchResults.map((income) => [
+      income.income_no,
+      income.income_date,
+      income.partyName || "N/A",
+      income.payment_method || "N/A",
+      income.bankName || "N/A",
+      income.account_name || "N/A",
+      Number(income.amount || 0).toFixed(2),
+    ]);
 
-      // Calculate total amount
-      const totalAmount = searchResults
-        .reduce((sum, income) => sum + income.amount, 0)
-        .toFixed(2);
+    const totalAmount = searchResults
+      .reduce((sum, income) => sum + Number(income.amount || 0), 0)
+      .toFixed(2);
 
-      // Add total row
-      data.push(["", "", "", "", "", "Total:", totalAmount]);
+    data.push(["", "", "", "", "", "Total:", totalAmount]);
 
-      // Generate table
-      doc.autoTable({
-        startY: 40, // Adjust based on logo position
-        head: headers,
-        body: data,
-        theme: "grid",
-      });
+    doc.autoTable({
+      startY: 40,
+      head: headers,
+      body: data,
+      theme: "grid",
+      styles: {
+        fontSize: 9,
+      },
+      headStyles: {
+        fillColor: [12, 106, 92],
+      },
+    });
 
-      // Save the PDF
-      doc.save("Income_Data.pdf");
-    };
+    doc.save("Income_Data.pdf");
   };
 
   const handleClear = () => {

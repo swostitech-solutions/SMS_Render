@@ -486,7 +486,7 @@ class PartyMasterListAPIView(ListAPIView):
                         'gst_no': item.gst_no,
                         'phone': item.phone,
                         'email_id': item.email_id,
-                        'party_flag': item.party_flag
+                        'party_flag': item.party_flag,
                     }
 
                     responseData.append(data)
@@ -551,7 +551,7 @@ class PartyMasterRetrieveAPIView(RetrieveAPIView):
                     'gst_no': PartyMasterInstance.gst_no,
                     'phone': PartyMasterInstance.phone,
                     'email_id': PartyMasterInstance.email_id,
-                    'party_flag': PartyMasterInstance.party_flag
+                    'party_flag': PartyMasterInstance.party_flag,
                 }
 
                 return Response({'message': 'success', 'data': data}, status=status.HTTP_200_OK)
@@ -758,13 +758,15 @@ class PartyMasterSearchListAPIView(ListAPIView):
                except Exception:
                    pass
 
-            # Convert is_active string to boolean if needed, or rely on capitalization if that's what the model expects (it seems to expect a boolean or string 'True'/'False')
-            # It seems is_active in filter below uses Capitalize(), so 'true' -> 'True'. 
-            # However, simpler to just filter by the mapped batch_id.
-            
-            # get All party list
-            filterdata = PartyMaster.objects.filter(organization=organization, batch=batch_id,
-                                                    is_active=is_active.capitalize())
+            filterdata = PartyMaster.objects.filter(
+                organization=organization,
+                batch=batch_id,
+            )
+
+            if str(is_active).lower() == "true":
+                filterdata = filterdata.filter(enabled="Y")
+            elif str(is_active).lower() == "false":
+                filterdata = filterdata.filter(enabled="N")
 
             if filterdata:
 
@@ -826,7 +828,8 @@ class PartyMasterSearchListAPIView(ListAPIView):
                             'gst_no': item.gst_no,
                             'phone': item.phone,
                             'email_id': item.email_id,
-                            'is_active': item.is_active
+                            'enabled': item.enabled,
+                            'is_active': item.enabled == "Y",
                         }
                         responseData.append(data)
 
@@ -1209,7 +1212,8 @@ class ExpenseIncomeListBasedOnCategory(ListAPIView):
             categoryList = ExpenseCategoryMaster.objects.filter(
                 organization_id=organization_id,
                 batch_id__in=possible_batches,
-                is_active=True
+                is_active=True,
+                enabled="Y",
             )
 
             # Apply flag-based filtering
