@@ -287,7 +287,6 @@ const handleView = async (incomeId) => {
     // Define the table headers
     const headers = [
       [
-        "Income ID",
         "Income No",
         "Date",
         "Party Name",
@@ -300,7 +299,6 @@ const handleView = async (incomeId) => {
 
     // Map searchResults into a format suitable for Excel
     const data = searchResults.map((income) => [
-      income.income_id,
       income.income_no,
       income.income_date,
       income.partyName,
@@ -316,7 +314,7 @@ const handleView = async (incomeId) => {
       .toFixed(2);
 
     // Add total row
-    data.push(["", "", "", "", "", "", "Total:", totalAmount]);
+    data.push(["", "", "", "", "", "Total:", totalAmount]);
 
     // Create a worksheet
     const ws = XLSX.utils.aoa_to_sheet([...headers, ...data]);
@@ -354,7 +352,6 @@ const handleView = async (incomeId) => {
       // Define table headers
       const headers = [
         [
-          "Income ID",
           "Income No",
           "Date",
           "Party Name",
@@ -367,7 +364,6 @@ const handleView = async (incomeId) => {
 
       // Map searchResults into a format suitable for PDF
       const data = searchResults.map((income) => [
-        income.income_id,
         income.income_no,
         income.income_date,
         income.partyName,
@@ -383,7 +379,7 @@ const handleView = async (incomeId) => {
         .toFixed(2);
 
       // Add total row
-      data.push(["", "", "", "", "", "", "Total:", totalAmount]);
+      data.push(["", "", "", "", "", "Total:", totalAmount]);
 
       // Generate table
       doc.autoTable({
@@ -661,7 +657,6 @@ const handleView = async (incomeId) => {
                     <table className="table table-bordered ">
                       <thead className="thead-dark">
                         <tr>
-                          <th>Income ID</th>
                           <th>Income No</th>
                           <th>Date</th>
                           <th>Party Name</th>
@@ -676,7 +671,6 @@ const handleView = async (incomeId) => {
                       <tbody>
                         {searchResults.map((income) => (
                           <tr key={income.income_id}>
-                            <td>{income.income_id}</td>
                             <td>{income.income_no}</td>
                             <td>{income.income_date}</td>
                             <td>{income.partyName}</td>
