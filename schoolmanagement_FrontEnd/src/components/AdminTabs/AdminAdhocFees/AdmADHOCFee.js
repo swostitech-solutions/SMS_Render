@@ -2886,19 +2886,20 @@ const AdmADHOCFee = () => {
     }
 
     try {
-      const url = `${
-        ApiUrl.apiurl
-      }Filter/GetStudentBasedCourseSection/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${selectedSessionIds.join(
-        ",",
-      )}&course_ids=${selectedCourseIds.join(
-        ",",
-      )}&department_ids=${selectedDepartmentIds.join(
-        ",",
-      )}&academic_year_id=${selectedAcademicYearIds.join(
-        ",",
-      )}&semester_ids=${selectedSemesterIds.join(
-        ",",
-      )}&section_ids=${selectedSectionIds.join(",")}`;
+      const queryParams = new URLSearchParams({
+        organization_id: String(organization_id),
+        branch_id: String(branch_id),
+        batch_id: String(selectedSessionIds[0]),
+        batch_ids: selectedSessionIds.join(","),
+        course_ids: selectedCourseIds.join(","),
+        department_ids: selectedDepartmentIds.join(","),
+        academic_year_id: String(selectedAcademicYearIds[0]),
+        academic_year_ids: selectedAcademicYearIds.join(","),
+        semester_ids: selectedSemesterIds.join(","),
+        section_ids: selectedSectionIds.join(","),
+      });
+
+      const url = `${ApiUrl.apiurl}Filter/GetStudentBasedCourseSection/?${queryParams.toString()}`;
 
       console.log("Fetching students from:", url);
 

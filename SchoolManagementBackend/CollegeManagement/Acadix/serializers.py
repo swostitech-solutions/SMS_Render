@@ -1337,12 +1337,23 @@ class FeeElementTypeSerializer(serializers.ModelSerializer):
 class StudentGetBasedOnCourseSectionSerializer(serializers.Serializer):
     organization_id = serializers.IntegerField(required=True)
     branch_id = serializers.IntegerField(required=True)
-    batch_id = serializers.IntegerField(required=True)
+    batch_id = serializers.IntegerField(required=False, allow_null=True)
+    batch_ids = serializers.ListField(required=False, allow_empty=True)
     course_ids = serializers.ListField(required=True)
     department_ids = serializers.ListField(required=True)
-    academic_year_id = serializers.IntegerField(required=True)
+    academic_year_id = serializers.IntegerField(required=False, allow_null=True)
+    academic_year_ids = serializers.ListField(required=False, allow_empty=True)
     semester_ids = serializers.ListField(required=True)
     section_ids = serializers.ListField(required=True)
+
+    def validate(self, data):
+        if data.get('batch_id') in (None, '') and not data.get('batch_ids'):
+            raise serializers.ValidationError({'batch_id': 'Either batch_id or batch_ids is required.'})
+
+        if data.get('academic_year_id') in (None, '') and not data.get('academic_year_ids'):
+            raise serializers.ValidationError({'academic_year_id': 'Either academic_year_id or academic_year_ids is required.'})
+
+        return data
 
 
 class FeeElementSerializer(serializers.Serializer):

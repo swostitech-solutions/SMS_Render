@@ -185,6 +185,14 @@ class UserTypeListView(ListAPIView):
             response = super().list(request, *args, **kwargs)
             resdata = response.data
 
+            def normalize_fee_label(value):
+                if not value:
+                    return value
+                compact = re.sub(r'[^a-z]', '', str(value).lower())
+                if compact in ('academicfee', 'academicfees'):
+                    return 'Admission Fee'
+                return value
+
             # prepare data from response
 
             if resdata:
@@ -9288,11 +9296,14 @@ class FeeElementTypeListAPIView(ListAPIView):
                         organization_instance = Organization.objects.get(pk=organization)
                         branch_instance = Branch.objects.get(id=branch)
 
+                        normalized_element_name = normalize_fee_label(item.get('element_name'))
+                        normalized_element_description = normalize_fee_label(item.get('element_description'))
+
                         # Make Response data
                         data = {
                             'id': item.get('id'),
-                            'element_name': item.get('element_name'),
-                            'element_description': item.get('element_description'),
+                            'element_name': normalized_element_name,
+                            'element_description': normalized_element_description,
                             'organization': organization_instance.id,
                             'organization_code': organization_instance.organization_code,
                             'branch_id': branch_instance.id,
@@ -9347,36 +9358,71 @@ class GetStudentBasedOnCourseSection(ListAPIView):
             organization_id = serializer.validated_data.get('organization_id')
             branch_id = serializer.validated_data.get('branch_id')
             batch_id = serializer.validated_data.get('batch_id')
+            batch_ids_list = serializer.validated_data.get('batch_ids')
             # course_id = serializer.validated_data.get('course_id')
             course_ids_list = serializer.validated_data.get('course_ids')
             # department_id = serializer.validated_data.get('department_id')
             department_ids_list = serializer.validated_data.get('department_ids')
             academic_year_id = serializer.validated_data.get('academic_year_id')
+            academic_year_ids_list = serializer.validated_data.get('academic_year_ids')
             semester_ids_list = serializer.validated_data.get('semester_ids')
             # semester_id = serializer.validated_data.get('semester_id')
             # semester_id = serializer.validated_data.get('section_id')
             section_ids_list = serializer.validated_data.get('section_ids')
 
-            # print(class_ids_list,type(class_ids_list))
+            def parse_id_list(value):
+                if value in (None, ''):
+                    return []
 
-            # Convert class_ids to a list of integers by stripping brackets and splitting by comma
-            if isinstance(course_ids_list, list):
-                course_ids_list = [int(i) for i in course_ids_list[0].split(',')]
-            if isinstance(department_ids_list, list):
-                department_ids_list = [int(i) for i in department_ids_list[0].split(',')]
-            if isinstance(semester_ids_list, list):
-                semester_ids_list = [int(i) for i in semester_ids_list[0].split(',')]
-            if isinstance(section_ids_list, list):
-                section_ids_list = [int(i) for i in section_ids_list[0].split(',')]
+                if isinstance(value, int):
+                    return [value]
+
+                if isinstance(value, str):
+                    value = value.split(',')
+
+                if isinstance(value, list):
+                    parsed_values = []
+                    for item in value:
+                        if item in (None, ''):
+                            continue
+                        if isinstance(item, int):
+                            parsed_values.append(item)
+                        elif isinstance(item, str):
+                            parsed_values.extend(
+                                int(part.strip())
+                                for part in item.split(',')
+                                if part and part.strip()
+                            )
+                        else:
+                            parsed_values.append(int(item))
+                    return parsed_values
+
+                return [int(value)]
+
+            batch_ids_list = parse_id_list(batch_ids_list)
+            if not batch_ids_list and batch_id is not None:
+                batch_ids_list = [int(batch_id)]
+
+            course_ids_list = parse_id_list(course_ids_list)
+            department_ids_list = parse_id_list(department_ids_list)
+            academic_year_ids_list = parse_id_list(academic_year_ids_list)
+            if not academic_year_ids_list and academic_year_id is not None:
+                academic_year_ids_list = [int(academic_year_id)]
+            semester_ids_list = parse_id_list(semester_ids_list)
+            section_ids_list = parse_id_list(section_ids_list)
 
             try:
-                student_list = StudentCourse.objects.filter(organization=organization_id, branch=branch_id,
-                                                            batch=batch_id, academic_year=academic_year_id,
-                                                            course__in=course_ids_list,
-                                                            department__in=department_ids_list
-                                                            , semester__in=semester_ids_list,
-                                                            section__in=section_ids_list,
-                                                            is_active=True)
+                student_list = StudentCourse.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    batch__in=batch_ids_list,
+                    academic_year__in=academic_year_ids_list,
+                    course__in=course_ids_list,
+                    department__in=department_ids_list,
+                    semester__in=semester_ids_list,
+                    section__in=section_ids_list,
+                    is_active=True
+                )
             except:
                 student_list = []
 
@@ -12484,11 +12530,18 @@ class GetFeeStructureMasterAndDetailsListAPIView(ListAPIView):
                 element_type_instance = FeeElementType.objects.get(id=item['element_type'])
                 element_frequency_instance = FeeFrequency.objects.get(id=item['element_frequency'])
 
+                normalized_element_description = (
+                    'Admission Fee'
+                    if element_type_instance.element_description
+                    and element_type_instance.element_description.strip().lower() in ('academic fees', 'academic fee')
+                    else element_type_instance.element_description
+                )
+
                 fee_structure_detail_data = dict(item)
 
                 fee_structure_detail_data.update({
                     "fee_structure_master_description": fee_structure_master_instance.fee_structure_description,
-                    "element_description": element_type_instance.element_description,
+                    "element_description": normalized_element_description,
                     "element_frequency_name": element_frequency_instance.fee_frequency_name
                 })
 
@@ -13943,11 +13996,16 @@ class GetFeeDetailsBasedOnFeeMasterListAPIView(ListAPIView):
             for item in feedetailsData:
                 ElementTypename = FeeElementType.objects.get(id=item.element_type_id.id).element_name
                 FrequencyTypeName = FeeFrequency.objects.get(id=item.element_frequency.id).FeeFrequency_name
+                normalized_element_type_name = (
+                    'Admission Fee'
+                    if ElementTypename and ElementTypename.strip().lower() in ('academic fees', 'academic fee')
+                    else ElementTypename
+                )
 
                 feestructuredata = {
                     'id': item.id,
                     'element_type_id': item.element_type_id.id,
-                    'element_type_name': ElementTypename,
+                    'element_type_name': normalized_element_type_name,
                     'element_frequency': item.element_frequency.id,
                     'element_frequency_name': FrequencyTypeName,
                     'amount': item.amount,
@@ -16612,16 +16670,24 @@ class StudentFeeReceiptCreateAPIView(CreateAPIView):
                     fee_periods.append(studentfeedetailsInstance.semester.semester_description)
 
                     element_name = studentfeedetailsInstance.element_name
+                    display_element_name = (
+                        "Admission Fee"
+                        if element_name and element_name.strip().lower() in ("academic fees", "academic fee")
+                        else element_name
+                    )
                     # Use the current receipt line amount instead of cumulative paid_amount.
                     paid_amount = abs(item.amount) if element_name == "DISCOUNT" else item.amount
 
                     # Update paid_element dictionary
-                    if element_name in paid_element:
+                    if display_element_name in paid_element:
                         # Add to existing amount if element_name already exists
-                        paid_element[element_name]["amount"] += paid_amount
+                        paid_element[display_element_name]["amount"] += paid_amount
                     else:
                         # Create a new entry if element_name does not exist
-                        paid_element[element_name] = {"element_name": element_name, "amount": paid_amount}
+                        paid_element[display_element_name] = {
+                            "element_name": display_element_name,
+                            "amount": paid_amount,
+                        }
 
                 Total_fees_objects = StudentFeeDetail.objects.filter(student=studentId, is_active=True)
                 # print(Total_academic_year_fees_objects)
@@ -17764,15 +17830,23 @@ class GetFeeReceiptBasedOnReceiptNo(ListAPIView):
                 fee_semesters.append(studentfeedetailsInstance.semester.semester_description)
 
                 element_name = studentfeedetailsInstance.element_name
+                display_element_name = (
+                    "Admission Fee"
+                    if element_name and element_name.strip().lower() in ("academic fees", "academic fee")
+                    else element_name
+                )
                 paid_amount = studentfeedetailsInstance.paid_amount
 
                 # Update paid_element dictionary
-                if element_name in paid_element:
+                if display_element_name in paid_element:
                     # Add to existing amount if element_name already exists
-                    paid_element[element_name]["amount"] += paid_amount
+                    paid_element[display_element_name]["amount"] += paid_amount
                 else:
                     # Create a new entry if element_name does not exist
-                    paid_element[element_name] = {"element_name": element_name, "amount": paid_amount}
+                    paid_element[display_element_name] = {
+                        "element_name": display_element_name,
+                        "amount": paid_amount,
+                    }
 
             Total_fees_objects = StudentFeeDetail.objects.filter(student_id=studentId)
 

@@ -56,6 +56,7 @@ const EditAdminUserModal = ({ show, handleClose, roleData, staffMap, onUpdateSuc
         { code: "fee.ledger", label: "Fee Ledger" },
         { code: "fee.student_fee", label: "Student Fee" },
         { code: "fee.structure", label: "Fee Structure" },
+        { code: "fee.report", label: "Fee Report" },
       ]
     },
     {

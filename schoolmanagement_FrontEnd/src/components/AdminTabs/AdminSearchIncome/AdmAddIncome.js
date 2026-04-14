@@ -75,6 +75,86 @@ const AdmAttendanceEntry = () => {
   // Store income data account ID for later use
   const [pendingAccountId, setPendingAccountId] = useState(null);
 
+  const getStoredNumericValue = (keys, { allowZero = false } = {}) => {
+    for (const key of keys) {
+      const rawValue =
+        sessionStorage.getItem(key) ?? localStorage.getItem(key);
+      if (rawValue === null || rawValue === undefined || rawValue === "") {
+        continue;
+      }
+
+      const parsedValue = parseInt(rawValue, 10);
+      if (
+        !Number.isNaN(parsedValue) &&
+        (parsedValue > 0 || (allowZero && parsedValue === 0))
+      ) {
+        return parsedValue;
+      }
+    }
+    return null;
+  };
+
+  const hasRequiredNumericValue = (value, { allowZero = false } = {}) =>
+    value !== null &&
+    value !== undefined &&
+    !Number.isNaN(value) &&
+    (value > 0 || (allowZero && value === 0));
+
+  const resolveAcademicYearId = async (
+    organizationId,
+    branchId,
+    currentAcademicYearId
+  ) => {
+    if (
+      !hasRequiredNumericValue(organizationId) ||
+      !hasRequiredNumericValue(branchId)
+    ) {
+      return currentAcademicYearId;
+    }
+
+    try {
+      const response = await api.get("AcademicYear/GetAllAcademicYear/", {
+        params: {
+          organization_id: organizationId,
+          branch_id: branchId,
+        },
+      });
+
+      const academicYears = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+
+      if (academicYears.length === 0) {
+        return currentAcademicYearId;
+      }
+
+      const matchedAcademicYear = academicYears.find(
+        (year) => Number(year.id) === Number(currentAcademicYearId)
+      );
+      if (matchedAcademicYear) {
+        return Number(matchedAcademicYear.id);
+      }
+
+      const defaultAcademicYear =
+        academicYears.find(
+          (year) =>
+            String(year.academic_year_code || "").trim().toLowerCase() === "default"
+        ) || academicYears[0];
+
+      if (defaultAcademicYear?.id) {
+        localStorage.setItem("academicSessionId", String(defaultAcademicYear.id));
+        localStorage.setItem("academic_year_id", String(defaultAcademicYear.id));
+        return Number(defaultAcademicYear.id);
+      }
+    } catch (error) {
+      console.error("Error resolving academic year:", error);
+    }
+
+    return currentAcademicYearId;
+  };
+
   // Set account when accounts are loaded and we have a pending account ID
   useEffect(() => {
     if (pendingAccountId && accountOptions.length > 0) {
@@ -261,16 +341,28 @@ const AdmAttendanceEntry = () => {
 
 
   const handleSave = async () => {
-    // Retrieve org_id, branch_id, and academic_year_id from local storage
-    const orgId = localStorage.getItem("orgId");
-    const branchId = localStorage.getItem("branchId");
-    const academicSessionId = localStorage.getItem("academicSessionId");
+    // Retrieve org_id, branch_id, and academic_year_id from storage
+    const orgId = getStoredNumericValue(["organization_id", "orgId"]);
+    const branchId = getStoredNumericValue(["branch_id", "branchId"]);
+    const storedAcademicYearId = getStoredNumericValue(
+      ["academic_year_id", "academicYearId", "academicSessionId"]
+    );
+    const academicYearId = await resolveAcademicYearId(
+      orgId,
+      branchId,
+      storedAcademicYearId
+    );
 
     // Retrieve userId from session storage
-    const userId = sessionStorage.getItem("userId");
+    const userId = getStoredNumericValue(["userId"], { allowZero: true });
 
-    // Check if required values exist in localStorage and sessionStorage
-    if (!orgId || !branchId || !academicSessionId || !userId) {
+    // Check if required values exist in storage
+    if (
+      !hasRequiredNumericValue(orgId) ||
+      !hasRequiredNumericValue(branchId) ||
+      !hasRequiredNumericValue(academicYearId) ||
+      !hasRequiredNumericValue(userId, { allowZero: true })
+    ) {
       alert("Missing required data. Please check.");
       return;
     }
@@ -279,7 +371,7 @@ const AdmAttendanceEntry = () => {
       created_by: userId,
       org_id: orgId,
       batch_id: branchId,
-      academic_year_id: academicSessionId,
+      academic_year_id: academicYearId,
       payment_method: selectedPayment?.label || "",
       bank: selectedBank?.value || null,
       account: selectedAccount?.value || null,
