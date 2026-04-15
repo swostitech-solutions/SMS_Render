@@ -6576,24 +6576,20 @@ class ProcessFeeGroupMixin:
                             frequency_period = frequency_instance.frequency_period
 
                             if frequency_period > 0:
-                                for item in range(frequency_period):
+                                period_months = [
+                                    details.period_1,
+                                    details.period_2,
+                                    details.period_3,
+                                    details.period_4,
+                                    details.period_5,
+                                    details.period_6,
+                                ]
+                                unique_period_months = []
+                                for period_month in period_months:
+                                    if period_month and period_month not in unique_period_months:
+                                        unique_period_months.append(period_month)
 
-                                    if item == 0:
-                                        period_month = details.period_1
-                                    elif item == 1:
-                                        period_month = details.period_2
-                                    elif item == 2:
-                                        period_month = details.period_3
-                                    elif item == 3:
-                                        period_month = details.period_4
-
-                                    elif item == 4:
-                                        period_month = details.period_5
-
-                                    elif item == 5:
-                                        period_month = details.period_6
-
-                                    # Try creating the student fee details record
+                                for period_month in unique_period_months:
                                     student_fee_details_instance = StudentFeeDetail.objects.create(
                                         student=student_instance,
                                         fee_group=fee_group,
@@ -10735,49 +10731,42 @@ class UtilityGroupMixin:
                     frequency_period = frequency_instance.frequency_period
 
                     if frequency_period > 0 and frequency_period < 12:
-                        # for item in range(1, frequency_period+1):
-                        for item in range(1, frequency_period + 1):
+                        semester_slots = [
+                            details.semester_1,
+                            details.semester_2,
+                            details.semester_3,
+                            details.semester_4,
+                            details.semester_5,
+                            details.semester_6,
+                            details.semester_7,
+                            details.semester_8,
+                        ]
+                        unique_semester_ids = []
+                        for semester_id in semester_slots:
+                            if semester_id and semester_id not in unique_semester_ids:
+                                unique_semester_ids.append(semester_id)
 
-                            if item == 1:
-                                semester = details.semester_1
+                        studentCourseInstance = StudentCourse.objects.get(
+                            student=student_instance.id,
+                            is_active=True,
+                        )
 
-                            elif item == 2:
-                                semester = details.semester_2
-
-                            elif item == 3:
-                                semester = details.semester_3
-
-                            elif item == 4:
-                                semester = details.semester_4
-
-                            elif item == 5:
-                                semester = details.semester_5
-
-                            elif item == 6:
-                                semester = details.semester_6
-
-                            elif item == 7:
-                                semester = details.semester_7
-
-                            elif item == 8:
-                                semester = details.semester_8
-
+                        for semester_id in unique_semester_ids:
                             try:
-                                fee_applied_from_instance = Semester.objects.get(id=details.semester_1, is_active=True)
-                                semester_instance = Semester.objects.get(id=semester, is_active=True)
+                                semester_instance = Semester.objects.get(
+                                    id=semester_id,
+                                    is_active=True,
+                                )
                             except Semester.DoesNotExist:
-                                return Response({"message": "semester record not found !!!"},
-                                                status=status.HTTP_204_NO_CONTENT)
-                            studentCourseInstance = StudentCourse.objects.get(student=student_instance.id,
-                                                                              is_active=True)
-                            # Try creating the student fee details record
+                                continue
+
                             student_fee_details_instance = StudentFeeDetail.objects.create(
                                 student=student_instance,
                                 student_course=studentCourseInstance,
                                 fee_group=FeeStructuremasterInstance,
                                 fee_structure_details=details,
                                 element_name=details.element_type.element_name,
-                                fee_applied_from=fee_applied_from_instance,
+                                fee_applied_from=semester_instance,
                                 semester=semester_instance,
                                 paid='N',
                                 academic_year=student_instance.academic_year,
