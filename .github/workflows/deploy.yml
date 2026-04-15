@@ -37,7 +37,7 @@ jobs:
 
             echo "=== Deploying Frontend ==="
             cd /var/www/schoolmanagement/schoolmanagement_FrontEnd
-            export REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}"
+            export REACT_APP_API_URL="/api/"
             export CI=false
             export GENERATE_SOURCEMAP=false
             npm ci --silent
@@ -82,7 +82,7 @@ jobs:
 
             echo "=== Deploying Preprod Frontend ==="
             cd /var/www/schoolmanagement-preprod/schoolmanagement_FrontEnd
-            export REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL_PREPROD }}"
+            export REACT_APP_API_URL="/api/"
             export CI=false
             export GENERATE_SOURCEMAP=false
             npm ci --silent
