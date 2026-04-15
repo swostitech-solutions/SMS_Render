@@ -1473,17 +1473,16 @@ const totalRows = [
                         placeholder="Select Status"
                         classNamePrefix="react-select"
                         defaultValue={statusOptions.find(
-                          (option) => option.value === "1"
+                          (option) => option.value === "1",
                         )}
                         onChange={(selectedOption) => {
                           console.log("Selected Status: ", selectedOption);
                           setStatusData(
-                            selectedOption ? selectedOption.value : ""
+                            selectedOption ? selectedOption.value : "",
                           ); // Set selected value to state
                         }}
                       />
                     </div>
-                   
 
                     <div className="col-12 col-md-3 mb-2">
                       <label htmlFor="report" className="form-label">
@@ -1634,14 +1633,14 @@ const totalRows = [
                               <td>{item.total_fees}</td>
                               <td>{item.total_paid}</td>
                               <td>{item.discount_fees}</td>
-                              <td>{item.remaining_fees}</td>
+                              <td>{item.total_fees - item.total_paid}</td>
                               <td>
                                 <button
                                   className="btn btn-link"
                                   onClick={() =>
                                     handleViewClick(
                                       item.academic_year_id,
-                                      item.studentId
+                                      item.studentId,
                                     )
                                   }
                                 >
