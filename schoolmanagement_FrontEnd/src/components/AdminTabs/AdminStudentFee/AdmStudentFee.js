@@ -8,6 +8,7 @@ import Select from "react-select";
 import { Table, Pagination } from "react-bootstrap";
 import { ApiUrl } from "../../../ApiUrl";
 import { useNavigate } from "react-router-dom";
+import { normalizeFeeElementOptions } from "../../utils/feeElementOptions";
 
 const StudentFee = () => {
   const navigate = useNavigate();
@@ -532,19 +533,13 @@ const StudentFee = () => {
         }
 
         const result = await response.json();
+        const options = normalizeFeeElementOptions(result);
 
-        //  Adjust mapping based on your backend response structure
-        if (result && result.data && Array.isArray(result.data)) {
-          const options = result.data.map((element) => ({
-            value: element.id,
-            label:
-              element.elementDescription ||
-              element.element_description ||
-              "N/A",
-          }));
+        if (options.length > 0) {
           setElementNameOptions(options);
         } else {
           console.error("Invalid data format:", result);
+          setElementNameOptions([]);
         }
       } catch (error) {
         console.error("Error fetching fee elements:", error);

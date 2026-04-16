@@ -917,11 +917,22 @@ const AdmAttendanceEntry = () => {
       const result = await response.json();
 
       if (response.ok && result.message === "success!!") {
-        const studentIds = result.data.map((student) => student.studentId);
+        let ledgerData = result.data;
+
+        // Filter logic for 'Show Students with Balance Fees' (Option 'B')
+        if (showFees === "B") {
+          ledgerData = ledgerData.filter((item) => {
+            const balance = (Number(item.total_fees) || 0) - (Number(item.total_paid) || 0);
+            return balance > 0;
+          });
+        }
+
+        const studentIds = ledgerData.map((student) => student.studentId);
 
         setSelectedStudentIds(studentIds);
-        setTableData(result.data);
+        setTableData(ledgerData);
         setShowTable(true);
+        setCurrentPage(0); // Reset pagination to page 1 on search
       } else {
         console.error("Failed to fetch data:", result.message);
         setSelectedStudentIds([]);

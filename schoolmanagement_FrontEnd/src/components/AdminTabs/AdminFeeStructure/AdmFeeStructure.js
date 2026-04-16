@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Select from "react-select";
 import { ApiUrl } from "../../../ApiUrl";
 import { useNavigate } from "react-router-dom";
+import { normalizeFeeElementOptions } from "../../utils/feeElementOptions";
 
 function AdmFeeStructure() {
   const navigate = useNavigate();
@@ -690,19 +691,13 @@ useEffect(() => {
         }
 
         const result = await response.json();
+        const options = normalizeFeeElementOptions(result);
 
-        //  Adjust mapping based on your backend response structure
-        if (result && result.data && Array.isArray(result.data)) {
-          const options = result.data.map((element) => ({
-            value: element.id,
-            label:
-              element.elementDescription ||
-              element.element_description ||
-              "N/A",
-          }));
+        if (options.length > 0) {
           setElementNameOptions(options);
         } else {
           console.error("Invalid data format:", result);
+          setElementNameOptions([]);
         }
       } catch (error) {
         console.error("Error fetching fee elements:", error);

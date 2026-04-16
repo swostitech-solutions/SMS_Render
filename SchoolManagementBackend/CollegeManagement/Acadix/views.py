@@ -64,6 +64,15 @@ from .serializers import *
 from .utils import send_otp_email, generate_otp
 
 
+def normalize_fee_label(value):
+    if not value:
+        return value
+    compact = re.sub(r'[^a-z]', '', str(value).lower())
+    if compact in ('academicfee', 'academicfees'):
+        return 'Admission Fee'
+    return value
+
+
 # from .serializers_new import UserTypeSerializer, EmployeeSerializer, LoginSerializer, LoginModelSerializer, \
 #     ChangePasswordSerializer, DetailsSerializer, AcademicYearSerializer, CourseSerializer, SectionSerializer, \
 #     StudentRegistrationSerializer, FeeStructureMasterRequestSerializer, StudentBasicDetailSerializer, \
@@ -184,14 +193,6 @@ class UserTypeListView(ListAPIView):
         try:
             response = super().list(request, *args, **kwargs)
             resdata = response.data
-
-            def normalize_fee_label(value):
-                if not value:
-                    return value
-                compact = re.sub(r'[^a-z]', '', str(value).lower())
-                if compact in ('academicfee', 'academicfees'):
-                    return 'Admission Fee'
-                return value
 
             # prepare data from response
 
@@ -9256,6 +9257,15 @@ class FeeElementTypeListAPIView(ListAPIView):
     queryset = FeeElementType.objects.all()
     serializer_class = FeeElementTypeSerializer
 
+    @staticmethod
+    def _normalize_fee_label(value):
+        if not value:
+            return value
+        compact = re.sub(r'[^a-z]', '', str(value).lower())
+        if compact in ('academicfee', 'academicfees'):
+            return 'Admission Fee'
+        return value
+
     def get_queryset(self):
         # Get the elementType from the URL
         element_type = self.kwargs.get('elementType')
@@ -9286,24 +9296,23 @@ class FeeElementTypeListAPIView(ListAPIView):
                         # Get Data
                         organization = item.get('organization')
                         branch = item.get('branch')
-                        # academic_id = item.get('academic_id')
 
-                        # Get Organization & Branch
-                        organization_instance = Organization.objects.get(pk=organization)
-                        branch_instance = Branch.objects.get(id=branch)
+                        # Resolve related names safely so one bad row does not crash the API
+                        organization_instance = Organization.objects.filter(pk=organization).first()
+                        branch_instance = Branch.objects.filter(id=branch).first()
 
-                        normalized_element_name = normalize_fee_label(item.get('element_name'))
-                        normalized_element_description = normalize_fee_label(item.get('element_description'))
+                        normalized_element_name = self._normalize_fee_label(item.get('element_name'))
+                        normalized_element_description = self._normalize_fee_label(item.get('element_description'))
 
                         # Make Response data
                         data = {
                             'id': item.get('id'),
                             'element_name': normalized_element_name,
                             'element_description': normalized_element_description,
-                            'organization': organization_instance.id,
-                            'organization_code': organization_instance.organization_code,
-                            'branch_id': branch_instance.id,
-                            'branch_description': branch_instance.branch_name,
+                            'organization': organization,
+                            'organization_code': organization_instance.organization_code if organization_instance else '',
+                            'branch_id': branch,
+                            'branch_description': branch_instance.branch_name if branch_instance else '',
                             'sequence_order': item.get('sequence_order'),
                             'element_type': item.get('element_type')
 
