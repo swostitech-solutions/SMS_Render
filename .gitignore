@@ -90,6 +90,9 @@ lerna-debug.log*
 # Project Specific
 # ===============================================
 
+# Local frontend API endpoint config
+schoolmanagement_FrontEnd/src/ApiUrl.jsx
+
 # Media files (uploaded content)
 SWOSTITECH_CMS/
 **/SWOSTITECH_CMS/
