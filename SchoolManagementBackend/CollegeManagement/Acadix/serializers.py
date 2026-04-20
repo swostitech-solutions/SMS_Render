@@ -1345,6 +1345,7 @@ class StudentGetBasedOnCourseSectionSerializer(serializers.Serializer):
     academic_year_ids = serializers.ListField(required=False, allow_empty=True)
     semester_ids = serializers.ListField(required=True)
     section_ids = serializers.ListField(required=True)
+    include_promoted_students = serializers.BooleanField(required=False, default=False)
 
     def validate(self, data):
         if data.get('batch_id') in (None, '') and not data.get('batch_ids'):
