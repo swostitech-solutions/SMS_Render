@@ -354,13 +354,14 @@ const AdmAttendanceEntry = ({
 
     if (!file) return;
 
-    // ✅ ALLOWED IMAGE TYPES
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const fileName = file.name || "profile_image";
+    const extension = fileName.split(".").pop()?.toLowerCase() || "";
+    const isImageMime = !!file.type && file.type.startsWith("image/");
+    const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
 
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG and PNG format is allowed");
+    if (!isImageMime && !allowedExtensions.includes(extension)) {
+      alert("Only image files are allowed");
 
-      // ❌ Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -370,21 +371,65 @@ const AdmAttendanceEntry = ({
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      const base64Data = reader.result;
+      const rawBase64Data = reader.result;
+      const img = new Image();
 
-      // Save to sessionStorage
-      sessionStorage.setItem("profile_pic_base64", base64Data);
-      sessionStorage.setItem("profile_pic_name", file.name);
-      sessionStorage.setItem("profile_pic_type", file.type);
+      const saveProcessedImage = (base64Data, mimeType, finalName) => {
+        sessionStorage.setItem("profile_pic_base64", base64Data);
+        sessionStorage.setItem("profile_pic_name", finalName);
+        sessionStorage.setItem("profile_pic_type", mimeType);
 
-      // Set preview
-      setFrontCover(base64Data);
+        setFrontCover(base64Data);
+        setFormData((prevData) => ({
+          ...prevData,
+          profile_pic_preview: base64Data,
+        }));
+      };
 
-      // Save preview to formData
-      setFormData((prevData) => ({
-        ...prevData,
-        profile_pic_preview: base64Data,
-      }));
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const maxDimension = 1400;
+          let { width, height } = img;
+
+          if (width > maxDimension || height > maxDimension) {
+            const ratio = Math.min(maxDimension / width, maxDimension / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const outputType = extension === "png" ? "image/png" : "image/jpeg";
+          const outputExt = extension === "png" ? "png" : "jpg";
+          const safeBaseName = fileName
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[^a-zA-Z0-9_-]/g, "_")
+            .slice(0, 60) || "profile_image";
+
+          const processedBase64 = canvas.toDataURL(
+            outputType,
+            outputType === "image/jpeg" ? 0.9 : undefined
+          );
+
+          saveProcessedImage(processedBase64, outputType, `${safeBaseName}.${outputExt}`);
+        } catch (error) {
+          console.warn("⚠️ Image normalization failed, using original file:", error);
+          saveProcessedImage(rawBase64Data, file.type || "image/jpeg", fileName);
+        }
+      };
+
+      img.onerror = () => {
+        saveProcessedImage(rawBase64Data, file.type || "image/jpeg", fileName);
+      };
+
+      img.src = rawBase64Data;
     };
 
     reader.readAsDataURL(file);

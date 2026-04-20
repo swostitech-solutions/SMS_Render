@@ -404,6 +404,37 @@ export default function BasicTabs() {
     return date.toISOString();
   };
 
+  const dataUrlToFile = (
+    dataUrl,
+    rawFileName = "profile_image.jpg",
+    fallbackType = "image/jpeg"
+  ) => {
+    try {
+      const matches = String(dataUrl || "").match(/^data:(.*?);base64,(.*)$/);
+      if (!matches) return null;
+
+      const detectedType = matches[1] || fallbackType;
+      const base64 = matches[2];
+      const binary = window.atob(base64);
+      const bytes = new Uint8Array(binary.length);
+
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      const safeName = String(rawFileName || "profile_image.jpg")
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .slice(0, 80);
+
+      return new File([bytes], safeName, {
+        type: detectedType || fallbackType,
+      });
+    } catch (error) {
+      console.warn("⚠️ Failed to convert profile image data URL to file:", error);
+      return null;
+    }
+  };
+
   const normalizeTitle = (value, role) => {
     const raw = String(value || "").trim();
     if (!raw) return "";
@@ -1120,17 +1151,18 @@ export default function BasicTabs() {
       const fileType = sessionStorage.getItem("profile_pic_type");
 
       if (selectedProfileFile) {
-        formPayload.append("profile_pic", selectedProfileFile);
-      } else if (
-        base64Data &&
-        fileName &&
-        fileType &&
-        String(base64Data).startsWith("data:")
-      ) {
-        const res = await fetch(base64Data);
-        const blob = await res.blob();
-        const file = new File([blob], fileName, { type: fileType });
-        formPayload.append("profile_pic", file);
+        const safeName = (selectedProfileFile.name || "profile_image.jpg")
+          .replace(/[^a-zA-Z0-9._-]/g, "_")
+          .slice(0, 80);
+        const safeFile = new File([selectedProfileFile], safeName, {
+          type: selectedProfileFile.type || "image/jpeg",
+        });
+        formPayload.append("profile_pic", safeFile);
+      } else if (base64Data && String(base64Data).startsWith("data:")) {
+        const convertedFile = dataUrlToFile(base64Data, fileName, fileType);
+        if (convertedFile) {
+          formPayload.append("profile_pic", convertedFile);
+        }
       }
 
       // ✅ Handle document images (supports 3 cases)
