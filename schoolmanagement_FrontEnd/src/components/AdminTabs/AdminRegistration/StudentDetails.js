@@ -314,25 +314,13 @@ const AdmAttendanceEntry = ({
             studentaadharno: s.student_aadhaar_no || "",
           };
 
-          // ✅ Handle profile image to base64 preview
+          // ✅ Use existing profile image URL directly to avoid cross-origin fetch issues
           if (s.profile_pic && typeof s.profile_pic === "string") {
-            try {
-              const imageResponse = await fetch(s.profile_pic);
-              const blob = await imageResponse.blob();
-              const base64Data = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-              });
-
-              sessionStorage.setItem("profile_pic_base64", base64Data);
-              sessionStorage.setItem("profile_pic_name", "profile.jpg");
-              sessionStorage.setItem("profile_pic_type", blob.type);
-              setFrontCover(base64Data);
-              updatedFormData.profile_pic_preview = base64Data;
-            } catch (error) {
-              console.warn("⚠️ Failed to load profile_pic:", error);
-            }
+            setFrontCover(s.profile_pic);
+            updatedFormData.profile_pic_preview = s.profile_pic;
+            sessionStorage.removeItem("profile_pic_base64");
+            sessionStorage.removeItem("profile_pic_name");
+            sessionStorage.removeItem("profile_pic_type");
           }
 
           setFormData((prev) => ({
@@ -1810,6 +1798,10 @@ const AdmAttendanceEntry = ({
                             <img
                               src={frontCover}
                               alt="Profile Picture Preview"
+                              onError={(e) => {
+                                console.warn("⚠️ Profile image failed to load:", frontCover);
+                                e.currentTarget.style.display = "none";
+                              }}
                               style={{
                                 width: "120px",
                                 height: "150px",

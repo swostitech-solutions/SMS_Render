@@ -1005,7 +1005,6 @@ export default function BasicTabs() {
         user_name: formData.username || "",
         remarks: formData.remarks || "",
         referred_by: formData.referred_by || "",
-        profile_pic: null,
         father_name: formData.father_name || "",
         father_title: formData.father_title || "",
         father_profession: formData.father_profession || "",
@@ -1114,12 +1113,20 @@ export default function BasicTabs() {
         previous_education_detail
       );
 
-      // ✅ Handle profile image
+      // ✅ Handle profile image update
+      const selectedProfileFile = fileInputRef.current?.files?.[0];
       const base64Data = sessionStorage.getItem("profile_pic_base64");
       const fileName = sessionStorage.getItem("profile_pic_name");
       const fileType = sessionStorage.getItem("profile_pic_type");
 
-      if (base64Data && fileName && fileType) {
+      if (selectedProfileFile) {
+        formPayload.append("profile_pic", selectedProfileFile);
+      } else if (
+        base64Data &&
+        fileName &&
+        fileType &&
+        String(base64Data).startsWith("data:")
+      ) {
         const res = await fetch(base64Data);
         const blob = await res.blob();
         const file = new File([blob], fileName, { type: fileType });
@@ -1300,7 +1307,7 @@ export default function BasicTabs() {
           <AdmDesignComponent
             formData={formData}
             setFormData={setFormData}
-            batch_id={formData.batch}
+            batch_id={formData.batch} 
             course_id={formData.course}
             department_id={formData.department}
             requiredErrors={errors}

@@ -249,7 +249,7 @@ const AdmOtherDetails = ({ formData, setFormData, isDataLoading }) => {
                         handleInputChange(
                           index,
                           "document_type",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       required
@@ -270,44 +270,39 @@ const AdmOtherDetails = ({ formData, setFormData, isDataLoading }) => {
                         row.document_type === "Aadhaar card"
                           ? 12
                           : row.document_type === "Pan Card"
-                          ? 10
-                          : 100
+                            ? 10
+                            : 100
                       }
                       onChange={(e) => {
                         const inputValue = e.target.value.toUpperCase();
 
                         if (row.document_type === "Aadhaar card") {
-                          // ✅ Aadhaar validation: only digits, up to 12
                           if (/^\d{0,12}$/.test(inputValue)) {
                             handleInputChange(index, "document_no", inputValue);
                           }
                         } else if (row.document_type === "Pan Card") {
-                          // ✅ PAN validation: 5 letters + 4 digits + 1 letter
-                          if (
-                            /^[A-Z]{0,5}[0-9]{0,4}[A-Z]{0,1}$/.test(inputValue)
-                          ) {
+                          // Allow typing but not strict validation here
+                          if (/^[A-Z0-9]{0,10}$/.test(inputValue)) {
                             handleInputChange(index, "document_no", inputValue);
                           }
                         } else {
-                          // ✅ Generic: accept all text
                           handleInputChange(index, "document_no", inputValue);
                         }
                       }}
-                      placeholder={
-                        row.document_type === "Aadhaar card"
-                          ? "Enter 12-digit Aadhaar number"
-                          : row.document_type === "Pan Card"
-                          ? "Enter 10-char PAN (e.g. ABCDE1234F)"
-                          : "Enter Document Number"
-                      }
-                      disabled={!row.document_type} // 🔒 disable until document type selected
-                      style={{
-                        backgroundColor: !row.document_type
-                          ? "#f5f5f5"
-                          : "white",
-                        cursor: !row.document_type ? "not-allowed" : "text",
+                      onBlur={(e) => {
+                        if (row.document_type === "Pan Card") {
+                          const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+
+                          if (
+                            e.target.value &&
+                            !panRegex.test(e.target.value)
+                          ) {
+                            alert(
+                              "Invalid PAN format. It should be like ABCDE1234F",
+                            );
+                          }
+                        }
                       }}
-                      required
                     />
                   </td>
                   <td>
