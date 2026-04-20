@@ -40,12 +40,14 @@ CustomTabPanel.propTypes = {
   index: PropTypes.number.isRequired,
   value: PropTypes.number.isRequired,
 };
+
 function a11yProps(index) {
   return {
     id: `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
+
 export default function BasicTabs() {
   const { id } = useParams();
   const location = useLocation();
@@ -55,6 +57,10 @@ export default function BasicTabs() {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [errors, setErrors] = useState({});
   const [isEditMode, setIsEditMode] = useState(false);
+  const [validationPopup, setValidationPopup] = useState({
+    show: false,
+    missingFields: [],
+  });
   const maxTabIndex = isEditMode ? 7 : 8;
   const [isTransportAvailed, setIsTransportAvailed] = useState(false);
   const [selectedMonths, setSelectedMonths] = useState({});
@@ -315,9 +321,9 @@ export default function BasicTabs() {
     }
     if (!formData.mother_contact_number?.trim()) {
       newErrors.mother_contact_number = "Mother Contact Number is required";
-        if (!formData.dob) {
-          newErrors.dob = "Date Of Birth is required";
-        }
+    }
+    if (!formData.dob) {
+      newErrors.dob = "Date Of Birth is required";
     }
     if (!formData.present_address?.trim()) {
       newErrors.present_address = "Present Address is required";
@@ -906,7 +912,55 @@ export default function BasicTabs() {
   };
 
   const handleUpdate = async () => {
-    if (!validateRequiredFields()) {
+    const isValid = validateRequiredFields();
+    if (!isValid) {
+      const tempErrors = {};
+      if (!formData.first_name?.trim()) tempErrors.first_name = "First Name is required";
+      if (!formData.last_name?.trim()) tempErrors.last_name = "Last Name is required";
+      if (!formData.batch) tempErrors.batch = "Session is required";
+      if (!formData.course) tempErrors.course = "Course is required";
+      if (!formData.department) tempErrors.department = "Department is required";
+      if (!formData.academic_year) tempErrors.academic_year = "Academic Year is required";
+      if (!formData.semester) tempErrors.semester = "Semester is required";
+      if (!formData.addmitted_section) tempErrors.addmitted_section = "Section is required";
+      if (!formData.gender) tempErrors.gender = "Gender is required";
+      if (!formData.date_of_admission) tempErrors.date_of_admission = "Date of Admission is required";
+      if (!formData.dob) tempErrors.dob = "Date Of Birth is required";
+      if (!formData.admission_type) tempErrors.admission_type = "Admission Type is required";
+      if (!formData.father_name?.trim()) tempErrors.father_name = "Father Name is required";
+      if (!formData.mother_name?.trim()) tempErrors.mother_name = "Mother Name is required";
+      if (!formData.father_profession) tempErrors.father_profession = "Father Profession is required";
+      if (!formData.mother_profession) tempErrors.mother_profession = "Mother Profession is required";
+      if (!formData.father_contact_number?.trim()) tempErrors.father_contact_number = "Father Contact Number is required";
+      if (!formData.mother_contact_number?.trim()) tempErrors.mother_contact_number = "Mother Contact Number is required";
+      if (!formData.present_address?.trim()) tempErrors.present_address = "Present Address is required";
+      if (!formData.present_country) tempErrors.present_country = "Present Country is required";
+      if (!formData.present_state) tempErrors.present_state = "Present State is required";
+      if (!formData.present_city) tempErrors.present_city = "Present District is required";
+      if (!formData.present_pincode?.trim()) tempErrors.present_pincode = "Present Pincode is required";
+      if (!formData.permanent_address?.trim()) tempErrors.permanent_address = "Permanent Address is required";
+      if (!formData.permanent_country) tempErrors.permanent_country = "Permanent Country is required";
+      if (!formData.permanent_state) tempErrors.permanent_state = "Permanent State is required";
+      if (!formData.permanent_city) tempErrors.permanent_city = "Permanent District is required";
+      if (!formData.permanent_pincode?.trim()) tempErrors.permanent_pincode = "Permanent Pincode is required";
+
+      const missingFields = Object.values(tempErrors);
+
+      (formData.emegencyContact || []).forEach((contact, index) => {
+        if (!contact?.name?.trim()) missingFields.push(`Emergency Contact ${index + 1}: Name is required`);
+        if (!contact?.relationship?.trim()) missingFields.push(`Emergency Contact ${index + 1}: Relationship is required`);
+        if (!contact?.Mobile_Number?.trim()) missingFields.push(`Emergency Contact ${index + 1}: Phone No is required`);
+      });
+
+      (formData.authorizedpickup || []).forEach((guardian, index) => {
+        if (!guardian?.name?.trim()) missingFields.push(`Local Guardian ${index + 1}: Name is required`);
+        if (!guardian?.relationship?.trim()) missingFields.push(`Local Guardian ${index + 1}: Relationship is required`);
+        if (!guardian?.Mobile_Number?.trim()) missingFields.push(`Local Guardian ${index + 1}: Mobile No is required`);
+        if (!guardian?.address?.trim()) missingFields.push(`Local Guardian ${index + 1}: Address is required`);
+        if (!guardian?.email?.trim()) missingFields.push(`Local Guardian ${index + 1}: Email is required`);
+      });
+
+      setValidationPopup({ show: true, missingFields });
       return;
     }
     const token = localStorage.getItem("accessToken");
@@ -1316,6 +1370,56 @@ export default function BasicTabs() {
           <ArrowForwardIcon />
         </IconButton>
       </Box>
+
+      {validationPopup.show && (
+        <div
+          className="modal fade show"
+          style={{
+            display: "block",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 9999,
+          }}
+          tabIndex="-1"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">Missing Required Fields</h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() =>
+                    setValidationPopup({ show: false, missingFields: [] })
+                  }
+                />
+              </div>
+              <div className="modal-body">
+                <p className="mb-2 text-danger fw-semibold">
+                  Please fill in the following required fields before updating:
+                </p>
+                <ul className="mb-0 ps-3">
+                  {validationPopup.missingFields.map((msg, idx) => (
+                    <li key={idx} className="text-dark">
+                      {msg}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() =>
+                    setValidationPopup({ show: false, missingFields: [] })
+                  }
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Box>
   );
 }
