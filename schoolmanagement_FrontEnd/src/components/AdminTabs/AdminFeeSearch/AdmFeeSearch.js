@@ -1986,15 +1986,10 @@ const FeeSearchPage = () => {
                                 type="text"
                                 className="form-control detail"
                                 value={upiUtrNo}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(
-                                    /\D/g,
-                                    "",
-                                  );
-                                  if (value.length <= 22) setUpiUtrNo(value);
-                                }}
-                                maxLength="22"
-                                placeholder="Enter UTR No (22 digits)"
+                                onChange={(e) =>
+                                  setUpiUtrNo(e.target.value.toUpperCase())
+                                }
+                                placeholder="Enter UTR No"
                               />
                             </div>
                           )}
@@ -2013,15 +2008,10 @@ const FeeSearchPage = () => {
                                   type="text"
                                   className="form-control detail"
                                   value={rtgsUtrNo}
-                                  onChange={(e) => {
-                                    const value = e.target.value.replace(
-                                      /\D/g,
-                                      "",
-                                    );
-                                    if (value.length <= 22) setRtgsUtrNo(value);
-                                  }}
-                                  maxLength="22"
-                                  placeholder="Enter UTR No (22 digits)"
+                                  onChange={(e) =>
+                                    setRtgsUtrNo(e.target.value.toUpperCase())
+                                  }
+                                  placeholder="Enter UTR No"
                                 />
                               </div>
 

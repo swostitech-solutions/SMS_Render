@@ -17520,14 +17520,14 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                     student_ids_in_section = StudentCourse.objects.filter(section=section_id).values_list('student', flat=True)
                     filterdata = filterdata.filter(student__in=student_ids_in_section)
                 if date_from and date_to:
-                    filterdata = filterdata.filter(receipt_date__range=(date_from, date_to))
+                    filterdata = filterdata.filter(receipt_date__date__range=(date_from, date_to))
                 # Removed default filter to today's date - students should see ALL receipts when no date filter is provided
                 # if not date_from and not date_to:
                 #     filterdata = filterdata.filter(receipt_date=date.today())
                 if date_from and not date_to:
-                    filterdata = filterdata.filter(receipt_date__range=(date_from, date.today()))
+                    filterdata = filterdata.filter(receipt_date__date__gte=date_from)
                 if not date_from and date_to:
-                    return Response({"message": "date_from is required !!!"}, status=status.HTTP_400_BAD_REQUEST)
+                    filterdata = filterdata.filter(receipt_date__date__lte=date_to)
 
             #
             # if batch_id:
