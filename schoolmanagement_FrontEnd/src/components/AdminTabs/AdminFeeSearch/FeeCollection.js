@@ -739,10 +739,6 @@
 //         alert("Please enter UTR No, Sender Bank and Account No for RTGS/NEFT.");
 //         return;
 //       }
-//       if (!/^\d{22}$/.test(rtgsUtrNo)) {
-//         alert("UTR Number must be exactly 22 digits.");
-//         return;
-//       }
 //       payment_detail = {
 //         payment_type: "rtgs_neft",
 //         utr_number: rtgsUtrNo,
@@ -759,10 +755,6 @@
 //     else if (selectedPaymentLabel.includes("upi")) {
 //       if (!upiUtrNo) {
 //         alert("Please enter UTR No for UPI payment.");
-//         return;
-//       }
-//       if (!/^\d{22}$/.test(upiUtrNo)) {
-//         alert("UTR Number must be exactly 22 digits.");
 //         return;
 //       }
 //       payment_detail = {
@@ -1903,10 +1895,9 @@
 //                           value={upiUtrNo}
 //                           onChange={(e) => {
 //                             const value = e.target.value.replace(/\D/g, '');
-//                             if (value.length <= 22) setUpiUtrNo(value);
+//                             setUpiUtrNo(value);
 //                           }}
-//                           maxLength="22"
-//                           placeholder="Enter UTR No (22 digits)"
+//                           placeholder="Enter UTR No"
 //                         />
 //                       </div>
 //                     )}
@@ -1923,10 +1914,9 @@
 //                               value={rtgsUtrNo}
 //                               onChange={(e) => {
 //                                 const value = e.target.value.replace(/\D/g, '');
-//                                 if (value.length <= 22) setRtgsUtrNo(value);
+//                                 setRtgsUtrNo(value);
 //                               }}
-//                               maxLength="22"
-//                               placeholder="Enter UTR No (22 digits)"
+//                               placeholder="Enter UTR No"
 //                             />
 //                           </div>
 
@@ -3022,10 +3012,6 @@ const FeeCollection = () => {
         alert("Please enter UTR No, Sender Bank and Account No for RTGS/NEFT.");
         return;
       }
-      if (!/^\d{22}$/.test(rtgsUtrNo)) {
-        alert("UTR Number must be exactly 22 digits.");
-        return;
-      }
       payment_detail = {
         payment_type: "rtgs_neft",
         utr_number: rtgsUtrNo,
@@ -3042,10 +3028,6 @@ const FeeCollection = () => {
     else if (selectedPaymentLabel.includes("upi")) {
       if (!upiUtrNo) {
         alert("Please enter UTR No for UPI payment.");
-        return;
-      }
-      if (!/^\d{22}$/.test(upiUtrNo)) {
-        alert("UTR Number must be exactly 22 digits.");
         return;
       }
       payment_detail = {
@@ -4479,15 +4461,10 @@ const generatePDF = async (data) => {
                           type="text"
                           className="form-control detail"
                           value={upiUtrNo}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .replace(/[^a-zA-Z0-9]/g, "") // allow only letters + numbers
-                              .toUpperCase(); // 🔥 convert to uppercase
-
-                            if (value.length <= 22) setUpiUtrNo(value);
-                          }}
-                          maxLength="22"
-                          placeholder="Enter UTR No (22 digits)"
+                          onChange={(e) =>
+                            setUpiUtrNo(e.target.value.toUpperCase())
+                          }
+                          placeholder="Enter UTR No"
                         />
                       </div>
                     )}
@@ -4502,15 +4479,10 @@ const generatePDF = async (data) => {
                             type="text"
                             className="form-control detail"
                             value={rtgsUtrNo}
-                            onChange={(e) => {
-                              const value = e.target.value
-                                .replace(/[^a-zA-Z0-9]/g, "")
-                                .toUpperCase(); // 🔥 important
-
-                              if (value.length <= 22) setRtgsUtrNo(value);
-                            }}
-                            maxLength="22"
-                            placeholder="Enter UTR No (22 digits)"
+                            onChange={(e) =>
+                              setRtgsUtrNo(e.target.value.toUpperCase())
+                            }
+                            placeholder="Enter UTR No"
                           />
                         </div>
 
