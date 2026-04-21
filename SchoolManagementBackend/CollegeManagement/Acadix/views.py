@@ -64,6 +64,15 @@ from .serializers import *
 from .utils import send_otp_email, generate_otp
 
 
+def normalize_fee_label(value):
+    if not value:
+        return value
+    compact = re.sub(r'[^a-z]', '', str(value).lower())
+    if compact in ('academicfee', 'academicfees'):
+        return 'Admission Fee'
+    return value
+
+
 # from .serializers_new import UserTypeSerializer, EmployeeSerializer, LoginSerializer, LoginModelSerializer, \
 #     ChangePasswordSerializer, DetailsSerializer, AcademicYearSerializer, CourseSerializer, SectionSerializer, \
 #     StudentRegistrationSerializer, FeeStructureMasterRequestSerializer, StudentBasicDetailSerializer, \
@@ -184,14 +193,6 @@ class UserTypeListView(ListAPIView):
         try:
             response = super().list(request, *args, **kwargs)
             resdata = response.data
-
-            def normalize_fee_label(value):
-                if not value:
-                    return value
-                compact = re.sub(r'[^a-z]', '', str(value).lower())
-                if compact in ('academicfee', 'academicfees'):
-                    return 'Admission Fee'
-                return value
 
             # prepare data from response
 
@@ -9295,7 +9296,6 @@ class FeeElementTypeListAPIView(ListAPIView):
                         # Get Data
                         organization = item.get('organization')
                         branch = item.get('branch')
-                        # academic_id = item.get('academic_id')
 
                         # Resolve related names safely so one bad row does not crash the API
                         organization_instance = Organization.objects.filter(pk=organization).first()
