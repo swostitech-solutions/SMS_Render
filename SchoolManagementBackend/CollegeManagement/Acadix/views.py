@@ -9374,6 +9374,7 @@ class GetStudentBasedOnCourseSection(ListAPIView):
             # semester_id = serializer.validated_data.get('semester_id')
             # semester_id = serializer.validated_data.get('section_id')
             section_ids_list = serializer.validated_data.get('section_ids')
+            include_promoted_students = serializer.validated_data.get('include_promoted_students', False)
 
             def parse_id_list(value):
                 if value in (None, ''):
@@ -9431,6 +9432,29 @@ class GetStudentBasedOnCourseSection(ListAPIView):
             except:
                 student_list = []
 
+            used_promoted_student_fallback = False
+            if include_promoted_students and not student_list:
+                student_list = StudentCourse.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    batch__in=batch_ids_list,
+                    course__in=course_ids_list,
+                    department__in=department_ids_list,
+                    is_active=True
+                )
+                used_promoted_student_fallback = True
+
+            selected_academic_year = None
+            selected_semester = None
+            selected_section = None
+            if used_promoted_student_fallback:
+                if len(academic_year_ids_list) == 1:
+                    selected_academic_year = AcademicYear.objects.filter(id=academic_year_ids_list[0]).first()
+                if len(semester_ids_list) == 1:
+                    selected_semester = Semester.objects.filter(id=semester_ids_list[0]).first()
+                if len(section_ids_list) == 1:
+                    selected_section = Section.objects.filter(id=section_ids_list[0]).first()
+
             student_record = []
 
             if student_list:
@@ -9450,9 +9474,9 @@ class GetStudentBasedOnCourseSection(ListAPIView):
                         'batch': item.student.batch.batch_code,
                         'course_name': item.student.course.course_name,
                         'department': item.student.department.department_code,
-                        'academic_year': item.student.academic_year.academic_year_code,
-                        'semester': item.student.semester.semester_code,
-                        'section': item.student.section.section_name,
+                        'academic_year': selected_academic_year.academic_year_code if selected_academic_year else item.student.academic_year.academic_year_code,
+                        'semester': selected_semester.semester_code if selected_semester else item.student.semester.semester_code,
+                        'section': selected_section.section_name if selected_section else item.student.section.section_name,
                         'registration_no': item.student.registration_no,
                         'enrollment_no': item.enrollment_no,
                         'college_admission_no': item.student.college_admission_no,
