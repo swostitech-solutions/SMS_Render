@@ -68,7 +68,17 @@ const IssuePage = () => {
       (row) => row.bookBarcodeId && row.availableCopies === 0
     );
 
-    if (booksWithNoAvailability.length > 0) {
+   if (booksWithNoAvailability.length > 0) {
+     const bookNames = booksWithNoAvailability
+       .map((row) => row.bookName)
+       .join(", ");
+
+     const errorMessage = `Cannot issue books with no available copies: ${bookNames}`;
+
+     alert(errorMessage); // 👈 ADD THIS LINE
+
+     return;
+   } if (booksWithNoAvailability.length > 0) {
       const bookNames = booksWithNoAvailability.map((row) => row.bookName).join(", ");
       setErrors((prev) => ({ ...prev, general: `Cannot issue books with no available copies: ${bookNames}` }));
       return;
