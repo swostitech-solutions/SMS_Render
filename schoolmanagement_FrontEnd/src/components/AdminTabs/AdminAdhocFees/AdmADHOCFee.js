@@ -1929,6 +1929,111 @@ import ReactPaginate from "react-paginate";
 import { ApiUrl } from "../../../ApiUrl";
 import { useNavigate } from "react-router-dom";
 
+const getSelectedIds = (selectedMap) =>
+  Object.keys(selectedMap).filter((id) => selectedMap[id]);
+
+const buildAuthHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+});
+
+const extractApiList = (result) => {
+  if (Array.isArray(result)) return result;
+  if (result?.message === "Success" && Array.isArray(result.data)) {
+    return result.data;
+  }
+  return [];
+};
+
+const fetchList = async (url) => {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: buildAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Network response not ok: ${response.status} - ${errorText}`);
+  }
+
+  if (response.status === 204) return [];
+
+  return extractApiList(await response.json());
+};
+
+const runLimited = async (tasks, limit = 6) => {
+  const results = [];
+  let nextIndex = 0;
+
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+    while (nextIndex < tasks.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await tasks[currentIndex]();
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+};
+
+const mergeUniqueOptions = (optionGroups) => {
+  const optionMap = new Map();
+
+  optionGroups.flat().forEach((option) => {
+    if (!option?.id) return;
+
+    if (!optionMap.has(option.id)) {
+      optionMap.set(option.id, option);
+      return;
+    }
+
+    const existing = optionMap.get(option.id);
+    const sourceMap = new Map();
+    [...(existing.sources || []), ...(option.sources || [])].forEach((source) => {
+      sourceMap.set(JSON.stringify(source), source);
+    });
+    optionMap.set(option.id, {
+      ...existing,
+      sources: Array.from(sourceMap.values()),
+    });
+  });
+
+  return Array.from(optionMap.values());
+};
+
+const getSelectedOptions = (options, selectedMap) =>
+  options.filter((option) => selectedMap[option.id]);
+
+const sameSelection = (first, second) => {
+  const firstKeys = Object.keys(first);
+  const secondKeys = Object.keys(second);
+  return (
+    firstKeys.length === secondKeys.length &&
+    firstKeys.every((key) => first[key] === second[key])
+  );
+};
+
+const pruneSelectionToOptions = (selectedMap, options) => {
+  const validIds = new Set(options.map((option) => String(option.id)));
+  return Object.keys(selectedMap).reduce((acc, id) => {
+    if (selectedMap[id] && validIds.has(String(id))) {
+      acc[id] = true;
+    }
+    return acc;
+  }, {});
+};
+
+const syncSelectionWithOptions = (options, setSelectedMap, setAllSelected) => {
+  setSelectedMap((prev) => {
+    const pruned = pruneSelectionToOptions(prev, options);
+    const allSelected =
+      options.length > 0 && options.every((option) => pruned[option.id]);
+    setAllSelected(allSelected);
+    return sameSelection(prev, pruned) ? prev : pruned;
+  });
+};
+
 const AdmADHOCFee = () => {
   const navigate = useNavigate();
   const [isAllSectionsSelected, setIsAllSectionsSelected] = useState(false);
@@ -2069,42 +2174,33 @@ const AdmADHOCFee = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const selectedIds = Object.keys(selectedSessions).filter(
-        (id) => selectedSessions[id],
-      );
+      const selectedIds = getSelectedIds(selectedSessions);
 
       if (selectedIds.length === 0) {
         setCourses([]);
         return;
       }
 
-      const batch_id = selectedIds[0]; // take first selected session ID
-      const token = localStorage.getItem("accessToken");
       const organization_id = sessionStorage.getItem("organization_id");
       const branch_id = sessionStorage.getItem("branch_id");
 
       try {
-        const response = await fetch(
-          `${ApiUrl.apiurl}Course/GetCourse/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        const optionGroups = await runLimited(
+          selectedIds.map((batch_id) => async () => {
+            const url = `${ApiUrl.apiurl}Course/GetCourse/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}`;
+            const data = await fetchList(url);
+            return data.map((item) => ({
+              id: item.id || item.course_id,
+              name: item.course_name || item.course_code || "Unnamed Course",
+              sources: [{ batchId: String(batch_id) }],
+            }));
+          }),
         );
 
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const courseOptions = data.map((item) => ({
-            id: item.id,
-            name: item.course_name,
-          }));
-          setCourses(courseOptions);
-        }
+        setCourses(mergeUniqueOptions(optionGroups));
       } catch (error) {
         console.error("Error fetching courses:", error);
+        setCourses([]);
       }
     };
 
@@ -2121,6 +2217,10 @@ const AdmADHOCFee = () => {
       localStorage.removeItem("selectedCourseIds");
     }
   }, [selectedCourses]);
+
+  useEffect(() => {
+    syncSelectionWithOptions(courses, setSelectedCourses, setIsAllCoursesSelected);
+  }, [courses]);
 
   // Handle single course checkbox change
   const handleCourseChange = (id) => {
@@ -2150,82 +2250,50 @@ const AdmADHOCFee = () => {
 
   useEffect(() => {
     const fetchDepartments = async () => {
-      // Get the first selected session and course IDs
-      const selectedSessionIds = Object.keys(selectedSessions).filter(
-        (id) => selectedSessions[id],
-      );
-      const selectedCourseIds = Object.keys(selectedCourses).filter(
-        (id) => selectedCourses[id],
-      );
+      const selectedSessionIds = getSelectedIds(selectedSessions);
+      const selectedCourseIds = getSelectedIds(selectedCourses);
 
       if (selectedSessionIds.length === 0 || selectedCourseIds.length === 0) {
         setDepartments([]);
         return;
       }
 
-      const batch_id = selectedSessionIds[0];
-      const course_id = selectedCourseIds[0];
-
       try {
-        const token = localStorage.getItem("accessToken");
         const organization_id = sessionStorage.getItem("organization_id");
         const branch_id = sessionStorage.getItem("branch_id");
 
-        if (!token || !organization_id || !branch_id) {
+        if (!localStorage.getItem("accessToken") || !organization_id || !branch_id) {
           console.warn("Missing required identifiers:", {
-            token: !!token,
+            token: !!localStorage.getItem("accessToken"),
             organization_id,
             branch_id,
           });
           return;
         }
 
-        const response = await fetch(
-          `${ApiUrl.apiurl}Department/GetDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        const selectedCourseOptions = getSelectedOptions(courses, selectedCourses);
+        const tasks = selectedCourseOptions.flatMap((course) =>
+          (course.sources || []).map((source) => async () => {
+            if (!selectedSessionIds.includes(String(source.batchId))) return [];
+
+            const batch_id = source.batchId;
+            const course_id = course.id;
+              const url = `${ApiUrl.apiurl}Department/GetDepartment/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}`;
+              const result = await fetchList(url);
+              return result.map((item) => ({
+                id: item.id || item.department_id,
+                name:
+                  item.department_name ||
+                  item.description ||
+                  item.department_description ||
+                  "Unnamed Department",
+                sources: [{ batchId: String(batch_id), courseId: String(course_id) }],
+              }));
+          }),
         );
+        const optionGroups = await runLimited(tasks);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`,
-          );
-        }
-
-        const result = await response.json();
-        console.log("Department API Response:", result);
-
-        let departmentOptions = [];
-
-        if (Array.isArray(result)) {
-          departmentOptions = result.map((item) => ({
-            id: item.id || item.department_id,
-            name:
-              item.department_name ||
-              item.description ||
-              item.department_description ||
-              "Unnamed Department",
-          }));
-        } else if (result.message === "Success" && Array.isArray(result.data)) {
-          departmentOptions = result.data.map((item) => ({
-            id: item.id || item.department_id,
-            name:
-              item.department_name ||
-              item.description ||
-              item.department_description ||
-              "Unnamed Department",
-          }));
-        } else {
-          console.warn("Unexpected API format:", result);
-        }
-
-        setDepartments(departmentOptions);
+        setDepartments(mergeUniqueOptions(optionGroups));
       } catch (error) {
         console.error("Error fetching departments:", error);
         setDepartments([]);
@@ -2233,7 +2301,7 @@ const AdmADHOCFee = () => {
     };
 
     fetchDepartments();
-  }, [selectedSessions, selectedCourses]);
+  }, [selectedSessions, selectedCourses, courses]);
   useEffect(() => {
     const selectedIds = Object.keys(selectedDepartments)
       .filter((id) => selectedDepartments[id])
@@ -2248,6 +2316,14 @@ const AdmADHOCFee = () => {
       localStorage.removeItem("selectedDepartmentIds");
     }
   }, [selectedDepartments]);
+
+  useEffect(() => {
+    syncSelectionWithOptions(
+      departments,
+      setSelectedDepartments,
+      setIsAllDepartmentsSelected,
+    );
+  }, [departments]);
 
   // Handle single department checkbox change
   const handleDepartmentChange = (id) => {
@@ -2277,16 +2353,9 @@ const AdmADHOCFee = () => {
 
   useEffect(() => {
     const fetchAcademicYears = async () => {
-      //  Extract selected IDs from checkbox objects
-      const selectedSessionIds = Object.keys(selectedSessions).filter(
-        (id) => selectedSessions[id],
-      );
-      const selectedCourseIds = Object.keys(selectedCourses).filter(
-        (id) => selectedCourses[id],
-      );
-      const selectedDepartmentIds = Object.keys(selectedDepartments).filter(
-        (id) => selectedDepartments[id],
-      );
+      const selectedSessionIds = getSelectedIds(selectedSessions);
+      const selectedCourseIds = getSelectedIds(selectedCourses);
+      const selectedDepartmentIds = getSelectedIds(selectedDepartments);
 
       //  Ensure all required fields are selected
       if (
@@ -2298,74 +2367,57 @@ const AdmADHOCFee = () => {
         return;
       }
 
-      //  Pick first selected ID from each (API supports single value)
-      const batch_id = selectedSessionIds[0];
-      const course_id = selectedCourseIds[0];
-      const department_id = selectedDepartmentIds[0];
-
       try {
-        const token = localStorage.getItem("accessToken");
         const organization_id = sessionStorage.getItem("organization_id");
         const branch_id = sessionStorage.getItem("branch_id");
 
         //  Validation
-        if (!token || !organization_id || !branch_id) {
+        if (!localStorage.getItem("accessToken") || !organization_id || !branch_id) {
           console.warn("Missing required parameters:", {
-            token: !!token,
+            token: !!localStorage.getItem("accessToken"),
             organization_id,
             branch_id,
           });
           return;
         }
 
-        //  API URL
-        const url = `${ApiUrl.apiurl}AcademicYear/GetAcademicYear/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`;
-        console.log("Fetching Academic Years from:", url);
+        const selectedDepartmentOptions = getSelectedOptions(
+          departments,
+          selectedDepartments,
+        );
+        const tasks = selectedDepartmentOptions.flatMap((department) =>
+          (department.sources || []).map((source) => async () => {
+            if (
+              !selectedSessionIds.includes(String(source.batchId)) ||
+              !selectedCourseIds.includes(String(source.courseId))
+            ) {
+              return [];
+            }
 
-        //  Fetch call
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+            const batch_id = source.batchId;
+            const course_id = source.courseId;
+            const department_id = department.id;
+                const url = `${ApiUrl.apiurl}AcademicYear/GetAcademicYear/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}`;
+                const result = await fetchList(url);
+                return result.map((item) => ({
+                  id: item.id || item.academic_year_id,
+                  name:
+                    item.academic_year_description ||
+                    item.academic_year_code ||
+                    "Unnamed Year",
+                  sources: [
+                    {
+                      batchId: String(batch_id),
+                      courseId: String(course_id),
+                      departmentId: String(department_id),
+                    },
+                  ],
+                }));
+          }),
+        );
+        const optionGroups = await runLimited(tasks);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`,
-          );
-        }
-
-        const result = await response.json();
-        console.log("Academic Year API Response:", result);
-
-        //  Map response properly
-        let yearOptions = [];
-
-        if (Array.isArray(result)) {
-          yearOptions = result.map((item) => ({
-            id: item.id || item.academic_year_id,
-            name:
-              item.academic_year_description ||
-              item.academic_year_code ||
-              "Unnamed Year",
-          }));
-        } else if (result.message === "Success" && Array.isArray(result.data)) {
-          yearOptions = result.data.map((item) => ({
-            id: item.id || item.academic_year_id,
-            name:
-              item.academic_year_description ||
-              item.academic_year_code ||
-              "Unnamed Year",
-          }));
-        } else {
-          console.warn("Unexpected API format:", result);
-        }
-
-        setAcademicYears(yearOptions);
-        console.log("Mapped Academic Years:", yearOptions);
+        setAcademicYears(mergeUniqueOptions(optionGroups));
       } catch (error) {
         console.error("Error fetching academic years:", error);
         setAcademicYears([]);
@@ -2373,7 +2425,15 @@ const AdmADHOCFee = () => {
     };
 
     fetchAcademicYears();
-  }, [selectedSessions, selectedCourses, selectedDepartments]);
+  }, [selectedSessions, selectedCourses, selectedDepartments, departments]);
+
+  useEffect(() => {
+    syncSelectionWithOptions(
+      academicYears,
+      setSelectedAcademicYears,
+      setIsAllAcademicYearsSelected,
+    );
+  }, [academicYears]);
 
   const handleAcademicYearChange = (id) => {
     setSelectedAcademicYears((prev) => {
@@ -2402,18 +2462,10 @@ const AdmADHOCFee = () => {
 
   useEffect(() => {
     const fetchSemesters = async () => {
-      const selectedSessionIds = Object.keys(selectedSessions).filter(
-        (id) => selectedSessions[id],
-      );
-      const selectedCourseIds = Object.keys(selectedCourses).filter(
-        (id) => selectedCourses[id],
-      );
-      const selectedDepartmentIds = Object.keys(selectedDepartments).filter(
-        (id) => selectedDepartments[id],
-      );
-      const selectedAcademicYearIds = Object.keys(selectedAcademicYears).filter(
-        (id) => selectedAcademicYears[id],
-      );
+      const selectedSessionIds = getSelectedIds(selectedSessions);
+      const selectedCourseIds = getSelectedIds(selectedCourses);
+      const selectedDepartmentIds = getSelectedIds(selectedDepartments);
+      const selectedAcademicYearIds = getSelectedIds(selectedAcademicYears);
 
       if (
         selectedSessionIds.length === 0 ||
@@ -2425,57 +2477,59 @@ const AdmADHOCFee = () => {
         return;
       }
 
-      const batch_id = selectedSessionIds[0];
-      const course_id = selectedCourseIds[0];
-      const department_id = selectedDepartmentIds[0];
-      const academic_year_id = selectedAcademicYearIds[0];
-
       try {
-        const token = localStorage.getItem("accessToken");
         const organization_id = sessionStorage.getItem("organization_id");
         const branch_id = sessionStorage.getItem("branch_id");
 
-        if (!token || !organization_id || !branch_id) {
+        if (!localStorage.getItem("accessToken") || !organization_id || !branch_id) {
           console.warn("Missing required identifiers:", {
-            token: !!token,
+            token: !!localStorage.getItem("accessToken"),
             organization_id,
             branch_id,
           });
           return;
         }
 
-        const url = `${ApiUrl.apiurl}Semester/GetSemester/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}&academic_year_id=${academic_year_id}`;
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const selectedAcademicYearOptions = getSelectedOptions(
+          academicYears,
+          selectedAcademicYears,
+        );
+        const tasks = selectedAcademicYearOptions.flatMap((academicYear) =>
+          (academicYear.sources || []).map((source) => async () => {
+            if (
+              !selectedSessionIds.includes(String(source.batchId)) ||
+              !selectedCourseIds.includes(String(source.courseId)) ||
+              !selectedDepartmentIds.includes(String(source.departmentId))
+            ) {
+              return [];
+            }
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP error: ${response.status} - ${errorText}`);
-        }
+            const batch_id = source.batchId;
+            const course_id = source.courseId;
+            const department_id = source.departmentId;
+            const academic_year_id = academicYear.id;
+                  const url = `${ApiUrl.apiurl}Semester/GetSemester/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}&academic_year_id=${academic_year_id}`;
+                  const semesterList = await fetchList(url);
+                  return semesterList.map((item) => ({
+                    id: item.id || item.semester_id,
+                    name:
+                      item.semester_description ||
+                      item.semester_code ||
+                      "Unnamed Semester",
+                    sources: [
+                      {
+                        batchId: String(batch_id),
+                        courseId: String(course_id),
+                        departmentId: String(department_id),
+                        academicYearId: String(academic_year_id),
+                      },
+                    ],
+                  }));
+          }),
+        );
+        const optionGroups = await runLimited(tasks);
 
-        const result = await response.json();
-
-        let semesterList = [];
-        if (Array.isArray(result)) {
-          semesterList = result;
-        } else if (result.message === "Success" && Array.isArray(result.data)) {
-          semesterList = result.data;
-        }
-
-        const options = semesterList.map((item) => ({
-          id: item.id || item.semester_id,
-          name:
-            item.semester_description ||
-            item.semester_code ||
-            "Unnamed Semester",
-        }));
-
-        setSemesters(options);
+        setSemesters(mergeUniqueOptions(optionGroups));
 
         // Optional: reset selectedSemesters when the semester list changes
         setSelectedSemesters({});
@@ -2494,7 +2548,16 @@ const AdmADHOCFee = () => {
     selectedCourses,
     selectedDepartments,
     selectedAcademicYears,
+    academicYears,
   ]);
+
+  useEffect(() => {
+    syncSelectionWithOptions(
+      semesters,
+      setSelectedSemesters,
+      setIsAllSemestersSelected,
+    );
+  }, [semesters]);
 
   // Corrected Select All handler (uses sem.id)
   const handleSelectAllSemesters = () => {
@@ -2529,22 +2592,11 @@ const AdmADHOCFee = () => {
 
   useEffect(() => {
     const fetchSections = async () => {
-      // Extract selected IDs from checkbox objects
-      const selectedSessionIds = Object.keys(selectedSessions).filter(
-        (id) => selectedSessions[id],
-      );
-      const selectedCourseIds = Object.keys(selectedCourses).filter(
-        (id) => selectedCourses[id],
-      );
-      const selectedDepartmentIds = Object.keys(selectedDepartments).filter(
-        (id) => selectedDepartments[id],
-      );
-      const selectedAcademicYearIds = Object.keys(selectedAcademicYears).filter(
-        (id) => selectedAcademicYears[id],
-      );
-      const selectedSemesterIds = Object.keys(selectedSemesters).filter(
-        (id) => selectedSemesters[id],
-      );
+      const selectedSessionIds = getSelectedIds(selectedSessions);
+      const selectedCourseIds = getSelectedIds(selectedCourses);
+      const selectedDepartmentIds = getSelectedIds(selectedDepartments);
+      const selectedAcademicYearIds = getSelectedIds(selectedAcademicYears);
+      const selectedSemesterIds = getSelectedIds(selectedSemesters);
 
       // Ensure all required fields are selected
       if (
@@ -2558,72 +2610,62 @@ const AdmADHOCFee = () => {
         return;
       }
 
-      // Pick the first selected ID from each (API supports single value)
-      const batch_id = selectedSessionIds[0];
-      const course_id = selectedCourseIds[0];
-      const department_id = selectedDepartmentIds[0];
-      const academic_year_id = selectedAcademicYearIds[0];
-      const semester_id = selectedSemesterIds[0];
-
       try {
-        const token = localStorage.getItem("accessToken");
         const organization_id = sessionStorage.getItem("organization_id");
         const branch_id = sessionStorage.getItem("branch_id");
 
-        if (!token || !organization_id || !branch_id) {
+        if (!localStorage.getItem("accessToken") || !organization_id || !branch_id) {
           console.warn("Missing required identifiers:", {
-            token: !!token,
+            token: !!localStorage.getItem("accessToken"),
             organization_id,
             branch_id,
           });
           return;
         }
 
-        const url = `${ApiUrl.apiurl}Section/GetSection/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}&academic_year_id=${academic_year_id}&semester_id=${semester_id}`;
-        console.log("Fetching Sections from:", url);
+        const selectedSemesterOptions = getSelectedOptions(
+          semesters,
+          selectedSemesters,
+        );
+        const tasks = selectedSemesterOptions.flatMap((semester) =>
+          (semester.sources || []).map((source) => async () => {
+            if (
+              !selectedSessionIds.includes(String(source.batchId)) ||
+              !selectedCourseIds.includes(String(source.courseId)) ||
+              !selectedDepartmentIds.includes(String(source.departmentId)) ||
+              !selectedAcademicYearIds.includes(String(source.academicYearId))
+            ) {
+              return [];
+            }
 
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+            const batch_id = source.batchId;
+            const course_id = source.courseId;
+            const department_id = source.departmentId;
+            const academic_year_id = source.academicYearId;
+            const semester_id = semester.id;
+                    const url = `${ApiUrl.apiurl}Section/GetSection/?organization_id=${organization_id}&branch_id=${branch_id}&batch_id=${batch_id}&course_id=${course_id}&department_id=${department_id}&academic_year_id=${academic_year_id}&semester_id=${semester_id}`;
+                    const result = await fetchList(url);
+                    return result.map((item) => ({
+                      id: item.id || item.section_id,
+                      sectionname:
+                        item.section_name ||
+                        item.section_description ||
+                        "Unnamed Section",
+                      sources: [
+                        {
+                          batchId: String(batch_id),
+                          courseId: String(course_id),
+                          departmentId: String(department_id),
+                          academicYearId: String(academic_year_id),
+                          semesterId: String(semester_id),
+                        },
+                      ],
+                    }));
+          }),
+        );
+        const optionGroups = await runLimited(tasks);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Network response not ok: ${response.status} - ${errorText}`,
-          );
-        }
-
-        const result = await response.json();
-        console.log("Section API Response:", result);
-
-        let mappedSections = [];
-
-        if (Array.isArray(result)) {
-          mappedSections = result.map((item) => ({
-            id: item.id || item.section_id,
-            sectionname:
-              item.section_name ||
-              item.section_description ||
-              "Unnamed Section",
-          }));
-        } else if (result.message === "Success" && Array.isArray(result.data)) {
-          mappedSections = result.data.map((item) => ({
-            id: item.id || item.section_id,
-            sectionname:
-              item.section_name ||
-              item.section_description ||
-              "Unnamed Section",
-          }));
-        } else {
-          console.warn("Unexpected API format:", result);
-        }
-
-        setSections(mappedSections);
-        console.log("Mapped Sections:", mappedSections);
+        setSections(mergeUniqueOptions(optionGroups));
       } catch (error) {
         console.error("Error fetching sections:", error);
         setSections([]);
@@ -2637,7 +2679,12 @@ const AdmADHOCFee = () => {
     selectedDepartments,
     selectedAcademicYears,
     selectedSemesters,
+    semesters,
   ]);
+
+  useEffect(() => {
+    syncSelectionWithOptions(sections, setSelectedSections, setIsAllSectionsSelected);
+  }, [sections]);
 
   //  Checkbox Handlers
   const handleSectionChange = (sectionId) => {
@@ -2897,6 +2944,7 @@ const AdmADHOCFee = () => {
         academic_year_ids: selectedAcademicYearIds.join(","),
         semester_ids: selectedSemesterIds.join(","),
         section_ids: selectedSectionIds.join(","),
+        include_promoted_students: "true",
       });
 
       const url = `${ApiUrl.apiurl}Filter/GetStudentBasedCourseSection/?${queryParams.toString()}`;
@@ -2913,6 +2961,13 @@ const AdmADHOCFee = () => {
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      if (response.status === 204) {
+        setStudents([]);
+        setCurrentPage(0);
+        setShowTable(true);
+        return;
       }
 
       const result = await response.json();

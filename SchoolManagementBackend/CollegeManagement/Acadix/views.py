@@ -64,6 +64,15 @@ from .serializers import *
 from .utils import send_otp_email, generate_otp
 
 
+def normalize_fee_label(value):
+    if not value:
+        return value
+    compact = re.sub(r'[^a-z]', '', str(value).lower())
+    if compact in ('academicfee', 'academicfees'):
+        return 'Admission Fee'
+    return value
+
+
 # from .serializers_new import UserTypeSerializer, EmployeeSerializer, LoginSerializer, LoginModelSerializer, \
 #     ChangePasswordSerializer, DetailsSerializer, AcademicYearSerializer, CourseSerializer, SectionSerializer, \
 #     StudentRegistrationSerializer, FeeStructureMasterRequestSerializer, StudentBasicDetailSerializer, \
@@ -184,14 +193,6 @@ class UserTypeListView(ListAPIView):
         try:
             response = super().list(request, *args, **kwargs)
             resdata = response.data
-
-            def normalize_fee_label(value):
-                if not value:
-                    return value
-                compact = re.sub(r'[^a-z]', '', str(value).lower())
-                if compact in ('academicfee', 'academicfees'):
-                    return 'Admission Fee'
-                return value
 
             # prepare data from response
 
@@ -9256,6 +9257,15 @@ class FeeElementTypeListAPIView(ListAPIView):
     queryset = FeeElementType.objects.all()
     serializer_class = FeeElementTypeSerializer
 
+    @staticmethod
+    def _normalize_fee_label(value):
+        if not value:
+            return value
+        compact = re.sub(r'[^a-z]', '', str(value).lower())
+        if compact in ('academicfee', 'academicfees'):
+            return 'Admission Fee'
+        return value
+
     def get_queryset(self):
         # Get the elementType from the URL
         element_type = self.kwargs.get('elementType')
@@ -9286,24 +9296,23 @@ class FeeElementTypeListAPIView(ListAPIView):
                         # Get Data
                         organization = item.get('organization')
                         branch = item.get('branch')
-                        # academic_id = item.get('academic_id')
 
-                        # Get Organization & Branch
-                        organization_instance = Organization.objects.get(pk=organization)
-                        branch_instance = Branch.objects.get(id=branch)
+                        # Resolve related names safely so one bad row does not crash the API
+                        organization_instance = Organization.objects.filter(pk=organization).first()
+                        branch_instance = Branch.objects.filter(id=branch).first()
 
-                        normalized_element_name = normalize_fee_label(item.get('element_name'))
-                        normalized_element_description = normalize_fee_label(item.get('element_description'))
+                        normalized_element_name = self._normalize_fee_label(item.get('element_name'))
+                        normalized_element_description = self._normalize_fee_label(item.get('element_description'))
 
                         # Make Response data
                         data = {
                             'id': item.get('id'),
                             'element_name': normalized_element_name,
                             'element_description': normalized_element_description,
-                            'organization': organization_instance.id,
-                            'organization_code': organization_instance.organization_code,
-                            'branch_id': branch_instance.id,
-                            'branch_description': branch_instance.branch_name,
+                            'organization': organization,
+                            'organization_code': organization_instance.organization_code if organization_instance else '',
+                            'branch_id': branch,
+                            'branch_description': branch_instance.branch_name if branch_instance else '',
                             'sequence_order': item.get('sequence_order'),
                             'element_type': item.get('element_type')
 
@@ -9365,6 +9374,7 @@ class GetStudentBasedOnCourseSection(ListAPIView):
             # semester_id = serializer.validated_data.get('semester_id')
             # semester_id = serializer.validated_data.get('section_id')
             section_ids_list = serializer.validated_data.get('section_ids')
+            include_promoted_students = serializer.validated_data.get('include_promoted_students', False)
 
             def parse_id_list(value):
                 if value in (None, ''):
@@ -9422,6 +9432,29 @@ class GetStudentBasedOnCourseSection(ListAPIView):
             except:
                 student_list = []
 
+            used_promoted_student_fallback = False
+            if include_promoted_students and not student_list:
+                student_list = StudentCourse.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    batch__in=batch_ids_list,
+                    course__in=course_ids_list,
+                    department__in=department_ids_list,
+                    is_active=True
+                )
+                used_promoted_student_fallback = True
+
+            selected_academic_year = None
+            selected_semester = None
+            selected_section = None
+            if used_promoted_student_fallback:
+                if len(academic_year_ids_list) == 1:
+                    selected_academic_year = AcademicYear.objects.filter(id=academic_year_ids_list[0]).first()
+                if len(semester_ids_list) == 1:
+                    selected_semester = Semester.objects.filter(id=semester_ids_list[0]).first()
+                if len(section_ids_list) == 1:
+                    selected_section = Section.objects.filter(id=section_ids_list[0]).first()
+
             student_record = []
 
             if student_list:
@@ -9441,9 +9474,9 @@ class GetStudentBasedOnCourseSection(ListAPIView):
                         'batch': item.student.batch.batch_code,
                         'course_name': item.student.course.course_name,
                         'department': item.student.department.department_code,
-                        'academic_year': item.student.academic_year.academic_year_code,
-                        'semester': item.student.semester.semester_code,
-                        'section': item.student.section.section_name,
+                        'academic_year': selected_academic_year.academic_year_code if selected_academic_year else item.student.academic_year.academic_year_code,
+                        'semester': selected_semester.semester_code if selected_semester else item.student.semester.semester_code,
+                        'section': selected_section.section_name if selected_section else item.student.section.section_name,
                         'registration_no': item.student.registration_no,
                         'enrollment_no': item.enrollment_no,
                         'college_admission_no': item.student.college_admission_no,
@@ -17487,14 +17520,14 @@ class StudentFeeReceiptSearchBasedOnCondition(ListAPIView):
                     student_ids_in_section = StudentCourse.objects.filter(section=section_id).values_list('student', flat=True)
                     filterdata = filterdata.filter(student__in=student_ids_in_section)
                 if date_from and date_to:
-                    filterdata = filterdata.filter(receipt_date__range=(date_from, date_to))
+                    filterdata = filterdata.filter(receipt_date__date__range=(date_from, date_to))
                 # Removed default filter to today's date - students should see ALL receipts when no date filter is provided
                 # if not date_from and not date_to:
                 #     filterdata = filterdata.filter(receipt_date=date.today())
                 if date_from and not date_to:
-                    filterdata = filterdata.filter(receipt_date__range=(date_from, date.today()))
+                    filterdata = filterdata.filter(receipt_date__date__gte=date_from)
                 if not date_from and date_to:
-                    return Response({"message": "date_from is required !!!"}, status=status.HTTP_400_BAD_REQUEST)
+                    filterdata = filterdata.filter(receipt_date__date__lte=date_to)
 
             #
             # if batch_id:

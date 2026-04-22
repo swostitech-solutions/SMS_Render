@@ -365,12 +365,12 @@ class FeesDashboardListAPIView(ListAPIView):
 
             if from_date:
                 filterdata = filterdata.filter(
-                    receipt__receipt_date__gte=serializer.validated_data.get('from_date')
+                    receipt__receipt_date__date__gte=serializer.validated_data.get('from_date')
                 )
 
             if to_date:
                 filterdata = filterdata.filter(
-                    receipt__receipt_date__lte=serializer.validated_data.get('to_date')
+                    receipt__receipt_date__date__lte=serializer.validated_data.get('to_date')
                 )
 
             if filterdata:
@@ -394,11 +394,14 @@ class FeesDashboardListAPIView(ListAPIView):
 
                 response_data=[]
                 for item in grouped_data:
+                    total_amount = item.get("total_amount") or 0
+                    total_discount = item.get("total_discount") or 0
 
                     data={
                         "receipt_date":item.get("receipt_date"),
-                        "received_amount": item.get("total_amount"),
-                        "discount_amount": item.get("total_discount")
+                        "received_amount": total_amount + total_discount,
+                        "gross_amount": total_amount,
+                        "discount_amount": total_discount
 
                     }
 
