@@ -752,7 +752,7 @@ const AdmBookMovements = () => {
                     style={{
                       width: "150px",
                     }}
-                    onClick={handleAllSearch}
+                    onClick={() => handleAllSearch(flag)}
                   >
                     Search
                   </button>
