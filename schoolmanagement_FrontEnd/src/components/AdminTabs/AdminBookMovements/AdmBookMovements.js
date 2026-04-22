@@ -1,7 +1,5 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import SelectStudentModal from "../AdminAttendanceEntry/SelectStudentModal";
@@ -39,7 +37,6 @@ const AdmBookMovements = () => {
   const [penaltyAmount, setPenaltyAmount] = useState(0);
   const [employeeName, setEmployeeName] = useState([]);
   const [employeeId, setEmployeeId] = useState([]);
-  const [academicyearId, setacAdemicyearId] = useState("A");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
@@ -76,7 +73,6 @@ const AdmBookMovements = () => {
     value: subCategory.id,
     label: subCategory.name, // Label for display
   }));
-
 
   // Handle category change
   const handleCategoryChange = (selectedOption) => {
@@ -145,13 +141,16 @@ const AdmBookMovements = () => {
     setStudentId(studentData.id || "");
     setStudentName(fullName);
     setClassId(studentData.addmitted_class || studentData.course_id || null);
-    setSectionId(studentData.addmitted_section || studentData.section_id || null);
-    setAddno(studentData.college_admission_no || studentData.school_admission_no || "");
+    setSectionId(
+      studentData.addmitted_section || studentData.section_id || null,
+    );
+    setAddno(
+      studentData.college_admission_no || studentData.school_admission_no || "",
+    );
     setBarCode(studentData.barcode || studentData.college_admission_no || "");
 
     handleCloseModal();
   };
-
 
   // Fetch Sessions (Batch) on component mount
   useEffect(() => {
@@ -162,7 +161,9 @@ const AdmBookMovements = () => {
         const organization_id = sessionStorage.getItem("organization_id");
 
         if (!branch_id || !organization_id) {
-          console.error("Branch ID or Organization ID not found in session storage.");
+          console.error(
+            "Branch ID or Organization ID not found in session storage.",
+          );
           return;
         }
 
@@ -174,7 +175,7 @@ const AdmBookMovements = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -186,7 +187,8 @@ const AdmBookMovements = () => {
         if (Array.isArray(data)) {
           const sessionOptions = data.map((item) => ({
             value: item.id,
-            label: item.batch_description || item.batch_code || `Batch ${item.id}`,
+            label:
+              item.batch_description || item.batch_code || `Batch ${item.id}`,
           }));
           setSessions(sessionOptions);
         } else {
@@ -227,7 +229,7 @@ const AdmBookMovements = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -281,7 +283,7 @@ const AdmBookMovements = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -293,13 +295,21 @@ const AdmBookMovements = () => {
         if (Array.isArray(result)) {
           const departmentOptions = result.map((item) => ({
             value: item.id || item.department_id,
-            label: item.department_name || item.description || item.department_description || "Unnamed Department",
+            label:
+              item.department_name ||
+              item.description ||
+              item.department_description ||
+              "Unnamed Department",
           }));
           setDepartments(departmentOptions);
         } else if (result.message === "Success" && Array.isArray(result.data)) {
           const departmentOptions = result.data.map((item) => ({
             value: item.id || item.department_id,
-            label: item.department_name || item.description || item.department_description || "Unnamed Department",
+            label:
+              item.department_name ||
+              item.description ||
+              item.department_description ||
+              "Unnamed Department",
           }));
           setDepartments(departmentOptions);
         } else {
@@ -318,7 +328,11 @@ const AdmBookMovements = () => {
   // Fetch Academic Years when Session, Course, and Department change
   useEffect(() => {
     const fetchAcademicYears = async () => {
-      if (!selectedSession?.value || !selectedCourse?.value || !selectedDepartment?.value) {
+      if (
+        !selectedSession?.value ||
+        !selectedCourse?.value ||
+        !selectedDepartment?.value
+      ) {
         setAcademicYears([]);
         return;
       }
@@ -355,13 +369,19 @@ const AdmBookMovements = () => {
         if (Array.isArray(result)) {
           const options = result.map((item) => ({
             value: item.id || item.academic_year_id,
-            label: item.academic_year_description || item.academic_year_code || "Unnamed Year",
+            label:
+              item.academic_year_description ||
+              item.academic_year_code ||
+              "Unnamed Year",
           }));
           setAcademicYears(options);
         } else if (result.message === "Success" && Array.isArray(result.data)) {
           const options = result.data.map((item) => ({
             value: item.id || item.academic_year_id,
-            label: item.academic_year_description || item.academic_year_code || "Unnamed Year",
+            label:
+              item.academic_year_description ||
+              item.academic_year_code ||
+              "Unnamed Year",
           }));
           setAcademicYears(options);
         } else {
@@ -411,7 +431,7 @@ const AdmBookMovements = () => {
             result.map((item) => ({
               value: item.id,
               label: item.semester_description || item.semester_code,
-            }))
+            })),
           );
         } else {
           setSemesters([]);
@@ -423,7 +443,12 @@ const AdmBookMovements = () => {
     };
 
     fetchSemesters();
-  }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear]);
+  }, [
+    selectedSession,
+    selectedCourse,
+    selectedDepartment,
+    selectedAcademicYear,
+  ]);
 
   // Fetch Sections when all above dropdowns are selected
   useEffect(() => {
@@ -473,13 +498,19 @@ const AdmBookMovements = () => {
         if (Array.isArray(result)) {
           const sectionOptions = result.map((item) => ({
             value: item.id || item.section_id,
-            label: item.section_name || item.section_description || "Unnamed Section",
+            label:
+              item.section_name ||
+              item.section_description ||
+              "Unnamed Section",
           }));
           setSections(sectionOptions);
         } else if (result.message === "Success" && Array.isArray(result.data)) {
           const sectionOptions = result.data.map((item) => ({
             value: item.id || item.section_id,
-            label: item.section_name || item.section_description || "Unnamed Section",
+            label:
+              item.section_name ||
+              item.section_description ||
+              "Unnamed Section",
           }));
           setSections(sectionOptions);
         } else {
@@ -493,11 +524,13 @@ const AdmBookMovements = () => {
     };
 
     fetchSections();
-  }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear, selectedSemester]);
-
-  useEffect(() => {
-    handleAllSearch(); // Fetch initial data when component mounts
-  }, [flag]);
+  }, [
+    selectedSession,
+    selectedCourse,
+    selectedDepartment,
+    selectedAcademicYear,
+    selectedSemester,
+  ]);
 
   const handleSelectEmployee = (selectedEmployee) => {
     console.log("Selected Employee:", selectedEmployee);
@@ -508,7 +541,7 @@ const AdmBookMovements = () => {
 
   const academicId = sessionStorage.getItem("academicSessionId") || "1";
   // GetIssueReturnSearchList Api Call
-  const handleAllSearch = async () => {
+  const handleAllSearch = async (selectedFlag = flag) => {
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
@@ -525,21 +558,25 @@ const AdmBookMovements = () => {
       const sectionIdValue = selectedSection?.value || sectionId;
       if (courseId) queryParams.push(`course_id=${courseId}`);
       if (sectionIdValue) queryParams.push(`section_id=${sectionIdValue}`);
-      if (selectedDepartment?.value) queryParams.push(`department_id=${selectedDepartment.value}`);
-      if (selectedSemester?.value) queryParams.push(`semester_id=${selectedSemester.value}`);
+      if (selectedDepartment?.value)
+        queryParams.push(`department_id=${selectedDepartment.value}`);
+      if (selectedSemester?.value)
+        queryParams.push(`semester_id=${selectedSemester.value}`);
       if (bookTitle) queryParams.push(`book_title=${bookTitle}`);
       if (bookCategory) queryParams.push(`category_id=${bookCategory}`);
-      if (bookSubCategory) queryParams.push(`subcategory_id=${bookSubCategory}`);
+      if (bookSubCategory)
+        queryParams.push(`subcategory_id=${bookSubCategory}`);
       if (issueDate) queryParams.push(`issue_date=${issueDate}`);
       if (returnDate) queryParams.push(`return_date=${returnDate}`);
       if (bookBarcode) queryParams.push(`book_barcode_no=${bookBarcode}`);
-      if (flag) queryParams.push(`flag=${flag}`);
+      if (selectedFlag) queryParams.push(`flag=${selectedFlag}`);
       // Use cascading academic year if selected, otherwise use session storage
       const academicYearId = selectedAcademicYear?.value || academicId;
       queryParams.push(`academic_year_id=${academicYearId}`);
       // Construct the API URL
-      const apiUrl = `${ApiUrl.apiurl
-        }ISSUEBOOK/BOOKISSUESEARCHLIST/?${queryParams.join("&")}`;
+      const apiUrl = `${
+        ApiUrl.apiurl
+      }ISSUEBOOK/BOOKISSUESEARCHLIST/?${queryParams.join("&")}`;
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -940,7 +977,9 @@ const AdmBookMovements = () => {
 
                       {/* Academic Year Dropdown */}
                       <div className="col-md-3" style={{ minWidth: "250px" }}>
-                        <label style={{ fontWeight: "700" }}>Academic Year</label>
+                        <label style={{ fontWeight: "700" }}>
+                          Academic Year
+                        </label>
                         <Select
                           options={academicYears}
                           className="detail"
@@ -1053,8 +1092,8 @@ const AdmBookMovements = () => {
                           value={
                             bookCategory
                               ? categoryOptions.find(
-                                (option) => option.value === bookCategory
-                              )
+                                  (option) => option.value === bookCategory,
+                                )
                               : null
                           }
                           styles={{
@@ -1084,8 +1123,8 @@ const AdmBookMovements = () => {
                           value={
                             bookSubCategory
                               ? subCategoryOptions.find(
-                                (option) => option.value === bookSubCategory
-                              )
+                                  (option) => option.value === bookSubCategory,
+                                )
                               : null
                           }
                           isDisabled={!subCategoryOptions.length}
@@ -1144,8 +1183,10 @@ const AdmBookMovements = () => {
                             id="viewIssued"
                             value="I"
                             checked={flag === "I"}
-                            onChange={(e) => setFlag(e.target.value)}
-                            onClick={handleAllSearch}
+                            onChange={(e) => {
+                              setFlag(e.target.value);
+                              handleAllSearch(e.target.value);
+                            }}
                           />
                           <label
                             className="form-check-label ms-1"
@@ -1162,8 +1203,10 @@ const AdmBookMovements = () => {
                             id="viewAll"
                             value="A"
                             checked={flag === "A"}
-                            onChange={(e) => setFlag(e.target.value)}
-                            onClick={handleAllSearch}
+                            onChange={(e) => {
+                              setFlag(e.target.value);
+                              handleAllSearch(e.target.value);
+                            }}
                           />
                           <label
                             className="form-check-label ms-1"
@@ -1181,10 +1224,7 @@ const AdmBookMovements = () => {
               <div className="row p-2 mx-2">
                 <div className="col-12 custom-section-box">
                   <div className="table-responsive mt-3">
-                    <table
-                      responsive
-                      className="table table-bordered"
-                    >
+                    <table responsive className="table table-bordered">
                       <thead className="thead-dark">
                         <tr>
                           <th>Sr No</th>
@@ -1212,16 +1252,22 @@ const AdmBookMovements = () => {
                             const returnDateValue = returnDates[offset + index];
                             const isChecked = !!selectedReturns[offset + index];
                             // Calculate penalty only for students, not for teachers
-                            const penalty = isChecked && !item.professor_id
-                              ? calculatePenalty(item.due_date, returnDateValue)
-                              : "";
+                            const penalty =
+                              isChecked && !item.professor_id
+                                ? calculatePenalty(
+                                    item.due_date,
+                                    returnDateValue,
+                                  )
+                                : "";
                             // Handle both student and professor responses
-                            const displayName = item.name || item.professor_name || "";
+                            const displayName =
+                              item.name || item.professor_name || "";
                             const admissionNo = item.college_admission_no || "";
                             const studentBarcode = item.student_barcode || "";
                             const courseName = item.course_name || "";
                             const sectionName = item.section_name || "";
-                            const bookName = item.bookName || item.book_name || "";
+                            const bookName =
+                              item.bookName || item.book_name || "";
                             return (
                               <tr key={index}>
                                 <td>{offset + index + 1}</td>
