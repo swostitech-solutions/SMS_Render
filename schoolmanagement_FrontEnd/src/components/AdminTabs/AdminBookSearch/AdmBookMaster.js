@@ -4574,7 +4574,7 @@
 
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Image, Table, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
@@ -4721,7 +4721,20 @@ const BookForm = () => {
     setBookStatus(selectedOption);
   };
 
-  const resolveCoverPreview = (coverValue) => {
+  const getBackendOrigin = useCallback(() => {
+    const apiBase = ApiUrl.apiurl || "";
+    if (apiBase.startsWith("http://") || apiBase.startsWith("https://")) {
+      try {
+        const parsed = new URL(apiBase);
+        return parsed.origin;
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  }, []);
+
+  const resolveCoverPreview = useCallback((coverValue) => {
     if (!coverValue) return null;
 
     if (typeof coverValue === "string") {
@@ -4730,18 +4743,24 @@ const BookForm = () => {
       }
 
       const normalized = coverValue.replace(/\\/g, "/");
+      const backendOrigin = getBackendOrigin();
 
       if (normalized.startsWith("/SWOSTITECH_CMS/")) {
-        return normalized;
+        return backendOrigin ? `${backendOrigin}${normalized}` : normalized;
       }
 
       const mediaMarker = "/SWOSTITECH_CMS/";
       if (normalized.includes(mediaMarker)) {
-        return normalized.substring(normalized.indexOf(mediaMarker));
+        const mediaPath = normalized.substring(normalized.indexOf(mediaMarker));
+        return backendOrigin ? `${backendOrigin}${mediaPath}` : mediaPath;
       }
 
       if (normalized.includes("/Book_cover/")) {
-        return `/SWOSTITECH_CMS/${normalized.split("/Book_cover/")[1] ? `Book_cover/${normalized.split("/Book_cover/")[1]}` : ""}`;
+        const relative = normalized.split("/Book_cover/")[1]
+          ? `Book_cover/${normalized.split("/Book_cover/")[1]}`
+          : "";
+        const mediaPath = `/SWOSTITECH_CMS/${relative}`;
+        return backendOrigin ? `${backendOrigin}${mediaPath}` : mediaPath;
       }
 
       return normalized;
@@ -4759,7 +4778,7 @@ const BookForm = () => {
     }
 
     return null;
-  };
+  }, [getBackendOrigin]);
 
   useEffect(() => {
     if (bookDetails?.total_no_of_copies > 0) {
@@ -4845,7 +4864,7 @@ const BookForm = () => {
       console.log("Total Number of Copies:", totalCopies);
       console.log("Setting Branch ID to:", firstBookDetails.library_branch_id);
     }
-  }, [bookData]);
+  }, [bookData, resolveCoverPreview]);
 
   // const fetchNextBarcode = async () => {
   //   try {
@@ -5590,14 +5609,17 @@ const BookForm = () => {
       if (response.ok) {
         // Clear form data after successful save (both create and update)
         handleClear();
-        setSaveMsg({ type: "success", text: isUpdate ? "Book updated successfully!" : "Book saved successfully!" });
+        setSaveMsg({ type: "", text: "" });
+        alert(isUpdate ? "Book updated successfully!" : "Book saved successfully!");
       } else {
-        setSaveMsg({ type: "danger", text: isUpdate ? "Failed to update the book." : "Failed to save the book." });
+        setSaveMsg({ type: "", text: "" });
+        alert(data?.message || data?.error || (isUpdate ? "Failed to update the book." : "Failed to save the book."));
         console.error("Error response from server:", data);
       }
     } catch (error) {
       console.error("Error submitting book:", error);
-      setSaveMsg({ type: "danger", text: "An error occurred while saving the book." });
+      setSaveMsg({ type: "", text: "" });
+      alert("An error occurred while saving the book.");
     }
   };
 
@@ -5675,12 +5697,6 @@ const BookForm = () => {
                   </button>
                 </div>
               </div>
-              {saveMsg.text && (
-                <div className={`alert alert-${saveMsg.type} mx-3 mt-2`} role="alert">
-                  {saveMsg.text}
-                </div>
-              )}
-
               <div className="row mt-3 mx-2">
                 <div className="col-12 custom-section-box">
                   <div className="row flex-grow-1">
@@ -6041,17 +6057,23 @@ const BookForm = () => {
                       />
                     </Form.Group>
                     {frontCover && (
-                      <Image
-                        src={frontCover.preview} // Display the preview URL
-                        alt="Front Cover Preview"
-                        thumbnail
-                        style={{
-                          marginTop: "10px",
-                          width: "120px",
-                          height: "150px",
-                          objectFit: "cover",
-                        }}
-                      />
+                      <>
+                        <Image
+                          src={frontCover.preview} // Display the preview URL
+                          alt="Front Cover Preview"
+                          thumbnail
+                          onError={() => setFrontCover(null)}
+                          style={{
+                            marginTop: "10px",
+                            width: "120px",
+                            height: "150px",
+                            objectFit: "cover",
+                          }}
+                        />
+                        {!frontCover?.preview && (
+                          <small className="text-muted d-block mt-1">Front cover not available</small>
+                        )}
+                      </>
                     )}
                   </Col>
                   <Col>
@@ -6067,17 +6089,23 @@ const BookForm = () => {
                       />
                     </Form.Group>
                     {backCover && (
-                      <Image
-                        src={backCover.preview} // Display the preview URL
-                        alt="Back Cover Preview"
-                        thumbnail
-                        style={{
-                          marginTop: "10px",
-                          width: "120px",
-                          height: "150px",
-                          objectFit: "cover",
-                        }}
-                      />
+                      <>
+                        <Image
+                          src={backCover.preview} // Display the preview URL
+                          alt="Back Cover Preview"
+                          thumbnail
+                          onError={() => setBackCover(null)}
+                          style={{
+                            marginTop: "10px",
+                            width: "120px",
+                            height: "150px",
+                            objectFit: "cover",
+                          }}
+                        />
+                        {!backCover?.preview && (
+                          <small className="text-muted d-block mt-1">Back cover not available</small>
+                        )}
+                      </>
                     )}
                   </Col>
                 </Row>

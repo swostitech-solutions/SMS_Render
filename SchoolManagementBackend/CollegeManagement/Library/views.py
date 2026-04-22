@@ -51,24 +51,49 @@ def normalize_media_url(file_value):
 
     media_url = settings.MEDIA_URL if str(settings.MEDIA_URL).endswith('/') else f"{settings.MEDIA_URL}/"
 
+    def to_existing_media_url(rel_path):
+        """Resolve legacy paths by checking common on-disk locations."""
+        if not rel_path:
+            return None
+
+        normalized_rel = str(rel_path).lstrip('/').replace('\\', '/')
+        candidates = [normalized_rel]
+
+        # Legacy rows may store only filename while file is under Book_cover/.
+        base_name = os.path.basename(normalized_rel)
+        if base_name and '/' not in normalized_rel:
+            candidates.append(f"Book_cover/{base_name}")
+
+        for candidate in candidates:
+            abs_path = os.path.join(str(settings.MEDIA_ROOT), candidate.replace('/', os.sep))
+            if os.path.exists(abs_path):
+                return f"{media_url}{candidate}"
+
+        # Fallback to original relative path if file existence cannot be verified.
+        return f"{media_url}{normalized_rel}"
+
     # Already a media URL.
     if value.startswith(media_url):
-        return value
+        rel = value[len(media_url):]
+        return to_existing_media_url(rel)
 
     marker = '/SWOSTITECH_CMS/'
     if marker in value:
         rel = value.split(marker, 1)[1].lstrip('/')
-        return f"{media_url}{rel}"
+        return to_existing_media_url(rel)
 
     if value.startswith('SWOSTITECH_CMS/'):
         rel = value.split('SWOSTITECH_CMS/', 1)[1].lstrip('/')
-        return f"{media_url}{rel}"
+        return to_existing_media_url(rel)
 
     if value.startswith('/'):
+        if value.startswith('/SWOSTITECH_CMS/'):
+            rel = value.split('/SWOSTITECH_CMS/', 1)[1].lstrip('/')
+            return to_existing_media_url(rel)
         return value
 
     # Assume it is a relative media file path like Book_cover/x.jpg
-    return f"{media_url}{value.lstrip('/')}"
+    return to_existing_media_url(value)
 
 class BookCategoryCreateAPIView(CreateAPIView):
     queryset = BookCategory.objects.all()

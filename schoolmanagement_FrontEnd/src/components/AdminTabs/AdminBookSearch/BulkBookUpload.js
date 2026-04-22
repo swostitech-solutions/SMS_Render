@@ -1376,7 +1376,7 @@ const BulkBookUpload = () => {
                                     }}
                                   >
                                     <tr>
-                                      <th>Row</th>
+                                      <th>Sr no</th>
                                       <th>Book Title</th>
                                       <th>Category</th>
                                       <th>Sub Category</th>
@@ -1603,7 +1603,7 @@ const BulkBookUpload = () => {
                                   }}
                                 >
                                   <tr>
-                                    <th>#</th>
+                                    <th>Sr No</th>
                                     <th>Excel Row</th>
                                     <th>Book Title</th>
                                     <th>Result</th>
