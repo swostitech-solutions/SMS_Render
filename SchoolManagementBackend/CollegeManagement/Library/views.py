@@ -151,7 +151,6 @@ class BookCategoryListAPIView(ListAPIView):
                     # else:
                     #     continue
                 if responsedata:
-
                     return Response({'message': 'Success', 'data': responsedata}, status=status.HTTP_200_OK)
                 else:
                     return Response({'message': 'No Record Found!'}, status=status.HTTP_200_OK)
@@ -556,7 +555,6 @@ class GetAllCategorySubCategoryListAPIView(ListAPIView):
 #         try:
 #             response = super().list(request, *args, **kwargs)
 #             resdata = response.data
-#
 #             if resdata:
 #                 responsedata = []
 #
@@ -1087,6 +1085,7 @@ class LibraryBookSearchAPIView(ListAPIView):
                                 'batch_name': item.batch.batch_code,
                                 'publisher': item.publisher,
                                 'author': item.author,
+                                'authorName': item.author,
                                 'publish_year': item.publish_year,
                                 'volume': item.volume,
                                 'front_cover': item.front_cover if item.front_cover else None,
@@ -2303,6 +2302,7 @@ class BooksAvailableforIssues(ListAPIView):
                             'barcode': item.barcode,
                             'bookName': item.book.book_name,
                             'bookCode': item.book.book_code,
+                            'author': item.book.author,
                             'categoryId': item.book.book_category.id,
                             'categoryName': item.book.book_category.category_name,
                             'subcategoryId': item.book.book_sub_category.id,
@@ -3221,6 +3221,7 @@ class AllBookBarcodeFilterListAPIView(ListAPIView):
                             'totalCopies': total_copies,
                             'availableCopies': available_copies,
                             'isAvailable': is_available,
+                            'author': item.book.author if item.book.author else "",
                         }
 
                         responsedata.append(data)
