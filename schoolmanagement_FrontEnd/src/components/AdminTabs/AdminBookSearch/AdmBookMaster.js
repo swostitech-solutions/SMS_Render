@@ -4720,6 +4720,47 @@ const BookForm = () => {
   const handleBookStatusChange = (selectedOption) => {
     setBookStatus(selectedOption);
   };
+
+  const resolveCoverPreview = (coverValue) => {
+    if (!coverValue) return null;
+
+    if (typeof coverValue === "string") {
+      if (coverValue.startsWith("data:") || coverValue.startsWith("http")) {
+        return coverValue;
+      }
+
+      const normalized = coverValue.replace(/\\/g, "/");
+
+      if (normalized.startsWith("/SWOSTITECH_CMS/")) {
+        return normalized;
+      }
+
+      const mediaMarker = "/SWOSTITECH_CMS/";
+      if (normalized.includes(mediaMarker)) {
+        return normalized.substring(normalized.indexOf(mediaMarker));
+      }
+
+      if (normalized.includes("/Book_cover/")) {
+        return `/SWOSTITECH_CMS/${normalized.split("/Book_cover/")[1] ? `Book_cover/${normalized.split("/Book_cover/")[1]}` : ""}`;
+      }
+
+      return normalized;
+    }
+
+    if (typeof coverValue === "object") {
+      if (coverValue.binary_data) {
+        const mimeType = coverValue.type || "image/png";
+        return `data:${mimeType};base64,${coverValue.binary_data}`;
+      }
+
+      if (coverValue.path) {
+        return resolveCoverPreview(coverValue.path);
+      }
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     if (bookDetails?.total_no_of_copies > 0) {
       setErrors((prev) => ({ ...prev, total_no_of_copies: "" })); // Clear error
@@ -4755,10 +4796,16 @@ const BookForm = () => {
 
       // Set initial front cover and back cover previews
       if (firstBookDetails.front_cover) {
-        setFrontCover({ preview: firstBookDetails.front_cover });
+        const frontPreview = resolveCoverPreview(firstBookDetails.front_cover);
+        if (frontPreview) {
+          setFrontCover({ preview: frontPreview });
+        }
       }
       if (firstBookDetails.back_cover) {
-        setBackCover({ preview: firstBookDetails.back_cover });
+        const backPreview = resolveCoverPreview(firstBookDetails.back_cover);
+        if (backPreview) {
+          setBackCover({ preview: backPreview });
+        }
       }
       if (bookData?.bookDetails?.length > 0) {
         const firstBookDetails = bookData.bookDetails[0];

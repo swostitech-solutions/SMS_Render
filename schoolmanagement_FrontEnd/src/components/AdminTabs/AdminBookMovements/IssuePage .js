@@ -68,7 +68,17 @@ const IssuePage = () => {
       (row) => row.bookBarcodeId && row.availableCopies === 0
     );
 
-    if (booksWithNoAvailability.length > 0) {
+   if (booksWithNoAvailability.length > 0) {
+     const bookNames = booksWithNoAvailability
+       .map((row) => row.bookName)
+       .join(", ");
+
+     const errorMessage = `Cannot issue books with no available copies: ${bookNames}`;
+
+     alert(errorMessage); // 👈 ADD THIS LINE
+
+     return;
+   } if (booksWithNoAvailability.length > 0) {
       const bookNames = booksWithNoAvailability.map((row) => row.bookName).join(", ");
       setErrors((prev) => ({ ...prev, general: `Cannot issue books with no available copies: ${bookNames}` }));
       return;
@@ -243,7 +253,12 @@ const IssuePage = () => {
             bookBarcodeId: id, // Store the actual book barcode ID from database
             bookName: bookName || "",
             barcode: barcode || "",
-            author: selectedBook.author || "",
+            author:
+              selectedBook.author ||
+              selectedBook.authorName ||
+              selectedBook.bookAuthor ||
+              selectedBook.author_name ||
+              "",
             categoryName: categoryName || "",
             subcategoryName: subcategoryName || "",
             availableCopies: availableCopies,
@@ -349,7 +364,12 @@ const IssuePage = () => {
                   ...row,
                   bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
                   barcode: matchedBook.barcode || enteredBarcode,
-                  author: matchedBook.author || "",
+                  author:
+                    matchedBook.author ||
+                    matchedBook.authorName ||
+                    matchedBook.bookAuthor ||
+                    matchedBook.author_name ||
+                    "",
                   bookName: matchedBook.bookName || "",
                   categoryName: matchedBook.categoryName || "",
                   subcategoryName: matchedBook.subcategoryName || "",

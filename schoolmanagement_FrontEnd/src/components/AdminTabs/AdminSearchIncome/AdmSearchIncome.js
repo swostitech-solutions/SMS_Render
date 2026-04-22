@@ -119,12 +119,12 @@ const handleView = async (incomeId) => {
         income.IncomeDetailsdata || income.incomeDetaildata || [];
 
       detailsData.forEach((item, index) => {
-        tableRows.push([
-          index + 1,
-          item.income_category_name || "",
-          item.remarks || "",
-          Number(item.amount || 0).toFixed(2),
-        ]);
+     tableRows.push([
+  index + 1,
+  item.Income_category_id || "",  // ✅ FIXED
+  item.remarks || "",
+  Number(item.amount || 0).toFixed(2),
+]);
       });
 
       doc.autoTable({

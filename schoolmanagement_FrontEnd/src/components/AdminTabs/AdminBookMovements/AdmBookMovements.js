@@ -1,7 +1,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import SelectStudentModal from "../AdminAttendanceEntry/SelectStudentModal";
@@ -39,7 +38,6 @@ const AdmBookMovements = () => {
   const [penaltyAmount, setPenaltyAmount] = useState(0);
   const [employeeName, setEmployeeName] = useState([]);
   const [employeeId, setEmployeeId] = useState([]);
-  const [academicyearId, setacAdemicyearId] = useState("A");
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
@@ -495,10 +493,6 @@ const AdmBookMovements = () => {
     fetchSections();
   }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear, selectedSemester]);
 
-  useEffect(() => {
-    handleAllSearch(); // Fetch initial data when component mounts
-  }, [flag]);
-
   const handleSelectEmployee = (selectedEmployee) => {
     console.log("Selected Employee:", selectedEmployee);
 
@@ -508,7 +502,7 @@ const AdmBookMovements = () => {
 
   const academicId = sessionStorage.getItem("academicSessionId") || "1";
   // GetIssueReturnSearchList Api Call
-  const handleAllSearch = async () => {
+  const handleAllSearch = async (selectedFlag = flag) => {
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
@@ -533,7 +527,7 @@ const AdmBookMovements = () => {
       if (issueDate) queryParams.push(`issue_date=${issueDate}`);
       if (returnDate) queryParams.push(`return_date=${returnDate}`);
       if (bookBarcode) queryParams.push(`book_barcode_no=${bookBarcode}`);
-      if (flag) queryParams.push(`flag=${flag}`);
+      if (selectedFlag) queryParams.push(`flag=${selectedFlag}`);
       // Use cascading academic year if selected, otherwise use session storage
       const academicYearId = selectedAcademicYear?.value || academicId;
       queryParams.push(`academic_year_id=${academicYearId}`);
@@ -715,7 +709,7 @@ const AdmBookMovements = () => {
                     style={{
                       width: "150px",
                     }}
-                    onClick={handleAllSearch}
+                    onClick={() => handleAllSearch(flag)}
                   >
                     Search
                   </button>
@@ -1144,8 +1138,10 @@ const AdmBookMovements = () => {
                             id="viewIssued"
                             value="I"
                             checked={flag === "I"}
-                            onChange={(e) => setFlag(e.target.value)}
-                            onClick={handleAllSearch}
+                            onChange={(e) => {
+                              setFlag(e.target.value);
+                              handleAllSearch(e.target.value);
+                            }}
                           />
                           <label
                             className="form-check-label ms-1"
@@ -1162,8 +1158,10 @@ const AdmBookMovements = () => {
                             id="viewAll"
                             value="A"
                             checked={flag === "A"}
-                            onChange={(e) => setFlag(e.target.value)}
-                            onClick={handleAllSearch}
+                            onChange={(e) => {
+                              setFlag(e.target.value);
+                              handleAllSearch(e.target.value);
+                            }}
                           />
                           <label
                             className="form-check-label ms-1"

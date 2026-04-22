@@ -848,6 +848,25 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   const currentItems = bookData.slice(offset, offset + itemsPerPage);
   const pageCount = Math.ceil(bookData.length / itemsPerPage);
 
+  const normalizeBook = (book) => ({
+    ...book,
+    bookName: book.bookName || book.book_name || book.BookName || "",
+    barcode: book.barcode || book.barcodeNo || "",
+    author:
+      book.author ||
+      book.authorName ||
+      book.Author ||
+      book.bookAuthor ||
+      book.book_author ||
+      book.author_name ||
+      "",
+    categoryId: book.categoryId || book.category_id || book.book_category || null,
+    categoryName: book.categoryName || book.category || "",
+    subcategoryId:
+      book.subcategoryId || book.subcategory_id || book.book_sub_category || null,
+    subcategoryName: book.subcategoryName || book.subCategory || book.sub_category || "",
+  });
+
   const handlePageClick = ({ selected }) => {
     setCurrentPage(selected);
   };
@@ -869,6 +888,11 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   const bookNameRef = useRef();
   // const bookAccessionNoRef = useRef();
   const authorRef = useRef(); // ✅ ADD THIS
+  const handleCategoryChange = (option) => {
+    setSelectedCategory(option);
+    setSelectedSubCategory(null);
+  };
+
   const handleSelectBook = (book) => {
     const bookId = book.id;
     localStorage.setItem("selectedBookId", bookId);
@@ -899,21 +923,18 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
   const [isPrimaryInstance, setIsPrimaryInstance] = useState(false);
 
   useEffect(() => {
-    // Check if a lock exists
+    let ownsLock = false;
+
     if (!window.admBookListLock) {
       window.admBookListLock = true;
-      setIsPrimaryInstance(true); // We are the primary
+      ownsLock = true;
+      setIsPrimaryInstance(true);
     }
 
     return () => {
-      // Cleanup lock only if we were the primary
-      // Note: In StrictMode, this might run and clear lock, allowing 2nd mount to take it.
-      // But it helps prevent simultaneous permanent instances.
-      if (isPrimaryInstance) {
-        window.admBookListLock = false; // Release lock
+      if (ownsLock) {
+        window.admBookListLock = false;
       }
-      // Safety fallback: always clear on unmount if we think we held it
-      window.admBookListLock = false;
     };
   }, []);
 
@@ -930,8 +951,9 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
           console.log("=== API Response in AdmBook ===", data);
           if (data.message === "success" && Array.isArray(data.data)) {
             console.log("First book object:", data.data[0]);
-            setBookData(data.data);
-            setFullBookData(data.data);
+            const normalizedBooks = data.data.map(normalizeBook);
+            setBookData(normalizedBooks);
+            setFullBookData(normalizedBooks);
           }
         })
         .catch((error) => console.error("Error fetching data:", error));
@@ -945,42 +967,39 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
       setTimeout(() => {
         if (bookNameRef.current) bookNameRef.current.value = "";
         if (bookAccessionNoRef.current) bookAccessionNoRef.current.value = "";
+        if (authorRef.current) authorRef.current.value = "";
       }, 0);
     }
-  }, [show]);
+  }, [show, onlyAvailable]);
 
   // Search/Filter function
   const handleSearch = () => {
     const bookName = bookNameRef.current?.value?.toLowerCase() || "";
     const bookAccessionNo = bookAccessionNoRef.current?.value || "";
-    const author = authorRef.current?.value?.toLowerCase() || ""; // ✅ NEW
+    const author = authorRef.current?.value?.toLowerCase() || "";
     const categoryId = selectedCategory?.value;
     const subCategoryId = selectedSubCategory?.value;
 
     const filteredData = fullBookData.filter((book) => {
       const nameMatch =
-        !bookName || book.bookName?.toLowerCase().includes(bookName);
+        !bookName || book.bookName.toLowerCase().includes(bookName);
 
       const barcodeMatch =
-        !bookAccessionNo || book.barcode?.toString().includes(bookAccessionNo);
+        !bookAccessionNo || book.barcode.toString().includes(bookAccessionNo);
 
       const authorMatch =
-        !author || book.author?.toLowerCase().includes(author); // ✅ NEW
+        !author || book.author.toLowerCase().includes(author);
 
       const categoryMatch =
-        !categoryId ||
-        book.categoryId === categoryId ||
-        book.category_id === categoryId;
+        !categoryId || Number(book.categoryId) === Number(categoryId);
 
       const subCategoryMatch =
-        !subCategoryId ||
-        book.subcategoryId === subCategoryId ||
-        book.subcategory_id === subCategoryId;
+        !subCategoryId || Number(book.subcategoryId) === Number(subCategoryId);
 
       return (
         nameMatch &&
         barcodeMatch &&
-        authorMatch && // ✅ NEW
+        authorMatch &&
         categoryMatch &&
         subCategoryMatch
       );
@@ -1112,7 +1131,7 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
                           <Select
                             options={categoryOptions}
                             value={selectedCategory}
-                            onChange={setSelectedCategory}
+                            onChange={handleCategoryChange}
                             isClearable
                           />
                         </div>

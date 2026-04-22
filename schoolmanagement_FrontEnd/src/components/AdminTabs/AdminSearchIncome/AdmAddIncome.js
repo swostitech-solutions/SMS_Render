@@ -23,11 +23,17 @@ const AdmAttendanceEntry = () => {
   const [partyId, setPartyId] = useState("");
   const [partyName, setPartyName] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+  const [errors, setErrors] = useState({});
 
   // Custom hooks for fetching data
-  const { categories, loading: loadingCategories } = useExpenseIncomeCategories("I");
+  const { categories, loading: loadingCategories } =
+    useExpenseIncomeCategories("I");
   const { banks, loading: loadingBanks, error: errorBanks } = useBanks();
-  const { accounts, loading: loadingAccounts, error: errorAccounts } = useBankAccounts(selectedBank?.value);
+  const {
+    accounts,
+    loading: loadingAccounts,
+    error: errorAccounts,
+  } = useBankAccounts(selectedBank?.value);
 
   // Transform to React Select format
   const categoryOptions = categories.map((cat) => ({
@@ -42,7 +48,9 @@ const AdmAttendanceEntry = () => {
 
   const accountOptions = accounts.map((account) => ({
     value: account.id,
-    label: account.bank_account ? account.bank_account.toString() : "Unknown Account",
+    label: account.bank_account
+      ? account.bank_account.toString()
+      : "Unknown Account",
   }));
 
   const [partyDetails, setPartyDetails] = useState({
@@ -77,8 +85,7 @@ const AdmAttendanceEntry = () => {
 
   const getStoredNumericValue = (keys, { allowZero = false } = {}) => {
     for (const key of keys) {
-      const rawValue =
-        sessionStorage.getItem(key) ?? localStorage.getItem(key);
+      const rawValue = sessionStorage.getItem(key) ?? localStorage.getItem(key);
       if (rawValue === null || rawValue === undefined || rawValue === "") {
         continue;
       }
@@ -103,7 +110,7 @@ const AdmAttendanceEntry = () => {
   const resolveAcademicYearId = async (
     organizationId,
     branchId,
-    currentAcademicYearId
+    currentAcademicYearId,
   ) => {
     if (
       !hasRequiredNumericValue(organizationId) ||
@@ -131,7 +138,7 @@ const AdmAttendanceEntry = () => {
       }
 
       const matchedAcademicYear = academicYears.find(
-        (year) => Number(year.id) === Number(currentAcademicYearId)
+        (year) => Number(year.id) === Number(currentAcademicYearId),
       );
       if (matchedAcademicYear) {
         return Number(matchedAcademicYear.id);
@@ -140,12 +147,20 @@ const AdmAttendanceEntry = () => {
       const defaultAcademicYear =
         academicYears.find(
           (year) =>
-            String(year.academic_year_code || "").trim().toLowerCase() === "default"
+            String(year.academic_year_code || "")
+              .trim()
+              .toLowerCase() === "default",
         ) || academicYears[0];
 
       if (defaultAcademicYear?.id) {
-        localStorage.setItem("academicSessionId", String(defaultAcademicYear.id));
-        localStorage.setItem("academic_year_id", String(defaultAcademicYear.id));
+        localStorage.setItem(
+          "academicSessionId",
+          String(defaultAcademicYear.id),
+        );
+        localStorage.setItem(
+          "academic_year_id",
+          String(defaultAcademicYear.id),
+        );
         return Number(defaultAcademicYear.id);
       }
     } catch (error) {
@@ -158,9 +173,9 @@ const AdmAttendanceEntry = () => {
   // Set account when accounts are loaded and we have a pending account ID
   useEffect(() => {
     if (pendingAccountId && accountOptions.length > 0) {
-      const account = accountOptions.find(
-        (option) => option.value === pendingAccountId
-      ) || null;
+      const account =
+        accountOptions.find((option) => option.value === pendingAccountId) ||
+        null;
       setSelectedAccount(account);
       setPendingAccountId(null); // Clear pending ID
     }
@@ -171,13 +186,16 @@ const AdmAttendanceEntry = () => {
       const incomeData = location.state.incomeData;
 
       //  Set selected payment method
-      const payment = paymentOptions.find(
-        (option) => option.label === incomeData.payment_method
-      ) || null;
+      const payment =
+        paymentOptions.find(
+          (option) => option.label === incomeData.payment_method,
+        ) || null;
       setSelectedPayment(payment);
 
       //  Set selected bank
-      const bank = bankOptions.find((option) => option.value === incomeData.bank_id) || null;
+      const bank =
+        bankOptions.find((option) => option.value === incomeData.bank_id) ||
+        null;
       setSelectedBank(bank);
 
       // Store account ID to set after accounts are fetched
@@ -207,25 +225,19 @@ const AdmAttendanceEntry = () => {
               null,
             amount: detail.amount || "",
             remarks: detail.remarks || "",
-          }))
+          })),
         );
       } else {
         setRows([{ id: Date.now(), category: null, amount: "", remarks: "" }]);
       }
     }
-  }, [
-    location.state,
-    paymentOptions,
-    bankOptions,
-    categoryOptions,
-  ]);
-
+  }, [location.state, paymentOptions, bankOptions, categoryOptions]);
 
   // Fetch Income No. from the API
   useEffect(() => {
     const fetchIncomeNo = async () => {
       try {
-        const response = await api.get('EXPENSE/INCOME/GetIncomeNo/');
+        const response = await api.get("EXPENSE/INCOME/GetIncomeNo/");
         const data = response.data;
         if (data.message === "success") {
           setIncomeNo(data.income_no); // Set the fetched income_no
@@ -254,12 +266,15 @@ const AdmAttendanceEntry = () => {
       try {
         const orgId = localStorage.getItem("orgId");
         const branchId = localStorage.getItem("branchId");
-        const response = await api.get('PaymentMethod/GetAllPaymentMethodList/', {
-          params: {
-            organization_id: orgId,
-            branch_id: branchId
-          }
-        });
+        const response = await api.get(
+          "PaymentMethod/GetAllPaymentMethodList/",
+          {
+            params: {
+              organization_id: orgId,
+              branch_id: branchId,
+            },
+          },
+        );
         const data = response.data;
         if (data && data.data) {
           // Transform data to match React Select format
@@ -279,6 +294,7 @@ const AdmAttendanceEntry = () => {
 
   const handlePaymentChange = (selectedOption) => {
     setSelectedPayment(selectedOption);
+    setErrors((prev) => ({ ...prev, payment: undefined }));
     // Clear bank and account when payment method changes away from BANK
     if (selectedOption?.label?.toUpperCase() !== "BANK") {
       setSelectedBank(null);
@@ -290,6 +306,7 @@ const AdmAttendanceEntry = () => {
   const handleBankChange = (selectedBankOption) => {
     setSelectedBank(selectedBankOption);
     setSelectedAccount(null); // Clear selected account when bank changes
+    setErrors((prev) => ({ ...prev, bank: undefined, account: undefined }));
   };
 
   const handleOpenModal = () => {
@@ -311,6 +328,8 @@ const AdmAttendanceEntry = () => {
       email_id: selectedParty.email_id || "",
     });
 
+    setErrors((prev) => ({ ...prev, party: undefined }));
+
     handleCloseModal();
   };
 
@@ -323,6 +342,14 @@ const AdmAttendanceEntry = () => {
     const updatedRows = [...rows];
     updatedRows[index][field] = value;
     setRows(updatedRows);
+    setErrors((prev) => {
+      const rowErrors = [...(prev.rows || [])];
+      rowErrors[index] = {
+        ...(rowErrors[index] || {}),
+        [field]: undefined,
+      };
+      return { ...prev, rows: rowErrors };
+    });
   };
 
   // Handle removing a row
@@ -339,113 +366,270 @@ const AdmAttendanceEntry = () => {
     ]);
   };
 
+  // const handleSave = async () => {
+  //   // Retrieve org_id, branch_id, and academic_year_id from storage
+  //   const orgId = getStoredNumericValue(["organization_id", "orgId"]);
+  //   const branchId = getStoredNumericValue(["branch_id", "branchId"]);
+  //   const storedAcademicYearId = getStoredNumericValue(
+  //     ["academic_year_id", "academicYearId", "academicSessionId"]
+  //   );
+  //   const academicYearId = await resolveAcademicYearId(
+  //     orgId,
+  //     branchId,
+  //     storedAcademicYearId
+  //   );
 
-  const handleSave = async () => {
-    // Retrieve org_id, branch_id, and academic_year_id from storage
-    const orgId = getStoredNumericValue(["organization_id", "orgId"]);
-    const branchId = getStoredNumericValue(["branch_id", "branchId"]);
-    const storedAcademicYearId = getStoredNumericValue(
-      ["academic_year_id", "academicYearId", "academicSessionId"]
+  //   // Retrieve userId from session storage
+  //   const userId = getStoredNumericValue(["userId"], { allowZero: true });
+
+  //   // Check if required values exist in storage
+  //   if (
+  //     !hasRequiredNumericValue(orgId) ||
+  //     !hasRequiredNumericValue(branchId) ||
+  //     !hasRequiredNumericValue(academicYearId) ||
+  //     !hasRequiredNumericValue(userId, { allowZero: true })
+  //   ) {
+  //     alert("Missing required data. Please check.");
+  //     return;
+  //   }
+
+  //   const incomeHeaderDetails = {
+  //     created_by: userId,
+  //     org_id: orgId,
+  //     batch_id: branchId,
+  //     academic_year_id: academicYearId,
+  //     payment_method: selectedPayment?.label || "",
+  //     bank: selectedBank?.value || null,
+  //     account: selectedAccount?.value || null,
+  //     party_id: partyDetails.party_id || null,
+  //     date: currentDate,
+  //     income_no: incomeNo,
+  //     party_reference: partyReference,
+  //     total_amount: totalAmount,
+  //   };
+
+  //   // Filter and map rows to income details, ensuring category_id is a valid integer
+  //   const incomeDetails = rows
+  //     .filter((row) => {
+  //       // Only include rows with valid category and amount
+  //       const categoryId = row.category?.value || row.category;
+  //       return categoryId && row.amount;
+  //     })
+  //     .map((row) => {
+  //       // Extract category_id - handle both object and direct value
+  //       const categoryId = row.category?.value || row.category;
+  //       const parsedCategoryId = parseInt(categoryId, 10);
+
+  //       // Validate that category_id is a valid integer
+  //       if (isNaN(parsedCategoryId) || parsedCategoryId <= 0) {
+  //         console.error("Invalid category_id:", categoryId);
+  //         return null;
+  //       }
+
+  //       return {
+  //         category_id: parsedCategoryId, // Ensure it's an integer
+  //         amount: parseFloat(row.amount) || 0,
+  //         remarks: row.remarks || "",
+  //       };
+  //     })
+  //     .filter((detail) => detail !== null); // Remove any invalid entries
+
+  //   // Validate that we have at least one income detail
+  //   if (incomeDetails.length === 0) {
+  //     alert("Please add at least one income detail with a valid category and amount.");
+  //     return;
+  //   }
+
+  //   const payload = {
+  //     IncomeHeaderDetails: incomeHeaderDetails,
+  //     IncomeDetails: incomeDetails,
+  //   };
+
+  //   try {
+  //     //  Check if it's an update request
+  //     if (location.state?.incomeData?.income_id) {
+  //       const incomeId = location.state.incomeData.income_id;
+  //       await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}`, payload);
+  //     } else {
+  //       await api.post('EXPENSE/INCOME/IncomeCreate/', payload);
+  //     }
+
+  //     alert(
+  //       location.state?.incomeData?.income_id
+  //         ? "Income details updated successfully!"
+  //         : "Income details saved successfully!"
+  //     );
+
+  //     // Clear all fields after successful save/update
+  //     handleClear();
+  //   } catch (error) {
+  //     console.error("Error saving/updating income details:", error);
+  //     const errorMessage = error.response?.data?.message || "Failed to save/update income details.";
+  //     alert(errorMessage);
+  //   }
+  // };
+  // ✅ VALIDATION FUNCTION
+  const validateForm = () => {
+    let newErrors = {};
+
+    if (!selectedPayment) newErrors.payment = "Payment Method is required";
+
+    if (selectedPayment?.label?.toUpperCase() === "BANK") {
+      if (!selectedBank) newErrors.bank = "Bank is required";
+      if (!selectedAccount) newErrors.account = "Account No is required";
+    }
+
+    if (!partyDetails.party_id) newErrors.party = "Party is required";
+    if (!currentDate) newErrors.date = "Date is required";
+    if (!partyReference) newErrors.reference = "Party Reference is required";
+
+    let rowErrors = [];
+    rows.forEach((row, index) => {
+      let rError = {};
+      if (!row.category) rError.category = "Category required";
+      if (!row.amount) rError.amount = "Amount required";
+      rowErrors[index] = rError;
+    });
+
+    setErrors({ ...newErrors, rows: rowErrors });
+
+    return (
+      Object.keys(newErrors).length === 0 &&
+      rowErrors.every((r) => Object.keys(r).length === 0)
     );
-    const academicYearId = await resolveAcademicYearId(
-      orgId,
-      branchId,
-      storedAcademicYearId
-    );
+  };
+const handleSave = async () => {
+  let newErrors = {};
 
-    // Retrieve userId from session storage
-    const userId = getStoredNumericValue(["userId"], { allowZero: true });
+  // 🔴 FIELD VALIDATION
 
-    // Check if required values exist in storage
-    if (
-      !hasRequiredNumericValue(orgId) ||
-      !hasRequiredNumericValue(branchId) ||
-      !hasRequiredNumericValue(academicYearId) ||
-      !hasRequiredNumericValue(userId, { allowZero: true })
-    ) {
-      alert("Missing required data. Please check.");
-      return;
+  if (!selectedPayment) {
+    newErrors.payment = "Payment Method is required";
+  }
+
+  if (selectedPayment?.label?.toUpperCase() === "BANK") {
+    if (!selectedBank) {
+      newErrors.bank = "Bank is required";
+    }
+    if (!selectedAccount) {
+      newErrors.account = "Account No is required";
+    }
+  }
+
+  if (!partyDetails.party_id) {
+    newErrors.party = "Party is required";
+  }
+
+  if (!currentDate) {
+    newErrors.date = "Date is required";
+  }
+
+  if (!partyReference) {
+    newErrors.reference = "Party Reference is required";
+  }
+
+  // 🔴 ROW VALIDATION
+  let rowErrors = [];
+
+  rows.forEach((row, index) => {
+    let rError = {};
+
+    if (!row.category) {
+      rError.category = "Category required";
     }
 
-    const incomeHeaderDetails = {
-      created_by: userId,
-      org_id: orgId,
-      batch_id: branchId,
-      academic_year_id: academicYearId,
-      payment_method: selectedPayment?.label || "",
-      bank: selectedBank?.value || null,
-      account: selectedAccount?.value || null,
-      party_id: partyDetails.party_id || null,
-      date: currentDate,
-      income_no: incomeNo,
-      party_reference: partyReference,
-      total_amount: totalAmount,
-    };
-
-    // Filter and map rows to income details, ensuring category_id is a valid integer
-    const incomeDetails = rows
-      .filter((row) => {
-        // Only include rows with valid category and amount
-        const categoryId = row.category?.value || row.category;
-        return categoryId && row.amount;
-      })
-      .map((row) => {
-        // Extract category_id - handle both object and direct value
-        const categoryId = row.category?.value || row.category;
-        const parsedCategoryId = parseInt(categoryId, 10);
-        
-        // Validate that category_id is a valid integer
-        if (isNaN(parsedCategoryId) || parsedCategoryId <= 0) {
-          console.error("Invalid category_id:", categoryId);
-          return null;
-        }
-        
-        return {
-          category_id: parsedCategoryId, // Ensure it's an integer
-          amount: parseFloat(row.amount) || 0,
-          remarks: row.remarks || "",
-        };
-      })
-      .filter((detail) => detail !== null); // Remove any invalid entries
-
-    // Validate that we have at least one income detail
-    if (incomeDetails.length === 0) {
-      alert("Please add at least one income detail with a valid category and amount.");
-      return;
+    if (!row.amount) {
+      rError.amount = "Amount required";
     }
 
-    const payload = {
-      IncomeHeaderDetails: incomeHeaderDetails,
-      IncomeDetails: incomeDetails,
-    };
+    rowErrors[index] = rError;
+  });
 
-    try {
-      //  Check if it's an update request
-      if (location.state?.incomeData?.income_id) {
-        const incomeId = location.state.incomeData.income_id;
-        await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}`, payload);
-      } else {
-        await api.post('EXPENSE/INCOME/IncomeCreate/', payload);
-      }
+  // 🔴 SET ERRORS
+  setErrors({ ...newErrors, rows: rowErrors });
 
-      alert(
-        location.state?.incomeData?.income_id
-          ? "Income details updated successfully!"
-          : "Income details saved successfully!"
-      );
+  // ❌ STOP if errors exist
+  const hasFieldErrors = Object.keys(newErrors).length > 0;
+  const hasRowErrors = rowErrors.some((r) => Object.keys(r).length > 0);
 
-      // Clear all fields after successful save/update
-      handleClear();
-    } catch (error) {
-      console.error("Error saving/updating income details:", error);
-      const errorMessage = error.response?.data?.message || "Failed to save/update income details.";
-      alert(errorMessage);
-    }
+  if (hasFieldErrors || hasRowErrors) return;
+
+  // ✅ FETCH REQUIRED DATA
+  const orgId = getStoredNumericValue(["organization_id", "orgId"]);
+  const branchId = getStoredNumericValue(["branch_id", "branchId"]);
+  const storedAcademicYearId = getStoredNumericValue([
+    "academic_year_id",
+    "academicYearId",
+    "academicSessionId",
+  ]);
+
+  const academicYearId = await resolveAcademicYearId(
+    orgId,
+    branchId,
+    storedAcademicYearId,
+  );
+
+  const userId = getStoredNumericValue(["userId"], { allowZero: true });
+
+  if (
+    !hasRequiredNumericValue(orgId) ||
+    !hasRequiredNumericValue(branchId) ||
+    !hasRequiredNumericValue(academicYearId) ||
+    !hasRequiredNumericValue(userId, { allowZero: true })
+  ) {
+    alert("Missing required system data");
+    return;
+  }
+
+  // ✅ HEADER
+  const incomeHeaderDetails = {
+    created_by: userId,
+    org_id: orgId,
+    batch_id: branchId,
+    academic_year_id: academicYearId,
+    payment_method: selectedPayment?.label || "",
+    bank: selectedBank?.value || null,
+    account: selectedAccount?.value || null,
+    party_id: partyDetails.party_id,
+    date: currentDate,
+    income_no: incomeNo,
+    party_reference: partyReference,
+    total_amount: totalAmount,
   };
 
+  // ✅ DETAILS
+  const incomeDetails = rows.map((row) => ({
+    category_id: parseInt(row.category?.value || row.category, 10),
+    amount: parseFloat(row.amount) || 0,
+    remarks: row.remarks || "",
+  }));
+
+  const payload = {
+    IncomeHeaderDetails: incomeHeaderDetails,
+    IncomeDetails: incomeDetails,
+  };
+
+  // ✅ API CALL
+  try {
+    if (location.state?.incomeData?.income_id) {
+      const incomeId = location.state.incomeData.income_id;
+      await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}`, payload);
+      alert("Income updated successfully");
+    } else {
+      await api.post("EXPENSE/INCOME/IncomeCreate/", payload);
+      alert("Income saved successfully");
+    }
+
+    handleClear();
+    setErrors({}); // clear errors after success
+  } catch (error) {
+    console.error("Error:", error);
+    alert(error.response?.data?.message || "Something went wrong");
+  }
+};
   const totalAmount = rows.reduce(
     (sum, row) => sum + parseFloat(row.amount || 0),
-    0
+    0,
   );
 
   return (
@@ -500,7 +684,6 @@ const AdmAttendanceEntry = () => {
                 </div>
               </div>
 
-    
               <div className="row  mt-3 mx-2">
                 <div className="col-12 custom-section-box">
                   <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center">
@@ -518,6 +701,11 @@ const AdmAttendanceEntry = () => {
                           onChange={handlePaymentChange}
                           placeholder="Select payment method"
                         />
+                        {errors.payment && (
+                          <small className="text-danger d-block mt-1">
+                            {errors.payment}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-2">
@@ -535,16 +723,25 @@ const AdmAttendanceEntry = () => {
                             !selectedPayment
                               ? "Select payment method first"
                               : selectedPayment?.label?.toUpperCase() !== "BANK"
-                              ? "Select BANK payment method"
-                              : loadingBanks
-                              ? "Loading banks..."
-                              : bankOptions.length === 0
-                              ? "No banks available"
-                              : "Select bank"
+                                ? "Select BANK payment method"
+                                : loadingBanks
+                                  ? "Loading banks..."
+                                  : bankOptions.length === 0
+                                    ? "No banks available"
+                                    : "Select bank"
                           }
-                          isDisabled={!selectedPayment || selectedPayment?.label?.toUpperCase() !== "BANK" || loadingBanks} // Enable only if "BANK" is selected (case-insensitive)
+                          isDisabled={
+                            !selectedPayment ||
+                            selectedPayment?.label?.toUpperCase() !== "BANK" ||
+                            loadingBanks
+                          } // Enable only if "BANK" is selected (case-insensitive)
                           noOptionsMessage={() => "No banks available"}
                         />
+                        {errors.bank && (
+                          <small className="text-danger d-block mt-1">
+                            {errors.bank}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-2">
@@ -557,19 +754,32 @@ const AdmAttendanceEntry = () => {
                           classNamePrefix="account-select"
                           options={accountOptions}
                           value={selectedAccount}
-                          onChange={setSelectedAccount}
                           placeholder={
                             loadingAccounts
                               ? "Loading..."
                               : errorAccounts
-                              ? errorAccounts
-                              : !selectedBank
-                              ? "Select bank first"
-                              : "Select Account No"
+                                ? errorAccounts
+                                : !selectedBank
+                                  ? "Select bank first"
+                                  : "Select Account No"
                           }
                           isDisabled={!selectedBank || loadingAccounts}
-                          noOptionsMessage={() => errorAccounts || "No accounts available"}
+                          noOptionsMessage={() =>
+                            errorAccounts || "No accounts available"
+                          }
+                          onChange={(option) => {
+                            setSelectedAccount(option);
+                            setErrors((prev) => ({
+                              ...prev,
+                              account: undefined,
+                            }));
+                          }}
                         />
+                        {errors.account && (
+                          <small className="text-danger d-block mt-1">
+                            {errors.account}
+                          </small>
+                        )}
                         {errorAccounts && (
                           <small className="text-danger">{errorAccounts}</small>
                         )}
@@ -596,6 +806,11 @@ const AdmAttendanceEntry = () => {
                             ...
                           </button>
                         </div>
+                        {errors.party && (
+                          <small className="text-danger d-block mt-1">
+                            {errors.party}
+                          </small>
+                        )}
                       </div>
 
                       <SelectSearchParty
@@ -613,8 +828,16 @@ const AdmAttendanceEntry = () => {
                           className="form-control detail"
                           ref={dateRef}
                           value={currentDate}
-                          onChange={(e) => setCurrentDate(e.target.value)}
+                          onChange={(e) => {
+                            setCurrentDate(e.target.value);
+                            setErrors((prev) => ({ ...prev, date: undefined }));
+                          }}
                         />
+                        {errors.date && (
+                          <small className="text-danger d-block mt-1">
+                            {errors.date}
+                          </small>
+                        )}
                       </div>
 
                       <div className="col-12 col-md-3 mb-0">
@@ -662,9 +885,20 @@ const AdmAttendanceEntry = () => {
                             className="form-control detail"
                             placeholder="Enter party reference"
                             value={partyReference} // Bind value to state
-                            onChange={(e) => setPartyReference(e.target.value)} // Update state on change
+                            onChange={(e) => {
+                              setPartyReference(e.target.value);
+                              setErrors((prev) => ({
+                                ...prev,
+                                reference: undefined,
+                              }));
+                            }} // Update state on change
                           />
                         </div>
+                          {errors.reference && (
+                            <small className="text-danger d-block mt-1">
+                              {errors.reference}
+                            </small>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -696,8 +930,6 @@ const AdmAttendanceEntry = () => {
                         <tr key={row.id}>
                           <td>{index + 1}</td>
                           <td>
-    
-
                             <select
                               className="form-select detail"
                               value={row.category?.value || row.category || ""}
@@ -709,12 +941,21 @@ const AdmAttendanceEntry = () => {
                                   return;
                                 }
                                 const selected = categoryOptions.find(
-                                  (option) => String(option.value) === String(selectedValue)
+                                  (option) =>
+                                    String(option.value) ===
+                                    String(selectedValue),
                                 );
                                 if (selected) {
-                                  handleInputChange(index, "category", selected);
+                                  handleInputChange(
+                                    index,
+                                    "category",
+                                    selected,
+                                  );
                                 } else {
-                                  console.error("Category not found for value:", selectedValue);
+                                  console.error(
+                                    "Category not found for value:",
+                                    selectedValue,
+                                  );
                                 }
                               }}
                             >
@@ -725,6 +966,11 @@ const AdmAttendanceEntry = () => {
                                 </option>
                               ))}
                             </select>
+                            {errors.rows?.[index]?.category && (
+                              <small className="text-danger d-block mt-1">
+                                {errors.rows[index].category}
+                              </small>
+                            )}
                           </td>
                           <td>
                             <Form.Control
@@ -736,10 +982,15 @@ const AdmAttendanceEntry = () => {
                                 handleInputChange(
                                   index,
                                   "amount",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
+                            {errors.rows?.[index]?.amount && (
+                              <small className="text-danger d-block mt-1">
+                                {errors.rows[index].amount}
+                              </small>
+                            )}
                           </td>
 
                           <td>
@@ -751,7 +1002,7 @@ const AdmAttendanceEntry = () => {
                                 handleInputChange(
                                   index,
                                   "remarks",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -784,6 +1035,6 @@ const AdmAttendanceEntry = () => {
       </div>
     </div>
   );
-};
+};;
 
 export default AdmAttendanceEntry;
