@@ -36,6 +36,65 @@ from Swostitech_Acadix import settings
 
 # Create your views here.
 
+
+def normalize_media_url(file_value):
+    """Return a browser-accessible media URL for stored cover values."""
+    if not file_value:
+        return None
+
+    value = str(file_value).strip().replace('\\', '/')
+    if not value:
+        return None
+
+    if value.startswith('http://') or value.startswith('https://'):
+        return value
+
+    media_url = settings.MEDIA_URL if str(settings.MEDIA_URL).endswith('/') else f"{settings.MEDIA_URL}/"
+
+    def to_existing_media_url(rel_path):
+        """Resolve legacy paths by checking common on-disk locations."""
+        if not rel_path:
+            return None
+
+        normalized_rel = str(rel_path).lstrip('/').replace('\\', '/')
+        candidates = [normalized_rel]
+
+        # Legacy rows may store only filename while file is under Book_cover/.
+        base_name = os.path.basename(normalized_rel)
+        if base_name and '/' not in normalized_rel:
+            candidates.append(f"Book_cover/{base_name}")
+
+        for candidate in candidates:
+            abs_path = os.path.join(str(settings.MEDIA_ROOT), candidate.replace('/', os.sep))
+            if os.path.exists(abs_path):
+                return f"{media_url}{candidate}"
+
+        # Fallback to original relative path if file existence cannot be verified.
+        return f"{media_url}{normalized_rel}"
+
+    # Already a media URL.
+    if value.startswith(media_url):
+        rel = value[len(media_url):]
+        return to_existing_media_url(rel)
+
+    marker = '/SWOSTITECH_CMS/'
+    if marker in value:
+        rel = value.split(marker, 1)[1].lstrip('/')
+        return to_existing_media_url(rel)
+
+    if value.startswith('SWOSTITECH_CMS/'):
+        rel = value.split('SWOSTITECH_CMS/', 1)[1].lstrip('/')
+        return to_existing_media_url(rel)
+
+    if value.startswith('/'):
+        if value.startswith('/SWOSTITECH_CMS/'):
+            rel = value.split('/SWOSTITECH_CMS/', 1)[1].lstrip('/')
+            return to_existing_media_url(rel)
+        return value
+
+    # Assume it is a relative media file path like Book_cover/x.jpg
+    return to_existing_media_url(value)
+
 class BookCategoryCreateAPIView(CreateAPIView):
     queryset = BookCategory.objects.all()
     serializer_class = BookCategorySerializers
@@ -151,7 +210,6 @@ class BookCategoryListAPIView(ListAPIView):
                     # else:
                     #     continue
                 if responsedata:
-
                     return Response({'message': 'Success', 'data': responsedata}, status=status.HTTP_200_OK)
                 else:
                     return Response({'message': 'No Record Found!'}, status=status.HTTP_200_OK)
@@ -556,7 +614,6 @@ class GetAllCategorySubCategoryListAPIView(ListAPIView):
 #         try:
 #             response = super().list(request, *args, **kwargs)
 #             resdata = response.data
-#
 #             if resdata:
 #                 responsedata = []
 #
@@ -1087,10 +1144,11 @@ class LibraryBookSearchAPIView(ListAPIView):
                                 'batch_name': item.batch.batch_code,
                                 'publisher': item.publisher,
                                 'author': item.author,
+                                'authorName': item.author,
                                 'publish_year': item.publish_year,
                                 'volume': item.volume,
-                                'front_cover': item.front_cover if item.front_cover else None,
-                                'back_cover': item.back_cover if item.back_cover else None,
+                                'front_cover': normalize_media_url(item.front_cover),
+                                'back_cover': normalize_media_url(item.back_cover),
                                 'edition': item.edition,
                                 'pages': item.pages,
                                 'bookBarcode': barcodes.barcode,
@@ -1414,18 +1472,11 @@ class LibraryBookCreateAPIView(CreateAPIView):
         folder_name = 'Book_cover'
         unique_string = str(uuid.uuid4())[:8]
         file_name = f"{os.path.splitext(file.name)[0]}_{unique_string}{os.path.splitext(file.name)[-1]}"
-        file_path = os.path.join(folder_name, file_name)
-        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        file_path = os.path.join(folder_name, file_name).replace('\\', '/')
 
-        # Ensure the directory exists
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-
-        # Save the file
-        with default_storage.open(full_path, 'wb+') as destination:
-            for chunk in file.chunks():
-                destination.write(chunk)
-
-        return full_path  # Return full file path
+        # Save under MEDIA_ROOT and return a web URL path for frontend rendering.
+        saved_rel_path = default_storage.save(file_path, file)
+        return normalize_media_url(saved_rel_path)
 
 
 # class LibraryBookCreateAPIView(CreateAPIView):
@@ -1742,27 +1793,11 @@ class GetLibraryBookBasedOnIdAPIView(ListAPIView):
             purchesdetails = []
             barcode_location_details = []
 
-            # Helper function to get file details
+            # Helper function to get a browser-consumable file URL
             def get_file_details(file_field):
-                """Return type, path, and binary data of the given file field."""
-                if not file_field:  # If the field is empty
+                if not file_field:
                     return None
-
-                file_path = file_field.path if hasattr(file_field, 'path') else file_field  # Handle string case
-                file_url = file_field.url if hasattr(file_field, 'url') else file_field  # Handle string case
-                file_type, _ = mimetypes.guess_type(file_path)  # Determine MIME type
-
-                if os.path.exists(file_path):  # Ensure file exists
-                    with open(file_path, "rb") as image_file:
-                        binary_data = base64.b64encode(image_file.read()).decode("utf-8")  # Encode to Base64
-
-                    return {
-                        "type": file_type if file_type else "unknown",
-                        "path": file_url,  # Return file URL
-                        "binary_data": binary_data  # Base64 encoded binary data
-                    }
-
-                return None  # Return None if file does not exist
+                return normalize_media_url(file_field)
 
             # Retrieve Record from LibraryBook
             # Safely get library branch info
@@ -2103,10 +2138,21 @@ class LibraryBookUpdateAPIView(APIView):
             bookInstance.author = libraryBookdetails.get('author')
             bookInstance.publish_year = libraryBookdetails.get('publish_year')
             bookInstance.volume = libraryBookdetails.get('volume')
-            bookInstance.front_cover = libraryBookdetails.get('front_cover') if libraryBookdetails.get(
-                'front_cover') else None
-            bookInstance.back_cover = libraryBookdetails.get('back_cover') if libraryBookdetails.get(
-                'back_cover') else None
+            front_cover = libraryBookdetails.get('front_cover')
+            back_cover = libraryBookdetails.get('back_cover')
+
+            # Preserve existing covers unless a new value/file is explicitly provided.
+            if front_cover is not None and front_cover != '':
+                if hasattr(front_cover, 'name'):
+                    bookInstance.front_cover = self.save_uploaded_file(front_cover)
+                else:
+                    bookInstance.front_cover = normalize_media_url(front_cover)
+
+            if back_cover is not None and back_cover != '':
+                if hasattr(back_cover, 'name'):
+                    bookInstance.back_cover = self.save_uploaded_file(back_cover)
+                else:
+                    bookInstance.back_cover = normalize_media_url(back_cover)
             bookInstance.edition = libraryBookdetails.get('edition')
             bookInstance.pages = libraryBookdetails.get('pages')
             # bookInstance.barcode_auto_generated = libraryBookBarcodeDetails.get('barcode_auto_generated')
@@ -2267,6 +2313,19 @@ class LibraryBookUpdateAPIView(APIView):
 
         )
 
+    def save_uploaded_file(self, file):
+        """Helper function to save uploaded files for update flow."""
+        if not file:
+            return None
+
+        folder_name = 'Book_cover'
+        unique_string = str(uuid.uuid4())[:8]
+        file_name = f"{os.path.splitext(file.name)[0]}_{unique_string}{os.path.splitext(file.name)[-1]}"
+        file_path = os.path.join(folder_name, file_name).replace('\\', '/')
+
+        saved_rel_path = default_storage.save(file_path, file)
+        return normalize_media_url(saved_rel_path)
+
 
 class BooksAvailableforIssues(ListAPIView):
     # queryset = LibraryBooksBarcode.objects.all()
@@ -2303,6 +2362,7 @@ class BooksAvailableforIssues(ListAPIView):
                             'barcode': item.barcode,
                             'bookName': item.book.book_name,
                             'bookCode': item.book.book_code,
+                            'author': item.book.author,
                             'categoryId': item.book.book_category.id,
                             'categoryName': item.book.book_category.category_name,
                             'subcategoryId': item.book.book_sub_category.id,
@@ -3221,6 +3281,7 @@ class AllBookBarcodeFilterListAPIView(ListAPIView):
                             'totalCopies': total_copies,
                             'availableCopies': available_copies,
                             'isAvailable': is_available,
+                            'author': item.book.author if item.book.author else "",
                         }
 
                         responsedata.append(data)
