@@ -175,7 +175,7 @@ class BookCategoryCreateAPIView(CreateAPIView):
 
 
 class BookCategoryListAPIView(ListAPIView):
-    queryset = BookCategory.objects.all()
+    queryset = BookCategory.objects.filter(is_active=True)
     serializer_class = BookCategorySerializers
 
     def list(self, request, *args, **kwargs):
@@ -186,8 +186,6 @@ class BookCategoryListAPIView(ListAPIView):
             if resdata:
                 responsedata = []
                 for item in resdata:
-                    # if item.get('is_active') == True:
-
                     # Get Data
                     organization_id = item.get('organization')
                     batch_id = item.get('batch')
@@ -207,8 +205,6 @@ class BookCategoryListAPIView(ListAPIView):
                         'batch_description': batch_instance.batch_description,
                         'is_active': item.get('is_active'),
                     })
-                    # else:
-                    #     continue
                 if responsedata:
                     return Response({'message': 'Success', 'data': responsedata}, status=status.HTTP_200_OK)
                 else:

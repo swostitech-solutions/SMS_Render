@@ -27803,84 +27803,137 @@ class SendOTPView(APIView):
         try:
             organization_id = request.data.get("organization_id")
             branch_id = request.data.get("branch_id")
-            email = request.data.get("email")
-            username = request.data.get("username")
+            email = (request.data.get("email") or "").strip()
+            username = (request.data.get("username") or "").strip()
 
-            if username:
-                try:
-                    user = UserLogin.objects.get(organization=organization_id, branch=branch_id,
-                                                 user_name__iexact=username)
-                except UserLogin.DoesNotExist:
-                    return Response({"error": "User not found"}, status=404)
-
-                user_email = None
+            def resolve_registered_email(user, identifier):
+                resolved_email = None
                 reference_id = user.reference_id
                 user_type_id = user.user_type_id
 
                 if user_type_id == 2:
-                    # Student: email stored in StudentRegistration, linked via reference_id
-                    try:
-                        student = StudentRegistration.objects.get(id=reference_id)
-                        user_email = student.email
-                    except StudentRegistration.DoesNotExist:
-                        # Fallback: match by user_name in case reference_id is stale
+                    # Student: email stored in StudentRegistration
+                    student = None
+                    if reference_id:
+                        student = StudentRegistration.objects.filter(id=reference_id).first()
+                    if not student:
                         student = StudentRegistration.objects.filter(
                             organization=organization_id,
                             branch=branch_id,
-                            user_name__iexact=username
+                            user_name__iexact=identifier
                         ).first()
-                        if student:
-                            user_email = student.email
+                    if student:
+                        resolved_email = (student.email or "").strip()
+                else:
+                    # Non-Teaching and Teaching staff via reference_id
+                    if reference_id:
+                        nts = NonTeachingStaffMaster.objects.filter(nts_id=reference_id, is_active=True).first()
+                        if nts:
+                            resolved_email = (nts.email or nts.official_email or "").strip()
 
-                elif reference_id:
-                    # Teaching Staff or Non-Teaching Staff: resolve email via reference_id
-                    # Try Non-Teaching Staff (NonTeachingStaffMaster) first
-                    try:
-                        nts = NonTeachingStaffMaster.objects.get(nts_id=reference_id, is_active=True)
-                        user_email = nts.email
-                    except NonTeachingStaffMaster.DoesNotExist:
-                        pass
+                        if not resolved_email:
+                            emp = EmployeeMaster.objects.filter(id=reference_id, is_active=True).first()
+                            if emp:
+                                resolved_email = (emp.email or emp.office_email or "").strip()
 
-                    # Fallback to Teaching Staff (EmployeeMaster)
-                    if not user_email:
-                        try:
-                            emp = EmployeeMaster.objects.get(id=reference_id, is_active=True)
-                            user_email = emp.email
-                        except EmployeeMaster.DoesNotExist:
-                            pass
+                # Final fallback for admin/self-email usernames
+                if not resolved_email:
+                    resolved_email = (user.user_name or "").strip()
 
-                # Final fallback: admin/superuser whose user_name is their email
-                if not user_email:
-                    user_email = user.user_name
+                return resolved_email
 
-                # Validate the resolved address is an email
-                if not user_email or '@' not in str(user_email):
-                    return Response(
-                        {"error": "No email address is registered for this account. Please contact the administrator."},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-
-                otp = generate_otp()
-                PasswordResetOTP.objects.create(user_login=user, otp=otp)
-                send_otp_email(user_email, otp)
-
-                return Response({"message": "OTP sent successfully to registered email"}, status=200)
-
-            if email:
-                try:
-                    user_login_instance = UserLogin.objects.get(organization=organization_id, branch=branch_id,
-                                                                user_name__iexact=email)
-                except UserLogin.DoesNotExist:
-                    return Response({"error": "UserLogin record not found"}, status=404)
-
-                otp = generate_otp()
-                PasswordResetOTP.objects.create(user_login=user_login_instance, otp=otp)
-                send_otp_email(email, otp)
-
-                return Response({"message": "OTP sent successfully"}, status=200)
-
-            if not email and not username:
+            identifier = username or email
+            if not identifier:
                 return Response({"error": "email or username is required"}, status=400)
+
+            user = UserLogin.objects.filter(
+                organization=organization_id,
+                branch=branch_id,
+                user_name__iexact=identifier
+            ).first()
+
+            # If email is provided directly, also allow lookup by registered staff/student email.
+            if not user and email:
+                staff = EmployeeMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    email__iexact=email,
+                    is_active=True
+                ).first() or EmployeeMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    office_email__iexact=email,
+                    is_active=True
+                ).first()
+
+                if staff:
+                    user = UserLogin.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        reference_id=staff.id,
+                        is_active=True
+                    ).first()
+
+            if not user and email:
+                nts = NonTeachingStaffMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    email__iexact=email,
+                    is_active=True
+                ).first() or NonTeachingStaffMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    official_email__iexact=email,
+                    is_active=True
+                ).first()
+
+                if nts:
+                    user = UserLogin.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        reference_id=nts.nts_id,
+                        is_active=True
+                    ).first()
+
+            if not user and email:
+                student = StudentRegistration.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    email__iexact=email,
+                    is_active=True
+                ).first()
+                if student:
+                    user = UserLogin.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        reference_id=student.id,
+                        is_active=True
+                    ).first()
+
+            if not user:
+                return Response({"error": "User not found"}, status=404)
+
+            user_email = resolve_registered_email(user, identifier)
+            if not user_email or '@' not in user_email:
+                return Response(
+                    {"error": "No email address is registered for this account. Please contact the administrator."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            otp = generate_otp()
+            PasswordResetOTP.objects.create(user_login=user, otp=otp)
+            send_otp_email(user_email, otp)
+
+            return Response({"message": "OTP sent successfully to registered email"}, status=200)
+        except ValueError as e:
+            error_message = str(e)
+            ExceptionTrack.objects.create(
+                request=str(request),
+                process_name='ForgotPasswordSendOtp',
+                message=error_message,
+            )
+            return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             error_message = str(e)
             ExceptionTrack.objects.create(
