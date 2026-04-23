@@ -28,7 +28,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
-from django.db import transaction, DatabaseError, connection
+from django.db import transaction, DatabaseError, IntegrityError, connection
 from django.db.models import Q, Max, Sum, Exists, OuterRef
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404
@@ -11140,6 +11140,7 @@ class UtilityGroupMixin:
 
     def documentsDetailsProcess(self, request, documentsDetails, instance, document_files):
         try:
+            seen_document_types = set()
             for idx, documents in enumerate(documentsDetails):
                 document_no = documents.get('document_no')
                 document_type = documents.get('document_type')
@@ -11155,10 +11156,20 @@ class UtilityGroupMixin:
                 start_from = documents.get('start_from')
                 end_to = documents.get('end_to')
 
-                # Check if the combination of data exist or not
-                if StudentDocument.objects.filter(document_no=document_no, document_type=document_type,
-                                                  is_active=True).exists():
-                    raise ValueError(f"This Document data with document_no {document_no} has already been added.")
+                normalized_document_type = (document_type or '').strip()
+
+                if normalized_document_type in seen_document_types:
+                    raise ValueError(f"This Document data with document_type {document_type} has already been added.")
+
+                seen_document_types.add(normalized_document_type)
+
+                # Keep document uniqueness aligned with the standalone document APIs.
+                if StudentDocument.objects.filter(
+                    student=instance,
+                    document_type=document_type,
+                    is_active=True
+                ).exists():
+                    raise ValueError(f"This Document data with document_type {document_type} has already been added.")
 
                 # Save the Emergency contact on db
                 StudentDocumentData = StudentDocument.objects.create(
@@ -11251,6 +11262,26 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
     # queryset = StudentRegistration.objects.all()
     serializer_class = StudentRegistrationSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]  # Supports JSON & Multipart
+
+    def _student_username_exists(self, user_name):
+        return (
+            UserLogin.objects.filter(user_name=user_name).exists()
+            or StudentRegistration.objects.filter(user_name=user_name).exists()
+        )
+
+    def _generate_unique_student_username(self, first_name, admission_no):
+        max_length = StudentRegistration._meta.get_field('user_name').max_length or 30
+        base_name = re.sub(r'\s+', '', (first_name or 'student')).strip() or 'student'
+        base_username = f"{base_name}{admission_no}"[:max_length]
+        candidate = base_username
+        suffix = 1
+
+        while self._student_username_exists(candidate):
+            suffix_text = str(suffix)
+            candidate = f"{base_username[:max_length - len(suffix_text)]}{suffix_text}"
+            suffix += 1
+
+        return candidate
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -11417,13 +11448,13 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
                     student_basic_detail['college_admission_no'] = admission_no
 
                 if user_name:
-                    if StudentRegistration.objects.filter(user_name=user_name).exists():
+                    user_name = user_name.strip()
+                    if self._student_username_exists(user_name):
                         return Response({'message': 'duplicate user_name, required unique user_name'},
                                         status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        student_basic_detail['username'] = user_name
+                    student_basic_detail['user_name'] = user_name
                 elif not user_name or user_name == '':
-                    username_generated = first_name + str(admission_no)
+                    username_generated = self._generate_unique_student_username(first_name, admission_no)
                     student_basic_detail['user_name'] = username_generated
                     # if not college_admission_no:
                     #     studentBasicDetails['username'] = admission_no
@@ -11698,6 +11729,13 @@ class StudentRegistrationCreate(CreateAPIView, UtilityGroupMixin):
         except ValidationError as e:
             # Rollback the transaction on validation error
             return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+
+        except IntegrityError as e:
+            if 'Acadix_userlogin_user_name_key' in str(e) or 'duplicate key value' in str(e):
+                return Response({'error': 'Username already exists. Please retry the request.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'A database integrity error occurred: ' + str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         except DatabaseError as e:
             # Rollback the transaction on database error
@@ -27765,42 +27803,137 @@ class SendOTPView(APIView):
         try:
             organization_id = request.data.get("organization_id")
             branch_id = request.data.get("branch_id")
-            email = request.data.get("email")
-            username = request.data.get("username")
+            email = (request.data.get("email") or "").strip()
+            username = (request.data.get("username") or "").strip()
 
-            if username:
-                student_registration_instance = StudentRegistration.objects.get(organization=organization_id,
-                                                                                branch=branch_id,
-                                                                                user_name__iexact=username)
-                user_email = student_registration_instance.email
-                # user_email = 'bic.void@gmail.com'
-                try:
-                    user = UserLogin.objects.get(organization=organization_id, branch=branch_id,
-                                                 user_name__iexact=username)
-                except UserLogin.DoesNotExist:
-                    return Response({"error": "UserLogin record not found"}, status=404)
+            def resolve_registered_email(user, identifier):
+                resolved_email = None
+                reference_id = user.reference_id
+                user_type_id = user.user_type_id
 
-                otp = generate_otp()
-                PasswordResetOTP.objects.create(user_login=user, otp=otp)
-                send_otp_email(user_email, otp)
+                if user_type_id == 2:
+                    # Student: email stored in StudentRegistration
+                    student = None
+                    if reference_id:
+                        student = StudentRegistration.objects.filter(id=reference_id).first()
+                    if not student:
+                        student = StudentRegistration.objects.filter(
+                            organization=organization_id,
+                            branch=branch_id,
+                            user_name__iexact=identifier
+                        ).first()
+                    if student:
+                        resolved_email = (student.email or "").strip()
+                else:
+                    # Non-Teaching and Teaching staff via reference_id
+                    if reference_id:
+                        nts = NonTeachingStaffMaster.objects.filter(nts_id=reference_id, is_active=True).first()
+                        if nts:
+                            resolved_email = (nts.email or nts.official_email or "").strip()
 
-                return Response({"message": "OTP sent successfully"}, status=200)
+                        if not resolved_email:
+                            emp = EmployeeMaster.objects.filter(id=reference_id, is_active=True).first()
+                            if emp:
+                                resolved_email = (emp.email or emp.office_email or "").strip()
 
-            if email:
-                try:
-                    user_login_instance = UserLogin.objects.get(organization=organization_id, branch=branch_id,
-                                                                user_name__iexact=email)
-                except UserLogin.DoesNotExist:
-                    return Response({"error": "UserLogin record not found"}, status=404)
+                # Final fallback for admin/self-email usernames
+                if not resolved_email:
+                    resolved_email = (user.user_name or "").strip()
 
-                otp = generate_otp()
-                PasswordResetOTP.objects.create(user_login=user_login_instance, otp=otp)
-                send_otp_email(email, otp)
+                return resolved_email
 
-                return Response({"message": "OTP sent successfully"}, status=200)
-
-            if not email and not username:
+            identifier = username or email
+            if not identifier:
                 return Response({"error": "email or username is required"}, status=400)
+
+            user = UserLogin.objects.filter(
+                organization=organization_id,
+                branch=branch_id,
+                user_name__iexact=identifier
+            ).first()
+
+            # If email is provided directly, also allow lookup by registered staff/student email.
+            if not user and email:
+                staff = EmployeeMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    email__iexact=email,
+                    is_active=True
+                ).first() or EmployeeMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    office_email__iexact=email,
+                    is_active=True
+                ).first()
+
+                if staff:
+                    user = UserLogin.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        reference_id=staff.id,
+                        is_active=True
+                    ).first()
+
+            if not user and email:
+                nts = NonTeachingStaffMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    email__iexact=email,
+                    is_active=True
+                ).first() or NonTeachingStaffMaster.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    official_email__iexact=email,
+                    is_active=True
+                ).first()
+
+                if nts:
+                    user = UserLogin.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        reference_id=nts.nts_id,
+                        is_active=True
+                    ).first()
+
+            if not user and email:
+                student = StudentRegistration.objects.filter(
+                    organization=organization_id,
+                    branch=branch_id,
+                    email__iexact=email,
+                    is_active=True
+                ).first()
+                if student:
+                    user = UserLogin.objects.filter(
+                        organization=organization_id,
+                        branch=branch_id,
+                        reference_id=student.id,
+                        is_active=True
+                    ).first()
+
+            if not user:
+                return Response({"error": "User not found"}, status=404)
+
+            user_email = resolve_registered_email(user, identifier)
+            if not user_email or '@' not in user_email:
+                return Response(
+                    {"error": "No email address is registered for this account. Please contact the administrator."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            otp = generate_otp()
+            PasswordResetOTP.objects.create(user_login=user, otp=otp)
+            send_otp_email(user_email, otp)
+
+            return Response({"message": "OTP sent successfully to registered email"}, status=200)
+        except ValueError as e:
+            error_message = str(e)
+            ExceptionTrack.objects.create(
+                request=str(request),
+                process_name='ForgotPasswordSendOtp',
+                message=error_message,
+            )
+            return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             error_message = str(e)
             ExceptionTrack.objects.create(
