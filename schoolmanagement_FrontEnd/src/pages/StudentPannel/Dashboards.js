@@ -161,6 +161,7 @@ function Dashboard() {
   };
 
   // Quick stats data
+  const dueAmount = Number(feeDue?.pending_fees ?? feeDue?.grand_total_fees ?? 0);
   const quickStats = [
     {
       icon: <FaCalendarCheck size={32} />,
@@ -172,28 +173,29 @@ function Dashboard() {
     },
     {
       icon: <FaMoneyBillWave size={32} />,
+      title: "Fee Status",
       value: feeDueLoading
         ? "..."
         : (feeDue
-          ? ((feeDue.total_assigned_fees > 0 || feeDue.grand_total_fees > 0) // Check if any fees were ever assigned OR if there's a due balance (fallback)
-            ? (feeDue.grand_total_fees > 0
-              ? `₹${feeDue.grand_total_fees}`
+          ? ((feeDue.total_assigned_fees > 0 || dueAmount > 0)
+            ? (dueAmount > 0
+              ? "₹" + dueAmount
               : "Paid")
-            : "N/A") // If explicit total_assigned_fees is 0 (or missing/undefined and grand_total_fees is 0), assume no info
+            : "N/A")
           : "N/A"),
-      color: feeDue?.grand_total_fees > 0
+      color: dueAmount > 0
         ? "#dc3545"
         : (feeDue && (feeDue.total_assigned_fees > 0)
-          ? "#28a745" // Paid (Green)
-          : "#6c757d"), // N/A (Grey)
-      bgColor: feeDue?.grand_total_fees > 0
+          ? "#28a745"
+          : "#6c757d"),
+      bgColor: dueAmount > 0
         ? "#f8d7da"
         : (feeDue && (feeDue.total_assigned_fees > 0)
-          ? "#d4edda" // Paid (Light Green)
-          : "#e2e3e5"), // N/A (Light Grey)
+          ? "#d4edda"
+          : "#e2e3e5"),
       subtitle: feeDueLoading
         ? "Checking..."
-        : (feeDue?.grand_total_fees > 0
+        : (dueAmount > 0
           ? "Due"
           : (feeDue && (feeDue.total_assigned_fees > 0)
             ? "All Clear"
