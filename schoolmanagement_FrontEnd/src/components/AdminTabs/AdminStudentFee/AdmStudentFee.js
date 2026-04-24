@@ -40,6 +40,7 @@ const StudentFee = () => {
   const [periodMonthDisabled, setPeriodMonthDisabled] = React.useState(false);
   // Student basic information
   const [selectedStudent, setSelectedStudent] = useState({
+    id: "",
     name: "",
     barcode: "",
     admissionNo: "",
@@ -65,6 +66,7 @@ const StudentFee = () => {
 
   const handleClear = () => {
     setSelectedStudent({
+      id: "",
       name: "",
       barcode: "",
       admissionNo: "",
@@ -106,6 +108,13 @@ const StudentFee = () => {
     setPeriodMonthDisabled(false);
 
     // PAGE RESET
+    setCurrentPage(1);
+  };
+
+  const resetFeeDisplayState = () => {
+    setFeeStructure([]);
+    setUnpaidElements([]);
+    setAddedFeeElements([]);
     setCurrentPage(1);
   };
 
@@ -174,9 +183,15 @@ const StudentFee = () => {
 
   const handleSelectStudent = async (selectedStudent) => {
     try {
-      // Safely extract student_id
+      const recordId =
+        selectedStudent?.id ||
+        selectedStudent?.fullData?.id ||
+        selectedStudent?.student_course_id ||
+        null;
+
       const studentId =
         selectedStudent?.fullData?.student ||
+        selectedStudent?.fullData?.student_id ||
         selectedStudent?.studentBasicDetails?.student_id ||
         selectedStudent?.student_id ||
         null;
@@ -194,10 +209,29 @@ const StudentFee = () => {
 
       console.log(" Stored student_id in localStorage:", studentId);
 
-      //  Fetch full details from the API
+      resetFeeDisplayState();
+      setStudentId(studentId);
+      setSelectedStudent((prev) => ({
+        ...prev,
+        id: recordId || prev.id || "",
+      }));
+
       await fetchStudentDetails(studentId);
 
-      //  Close modal
+      await handleSearch({
+        studentCourseId: recordId || "",
+        barcode:
+          selectedStudent?.barcode ||
+          selectedStudent?.studentBasicDetails?.barcode ||
+          selectedStudent?.fullData?.barcode ||
+          "",
+        admissionNo:
+          selectedStudent?.college_admission_no ||
+          selectedStudent?.studentBasicDetails?.enrollment_no ||
+          selectedStudent?.fullData?.college_admission_no ||
+          "",
+      });
+
       handleCloseModal();
     } catch (error) {
       console.error(" Error handling selected student:", error);
@@ -238,6 +272,7 @@ const StudentFee = () => {
         setStudentName(student.student_name || "");
 
         setSelectedStudent({
+          id: student.student_course_id || "",
           name: student.student_name || "",
           barcode: student.barcode || "",
           admissionNo: student.college_admission_no || "",
@@ -549,20 +584,27 @@ const StudentFee = () => {
     fetchFeeElements();
   }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = async (searchOverrides = {}) => {
     try {
-      const id = selectedStudent?.id || "";
-      const barcode = selectedStudent?.barcode
-        ? String(selectedStudent.barcode).trim()
+      const selectedStudentId = searchOverrides.studentCourseId ?? selectedStudent?.id ?? "";
+      const selectedBarcode = searchOverrides.barcode ?? selectedStudent?.barcode;
+      const selectedAdmissionNo =
+        searchOverrides.admissionNo ?? selectedStudent?.admissionNo;
+
+      const id = selectedStudentId ? String(selectedStudentId).trim() : "";
+      const barcode = selectedBarcode
+        ? String(selectedBarcode).trim()
         : "";
-      const admissionNo = selectedStudent?.admissionNo
-        ? String(selectedStudent.admissionNo).trim()
+      const admissionNo = selectedAdmissionNo
+        ? String(selectedAdmissionNo).trim()
         : "";
 
       if (!id && !barcode && !admissionNo) {
         console.error("Please enter Student ID, Barcode, or Admission No.");
         return;
       }
+
+      resetFeeDisplayState();
 
       // Build correct query params
       const queryParams = new URLSearchParams();
@@ -588,6 +630,15 @@ const StudentFee = () => {
 
         // Store student id
         setStudentId(studentData.studentId);
+        setSelectedStudent((prev) => ({
+          ...prev,
+          id:
+            studentData.student_course_id ||
+            studentData.id ||
+            searchOverrides.studentCourseId ||
+            prev.id ||
+            "",
+        }));
 
         // Map all student data through your existing function
         await fetchStudentDetails(studentData.studentId);
@@ -634,6 +685,7 @@ const StudentFee = () => {
         setUnpaidElements(unpaid);
       } else {
         console.error("No student found.");
+        setStudentId(null);
         setFeeStructure([]);
         setUnpaidElements([]);
       }
@@ -760,6 +812,7 @@ const StudentFee = () => {
 
       // RESET STATES
       setSelectedStudent({
+        id: "",
         name: "",
         barcode: "",
         admissionNo: "",
