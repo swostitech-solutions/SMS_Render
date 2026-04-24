@@ -135,12 +135,6 @@ const LibrarySettings = () => {
 
       const result = await response.json();
 
-
-     if (result.message === "success") {
-  alert("Library settings updated successfully!");
-  fetchLibrarySettings();
- // Refresh settings after update
-
       if (result.message === "success") {
         alert("Library settings updated successfully!");
         fetchLibrarySettings();

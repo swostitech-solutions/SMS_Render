@@ -1003,12 +1003,8 @@ const AdmBook = ({
       const barcodeMatch =
         !bookAccessionNo || book.barcode.toString().includes(bookAccessionNo);
 
-
       const authorMatch =
         !author || book.author.toLowerCase().includes(author);
-
-      const authorMatch = !author || book.author.toLowerCase().includes(author);
-
 
       const categoryMatch =
         !categoryId || Number(book.categoryId) === Number(categoryId);

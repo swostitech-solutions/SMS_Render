@@ -170,7 +170,6 @@ const IssuePage = () => {
   };
 
   const handleCloseModals = () => {
-    navigate("/admin/book-movements");
   };
   const addNewRow = () => {
     setRows([
@@ -318,26 +317,9 @@ const IssuePage = () => {
             availableCopies: availableCopies,
             totalCopies: totalCopies,
           }
-          : row
-      )
-
-              ...row,
-              bookBarcodeId: id, // Store the actual book barcode ID from database
-              bookName: bookName || "",
-              barcode: barcode || "",
-              author:
-                selectedBook.author ||
-                selectedBook.authorName ||
-                selectedBook.bookAuthor ||
-                selectedBook.author_name ||
-                "",
-              categoryName: categoryName || "",
-              subcategoryName: subcategoryName || "",
-              availableCopies: availableCopies,
-              totalCopies: totalCopies,
-            }
           : row,
-      ),
+      )
+    );
 
     );
     setErrors((prev) => ({ ...prev, books: "" }));

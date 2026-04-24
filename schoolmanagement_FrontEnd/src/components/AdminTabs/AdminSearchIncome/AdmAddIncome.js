@@ -497,25 +497,6 @@ const AdmAttendanceEntry = () => {
     return (
       Object.keys(newErrors).length === 0 &&
       rowErrors.every((r) => Object.keys(r).length === 0)
-
-
-    if (!partyDetails.party_id) newErrors.party = "Party is required";
-    if (!currentDate) newErrors.date = "Date is required";
-    if (!partyReference) newErrors.reference = "Party Reference is required";
-
-    let rowErrors = [];
-    rows.forEach((row, index) => {
-      let rError = {};
-      if (!row.category) rError.category = "Category required";
-      if (!row.amount) rError.amount = "Amount required";
-      rowErrors[index] = rError;
-    });
-
-    setErrors({ ...newErrors, rows: rowErrors });
-
-    return (
-      Object.keys(newErrors).length === 0 &&
-      rowErrors.every((r) => Object.keys(r).length === 0)
     );
   };
   const handleSave = async () => {
