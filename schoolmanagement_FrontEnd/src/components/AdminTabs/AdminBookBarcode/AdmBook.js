@@ -265,7 +265,6 @@
 
 // export default AdmBook;
 
-
 // import React, { useRef, useState } from "react";
 // import "bootstrap/dist/css/bootstrap.min.css";
 // import Select from "react-select"; // Importing React Select
@@ -827,7 +826,13 @@ import useFetchBookCategories from "../../hooks/useFetchBookCategories";
 import useFetchBookSubCategories from "../../hooks/useFetchBookSubCategories";
 import { ApiUrl } from "../../../ApiUrl";
 
-const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable = false }) => {
+const AdmBook = ({
+  show,
+  handleClose,
+  selectedRowId,
+  onSelectBook,
+  onlyAvailable = false,
+}) => {
   const [bookData, setBookData] = useState([]);
   const [fullBookData, setFullBookData] = useState([]); // Original data for filtering
   const { categories } = useFetchBookCategories();
@@ -860,11 +865,22 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
       book.book_author ||
       book.author_name ||
       "",
+
     categoryId: book.categoryId || book.category_id || book.book_category || null,
     categoryName: book.categoryName || book.category || "",
     subcategoryId:
       book.subcategoryId || book.subcategory_id || book.book_sub_category || null,
     subcategoryName: book.subcategoryName || book.subCategory || book.sub_category || "",
+    categoryId:
+      book.categoryId || book.category_id || book.book_category || null,
+    categoryName: book.categoryName || book.category || "",
+    subcategoryId:
+      book.subcategoryId ||
+      book.subcategory_id ||
+      book.book_sub_category ||
+      null,
+    subcategoryName:
+      book.subcategoryName || book.subCategory || book.sub_category || "",
   });
 
   const handlePageClick = ({ selected }) => {
@@ -987,8 +1003,12 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
       const barcodeMatch =
         !bookAccessionNo || book.barcode.toString().includes(bookAccessionNo);
 
+
       const authorMatch =
         !author || book.author.toLowerCase().includes(author);
+
+      const authorMatch = !author || book.author.toLowerCase().includes(author);
+
 
       const categoryMatch =
         !categoryId || Number(book.categoryId) === Number(categoryId);
@@ -1232,9 +1252,3 @@ const AdmBook = ({ show, handleClose, selectedRowId, onSelectBook, onlyAvailable
 };
 
 export default AdmBook;
-
-
-
-
-
-

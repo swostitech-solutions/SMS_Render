@@ -28,16 +28,20 @@ const IssuePage = () => {
     // 1. Selected student's data (most accurate)
     // 2. Selected academic year dropdown
     // 3. Session storage as fallback
-    const academicYearId = selectedStudentData?.academic_year
-      || selectedAcademicYear?.value
-      || sessionStorage.getItem("academicSessionId")
-      || localStorage.getItem("academicSessionId");
+    const academicYearId =
+      selectedStudentData?.academic_year ||
+      selectedAcademicYear?.value ||
+      sessionStorage.getItem("academicSessionId") ||
+      localStorage.getItem("academicSessionId");
     const createdBy = sessionStorage.getItem("userId");
     const issueDateValue = document.getElementById("issue-date")?.value || ""; // Get issue date from input
     const storedStudentId = sessionStorage.getItem("studentId");
 
     if (!token) {
-      setErrors((prev) => ({ ...prev, general: "Unauthorized: Missing access token." }));
+      setErrors((prev) => ({
+        ...prev,
+        general: "Unauthorized: Missing access token.",
+      }));
       return;
     }
 
@@ -49,24 +53,40 @@ const IssuePage = () => {
     // Check if we're issuing to student or staff
     // Note: employeeId might be an array or string, so check properly
     const hasStudent = storedStudentId && storedStudentId !== "";
-    const hasStaff = employeeId && employeeId !== "" && (!Array.isArray(employeeId) || employeeId.length > 0);
+    const hasStaff =
+      employeeId &&
+      employeeId !== "" &&
+      (!Array.isArray(employeeId) || employeeId.length > 0);
     const issuingToStudent = hasStudent;
     const issuingToStaff = hasStaff;
 
     const fieldErrors = {};
-    if (!hasStudent && !hasStaff) fieldErrors.studentTeacher = "Please select either a student or a teacher to issue books.";
+    if (!hasStudent && !hasStaff)
+      fieldErrors.studentTeacher =
+        "Please select either a student or a teacher to issue books.";
     if (!issueDateValue) fieldErrors.issueDate = "Issue Date is required.";
-    if (bookBarcodeIds.length === 0) fieldErrors.books = "Please select at least one book title.";
+    if (bookBarcodeIds.length === 0)
+      fieldErrors.books = "Please select at least one book title.";
     if (Object.keys(fieldErrors).length > 0) {
-      console.log("academicYearId", academicYearId, "createdBy", createdBy, "issueDateValue", issueDateValue, "bookBarcodeIds", bookBarcodeIds);
+      console.log(
+        "academicYearId",
+        academicYearId,
+        "createdBy",
+        createdBy,
+        "issueDateValue",
+        issueDateValue,
+        "bookBarcodeIds",
+        bookBarcodeIds,
+      );
       setErrors((prev) => ({ ...prev, ...fieldErrors }));
       return;
     }
 
     // Frontend validation: Check if any book has 0 available copies
     const booksWithNoAvailability = rows.filter(
-      (row) => row.bookBarcodeId && row.availableCopies === 0
+      (row) => row.bookBarcodeId && row.availableCopies === 0,
     );
+
 
    if (booksWithNoAvailability.length > 0) {
      const bookNames = booksWithNoAvailability
@@ -81,6 +101,27 @@ const IssuePage = () => {
    } if (booksWithNoAvailability.length > 0) {
       const bookNames = booksWithNoAvailability.map((row) => row.bookName).join(", ");
       setErrors((prev) => ({ ...prev, general: `Cannot issue books with no available copies: ${bookNames}` }));
+
+    if (booksWithNoAvailability.length > 0) {
+      const bookNames = booksWithNoAvailability
+        .map((row) => row.bookName)
+        .join(", ");
+
+      const errorMessage = `Cannot issue books with no available copies: ${bookNames}`;
+
+      alert(errorMessage); // 👈 ADD THIS LINE
+
+      return;
+    }
+    if (booksWithNoAvailability.length > 0) {
+      const bookNames = booksWithNoAvailability
+        .map((row) => row.bookName)
+        .join(", ");
+      setErrors((prev) => ({
+        ...prev,
+        general: `Cannot issue books with no available copies: ${bookNames}`,
+      }));
+
       return;
     }
 
@@ -105,7 +146,7 @@ const IssuePage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestBody),
-        }
+        },
       );
 
       const data = await response.json();
@@ -121,7 +162,10 @@ const IssuePage = () => {
       }
     } catch (error) {
       console.error("Error issuing books:", error);
-      setSaveMsg({ type: "danger", text: "An error occurred while issuing books. Please try again." });
+      setSaveMsg({
+        type: "danger",
+        text: "An error occurred while issuing books. Please try again.",
+      });
     }
   };
 
@@ -149,7 +193,7 @@ const IssuePage = () => {
   const handleInputChange = (id, event) => {
     const { name, value } = event.target;
     setRows(
-      rows.map((row) => (row.id === id ? { ...row, [name]: value } : row))
+      rows.map((row) => (row.id === id ? { ...row, [name]: value } : row)),
     );
   };
   const dateRef = useRef(null);
@@ -202,7 +246,7 @@ const IssuePage = () => {
         subcategoryName: "",
         availableCopies: undefined,
         totalCopies: undefined,
-      }))
+      })),
     );
 
     // Reset issue date to today
@@ -234,13 +278,22 @@ const IssuePage = () => {
       subcategoryName: "",
       availableCopies: undefined,
       totalCopies: undefined,
-    }))
+    })),
   );
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [showBookModal, setShowBookModal] = useState(false);
   const handleBookSelection = (selectedBook) => {
-    const { id, bookName, barcode, categoryName, subcategoryName, bookBarcodeStatus, availableCopies, totalCopies, isAvailable } =
-      selectedBook;
+    const {
+      id,
+      bookName,
+      barcode,
+      categoryName,
+      subcategoryName,
+      bookBarcodeStatus,
+      availableCopies,
+      totalCopies,
+      isAvailable,
+    } = selectedBook;
 
     console.log("=== SELECTED BOOK FROM MODAL ===", selectedBook);
 
@@ -249,6 +302,7 @@ const IssuePage = () => {
       prevRows.map((row) =>
         row.id === selectedRowId
           ? {
+
             ...row,
             bookBarcodeId: id, // Store the actual book barcode ID from database
             bookName: bookName || "",
@@ -266,6 +320,25 @@ const IssuePage = () => {
           }
           : row
       )
+
+              ...row,
+              bookBarcodeId: id, // Store the actual book barcode ID from database
+              bookName: bookName || "",
+              barcode: barcode || "",
+              author:
+                selectedBook.author ||
+                selectedBook.authorName ||
+                selectedBook.bookAuthor ||
+                selectedBook.author_name ||
+                "",
+              categoryName: categoryName || "",
+              subcategoryName: subcategoryName || "",
+              availableCopies: availableCopies,
+              totalCopies: totalCopies,
+            }
+          : row,
+      ),
+
     );
     setErrors((prev) => ({ ...prev, books: "" }));
     setShowBookModal(false); // Close modal after selection
@@ -276,8 +349,8 @@ const IssuePage = () => {
     // Update barcode field while typing
     setRows((prevRows) =>
       prevRows.map((row) =>
-        row.id === rowId ? { ...row, barcode: enteredBarcode } : row
-      )
+        row.id === rowId ? { ...row, barcode: enteredBarcode } : row,
+      ),
     );
 
     if (enteredBarcode.trim() === "") return; // Prevent API call if input is empty
@@ -296,7 +369,7 @@ const IssuePage = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       const data = await response.json();
 
@@ -309,50 +382,59 @@ const IssuePage = () => {
 
         if (matchedBook) {
           // Check if book is available (both 'Available' and 'ACTIVE' are valid)
-          const validStatuses = ['Available', 'ACTIVE'];
+          const validStatuses = ["Available", "ACTIVE"];
           console.log("bookBarcodeStatus:", matchedBook.bookBarcodeStatus);
           console.log("validStatuses:", validStatuses);
-          console.log("includes check:", validStatuses.includes(matchedBook.bookBarcodeStatus));
+          console.log(
+            "includes check:",
+            validStatuses.includes(matchedBook.bookBarcodeStatus),
+          );
 
           if (!validStatuses.includes(matchedBook.bookBarcodeStatus)) {
-            setRowErrors((prev) => ({ ...prev, [rowId]: `Book "${matchedBook.bookName}" (Barcode: ${matchedBook.barcode}) is not available for issue.` }));
+            setRowErrors((prev) => ({
+              ...prev,
+              [rowId]: `Book "${matchedBook.bookName}" (Barcode: ${matchedBook.barcode}) is not available for issue.`,
+            }));
             // Clear the row
             setRows((prevRows) =>
               prevRows.map((row) =>
                 row.id === rowId
                   ? {
-                    ...row,
-                    bookBarcodeId: null,
-                    barcode: "",
-                    author: "",
-                    bookName: "",
-                    categoryName: "",
-                    subcategoryName: "",
-                  }
-                  : row
-              )
+                      ...row,
+                      bookBarcodeId: null,
+                      barcode: "",
+                      author: "",
+                      bookName: "",
+                      categoryName: "",
+                      subcategoryName: "",
+                    }
+                  : row,
+              ),
             );
             return;
           }
 
           // Check if available copies exist
           if (matchedBook.availableCopies === 0) {
-            setRowErrors((prev) => ({ ...prev, [rowId]: `No available copies for book "${matchedBook.bookName}". All ${matchedBook.totalCopies} copies are currently issued.` }));
+            setRowErrors((prev) => ({
+              ...prev,
+              [rowId]: `No available copies for book "${matchedBook.bookName}". All ${matchedBook.totalCopies} copies are currently issued.`,
+            }));
             // Clear the row
             setRows((prevRows) =>
               prevRows.map((row) =>
                 row.id === rowId
                   ? {
-                    ...row,
-                    bookBarcodeId: null,
-                    barcode: "",
-                    author: "",
-                    bookName: "",
-                    categoryName: "",
-                    subcategoryName: "",
-                  }
-                  : row
-              )
+                      ...row,
+                      bookBarcodeId: null,
+                      barcode: "",
+                      author: "",
+                      bookName: "",
+                      categoryName: "",
+                      subcategoryName: "",
+                    }
+                  : row,
+              ),
             );
             return;
           }
@@ -361,6 +443,7 @@ const IssuePage = () => {
             prevRows.map((row) =>
               row.id === rowId
                 ? {
+
                   ...row,
                   bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
                   barcode: matchedBook.barcode || enteredBarcode,
@@ -378,35 +461,64 @@ const IssuePage = () => {
                 }
                 : row
             )
+
+                    ...row,
+                    bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
+                    barcode: matchedBook.barcode || enteredBarcode,
+                    author:
+                      matchedBook.author ||
+                      matchedBook.authorName ||
+                      matchedBook.bookAuthor ||
+                      matchedBook.author_name ||
+                      "",
+                    bookName: matchedBook.bookName || "",
+                    categoryName: matchedBook.categoryName || "",
+                    subcategoryName: matchedBook.subcategoryName || "",
+                    availableCopies: matchedBook.availableCopies || 0,
+                    totalCopies: matchedBook.totalCopies || 0,
+                  }
+                : row,
+            ),
+
           );
           setErrors((prev) => ({ ...prev, books: "" }));
-          setRowErrors((prev) => { const n = { ...prev }; delete n[rowId]; return n; });
+          setRowErrors((prev) => {
+            const n = { ...prev };
+            delete n[rowId];
+            return n;
+          });
         }
       } else {
         console.log("=== No book found or API error ===");
         console.log("Message:", data.message);
         console.log("Data length:", data.data ? data.data.length : "No data");
-        setRowErrors((prev) => ({ ...prev, [rowId]: `Book with barcode ${enteredBarcode} not found.` }));
+        setRowErrors((prev) => ({
+          ...prev,
+          [rowId]: `Book with barcode ${enteredBarcode} not found.`,
+        }));
         // Clear the row
         setRows((prevRows) =>
           prevRows.map((row) =>
             row.id === rowId
               ? {
-                ...row,
-                bookBarcodeId: null,
-                barcode: "",
-                author: "",
-                bookName: "",
-                categoryName: "",
-                subcategoryName: "",
-              }
-              : row
-          )
+                  ...row,
+                  bookBarcodeId: null,
+                  barcode: "",
+                  author: "",
+                  bookName: "",
+                  categoryName: "",
+                  subcategoryName: "",
+                }
+              : row,
+          ),
         );
       }
     } catch (error) {
       console.error("Error fetching book data:", error);
-      setRowErrors((prev) => ({ ...prev, [rowId]: "Error fetching book data. Please try again." }));
+      setRowErrors((prev) => ({
+        ...prev,
+        [rowId]: "Error fetching book data. Please try again.",
+      }));
     }
   };
   const handleOpenBookModal = (rowId) => {
@@ -454,8 +566,16 @@ const IssuePage = () => {
     setStudentId(studentId);
     sessionStorage.setItem("studentId", studentId);
     setStudentName(fullName);
-    setAddno(selectedStudent.studentBasicDetails.school_admission_no || selectedStudent.studentBasicDetails.college_admission_no || null);
-    setBarCode(selectedStudent.studentBasicDetails.barcode || selectedStudent.studentBasicDetails.college_admission_no || null);
+    setAddno(
+      selectedStudent.studentBasicDetails.school_admission_no ||
+        selectedStudent.studentBasicDetails.college_admission_no ||
+        null,
+    );
+    setBarCode(
+      selectedStudent.studentBasicDetails.barcode ||
+        selectedStudent.studentBasicDetails.college_admission_no ||
+        null,
+    );
 
     // Store student data to populate dropdowns
     setSelectedStudentData(selectedStudent.studentBasicDetails);
@@ -471,8 +591,13 @@ const IssuePage = () => {
 
     // Set Session (Batch)
     if (studentDetails.batch && sessions.length > 0) {
-      const matchedSession = sessions.find(s => s.value === studentDetails.batch);
-      if (matchedSession && (!selectedSession || selectedSession.value !== matchedSession.value)) {
+      const matchedSession = sessions.find(
+        (s) => s.value === studentDetails.batch,
+      );
+      if (
+        matchedSession &&
+        (!selectedSession || selectedSession.value !== matchedSession.value)
+      ) {
         setSelectedSession(matchedSession);
       }
     }
@@ -485,8 +610,13 @@ const IssuePage = () => {
     if (!selectedStudentData || !selectedSession) return;
 
     if (selectedStudentData.course && courses.length > 0) {
-      const matchedCourse = courses.find(c => c.value === selectedStudentData.course);
-      if (matchedCourse && (!selectedCourse || selectedCourse.value !== matchedCourse.value)) {
+      const matchedCourse = courses.find(
+        (c) => c.value === selectedStudentData.course,
+      );
+      if (
+        matchedCourse &&
+        (!selectedCourse || selectedCourse.value !== matchedCourse.value)
+      ) {
         setSelectedCourse(matchedCourse);
       }
     }
@@ -497,8 +627,14 @@ const IssuePage = () => {
     if (!selectedStudentData || !selectedCourse) return;
 
     if (selectedStudentData.department && departments.length > 0) {
-      const matchedDepartment = departments.find(d => d.value === selectedStudentData.department);
-      if (matchedDepartment && (!selectedDepartment || selectedDepartment.value !== matchedDepartment.value)) {
+      const matchedDepartment = departments.find(
+        (d) => d.value === selectedStudentData.department,
+      );
+      if (
+        matchedDepartment &&
+        (!selectedDepartment ||
+          selectedDepartment.value !== matchedDepartment.value)
+      ) {
         setSelectedDepartment(matchedDepartment);
       }
     }
@@ -509,8 +645,14 @@ const IssuePage = () => {
     if (!selectedStudentData || !selectedDepartment) return;
 
     if (selectedStudentData.academic_year && academicYears.length > 0) {
-      const matchedAcademicYear = academicYears.find(ay => ay.value === selectedStudentData.academic_year);
-      if (matchedAcademicYear && (!selectedAcademicYear || selectedAcademicYear.value !== matchedAcademicYear.value)) {
+      const matchedAcademicYear = academicYears.find(
+        (ay) => ay.value === selectedStudentData.academic_year,
+      );
+      if (
+        matchedAcademicYear &&
+        (!selectedAcademicYear ||
+          selectedAcademicYear.value !== matchedAcademicYear.value)
+      ) {
         setSelectedAcademicYear(matchedAcademicYear);
       }
     }
@@ -521,8 +663,13 @@ const IssuePage = () => {
     if (!selectedStudentData || !selectedAcademicYear) return;
 
     if (selectedStudentData.semester && semesters.length > 0) {
-      const matchedSemester = semesters.find(s => s.value === selectedStudentData.semester);
-      if (matchedSemester && (!selectedSemester || selectedSemester.value !== matchedSemester.value)) {
+      const matchedSemester = semesters.find(
+        (s) => s.value === selectedStudentData.semester,
+      );
+      if (
+        matchedSemester &&
+        (!selectedSemester || selectedSemester.value !== matchedSemester.value)
+      ) {
         setSelectedSemester(matchedSemester);
       }
     }
@@ -533,8 +680,13 @@ const IssuePage = () => {
     if (!selectedStudentData || !selectedSemester) return;
 
     if (selectedStudentData.section && sections.length > 0) {
-      const matchedSection = sections.find(s => s.value === selectedStudentData.section);
-      if (matchedSection && (!selectedSection || selectedSection.value !== matchedSection.value)) {
+      const matchedSection = sections.find(
+        (s) => s.value === selectedStudentData.section,
+      );
+      if (
+        matchedSection &&
+        (!selectedSection || selectedSection.value !== matchedSection.value)
+      ) {
         setSelectedSection(matchedSection);
       }
     }
@@ -554,7 +706,9 @@ const IssuePage = () => {
         const organization_id = sessionStorage.getItem("organization_id");
 
         if (!branch_id || !organization_id) {
-          console.error("Branch ID or Organization ID not found in session storage.");
+          console.error(
+            "Branch ID or Organization ID not found in session storage.",
+          );
           return;
         }
 
@@ -566,7 +720,7 @@ const IssuePage = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -578,7 +732,8 @@ const IssuePage = () => {
         if (Array.isArray(data)) {
           const sessionOptions = data.map((item) => ({
             value: item.id,
-            label: item.batch_description || item.batch_code || `Batch ${item.id}`,
+            label:
+              item.batch_description || item.batch_code || `Batch ${item.id}`,
           }));
           setSessions(sessionOptions);
         } else {
@@ -619,7 +774,7 @@ const IssuePage = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -673,7 +828,7 @@ const IssuePage = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -685,13 +840,21 @@ const IssuePage = () => {
         if (Array.isArray(result)) {
           const departmentOptions = result.map((item) => ({
             value: item.id || item.department_id,
-            label: item.department_name || item.description || item.department_description || "Unnamed Department",
+            label:
+              item.department_name ||
+              item.description ||
+              item.department_description ||
+              "Unnamed Department",
           }));
           setDepartments(departmentOptions);
         } else if (result.message === "Success" && Array.isArray(result.data)) {
           const departmentOptions = result.data.map((item) => ({
             value: item.id || item.department_id,
-            label: item.department_name || item.description || item.department_description || "Unnamed Department",
+            label:
+              item.department_name ||
+              item.description ||
+              item.department_description ||
+              "Unnamed Department",
           }));
           setDepartments(departmentOptions);
         } else {
@@ -709,7 +872,11 @@ const IssuePage = () => {
   // Fetch Academic Years when Session, Course, and Department are selected
   useEffect(() => {
     const fetchAcademicYears = async () => {
-      if (!selectedSession?.value || !selectedCourse?.value || !selectedDepartment?.value) {
+      if (
+        !selectedSession?.value ||
+        !selectedCourse?.value ||
+        !selectedDepartment?.value
+      ) {
         setAcademicYears([]);
         return;
       }
@@ -746,13 +913,19 @@ const IssuePage = () => {
         if (Array.isArray(result)) {
           const options = result.map((item) => ({
             value: item.id || item.academic_year_id,
-            label: item.academic_year_description || item.academic_year_code || "Unnamed Year",
+            label:
+              item.academic_year_description ||
+              item.academic_year_code ||
+              "Unnamed Year",
           }));
           setAcademicYears(options);
         } else if (result.message === "Success" && Array.isArray(result.data)) {
           const options = result.data.map((item) => ({
             value: item.id || item.academic_year_id,
-            label: item.academic_year_description || item.academic_year_code || "Unnamed Year",
+            label:
+              item.academic_year_description ||
+              item.academic_year_code ||
+              "Unnamed Year",
           }));
           setAcademicYears(options);
         } else {
@@ -770,7 +943,12 @@ const IssuePage = () => {
   // Fetch Semesters when Session, Course, Department, and Academic Year are selected
   useEffect(() => {
     const fetchSemesters = async () => {
-      if (!selectedSession?.value || !selectedCourse?.value || !selectedDepartment?.value || !selectedAcademicYear?.value) {
+      if (
+        !selectedSession?.value ||
+        !selectedCourse?.value ||
+        !selectedDepartment?.value ||
+        !selectedAcademicYear?.value
+      ) {
         setSemesters([]);
         return;
       }
@@ -796,7 +974,7 @@ const IssuePage = () => {
             result.map((item) => ({
               value: item.id,
               label: item.semester_description || item.semester_code,
-            }))
+            })),
           );
         } else {
           setSemesters([]);
@@ -808,12 +986,23 @@ const IssuePage = () => {
     };
 
     fetchSemesters();
-  }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear]);
+  }, [
+    selectedSession,
+    selectedCourse,
+    selectedDepartment,
+    selectedAcademicYear,
+  ]);
 
   // Fetch Sections when all dependencies are selected
   useEffect(() => {
     const fetchSections = async () => {
-      if (!selectedSession?.value || !selectedCourse?.value || !selectedDepartment?.value || !selectedAcademicYear?.value || !selectedSemester?.value) {
+      if (
+        !selectedSession?.value ||
+        !selectedCourse?.value ||
+        !selectedDepartment?.value ||
+        !selectedAcademicYear?.value ||
+        !selectedSemester?.value
+      ) {
         setSections([]);
         return;
       }
@@ -852,13 +1041,19 @@ const IssuePage = () => {
         if (Array.isArray(result)) {
           const sectionOptions = result.map((item) => ({
             value: item.id,
-            label: item.section_name || item.section_description || "Unnamed Section",
+            label:
+              item.section_name ||
+              item.section_description ||
+              "Unnamed Section",
           }));
           setSections(sectionOptions);
         } else if (result.message === "Success" && Array.isArray(result.data)) {
           const sectionOptions = result.data.map((item) => ({
             value: item.id,
-            label: item.section_name || item.section_description || "Unnamed Section",
+            label:
+              item.section_name ||
+              item.section_description ||
+              "Unnamed Section",
           }));
           setSections(sectionOptions);
         } else {
@@ -871,7 +1066,13 @@ const IssuePage = () => {
     };
 
     fetchSections();
-  }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear, selectedSemester]);
+  }, [
+    selectedSession,
+    selectedCourse,
+    selectedDepartment,
+    selectedAcademicYear,
+    selectedSemester,
+  ]);
 
   return (
     <div className="container-fluid ">
@@ -927,7 +1128,10 @@ const IssuePage = () => {
                 <small className="text-danger mx-2">{errors.general}</small>
               )}
               {saveMsg.text && (
-                <div className={`alert alert-${saveMsg.type} mx-0 mt-2`} role="alert">
+                <div
+                  className={`alert alert-${saveMsg.type} mx-0 mt-2`}
+                  role="alert"
+                >
                   {saveMsg.text}
                 </div>
               )}
@@ -947,7 +1151,10 @@ const IssuePage = () => {
                             value={studentName}
                             onChange={(e) => {
                               setStudentName(e.target.value);
-                              setErrors((prev) => ({ ...prev, studentTeacher: "" }));
+                              setErrors((prev) => ({
+                                ...prev,
+                                studentTeacher: "",
+                              }));
                             }}
                           />
                           <button
@@ -960,7 +1167,9 @@ const IssuePage = () => {
                           </button>
                         </div>
                         {errors.studentTeacher && (
-                          <small className="text-danger">{errors.studentTeacher}</small>
+                          <small className="text-danger">
+                            {errors.studentTeacher}
+                          </small>
                         )}
                       </div>
                       <SelectStudentModal
@@ -1145,10 +1354,14 @@ const IssuePage = () => {
                           id="issue-date"
                           className="form-control detail"
                           ref={dateRef}
-                          onChange={() => setErrors((prev) => ({ ...prev, issueDate: "" }))}
+                          onChange={() =>
+                            setErrors((prev) => ({ ...prev, issueDate: "" }))
+                          }
                         />
                         {errors.issueDate && (
-                          <small className="text-danger">{errors.issueDate}</small>
+                          <small className="text-danger">
+                            {errors.issueDate}
+                          </small>
                         )}
                       </div>
                     </div>
@@ -1157,7 +1370,9 @@ const IssuePage = () => {
               </div>
 
               {errors.books && (
-                <small className="text-danger mx-2 mt-1 d-block">{errors.books}</small>
+                <small className="text-danger mx-2 mt-1 d-block">
+                  {errors.books}
+                </small>
               )}
               <div className="col-12">
                 <div className="table-responsive">
@@ -1215,7 +1430,9 @@ const IssuePage = () => {
                               onChange={(e) => handleBarcodeChange(e, row.id)}
                             />
                             {rowErrors[row.id] && (
-                              <small className="text-danger">{rowErrors[row.id]}</small>
+                              <small className="text-danger">
+                                {rowErrors[row.id]}
+                              </small>
                             )}
                           </td>
                           <td>
@@ -1246,8 +1463,16 @@ const IssuePage = () => {
                             />
                           </td>
                           <td>
-                            {row.availableCopies !== undefined && row.totalCopies !== undefined && row.bookBarcodeId ? (
-                              <span className={row.availableCopies > 0 ? "text-success fw-bold" : "text-danger fw-bold"}>
+                            {row.availableCopies !== undefined &&
+                            row.totalCopies !== undefined &&
+                            row.bookBarcodeId ? (
+                              <span
+                                className={
+                                  row.availableCopies > 0
+                                    ? "text-success fw-bold"
+                                    : "text-danger fw-bold"
+                                }
+                              >
                                 {row.availableCopies} / {row.totalCopies}
                               </span>
                             ) : (
@@ -1262,7 +1487,7 @@ const IssuePage = () => {
                               Delete
                             </Button>
                           </td>
-                          <td>{ }</td>
+                          <td>{}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Button, Table } from "react-bootstrap";
 import SelectSearchParty from "../AdminSearchExpense/SelectSearchParty";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -10,8 +10,6 @@ import "jspdf-autotable";
 import api from "../../../utils/api";
 import useBanks from "../../hooks/useBanks";
 import useBankAccounts from "../../hooks/useBankAccounts";
-
-
 
 const AdmAttendanceEntry = () => {
   const [showModal, setShowModal] = useState(false);
@@ -21,10 +19,13 @@ const AdmAttendanceEntry = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-
   // Custom hooks for fetching data
   const { banks, loading: loadingBanks, error: errorBanks } = useBanks();
-  const { accounts, loading: loadingAccounts, error: errorAccounts } = useBankAccounts(selectedBank?.value);
+  const {
+    accounts,
+    loading: loadingAccounts,
+    error: errorAccounts,
+  } = useBankAccounts(selectedBank?.value);
 
   // Transform banks to React Select format
   const bankOptions = banks.map((bank) => ({
@@ -35,7 +36,9 @@ const AdmAttendanceEntry = () => {
   // Transform accounts to React Select format
   const accountOptions = accounts.map((account) => ({
     value: account.id,
-    label: account.bank_account ? account.bank_account.toString() : "Unknown Account",
+    label: account.bank_account
+      ? account.bank_account.toString()
+      : "Unknown Account",
   }));
 
   const [searchResults, setSearchResults] = useState([]);
@@ -52,15 +55,10 @@ const AdmAttendanceEntry = () => {
     email_id: "",
   });
 
-
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [partyReference, setPartyReference] = useState("");
   const [incomeDetails, setIncomeDetails] = useState(null);
-
-
-
-
 
   const dateRef = useRef(null);
   const fromClassRef = useRef(null);
@@ -69,10 +67,11 @@ const AdmAttendanceEntry = () => {
   const barcodeRef = useRef(null);
   const smsToRef = useRef(null);
 
-
   const handleEdit = async (incomeId) => {
     try {
-      const response = await api.get(`EXPENSE/INCOME/IncomeDetailsRetrieve/${incomeId}/`);
+      const response = await api.get(
+        `EXPENSE/INCOME/IncomeDetailsRetrieve/${incomeId}/`,
+      );
       const result = response.data;
 
       if (result.message === "success") {
@@ -86,37 +85,14 @@ const AdmAttendanceEntry = () => {
     }
   };
 
-const handleView = async (incomeId) => {
-  try {
-    const response = await api.get(
-      `EXPENSE/INCOME/IncomeDetailsRetrieve/${incomeId}/`,
-    );
-
-    const result = response.data;
-
-    if (result.message === "success") {
-      const income = result.data;
-
-      // ✅ Generate PDF
-      const doc = new jsPDF();
-
-      doc.setFontSize(18);
-      doc.text("Income Receipt", 105, 20, null, null, "center");
-
-      doc.setFontSize(12);
-      doc.text(`Income No: ${income.income_no || ""}`, 15, 40);
-      doc.text(`Date: ${income.income_date || ""}`, 140, 40);
-      doc.text(
-        `Party Name: ${income.party_name || income.partyName || ""}`,
-        15,
-        50,
+  const handleView = async (incomeId) => {
+    try {
+      const response = await api.get(
+        `EXPENSE/INCOME/IncomeDetailsRetrieve/${incomeId}/`,
       );
 
-      const tableColumn = ["Sr.No", "Category", "Remarks", "Amount"];
-      const tableRows = [];
+      const result = response.data;
 
-      const detailsData =
-        income.IncomeDetailsdata || income.incomeDetaildata || [];
 
       detailsData.forEach((item, index) => {
      tableRows.push([
@@ -127,28 +103,60 @@ const handleView = async (incomeId) => {
 ]);
       });
 
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 60,
-        theme: "grid",
-      });
+      if (result.message === "success") {
+        const income = result.data;
 
-      // ✅ Convert to blob
-      const pdfBlob = doc.output("blob");
+        // ✅ Generate PDF
+        const doc = new jsPDF();
 
-      // ✅ Create URL
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+        doc.setFontSize(18);
+        doc.text("Income Receipt", 105, 20, null, null, "center");
 
-      // ✅ OPEN IN NEW TAB
-      window.open(pdfUrl, "_blank");
+        doc.setFontSize(12);
+        doc.text(`Income No: ${income.income_no || ""}`, 15, 40);
+        doc.text(`Date: ${income.income_date || ""}`, 140, 40);
+        doc.text(
+          `Party Name: ${income.party_name || income.partyName || ""}`,
+          15,
+          50,
+        );
+
+        const tableColumn = ["Sr.No", "Category", "Remarks", "Amount"];
+        const tableRows = [];
+
+        const detailsData =
+          income.IncomeDetailsdata || income.incomeDetaildata || [];
+
+        detailsData.forEach((item, index) => {
+          tableRows.push([
+            index + 1,
+            item.Income_category_id || "", // ✅ FIXED
+            item.remarks || "",
+            Number(item.amount || 0).toFixed(2),
+          ]);
+        });
+
+
+        doc.autoTable({
+          head: [tableColumn],
+          body: tableRows,
+          startY: 60,
+          theme: "grid",
+        });
+
+        // ✅ Convert to blob
+        const pdfBlob = doc.output("blob");
+
+        // ✅ Create URL
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        // ✅ OPEN IN NEW TAB
+        window.open(pdfUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error fetching income details:", error);
     }
-  } catch (error) {
-    console.error("Error fetching income details:", error);
-  }
-};
-
-
+  };
 
   // Helper to safely get total amount
   const getSafeTotalAmount = (income) => {
@@ -163,20 +171,21 @@ const handleView = async (incomeId) => {
     return 0;
   };
 
- 
-
   useEffect(() => {
     const fetchPaymentMethods = async () => {
       try {
         const orgId = localStorage.getItem("orgId");
         const branchId = localStorage.getItem("branchId");
 
-        const response = await api.get('PaymentMethod/GetAllPaymentMethodList/', {
-          params: {
-            organization_id: orgId,
-            branch_id: branchId
-          }
-        });
+        const response = await api.get(
+          "PaymentMethod/GetAllPaymentMethodList/",
+          {
+            params: {
+              organization_id: orgId,
+              branch_id: branchId,
+            },
+          },
+        );
         const data = response.data;
         if (data && data.data) {
           // Transform data to match React Select format
@@ -229,7 +238,9 @@ const handleView = async (incomeId) => {
     if (partyReference) params.party_reference = partyReference;
 
     try {
-      const response = await api.get('EXPENSE/INCOME/IncomeSearchList', { params });
+      const response = await api.get("EXPENSE/INCOME/IncomeSearchList", {
+        params,
+      });
       const data = response.data;
 
       if (data.message === "success") {
@@ -244,8 +255,6 @@ const handleView = async (incomeId) => {
     }
   };
 
-
-
   const handleOpenModal = () => {
     setShowModal(true);
   };
@@ -257,7 +266,6 @@ const handleView = async (incomeId) => {
   const handleNewClick = () => {
     navigate("/admin/addincome");
   };
-
 
   const handleSelectedParty = (selectedParty) => {
     console.log("Selected Party:", selectedParty);
@@ -276,7 +284,6 @@ const handleView = async (incomeId) => {
 
     handleCloseModal();
   };
-
 
   const handleExportToExcel = () => {
     if (searchResults.length === 0) {
@@ -327,7 +334,6 @@ const handleView = async (incomeId) => {
     XLSX.writeFile(wb, "Income_Data.xlsx");
   };
 
-
   const handleExportToPDF = () => {
     if (searchResults.length === 0) {
       alert("No data to export!");
@@ -349,14 +355,11 @@ const handleView = async (incomeId) => {
       "Plot No: 154/1683/2194 & 177/2195, Kantabada, Bhubaneswar-752054",
       105,
       27,
-      { align: "center" }
+      { align: "center" },
     );
-    doc.text(
-      "Ph.: +91 7735504783, Email: info@sparshnursing.edu.in",
-      105,
-      33,
-      { align: "center" }
-    );
+    doc.text("Ph.: +91 7735504783, Email: info@sparshnursing.edu.in", 105, 33, {
+      align: "center",
+    });
 
     const headers = [
       [
@@ -422,7 +425,6 @@ const handleView = async (incomeId) => {
     setPartyReference("");
     setSearchResults([]); // Clear table data
   };
-
 
   return (
     <div className="container-fluid">
@@ -578,7 +580,9 @@ const handleView = async (incomeId) => {
                           onChange={(selectedOption) => {
                             setSelectedPayment(selectedOption);
                             // Clear bank and account when payment method changes
-                            if (selectedOption?.label?.toUpperCase() !== "BANK") {
+                            if (
+                              selectedOption?.label?.toUpperCase() !== "BANK"
+                            ) {
                               setSelectedBank(null);
                               setSelectedAccount(null);
                             }
@@ -609,7 +613,11 @@ const handleView = async (incomeId) => {
                                     ? "No banks available"
                                     : "Select bank"
                           }
-                          isDisabled={!selectedPayment || selectedPayment?.label?.toUpperCase() !== "BANK" || loadingBanks} // Enable only if "BANK" is selected (case-insensitive)
+                          isDisabled={
+                            !selectedPayment ||
+                            selectedPayment?.label?.toUpperCase() !== "BANK" ||
+                            loadingBanks
+                          } // Enable only if "BANK" is selected (case-insensitive)
                           noOptionsMessage={() => "No banks available"}
                         />
                       </div>
@@ -740,8 +748,7 @@ const handleView = async (incomeId) => {
           </div>
         </div>
       </div>
-    
-    </div >
+    </div>
   );
 };
 

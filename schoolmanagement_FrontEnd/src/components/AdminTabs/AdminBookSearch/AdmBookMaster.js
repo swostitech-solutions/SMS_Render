@@ -1,7 +1,3 @@
-
-
-
-
 // import React, { useState, useEffect } from "react";
 // import { Row, Col, Form, Image, Table, Button } from "react-bootstrap";
 // import { useNavigate } from "react-router-dom";
@@ -164,7 +160,6 @@
 //     }
 //   };
 
-
 //   const handleFileChange = (e, setFile) => {
 //     const file = e.target.files[0];
 //     if (file) {
@@ -297,8 +292,6 @@
 //   //   );
 //   //   setRows(updatedRows);
 
-
-
 //   //   // Call the updateAccessionRows function to update the accession rows based on the new number of copies
 //   //   updateAccessionRows(updatedRows, isChecked ? nextBarcode : null);
 //   // };
@@ -325,7 +318,6 @@
 //   // Call the updateAccessionRows function to update the accession rows based on the new number of copies
 //   updateAccessionRows(updatedRows, isChecked ? nextBarcode : null);
 // };
-
 
 //   const updateAccessionRows = (rows, startingBarcode) => {
 //     // Calculate the total number of copies
@@ -444,7 +436,6 @@
 
 //     fetchLocations();
 //   }, []);
-
 
 // // const handleSave = async () => {
 // //   const orgId = localStorage.getItem("orgId");
@@ -919,8 +910,6 @@
 //     alert("An error occurred while saving the book.");
 //   }
 // };
-
-
 
 //   const handleClose = () => {
 //     navigate("/admin/book-search");
@@ -4574,6 +4563,8 @@
 
 
 
+
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Image, Table, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -4598,7 +4589,6 @@ const BookForm = () => {
     label: "ACTIVE",
   });
 
-
   const [bookCategory, setBookCategory] = useState("");
   const [bookSubCategory, setBookSubCategory] = useState("");
   const [locations, setLocations] = useState([]);
@@ -4616,7 +4606,6 @@ const BookForm = () => {
       cost: "",
       concession: "",
     },
-
   ];
   const [rows, setRows] = useState(initialRows);
   const [accessionRows, setAccessionRows] = useState([]);
@@ -4634,7 +4623,6 @@ const BookForm = () => {
   const [saveMsg, setSaveMsg] = useState({ type: "", text: "" });
   const [purchaseRowErrors, setPurchaseRowErrors] = useState({});
   const [accessionRowErrors, setAccessionRowErrors] = useState({});
-
 
   const [bookDetails, setBookDetails] = useState({
     book_code: "",
@@ -4657,9 +4645,7 @@ const BookForm = () => {
   //   setBookStatus(event.target.value); // Update state based on selection
   // };
 
-
   const bookStatusOptions = [
-
     { value: "ACTIVE", label: "ACTIVE" },
     { value: "INACTIVE", label: "INACTIVE" },
   ];
@@ -4713,8 +4699,73 @@ const BookForm = () => {
     setTypeofBooks("");
   };
 
+  const handleBookStatusChange = (selectedOption) => {
+    setBookStatus(selectedOption);
+  };
 
+  const getBackendOrigin = useCallback(() => {
+    const apiBase = ApiUrl.apiurl || "";
+    if (apiBase.startsWith("http://") || apiBase.startsWith("https://")) {
+      try {
+        const parsed = new URL(apiBase);
+        return parsed.origin;
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  }, []);
 
+  const resolveCoverPreview = useCallback(
+    (coverValue) => {
+      if (!coverValue) return null;
+
+      if (typeof coverValue === "string") {
+        if (coverValue.startsWith("data:") || coverValue.startsWith("http")) {
+          return coverValue;
+        }
+
+        const normalized = coverValue.replace(/\\/g, "/");
+        const backendOrigin = getBackendOrigin();
+
+        if (normalized.startsWith("/SWOSTITECH_CMS/")) {
+          return backendOrigin ? `${backendOrigin}${normalized}` : normalized;
+        }
+
+        const mediaMarker = "/SWOSTITECH_CMS/";
+        if (normalized.includes(mediaMarker)) {
+          const mediaPath = normalized.substring(
+            normalized.indexOf(mediaMarker),
+          );
+          return backendOrigin ? `${backendOrigin}${mediaPath}` : mediaPath;
+        }
+
+        if (normalized.includes("/Book_cover/")) {
+          const relative = normalized.split("/Book_cover/")[1]
+            ? `Book_cover/${normalized.split("/Book_cover/")[1]}`
+            : "";
+          const mediaPath = `/SWOSTITECH_CMS/${relative}`;
+          return backendOrigin ? `${backendOrigin}${mediaPath}` : mediaPath;
+        }
+
+        return normalized;
+      }
+
+      if (typeof coverValue === "object") {
+        if (coverValue.binary_data) {
+          const mimeType = coverValue.type || "image/png";
+          return `data:${mimeType};base64,${coverValue.binary_data}`;
+        }
+
+        if (coverValue.path) {
+          return resolveCoverPreview(coverValue.path);
+        }
+      }
+
+      return null;
+    },
+    [getBackendOrigin],
+  );
 
 
   const handleBookStatusChange = (selectedOption) => {
@@ -4780,6 +4831,7 @@ const BookForm = () => {
     return null;
   }, [getBackendOrigin]);
 
+
   useEffect(() => {
     if (bookDetails?.total_no_of_copies > 0) {
       setErrors((prev) => ({ ...prev, total_no_of_copies: "" })); // Clear error
@@ -4797,7 +4849,7 @@ const BookForm = () => {
       if (bookData?.purchesDetails?.length > 0) {
         totalCopies = bookData.purchesDetails.reduce(
           (sum, purchase) => sum + (parseInt(purchase.no_of_copies) || 0),
-          0
+          0,
         );
       }
 
@@ -4882,8 +4934,6 @@ const BookForm = () => {
   //   }
   // };
 
-
-
   const handleFileUpload = (event, setFile) => {
     const file = event.target.files[0];
     if (file) {
@@ -4901,8 +4951,6 @@ const BookForm = () => {
       reader.readAsDataURL(file); // just for preview
     }
   };
-
-
 
   const categoryOptions = categories.map((category) => ({
     value: category.id,
@@ -4937,7 +4985,7 @@ const BookForm = () => {
     if (newCheckedState) {
       try {
         const response = await fetch(
-          `${ApiUrl.apiurl}LIBRARYBOOK/NextbarcodeNo/`
+          `${ApiUrl.apiurl}LIBRARYBOOK/NextbarcodeNo/`,
         );
         const data = await response.json();
         if (data.message === "success") {
@@ -5009,14 +5057,14 @@ const BookForm = () => {
   const handleNoOfCopiesChange = (id, field, value) => {
     // Update the rows data
     const updatedRows = rows.map((row) =>
-      row.id === id ? { ...row, [field]: value } : row
+      row.id === id ? { ...row, [field]: value } : row,
     );
     setRows(updatedRows);
 
     // Calculate the total number of copies based on all row values
     const totalCopies = updatedRows.reduce(
       (sum, row) => sum + (parseInt(row.noOfCopies) || 0),
-      0
+      0,
     );
 
     // Update bookDetails with the new total copies count
@@ -5037,7 +5085,7 @@ const BookForm = () => {
     // Calculate the total number of copies
     const totalCopies = rows.reduce(
       (sum, row) => sum + (parseInt(row.noOfCopies) || 0),
-      0
+      0,
     );
 
     // Ensure the number of accession rows matches the total number of copies
@@ -5057,8 +5105,13 @@ const BookForm = () => {
           // If auto-generation is ON
           // Only overwrite if the barcode is empty/null/undefined
           // This preserves existing book barcodes
-          if (!existingRow.barcode || String(existingRow.barcode).trim() === "") {
-            barcodeToUse = (parseInt(startingBarcode) + generatedCount).toString();
+          if (
+            !existingRow.barcode ||
+            String(existingRow.barcode).trim() === ""
+          ) {
+            barcodeToUse = (
+              parseInt(startingBarcode) + generatedCount
+            ).toString();
             generatedCount++;
           }
         }
@@ -5078,7 +5131,9 @@ const BookForm = () => {
         let barcodeToUse = "";
 
         if (startingBarcode) {
-          barcodeToUse = (parseInt(startingBarcode) + generatedCount).toString();
+          barcodeToUse = (
+            parseInt(startingBarcode) + generatedCount
+          ).toString();
           generatedCount++;
         }
 
@@ -5105,19 +5160,32 @@ const BookForm = () => {
         return;
       }
 
-      console.log("🔵 Fetching branches for orgId:", orgId, "branchId:", branchId);
+      console.log(
+        "🔵 Fetching branches for orgId:",
+        orgId,
+        "branchId:",
+        branchId,
+      );
 
       try {
         const apiUrl = `${ApiUrl.apiurl}LIBRARYBRANCH/GetLibraryBranchList/${orgId}/${branchId}/`;
         console.log("📡 Branch API URL:", apiUrl);
 
         const response = await fetch(apiUrl);
-        console.log("📥 Branch API Response Status:", response.status, response.statusText);
+        console.log(
+          "📥 Branch API Response Status:",
+          response.status,
+          response.statusText,
+        );
 
         const result = await response.json();
         console.log("Library Branch API Response:", result);
 
-        if (response.ok && result.message === "success" && Array.isArray(result.data)) {
+        if (
+          response.ok &&
+          result.message === "success" &&
+          Array.isArray(result.data)
+        ) {
           const branchOptions = result.data.map((branch) => ({
             value: branch.library_branch_id,
             label: branch.library_branch_name,
@@ -5125,7 +5193,10 @@ const BookForm = () => {
           console.log("Mapped Branch Options:", branchOptions);
           setBranches(branchOptions);
         } else {
-          console.warn("⚠️ Branch API returned non-success or invalid data:", result);
+          console.warn(
+            "⚠️ Branch API returned non-success or invalid data:",
+            result,
+          );
           // Fallback to default branches if API fails
           const defaultBranches = [
             { value: 1, label: "Branch 1" },
@@ -5167,11 +5238,15 @@ const BookForm = () => {
 
       try {
         const response = await fetch(
-          `${ApiUrl.apiurl}BOOK_LOCATION/GetALLBookLocationList/${orgId}/${branchId}/`
+          `${ApiUrl.apiurl}BOOK_LOCATION/GetALLBookLocationList/${orgId}/${branchId}/`,
         );
         const result = await response.json();
 
-        if (response.ok && result.message === "success" && Array.isArray(result.data)) {
+        if (
+          response.ok &&
+          result.message === "success" &&
+          Array.isArray(result.data)
+        ) {
           const locationOptions = result.data.map((location) => ({
             value: location.id,
             label: location.booklocation,
@@ -5231,9 +5306,6 @@ const BookForm = () => {
     setErrors(newErrors);
     return isValid;
   };
-
-
-
 
   // const handleSave = async () => {
   //   const orgId = parseInt(localStorage.getItem("orgId"));
@@ -5408,7 +5480,6 @@ const BookForm = () => {
   //   }
   // };
 
-
   const handleSave = async () => {
     const orgId = parseInt(localStorage.getItem("orgId"));
     const branchId = parseInt(localStorage.getItem("branchId"));
@@ -5418,9 +5489,11 @@ const BookForm = () => {
     const fieldErrors = {};
     if (!bookDetails?.type) fieldErrors.type = "Book/Journal is required.";
     if (!bookCategory) fieldErrors.bookCategory = "Category is required.";
-    if (!bookSubCategory) fieldErrors.bookSubCategory = "Sub Category is required.";
+    if (!bookSubCategory)
+      fieldErrors.bookSubCategory = "Sub Category is required.";
     // if (!bookDetails?.book_code) fieldErrors.book_code = "Book Code is required.";
-    if (!bookDetails?.book_name) fieldErrors.book_name = "Book Title is required.";
+    if (!bookDetails?.book_name)
+      fieldErrors.book_name = "Book Title is required.";
     const isUpdate = !!bookDetails.id;
 
     // Per-row purchase validation
@@ -5430,7 +5503,8 @@ const BookForm = () => {
       if (!row.dateOfPurchase) rowErr.dateOfPurchase = "Required";
       if (!row.purchasedFrom?.trim()) rowErr.purchasedFrom = "Required";
       if (!row.billNo?.trim()) rowErr.billNo = "Required";
-      if (!row.noOfCopies || parseInt(row.noOfCopies) <= 0) rowErr.noOfCopies = "Required";
+      if (!row.noOfCopies || parseInt(row.noOfCopies) <= 0)
+        rowErr.noOfCopies = "Required";
       if (!row.cost || isNaN(parseFloat(row.cost))) rowErr.cost = "Required";
       if (Object.keys(rowErr).length) newPurchaseRowErrors[row.id] = rowErr;
     });
@@ -5438,11 +5512,13 @@ const BookForm = () => {
     // Per-row accession validation
     const newAccessionRowErrors = {};
     if (!accessionRows || accessionRows.length === 0) {
-      fieldErrors.accessionRows = "Please add at least one accession row with barcode details.";
+      fieldErrors.accessionRows =
+        "Please add at least one accession row with barcode details.";
     } else {
       accessionRows.forEach((row) => {
         const rowErr = {};
-        if (!isChecked && (!row.barcode || String(row.barcode).trim() === "")) rowErr.barcode = "Required";
+        if (!isChecked && (!row.barcode || String(row.barcode).trim() === ""))
+          rowErr.barcode = "Required";
         if (!row.status || row.status.trim() === "") rowErr.status = "Required";
         if (Object.keys(rowErr).length) newAccessionRowErrors[row.id] = rowErr;
       });
@@ -5470,25 +5546,36 @@ const BookForm = () => {
 
       try {
         const validationResponse = await fetch(
-          `${ApiUrl.apiurl
+          `${
+            ApiUrl.apiurl
           }LIBRARYBOOK/LibraryBarcodeValidation/?barcodeList=[${barcodeList
             .map((barcode) => `"${barcode}"`)
-            .join(",")}]`
+            .join(",")}]`,
         );
 
         const validationData = await validationResponse.json();
 
         if (validationResponse.ok && validationData.exists) {
-          setErrors((prev) => ({ ...prev, accessionRows: "Some of the entered barcodes already exist. Please check." }));
+          setErrors((prev) => ({
+            ...prev,
+            accessionRows:
+              "Some of the entered barcodes already exist. Please check.",
+          }));
           return;
         } else if (!validationResponse.ok) {
-          setErrors((prev) => ({ ...prev, accessionRows: "Failed to validate barcodes." }));
+          setErrors((prev) => ({
+            ...prev,
+            accessionRows: "Failed to validate barcodes.",
+          }));
           console.error("Validation Error:", validationData);
           return;
         }
       } catch (error) {
         console.error("Barcode validation error:", error);
-        setErrors((prev) => ({ ...prev, accessionRows: "An error occurred while validating barcodes." }));
+        setErrors((prev) => ({
+          ...prev,
+          accessionRows: "An error occurred while validating barcodes.",
+        }));
         return;
       }
     }
@@ -5521,7 +5608,6 @@ const BookForm = () => {
       type: bookDetails.type || "",
     };
 
-
     // Build barcode details
     const libraryBookBarcodeDetails = accessionRows
       .filter((row) => row.barcode && String(row.barcode).trim() !== "")
@@ -5538,7 +5624,11 @@ const BookForm = () => {
       }));
 
     if (!libraryBookBarcodeDetails.length) {
-      setErrors((prev) => ({ ...prev, accessionRows: "At least one barcode detail with barcode number is required." }));
+      setErrors((prev) => ({
+        ...prev,
+        accessionRows:
+          "At least one barcode detail with barcode number is required.",
+      }));
       return;
     }
 
@@ -5558,13 +5648,24 @@ const BookForm = () => {
           row.dateOfPurchase || new Date().toISOString().split("T")[0],
         purchase_from: row.purchasedFrom || "",
         bill_no: row.billNo || "",
-        bill_value: row.cost && !isNaN(parseFloat(row.cost)) ? row.cost.toString() : "0",
-        bill_concession: row.concession && !isNaN(parseFloat(row.concession)) ? row.concession.toString() : "0",
-        no_of_copies: row.noOfCopies && !isNaN(parseInt(row.noOfCopies)) ? row.noOfCopies.toString() : "1",
+        bill_value:
+          row.cost && !isNaN(parseFloat(row.cost)) ? row.cost.toString() : "0",
+        bill_concession:
+          row.concession && !isNaN(parseFloat(row.concession))
+            ? row.concession.toString()
+            : "0",
+        no_of_copies:
+          row.noOfCopies && !isNaN(parseInt(row.noOfCopies))
+            ? row.noOfCopies.toString()
+            : "1",
       }));
 
     if (!librarypurchesDetails.length) {
-      setErrors((prev) => ({ ...prev, purchaseRows: "Please add at least one purchase detail with number of copies." }));
+      setErrors((prev) => ({
+        ...prev,
+        purchaseRows:
+          "Please add at least one purchase detail with number of copies.",
+      }));
       return;
     }
 
@@ -5585,11 +5686,11 @@ const BookForm = () => {
     formData.append("libraryBookdetails", JSON.stringify(libraryBookdetails));
     formData.append(
       "libraryBookBarcodeDetails",
-      JSON.stringify(libraryBookBarcodeDetails)
+      JSON.stringify(libraryBookBarcodeDetails),
     );
     formData.append(
       "librarypurchesDetails",
-      JSON.stringify(librarypurchesDetails)
+      JSON.stringify(librarypurchesDetails),
     );
 
     const apiUrl = isUpdate
@@ -5610,10 +5711,25 @@ const BookForm = () => {
         // Clear form data after successful save (both create and update)
         handleClear();
         setSaveMsg({ type: "", text: "" });
+
         alert(isUpdate ? "Book updated successfully!" : "Book saved successfully!");
       } else {
         setSaveMsg({ type: "", text: "" });
         alert(data?.message || data?.error || (isUpdate ? "Failed to update the book." : "Failed to save the book."));
+
+        alert(
+          isUpdate ? "Book updated successfully!" : "Book saved successfully!",
+        );
+      } else {
+        setSaveMsg({ type: "", text: "" });
+        alert(
+          data?.message ||
+            data?.error ||
+            (isUpdate
+              ? "Failed to update the book."
+              : "Failed to save the book."),
+        );
+
         console.error("Error response from server:", data);
       }
     } catch (error) {
@@ -5623,17 +5739,13 @@ const BookForm = () => {
     }
   };
 
-
-
-
-
   const handleClose = () => {
     navigate("/admin/book-search");
   };
 
   const handleAccessionRowChange = (id, field, value) => {
     setAccessionRows((prevRows) =>
-      prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+      prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
     );
   };
 
@@ -5712,7 +5824,7 @@ const BookForm = () => {
                             options={bookJournalOptions}
                             value={
                               bookJournalOptions.find(
-                                (option) => option.value === bookDetails.type
+                                (option) => option.value === bookDetails.type,
                               ) || null
                             }
                             onChange={(selectedOption) => {
@@ -5757,7 +5869,7 @@ const BookForm = () => {
                             }}
                             value={
                               categoryOptions.find(
-                                (option) => option.value === bookCategory
+                                (option) => option.value === bookCategory,
                               ) || null
                             }
                             placeholder="Select Category"
@@ -5794,7 +5906,7 @@ const BookForm = () => {
                             }}
                             value={
                               subCategoryOptions.find(
-                                (option) => option.value === bookSubCategory
+                                (option) => option.value === bookSubCategory,
                               ) || null
                             }
                             placeholder="Select Sub Category"
@@ -5814,7 +5926,7 @@ const BookForm = () => {
                         </Form.Group>
                       </Col>
 
-{/*
+                      {/*
                         <Col>
                           <Form.Group controlId="bookCode">
                             <Form.Label>
@@ -5992,8 +6104,8 @@ const BookForm = () => {
                             value={
                               branch
                                 ? branches.find(
-                                  (option) => option.value === branch
-                                )
+                                    (option) => option.value === branch,
+                                  )
                                 : null
                             } // Match selected branch ID to options
                             onChange={handleBranchChange} // Handle branch selection
@@ -6071,7 +6183,12 @@ const BookForm = () => {
                           }}
                         />
                         {!frontCover?.preview && (
+
                           <small className="text-muted d-block mt-1">Front cover not available</small>
+
+                          <small className="text-muted d-block mt-1">
+                            Front cover not available
+
                         )}
                       </>
                     )}
@@ -6103,7 +6220,13 @@ const BookForm = () => {
                           }}
                         />
                         {!backCover?.preview && (
+
                           <small className="text-muted d-block mt-1">Back cover not available</small>
+
+                          <small className="text-muted d-block mt-1">
+                            Back cover not available
+                          </small>
+
                         )}
                       </>
                     )}
@@ -6160,11 +6283,25 @@ const BookForm = () => {
                               value={row.dateOfPurchase}
                               size="sm"
                               onChange={(e) => {
-                                handleNoOfCopiesChange(row.id, "dateOfPurchase", e.target.value);
-                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], dateOfPurchase: "" } }));
+                                handleNoOfCopiesChange(
+                                  row.id,
+                                  "dateOfPurchase",
+                                  e.target.value,
+                                );
+                                setPurchaseRowErrors((prev) => ({
+                                  ...prev,
+                                  [row.id]: {
+                                    ...prev[row.id],
+                                    dateOfPurchase: "",
+                                  },
+                                }));
                               }}
                             />
-                            {purchaseRowErrors[row.id]?.dateOfPurchase && <small className="text-danger">{purchaseRowErrors[row.id].dateOfPurchase}</small>}
+                            {purchaseRowErrors[row.id]?.dateOfPurchase && (
+                              <small className="text-danger">
+                                {purchaseRowErrors[row.id].dateOfPurchase}
+                              </small>
+                            )}
                           </td>
                           <td className="d-none d-md-table-cell">
                             <Form.Control
@@ -6173,11 +6310,25 @@ const BookForm = () => {
                               value={row.purchasedFrom}
                               size="sm"
                               onChange={(e) => {
-                                handleNoOfCopiesChange(row.id, "purchasedFrom", e.target.value);
-                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], purchasedFrom: "" } }));
+                                handleNoOfCopiesChange(
+                                  row.id,
+                                  "purchasedFrom",
+                                  e.target.value,
+                                );
+                                setPurchaseRowErrors((prev) => ({
+                                  ...prev,
+                                  [row.id]: {
+                                    ...prev[row.id],
+                                    purchasedFrom: "",
+                                  },
+                                }));
                               }}
                             />
-                            {purchaseRowErrors[row.id]?.purchasedFrom && <small className="text-danger">{purchaseRowErrors[row.id].purchasedFrom}</small>}
+                            {purchaseRowErrors[row.id]?.purchasedFrom && (
+                              <small className="text-danger">
+                                {purchaseRowErrors[row.id].purchasedFrom}
+                              </small>
+                            )}
                           </td>
                           <td className="d-none d-md-table-cell">
                             <Form.Control
@@ -6186,11 +6337,22 @@ const BookForm = () => {
                               value={row.billNo}
                               size="sm"
                               onChange={(e) => {
-                                handleNoOfCopiesChange(row.id, "billNo", e.target.value);
-                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], billNo: "" } }));
+                                handleNoOfCopiesChange(
+                                  row.id,
+                                  "billNo",
+                                  e.target.value,
+                                );
+                                setPurchaseRowErrors((prev) => ({
+                                  ...prev,
+                                  [row.id]: { ...prev[row.id], billNo: "" },
+                                }));
                               }}
                             />
-                            {purchaseRowErrors[row.id]?.billNo && <small className="text-danger">{purchaseRowErrors[row.id].billNo}</small>}
+                            {purchaseRowErrors[row.id]?.billNo && (
+                              <small className="text-danger">
+                                {purchaseRowErrors[row.id].billNo}
+                              </small>
+                            )}
                           </td>
 
                           <td>
@@ -6200,11 +6362,22 @@ const BookForm = () => {
                               value={row.noOfCopies}
                               size="sm"
                               onChange={(e) => {
-                                handleNoOfCopiesChange(row.id, "noOfCopies", e.target.value);
-                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], noOfCopies: "" } }));
+                                handleNoOfCopiesChange(
+                                  row.id,
+                                  "noOfCopies",
+                                  e.target.value,
+                                );
+                                setPurchaseRowErrors((prev) => ({
+                                  ...prev,
+                                  [row.id]: { ...prev[row.id], noOfCopies: "" },
+                                }));
                               }}
                             />
-                            {purchaseRowErrors[row.id]?.noOfCopies && <small className="text-danger">{purchaseRowErrors[row.id].noOfCopies}</small>}
+                            {purchaseRowErrors[row.id]?.noOfCopies && (
+                              <small className="text-danger">
+                                {purchaseRowErrors[row.id].noOfCopies}
+                              </small>
+                            )}
                           </td>
 
                           <td>
@@ -6214,11 +6387,22 @@ const BookForm = () => {
                               value={row.cost}
                               size="sm"
                               onChange={(e) => {
-                                handleNoOfCopiesChange(row.id, "cost", e.target.value);
-                                setPurchaseRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], cost: "" } }));
+                                handleNoOfCopiesChange(
+                                  row.id,
+                                  "cost",
+                                  e.target.value,
+                                );
+                                setPurchaseRowErrors((prev) => ({
+                                  ...prev,
+                                  [row.id]: { ...prev[row.id], cost: "" },
+                                }));
                               }}
                             />
-                            {purchaseRowErrors[row.id]?.cost && <small className="text-danger">{purchaseRowErrors[row.id].cost}</small>}
+                            {purchaseRowErrors[row.id]?.cost && (
+                              <small className="text-danger">
+                                {purchaseRowErrors[row.id].cost}
+                              </small>
+                            )}
                           </td>
                           {/* <td className="d-none d-lg-table-cell">
                             <Form.Control
@@ -6263,7 +6447,9 @@ const BookForm = () => {
                     </tfoot>
                   </table>
                 </div>
-                {errors.purchaseRows && <small className="text-danger">{errors.purchaseRows}</small>}
+                {errors.purchaseRows && (
+                  <small className="text-danger">{errors.purchaseRows}</small>
+                )}
               </div>
 
               <div className="col-12">
@@ -6298,16 +6484,26 @@ const BookForm = () => {
                                   const updatedRows = accessionRows.map((r) =>
                                     r.id === row.id
                                       ? { ...r, barcode: e.target.value }
-                                      : r
+                                      : r,
                                   );
                                   setAccessionRows(updatedRows);
-                                  setErrors((prev) => ({ ...prev, accessionRows: "" }));
-                                  setAccessionRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], barcode: "" } }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    accessionRows: "",
+                                  }));
+                                  setAccessionRowErrors((prev) => ({
+                                    ...prev,
+                                    [row.id]: { ...prev[row.id], barcode: "" },
+                                  }));
                                 }
                               }}
                               disabled={isChecked} // Disable manual entry if checkbox is checked
                             />
-                            {accessionRowErrors[row.id]?.barcode && <small className="text-danger">{accessionRowErrors[row.id].barcode}</small>}
+                            {accessionRowErrors[row.id]?.barcode && (
+                              <small className="text-danger">
+                                {accessionRowErrors[row.id].barcode}
+                              </small>
+                            )}
                           </td>
                           <td>
                             <Form.Select
@@ -6316,7 +6512,7 @@ const BookForm = () => {
                                 const updatedRows = accessionRows.map((r) =>
                                   r.id === row.id
                                     ? { ...r, location: e.target.value }
-                                    : r
+                                    : r,
                                 );
                                 setAccessionRows(updatedRows);
                               }}
@@ -6358,10 +6554,13 @@ const BookForm = () => {
                                 const updatedRows = accessionRows.map((r) =>
                                   r.id === row.id
                                     ? { ...r, status: e.target.value }
-                                    : r
+                                    : r,
                                 );
                                 setAccessionRows(updatedRows);
-                                setAccessionRowErrors((prev) => ({ ...prev, [row.id]: { ...prev[row.id], status: "" } }));
+                                setAccessionRowErrors((prev) => ({
+                                  ...prev,
+                                  [row.id]: { ...prev[row.id], status: "" },
+                                }));
                               }}
                               className={`detail ${accessionRowErrors[row.id]?.status ? "is-invalid" : ""}`}
                             >
@@ -6371,7 +6570,11 @@ const BookForm = () => {
                               <option value="LOST">LOST</option>
                               <option value="DAMAGED">DAMAGED</option>
                             </Form.Select>
-                            {accessionRowErrors[row.id]?.status && <small className="text-danger">{accessionRowErrors[row.id].status}</small>}
+                            {accessionRowErrors[row.id]?.status && (
+                              <small className="text-danger">
+                                {accessionRowErrors[row.id].status}
+                              </small>
+                            )}
                           </td>
 
                           <td>
@@ -6385,7 +6588,7 @@ const BookForm = () => {
                                 const updatedRows = accessionRows.map((r) =>
                                   r.id === row.id
                                     ? { ...r, remarks: e.target.value }
-                                    : r
+                                    : r,
                                 );
                                 setAccessionRows(updatedRows);
                               }}
@@ -6396,7 +6599,9 @@ const BookForm = () => {
                     </tbody>
                   </table>
                 </div>
-                {errors.accessionRows && <small className="text-danger">{errors.accessionRows}</small>}
+                {errors.accessionRows && (
+                  <small className="text-danger">{errors.accessionRows}</small>
+                )}
               </div>
             </div>
           </div>
