@@ -1616,6 +1616,10 @@ export default function BasicTabs() {
 
   const validateRequiredFields = () => {
     const newErrors = {};
+    const validationMessages = [];
+    const isValidMobileNumber = (value) => /^\d{10}$/.test(String(value || "").trim());
+    const isValidAadhaarNumber = (value) => /^\d{12}$/.test(String(value || "").trim());
+    const hasValue = (value) => String(value || "").trim() !== "";
 
     if (!formData.first_name?.trim()) newErrors.first_name = "First Name is required";
     if (!formData.last_name?.trim()) newErrors.last_name = "Last Name is required";
@@ -1640,9 +1644,15 @@ export default function BasicTabs() {
     if (!formData.mother_profession) newErrors.mother_profession = "Mother Profession is required";
     if (!formData.father_contact_number?.trim()) {
       newErrors.father_contact_number = "Father Contact Number is required";
+    } else if (!isValidMobileNumber(formData.father_contact_number)) {
+      newErrors.father_contact_number = "Father Contact Number must be exactly 10 digits";
+      validationMessages.push("Guardian: Father mobile number must be exactly 10 digits.");
     }
     if (!formData.mother_contact_number?.trim()) {
       newErrors.mother_contact_number = "Mother Contact Number is required";
+    } else if (!isValidMobileNumber(formData.mother_contact_number)) {
+      newErrors.mother_contact_number = "Mother Contact Number must be exactly 10 digits";
+      validationMessages.push("Guardian: Mother mobile number must be exactly 10 digits.");
     }
     if (!formData.dob) {
       newErrors.dob = "Date Of Birth is required";
@@ -1678,6 +1688,31 @@ export default function BasicTabs() {
       newErrors.permanent_pincode = "Permanent Pincode is required";
     }
 
+    if (hasValue(formData.studentaadharno) && !isValidAadhaarNumber(formData.studentaadharno)) {
+      newErrors.studentaadharno = "Student Aadhaar Number must be exactly 12 digits";
+      validationMessages.push("Student tab: Student Aadhaar number must be exactly 12 digits.");
+    }
+
+    if (hasValue(formData.father_aadharno) && !isValidAadhaarNumber(formData.father_aadharno)) {
+      newErrors.father_aadharno = "Father Aadhaar Number must be exactly 12 digits";
+      validationMessages.push("Guardian: Father Aadhaar number must be exactly 12 digits.");
+    }
+
+    if (hasValue(formData.mother_aadharno) && !isValidAadhaarNumber(formData.mother_aadharno)) {
+      newErrors.mother_aadharno = "Mother Aadhaar Number must be exactly 12 digits";
+      validationMessages.push("Guardian: Mother Aadhaar number must be exactly 12 digits.");
+    }
+
+    if (hasValue(formData.present_phone_number) && !isValidMobileNumber(formData.present_phone_number)) {
+      newErrors.present_phone_number = "Present Mobile Number must be exactly 10 digits";
+      validationMessages.push("Address tab: Present mobile number must be exactly 10 digits.");
+    }
+
+    if (hasValue(formData.permanent_phone_number) && !isValidMobileNumber(formData.permanent_phone_number)) {
+      newErrors.permanent_phone_number = "Permanent Mobile Number must be exactly 10 digits";
+      validationMessages.push("Address tab: Permanent mobile number must be exactly 10 digits.");
+    }
+
     const emergencyContacts = Array.isArray(formData.emegencyContact)
       ? formData.emegencyContact
       : [];
@@ -1689,6 +1724,9 @@ export default function BasicTabs() {
       }
       if (!contact?.Mobile_Number?.trim()) {
         rowError.Mobile_Number = "Phone No is required";
+      } else if (!isValidMobileNumber(contact.Mobile_Number)) {
+        rowError.Mobile_Number = "Phone No must be exactly 10 digits";
+        validationMessages.push("Emergency Contact: Mobile number must be exactly 10 digits.");
       }
       return rowError;
     });
@@ -1707,6 +1745,9 @@ export default function BasicTabs() {
       }
       if (!guardian?.Mobile_Number?.trim()) {
         rowError.Mobile_Number = "Mobile No is required";
+      } else if (!isValidMobileNumber(guardian.Mobile_Number)) {
+        rowError.Mobile_Number = "Mobile No must be exactly 10 digits";
+        validationMessages.push("Local Guardian: Mobile number must be exactly 10 digits.");
       }
       if (!guardian?.address?.trim()) rowError.address = "Address is required";
       if (!guardian?.email?.trim()) rowError.email = "EmailId is required";
@@ -1717,6 +1758,11 @@ export default function BasicTabs() {
     }
 
     setErrors(newErrors);
+
+    if (validationMessages.length > 0) {
+      alert(validationMessages.join("\n"));
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -2313,7 +2359,9 @@ export default function BasicTabs() {
         if (!guardian?.email?.trim()) missingFields.push(`Local Guardian ${index + 1}: Email is required`);
       });
 
-      setValidationPopup({ show: true, missingFields });
+      if (missingFields.length > 0) {
+        setValidationPopup({ show: true, missingFields });
+      }
       return;
     }
     const token = localStorage.getItem("accessToken");

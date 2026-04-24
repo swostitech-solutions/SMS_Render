@@ -865,6 +865,12 @@ const AdmBook = ({
       book.book_author ||
       book.author_name ||
       "",
+
+    categoryId: book.categoryId || book.category_id || book.book_category || null,
+    categoryName: book.categoryName || book.category || "",
+    subcategoryId:
+      book.subcategoryId || book.subcategory_id || book.book_sub_category || null,
+    subcategoryName: book.subcategoryName || book.subCategory || book.sub_category || "",
     categoryId:
       book.categoryId || book.category_id || book.book_category || null,
     categoryName: book.categoryName || book.category || "",
@@ -997,7 +1003,12 @@ const AdmBook = ({
       const barcodeMatch =
         !bookAccessionNo || book.barcode.toString().includes(bookAccessionNo);
 
+
+      const authorMatch =
+        !author || book.author.toLowerCase().includes(author);
+
       const authorMatch = !author || book.author.toLowerCase().includes(author);
+
 
       const categoryMatch =
         !categoryId || Number(book.categoryId) === Number(categoryId);

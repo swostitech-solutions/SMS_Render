@@ -524,6 +524,9 @@ const AdmBookMovements = () => {
     };
 
     fetchSections();
+
+  }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear, selectedSemester]);
+
   }, [
     selectedSession,
     selectedCourse,
@@ -531,6 +534,7 @@ const AdmBookMovements = () => {
     selectedAcademicYear,
     selectedSemester,
   ]);
+
 
   const handleSelectEmployee = (selectedEmployee) => {
     console.log("Selected Employee:", selectedEmployee);

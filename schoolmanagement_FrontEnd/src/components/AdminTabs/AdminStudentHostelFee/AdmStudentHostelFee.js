@@ -767,17 +767,33 @@ const AdmAttendanceEntry = () => {
   };
 
   const fetchViewPDF = async (student_id, feePeriod) => {
+    const pdfWindow = window.open("", "_blank");
+
     try {
       const orgId = sessionStorage.getItem("organization_id");
       const branchId = sessionStorage.getItem("branch_id");
 
       // ⛳ Build URL dynamically
-      let url = `${ApiUrl.apiurl}HOSTEL/HostelChargesCalculateBasedOnStudent/?academic_year_id=${selectedAcademicYear?.value}&organization_id=${orgId}&branch_id=${branchId}&batch_id=${selectedSession?.value}&student_id=${student_id}&course_id=${selectedCourse?.value}&section_id=${selectedSection?.value}&unpaid=${showUnpaidFee}`;
+      const queryParams = new URLSearchParams({
+        academic_year_id: selectedAcademicYear?.value || "",
+        organization_id: orgId || "",
+        branch_id: branchId || "",
+        batch_id: selectedSession?.value || "",
+        student_id,
+        course_id: selectedCourse?.value || "",
+        semester_id: selectedSemester?.value || "",
+        section_id: selectedSection?.value || "",
+        unpaid: showUnpaidFee ? "true" : "false",
+      });
 
       // 🚨 If Fee Period selected, then add parameter
       if (feePeriod) {
-        url += `&fee_applied_from_id=${feePeriod}`;
+        queryParams.append("fee_applied_from_id", feePeriod);
       }
+
+      const url = `${
+        ApiUrl.apiurl
+      }HOSTEL/HostelChargesCalculateBasedOnStudent/?${queryParams.toString()}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -797,17 +813,25 @@ const AdmAttendanceEntry = () => {
             : {
                 ...result.data[0],
                 semester_list: result.data[0]?.semester_list,
-              }
+              },
+          pdfWindow
         );
       } else {
+        if (pdfWindow && !pdfWindow.closed) {
+          pdfWindow.close();
+        }
         alert("No record found for PDF view");
       }
     } catch (error) {
       console.error("Fetch PDF Error:", error);
+      if (pdfWindow && !pdfWindow.closed) {
+        pdfWindow.close();
+      }
+      alert("Unable to open hostel fee PDF.");
     }
   };
 
-  const generatePDF = (data) => {
+  const generatePDF = (data, targetWindow) => {
     const doc = new jsPDF();
 
     // Title
@@ -904,7 +928,11 @@ const AdmAttendanceEntry = () => {
 
     const pdfBlob = doc.output("blob");
     const pdfURL = URL.createObjectURL(pdfBlob);
-    window.open(pdfURL);
+    if (targetWindow && !targetWindow.closed) {
+      targetWindow.location.href = pdfURL;
+    } else {
+      window.open(pdfURL, "_blank");
+    }
   };
 
   const groupByMonth = (data) => {
@@ -1214,17 +1242,14 @@ const AdmAttendanceEntry = () => {
 
                             {/* View Button */}
                             <td>
-                              <td>
                                 <button
                                   className="btn btn-info btn-sm"
                                   onClick={() =>
                                     fetchViewPDF(item.student_id, feePeriod)
                                   }
-                                  disabled={Number(item.paid_fees) === 0} // ✅ disable when paid fees is 0
                                 >
                                   View
                                 </button>
-                              </td>
                             </td>
                           </tr>
                         ))

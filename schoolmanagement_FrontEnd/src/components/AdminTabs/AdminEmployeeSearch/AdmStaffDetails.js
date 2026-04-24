@@ -251,8 +251,24 @@ export default function BasicTabs() {
   // ============================================
   // Shared validation for Basic Info required fields
   // ============================================
-  const validateBasicInfo = () => {
+  const getLatestBasicInfoData = () => {
     const b = basicInfoData || {};
+    const mobileInput = document.getElementById("mobile-number");
+    const emergencyInput = document.getElementById("emergency-contact-number");
+
+    const livePhone = String(mobileInput?.value || "").trim();
+    const liveEmergency = String(emergencyInput?.value || "").trim();
+
+    return {
+      ...b,
+      phoneNumber: livePhone !== "" ? livePhone : b.phoneNumber,
+      emergencyContactNumber:
+        liveEmergency !== "" ? liveEmergency : b.emergencyContactNumber,
+    };
+  };
+
+  const validateBasicInfo = () => {
+    const b = getLatestBasicInfoData();
     const a = addressFormData?.formValues || {};
     const errors = {};
 
@@ -348,6 +364,60 @@ export default function BasicTabs() {
     return true;
   };
 
+  const validateStaffNumberFields = () => {
+    const b = getLatestBasicInfoData();
+    const a = addressFormData?.formValues || {};
+    const errors = {};
+    const alertMessages = [];
+
+    const isValidMobile = (value) => /^\d{10}$/.test(String(value || "").trim());
+    const isValidAadhaar = (value) => /^\d{12}$/.test(String(value || "").trim());
+    const hasValue = (value) => String(value || "").trim() !== "";
+
+    if (hasValue(b.phoneNumber) && !isValidMobile(b.phoneNumber)) {
+      errors.phoneNumber = "Mobile Number must be exactly 10 digits.";
+      alertMessages.push("Basic Info: Mobile Number must be exactly 10 digits.");
+    }
+
+    if (hasValue(b.emergencyContactNumber) && !isValidMobile(b.emergencyContactNumber)) {
+      errors.emergencyContactNumber = "Emergency Contact Number must be exactly 10 digits.";
+      alertMessages.push("Basic Info: Emergency Contact Number must be exactly 10 digits.");
+    }
+
+    if (hasValue(a.residencePhone) && !isValidMobile(a.residencePhone)) {
+      errors.residencePhone = "Present Phone Number must be exactly 10 digits.";
+      alertMessages.push("Address tab: Present phone number must be exactly 10 digits.");
+    }
+
+    if (hasValue(a.permanentPhone) && !isValidMobile(a.permanentPhone)) {
+      errors.permanentPhone = "Permanent Phone Number must be exactly 10 digits.";
+      alertMessages.push("Address tab: Permanent phone number must be exactly 10 digits.");
+    }
+
+    (documentDetails || []).forEach((doc) => {
+      const documentType = String(
+        doc?.documentType || doc?.document_type_id || doc?.document_type || ""
+      ).toLowerCase();
+      const documentNumber = String(doc?.documentNumber || doc?.document_number || "").trim();
+
+      if (documentType.includes("aadh") && hasValue(documentNumber) && !isValidAadhaar(documentNumber)) {
+        alertMessages.push("Documents tab: Aadhaar number must be exactly 12 digits.");
+      }
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setBasicInfoFieldErrors((prev) => ({ ...prev, ...errors }));
+    }
+
+    const uniqueMessages = [...new Set(alertMessages)];
+    if (uniqueMessages.length > 0) {
+      alert(uniqueMessages.join("\n"));
+      return false;
+    }
+
+    return true;
+  };
+
   // ============================================
   // PHASE 1: CREATION (POST) - For NEW Staff
   // ============================================
@@ -358,8 +428,14 @@ export default function BasicTabs() {
       return;
     }
 
+    const latestBasicInfoData = getLatestBasicInfoData();
+    if (latestBasicInfoData !== basicInfoData) {
+      setBasicInfoData(latestBasicInfoData);
+    }
+
     // Validate required Basic Info fields
     if (!validateBasicInfo()) return;
+    if (!validateStaffNumberFields()) return;
 
     const userId = sessionStorage.getItem("userId");
     const orgId = localStorage.getItem("orgId");
@@ -431,10 +507,10 @@ export default function BasicTabs() {
         basicPayload.append("nationality", mapVal(basicInfoData.nationality, nationalities) || 3);
         basicPayload.append("religion", mapVal(basicInfoData.religion, religions) || 5);
         basicPayload.append("email", basicInfoData.email || "");
-        basicPayload.append("phone_number", basicInfoData.phoneNumber || "");
+        basicPayload.append("phone_number", latestBasicInfoData.phoneNumber || "");
         basicPayload.append("office_email", basicInfoData.officeEmail || "");
         basicPayload.append("employee_type", basicInfoData.employeeType || "");
-        basicPayload.append("emergency_contact_number", basicInfoData.emergencyContactNumber || "");
+        basicPayload.append("emergency_contact_number", latestBasicInfoData.emergencyContactNumber || "");
         basicPayload.append("mother_tongue", basicInfoData.motherTongue || "");
         basicPayload.append("blood_group", mapVal(basicInfoData.bloodGroup, bloodGroups) || 17);
         basicPayload.append("batch", 1);
@@ -764,8 +840,14 @@ export default function BasicTabs() {
       return;
     }
 
+    const latestBasicInfoData = getLatestBasicInfoData();
+    if (latestBasicInfoData !== basicInfoData) {
+      setBasicInfoData(latestBasicInfoData);
+    }
+
     // Validate required Basic Info fields
     if (!validateBasicInfo()) return;
+    if (!validateStaffNumberFields()) return;
 
     const employeeId = localStorage.getItem("employeeId");
     const employeeTypeId = localStorage.getItem("employeeTypeId");
@@ -849,10 +931,10 @@ export default function BasicTabs() {
           basicPayload.append("nationality", mapVal(basicInfoData.nationality, nationalities) || 3);
           basicPayload.append("religion", mapVal(basicInfoData.religion, religions) || 5);
           basicPayload.append("email", basicInfoData.email || "");
-          basicPayload.append("phone_number", basicInfoData.phoneNumber || "");
+          basicPayload.append("phone_number", latestBasicInfoData.phoneNumber || "");
           basicPayload.append("office_email", basicInfoData.officeEmail || "");
           basicPayload.append("employee_type", basicInfoData.employeeType || "");
-          basicPayload.append("emergency_contact_number", basicInfoData.emergencyContactNumber || "");
+          basicPayload.append("emergency_contact_number", latestBasicInfoData.emergencyContactNumber || "");
           basicPayload.append("mother_tongue", basicInfoData.motherTongue || "");
           basicPayload.append("blood_group", mapVal(basicInfoData.bloodGroup, bloodGroups) || 17);
           basicPayload.append("batch", 1);

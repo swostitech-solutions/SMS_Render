@@ -4559,6 +4559,12 @@
 
 // export default BookForm;
 
+
+
+
+
+
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Image, Table, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -4760,6 +4766,71 @@ const BookForm = () => {
     },
     [getBackendOrigin],
   );
+
+
+  const handleBookStatusChange = (selectedOption) => {
+    setBookStatus(selectedOption);
+  };
+
+  const getBackendOrigin = useCallback(() => {
+    const apiBase = ApiUrl.apiurl || "";
+    if (apiBase.startsWith("http://") || apiBase.startsWith("https://")) {
+      try {
+        const parsed = new URL(apiBase);
+        return parsed.origin;
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  }, []);
+
+  const resolveCoverPreview = useCallback((coverValue) => {
+    if (!coverValue) return null;
+
+    if (typeof coverValue === "string") {
+      if (coverValue.startsWith("data:") || coverValue.startsWith("http")) {
+        return coverValue;
+      }
+
+      const normalized = coverValue.replace(/\\/g, "/");
+      const backendOrigin = getBackendOrigin();
+
+      if (normalized.startsWith("/SWOSTITECH_CMS/")) {
+        return backendOrigin ? `${backendOrigin}${normalized}` : normalized;
+      }
+
+      const mediaMarker = "/SWOSTITECH_CMS/";
+      if (normalized.includes(mediaMarker)) {
+        const mediaPath = normalized.substring(normalized.indexOf(mediaMarker));
+        return backendOrigin ? `${backendOrigin}${mediaPath}` : mediaPath;
+      }
+
+      if (normalized.includes("/Book_cover/")) {
+        const relative = normalized.split("/Book_cover/")[1]
+          ? `Book_cover/${normalized.split("/Book_cover/")[1]}`
+          : "";
+        const mediaPath = `/SWOSTITECH_CMS/${relative}`;
+        return backendOrigin ? `${backendOrigin}${mediaPath}` : mediaPath;
+      }
+
+      return normalized;
+    }
+
+    if (typeof coverValue === "object") {
+      if (coverValue.binary_data) {
+        const mimeType = coverValue.type || "image/png";
+        return `data:${mimeType};base64,${coverValue.binary_data}`;
+      }
+
+      if (coverValue.path) {
+        return resolveCoverPreview(coverValue.path);
+      }
+    }
+
+    return null;
+  }, [getBackendOrigin]);
+
 
   useEffect(() => {
     if (bookDetails?.total_no_of_copies > 0) {
@@ -5640,6 +5711,12 @@ const BookForm = () => {
         // Clear form data after successful save (both create and update)
         handleClear();
         setSaveMsg({ type: "", text: "" });
+
+        alert(isUpdate ? "Book updated successfully!" : "Book saved successfully!");
+      } else {
+        setSaveMsg({ type: "", text: "" });
+        alert(data?.message || data?.error || (isUpdate ? "Failed to update the book." : "Failed to save the book."));
+
         alert(
           isUpdate ? "Book updated successfully!" : "Book saved successfully!",
         );
@@ -5652,6 +5729,7 @@ const BookForm = () => {
               ? "Failed to update the book."
               : "Failed to save the book."),
         );
+
         console.error("Error response from server:", data);
       }
     } catch (error) {
@@ -6105,9 +6183,12 @@ const BookForm = () => {
                           }}
                         />
                         {!frontCover?.preview && (
+
+                          <small className="text-muted d-block mt-1">Front cover not available</small>
+
                           <small className="text-muted d-block mt-1">
                             Front cover not available
-                          </small>
+
                         )}
                       </>
                     )}
@@ -6139,9 +6220,13 @@ const BookForm = () => {
                           }}
                         />
                         {!backCover?.preview && (
+
+                          <small className="text-muted d-block mt-1">Back cover not available</small>
+
                           <small className="text-muted d-block mt-1">
                             Back cover not available
                           </small>
+
                         )}
                       </>
                     )}

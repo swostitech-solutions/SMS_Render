@@ -2768,7 +2768,7 @@ const AdmAttendanceEntry = ({
                       </label>
                       <Select
                         className=" detail"
-                        isDisabled={false}
+                        isDisabled={isEditMode}
                         value={
                           BatchList?.find((b) => b.id === selectedSession)
                             ? {
@@ -2810,7 +2810,7 @@ const AdmAttendanceEntry = ({
                       </label>
                       <Select
                         className=" detail"
-                        isDisabled={false}
+                        isDisabled={isEditMode}
                         value={
                           CourseList?.find((c) => c.id === selectedCourse)
                             ? {
@@ -2852,7 +2852,7 @@ const AdmAttendanceEntry = ({
                       </label>
                       <Select
                         className=" detail"
-                        isDisabled={false}
+                        isDisabled={isEditMode}
                         value={
                           BranchList?.find((d) => d.id === selectedDepartment)
                             ? {
@@ -2894,7 +2894,7 @@ const AdmAttendanceEntry = ({
                       </label>
                       <Select
                         className=" detail"
-                        isDisabled={false}
+                        isDisabled={isEditMode}
                         value={
                           AcademicYearList?.find(
                             (y) => y.id === Number(selectedAcademicYear),
@@ -2938,7 +2938,7 @@ const AdmAttendanceEntry = ({
                       </label>
                       <Select
                         className=" detail"
-                        isDisabled={false}
+                        isDisabled={isEditMode}
                         value={
                           SemesterList?.find((s) => s.id === selectedSemester)
                             ? {
@@ -2980,7 +2980,7 @@ const AdmAttendanceEntry = ({
                       </label>
                       <Select
                         className=" detail"
-                        isDisabled={false}
+                        isDisabled={isEditMode}
                         value={
                           SectionList?.find((s) => s.id === selectedSection)
                             ? {

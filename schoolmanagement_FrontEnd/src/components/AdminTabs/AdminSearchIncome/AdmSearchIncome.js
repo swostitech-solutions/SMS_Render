@@ -93,6 +93,16 @@ const AdmAttendanceEntry = () => {
 
       const result = response.data;
 
+
+      detailsData.forEach((item, index) => {
+     tableRows.push([
+  index + 1,
+  item.Income_category_id || "",  // ✅ FIXED
+  item.remarks || "",
+  Number(item.amount || 0).toFixed(2),
+]);
+      });
+
       if (result.message === "success") {
         const income = result.data;
 
@@ -125,6 +135,7 @@ const AdmAttendanceEntry = () => {
             Number(item.amount || 0).toFixed(2),
           ]);
         });
+
 
         doc.autoTable({
           head: [tableColumn],
