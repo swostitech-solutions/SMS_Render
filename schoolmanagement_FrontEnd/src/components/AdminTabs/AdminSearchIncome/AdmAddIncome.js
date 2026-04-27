@@ -367,108 +367,7 @@ const AdmAttendanceEntry = () => {
     ]);
   };
 
-  // const handleSave = async () => {
-  //   // Retrieve org_id, branch_id, and academic_year_id from storage
-  //   const orgId = getStoredNumericValue(["organization_id", "orgId"]);
-  //   const branchId = getStoredNumericValue(["branch_id", "branchId"]);
-  //   const storedAcademicYearId = getStoredNumericValue(
-  //     ["academic_year_id", "academicYearId", "academicSessionId"]
-  //   );
-  //   const academicYearId = await resolveAcademicYearId(
-  //     orgId,
-  //     branchId,
-  //     storedAcademicYearId
-  //   );
 
-  //   // Retrieve userId from session storage
-  //   const userId = getStoredNumericValue(["userId"], { allowZero: true });
-
-  //   // Check if required values exist in storage
-  //   if (
-  //     !hasRequiredNumericValue(orgId) ||
-  //     !hasRequiredNumericValue(branchId) ||
-  //     !hasRequiredNumericValue(academicYearId) ||
-  //     !hasRequiredNumericValue(userId, { allowZero: true })
-  //   ) {
-  //     alert("Missing required data. Please check.");
-  //     return;
-  //   }
-
-  //   const incomeHeaderDetails = {
-  //     created_by: userId,
-  //     org_id: orgId,
-  //     batch_id: branchId,
-  //     academic_year_id: academicYearId,
-  //     payment_method: selectedPayment?.label || "",
-  //     bank: selectedBank?.value || null,
-  //     account: selectedAccount?.value || null,
-  //     party_id: partyDetails.party_id || null,
-  //     date: currentDate,
-  //     income_no: incomeNo,
-  //     party_reference: partyReference,
-  //     total_amount: totalAmount,
-  //   };
-
-  //   // Filter and map rows to income details, ensuring category_id is a valid integer
-  //   const incomeDetails = rows
-  //     .filter((row) => {
-  //       // Only include rows with valid category and amount
-  //       const categoryId = row.category?.value || row.category;
-  //       return categoryId && row.amount;
-  //     })
-  //     .map((row) => {
-  //       // Extract category_id - handle both object and direct value
-  //       const categoryId = row.category?.value || row.category;
-  //       const parsedCategoryId = parseInt(categoryId, 10);
-
-  //       // Validate that category_id is a valid integer
-  //       if (isNaN(parsedCategoryId) || parsedCategoryId <= 0) {
-  //         console.error("Invalid category_id:", categoryId);
-  //         return null;
-  //       }
-
-  //       return {
-  //         category_id: parsedCategoryId, // Ensure it's an integer
-  //         amount: parseFloat(row.amount) || 0,
-  //         remarks: row.remarks || "",
-  //       };
-  //     })
-  //     .filter((detail) => detail !== null); // Remove any invalid entries
-
-  //   // Validate that we have at least one income detail
-  //   if (incomeDetails.length === 0) {
-  //     alert("Please add at least one income detail with a valid category and amount.");
-  //     return;
-  //   }
-
-  //   const payload = {
-  //     IncomeHeaderDetails: incomeHeaderDetails,
-  //     IncomeDetails: incomeDetails,
-  //   };
-
-  //   try {
-  //     //  Check if it's an update request
-  //     if (location.state?.incomeData?.income_id) {
-  //       const incomeId = location.state.incomeData.income_id;
-  //       await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}`, payload);
-  //     } else {
-  //       await api.post('EXPENSE/INCOME/IncomeCreate/', payload);
-  //     }
-
-  //     alert(
-  //       location.state?.incomeData?.income_id
-  //         ? "Income details updated successfully!"
-  //         : "Income details saved successfully!"
-  //     );
-
-  //     // Clear all fields after successful save/update
-  //     handleClear();
-  //   } catch (error) {
-  //     console.error("Error saving/updating income details:", error);
-  //     const errorMessage = error.response?.data?.message || "Failed to save/update income details.";
-  //     alert(errorMessage);
-  //   }
-  // };
   // ✅ VALIDATION FUNCTION
   const validateForm = () => {
     let newErrors = {};
@@ -583,7 +482,7 @@ const AdmAttendanceEntry = () => {
       remarks: "",
       income_details: rows.map((row) => ({
         income_category_id: row.category?.value || row.category || "",
-        remarks: row.remark || "",
+        remarks: row.remarks || "",
         amount: row.amount || 0,
       })),
     };
@@ -1022,6 +921,6 @@ const AdmAttendanceEntry = () => {
       </div>
     </div>
   );
-};;
+};
 
 export default AdmAttendanceEntry;
