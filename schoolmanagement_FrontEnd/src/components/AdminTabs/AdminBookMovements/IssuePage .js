@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-use-before-define, react-hooks/rules-of-hooks, react-hooks/exhaustive-deps */
 import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 // import { Button } from "react-bootstrap";
@@ -87,41 +88,16 @@ const IssuePage = () => {
       (row) => row.bookBarcodeId && row.availableCopies === 0,
     );
 
-
-   if (booksWithNoAvailability.length > 0) {
-     const bookNames = booksWithNoAvailability
-       .map((row) => row.bookName)
-       .join(", ");
-
-     const errorMessage = `Cannot issue books with no available copies: ${bookNames}`;
-
-     alert(errorMessage); // 👈 ADD THIS LINE
-
-     return;
-   } if (booksWithNoAvailability.length > 0) {
-      const bookNames = booksWithNoAvailability.map((row) => row.bookName).join(", ");
-      setErrors((prev) => ({ ...prev, general: `Cannot issue books with no available copies: ${bookNames}` }));
-
     if (booksWithNoAvailability.length > 0) {
       const bookNames = booksWithNoAvailability
         .map((row) => row.bookName)
         .join(", ");
-
       const errorMessage = `Cannot issue books with no available copies: ${bookNames}`;
-
-      alert(errorMessage); // 👈 ADD THIS LINE
-
-      return;
-    }
-    if (booksWithNoAvailability.length > 0) {
-      const bookNames = booksWithNoAvailability
-        .map((row) => row.bookName)
-        .join(", ");
       setErrors((prev) => ({
         ...prev,
-        general: `Cannot issue books with no available copies: ${bookNames}`,
+        general: errorMessage,
       }));
-
+      alert(errorMessage);
       return;
     }
 
@@ -170,7 +146,6 @@ const IssuePage = () => {
   };
 
   const handleCloseModals = () => {
-    navigate("/admin/book-movements");
   };
   const addNewRow = () => {
     setRows([
@@ -318,27 +293,8 @@ const IssuePage = () => {
             availableCopies: availableCopies,
             totalCopies: totalCopies,
           }
-          : row
-      )
-
-              ...row,
-              bookBarcodeId: id, // Store the actual book barcode ID from database
-              bookName: bookName || "",
-              barcode: barcode || "",
-              author:
-                selectedBook.author ||
-                selectedBook.authorName ||
-                selectedBook.bookAuthor ||
-                selectedBook.author_name ||
-                "",
-              categoryName: categoryName || "",
-              subcategoryName: subcategoryName || "",
-              availableCopies: availableCopies,
-              totalCopies: totalCopies,
-            }
           : row,
-      ),
-
+      )
     );
     setErrors((prev) => ({ ...prev, books: "" }));
     setShowBookModal(false); // Close modal after selection
@@ -443,7 +399,6 @@ const IssuePage = () => {
             prevRows.map((row) =>
               row.id === rowId
                 ? {
-
                   ...row,
                   bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
                   barcode: matchedBook.barcode || enteredBarcode,
@@ -461,25 +416,6 @@ const IssuePage = () => {
                 }
                 : row
             )
-
-                    ...row,
-                    bookBarcodeId: matchedBook.id, // Store the actual book barcode ID
-                    barcode: matchedBook.barcode || enteredBarcode,
-                    author:
-                      matchedBook.author ||
-                      matchedBook.authorName ||
-                      matchedBook.bookAuthor ||
-                      matchedBook.author_name ||
-                      "",
-                    bookName: matchedBook.bookName || "",
-                    categoryName: matchedBook.categoryName || "",
-                    subcategoryName: matchedBook.subcategoryName || "",
-                    availableCopies: matchedBook.availableCopies || 0,
-                    totalCopies: matchedBook.totalCopies || 0,
-                  }
-                : row,
-            ),
-
           );
           setErrors((prev) => ({ ...prev, books: "" }));
           setRowErrors((prev) => {

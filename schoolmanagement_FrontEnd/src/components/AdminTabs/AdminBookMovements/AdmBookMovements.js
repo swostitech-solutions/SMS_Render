@@ -524,9 +524,6 @@ const AdmBookMovements = () => {
     };
 
     fetchSections();
-
-  }, [selectedSession, selectedCourse, selectedDepartment, selectedAcademicYear, selectedSemester]);
-
   }, [
     selectedSession,
     selectedCourse,
