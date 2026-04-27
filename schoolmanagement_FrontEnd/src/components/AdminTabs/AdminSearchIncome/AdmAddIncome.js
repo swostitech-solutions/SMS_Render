@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useRef, useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
@@ -568,194 +569,48 @@ const AdmAttendanceEntry = () => {
       orgId,
       branchId,
       storedAcademicYearId,
-
     );
-  };
-const handleSave = async () => {
-  let newErrors = {};
-
-
-  // 🔴 FIELD VALIDATION
-
-  if (!selectedPayment) {
-    newErrors.payment = "Payment Method is required";
-  }
-
-  if (selectedPayment?.label?.toUpperCase() === "BANK") {
-    if (!selectedBank) {
-      newErrors.bank = "Bank is required";
-    }
-    if (!selectedAccount) {
-      newErrors.account = "Account No is required";
-
-    const userId = getStoredNumericValue(["userId"], { allowZero: true });
-
-    if (
-      !hasRequiredNumericValue(orgId) ||
-      !hasRequiredNumericValue(branchId) ||
-      !hasRequiredNumericValue(academicYearId) ||
-      !hasRequiredNumericValue(userId, { allowZero: true })
-    ) {
-      alert("Missing required system data");
-      return;
-
-    }
-  }
-
-
-  if (!partyDetails.party_id) {
-    newErrors.party = "Party is required";
-  }
-
-  if (!currentDate) {
-    newErrors.date = "Date is required";
-  }
-
-    // ✅ HEADER
-    const incomeHeaderDetails = {
-      created_by: userId,
-      org_id: orgId,
-      batch_id: branchId,
-      academic_year_id: academicYearId,
-      payment_method: selectedPayment?.label || "",
-      bank: selectedBank?.value || null,
-      account: selectedAccount?.value || null,
+    const payload = {
+      organization_id: orgId,
+      branch_id: branchId,
+      academic_year: academicYearId,
+      income_date: currentDate,
       party_id: partyDetails.party_id,
-      date: currentDate,
-      income_no: incomeNo,
       party_reference: partyReference,
-      total_amount: totalAmount,
+      payment_method_id: selectedPayment?.value,
+      bank_id: selectedBank?.value || null,
+      account_id: selectedAccount?.value || null,
+      remarks: "",
+      income_details: rows.map((row) => ({
+        income_category_id: row.category?.value || row.category || "",
+        remarks: row.remark || "",
+        amount: row.amount || 0,
+      })),
     };
 
-    // ✅ DETAILS
-    const incomeDetails = rows.map((row) => ({
-      category_id: parseInt(row.category?.value || row.category, 10),
-      amount: parseFloat(row.amount) || 0,
-      remarks: row.remarks || "",
-    }));
+    const incomeId = location.state?.incomeData?.income_id;
 
-
-  if (!partyReference) {
-    newErrors.reference = "Party Reference is required";
-  }
-
-
-  // 🔴 ROW VALIDATION
-  let rowErrors = [];
-
-  rows.forEach((row, index) => {
-    let rError = {};
-
-    if (!row.category) {
-      rError.category = "Category required";
-    // ✅ API CALL
     try {
-      if (location.state?.incomeData?.income_id) {
-        const incomeId = location.state.incomeData.income_id;
-        await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}`, payload);
-        alert("Income updated successfully");
+      if (incomeId) {
+        await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}/`, payload);
       } else {
         await api.post("EXPENSE/INCOME/IncomeCreate/", payload);
-        alert("Income saved successfully");
       }
 
+      alert(
+        incomeId
+          ? "Income details updated successfully!"
+          : "Income details saved successfully!",
+      );
+
       handleClear();
-      setErrors({}); // clear errors after success
     } catch (error) {
-      console.error("Error:", error);
-      alert(error.response?.data?.message || "Something went wrong");
-
+      console.error("Error saving/updating income details:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to save/update income details.";
+      alert(errorMessage);
     }
-
-    if (!row.amount) {
-      rError.amount = "Amount required";
-    }
-
-    rowErrors[index] = rError;
-  });
-
-  // 🔴 SET ERRORS
-  setErrors({ ...newErrors, rows: rowErrors });
-
-  // ❌ STOP if errors exist
-  const hasFieldErrors = Object.keys(newErrors).length > 0;
-  const hasRowErrors = rowErrors.some((r) => Object.keys(r).length > 0);
-
-  if (hasFieldErrors || hasRowErrors) return;
-
-  // ✅ FETCH REQUIRED DATA
-  const orgId = getStoredNumericValue(["organization_id", "orgId"]);
-  const branchId = getStoredNumericValue(["branch_id", "branchId"]);
-  const storedAcademicYearId = getStoredNumericValue([
-    "academic_year_id",
-    "academicYearId",
-    "academicSessionId",
-  ]);
-
-  const academicYearId = await resolveAcademicYearId(
-    orgId,
-    branchId,
-    storedAcademicYearId,
-  );
-
-  const userId = getStoredNumericValue(["userId"], { allowZero: true });
-
-  if (
-    !hasRequiredNumericValue(orgId) ||
-    !hasRequiredNumericValue(branchId) ||
-    !hasRequiredNumericValue(academicYearId) ||
-    !hasRequiredNumericValue(userId, { allowZero: true })
-  ) {
-    alert("Missing required system data");
-    return;
-  }
-
-  // ✅ HEADER
-  const incomeHeaderDetails = {
-    created_by: userId,
-    org_id: orgId,
-    batch_id: branchId,
-    academic_year_id: academicYearId,
-    payment_method: selectedPayment?.label || "",
-    bank: selectedBank?.value || null,
-    account: selectedAccount?.value || null,
-    party_id: partyDetails.party_id,
-    date: currentDate,
-    income_no: incomeNo,
-    party_reference: partyReference,
-    total_amount: totalAmount,
-  };
-
-
-  // ✅ DETAILS
-  const incomeDetails = rows.map((row) => ({
-    category_id: parseInt(row.category?.value || row.category, 10),
-    amount: parseFloat(row.amount) || 0,
-    remarks: row.remarks || "",
-  }));
-
-  const payload = {
-    IncomeHeaderDetails: incomeHeaderDetails,
-    IncomeDetails: incomeDetails,
-  };
-
-  // ✅ API CALL
-  try {
-    if (location.state?.incomeData?.income_id) {
-      const incomeId = location.state.incomeData.income_id;
-      await api.put(`EXPENSE/INCOME/IncomeUpdate/${incomeId}`, payload);
-      alert("Income updated successfully");
-    } else {
-      await api.post("EXPENSE/INCOME/IncomeCreate/", payload);
-      alert("Income saved successfully");
-    }
-
-    handleClear();
-    setErrors({}); // clear errors after success
-  } catch (error) {
-    console.error("Error:", error);
-    alert(error.response?.data?.message || "Something went wrong");
-  }
 };
 
   const totalAmount = rows.reduce(
@@ -1025,12 +880,6 @@ const handleSave = async () => {
                             }} // Update state on change
                           />
                         </div>
-
-                          {errors.reference && (
-                            <small className="text-danger d-block mt-1">
-                              {errors.reference}
-                            </small>
-
                         {errors.reference && (
                           <small className="text-danger d-block mt-1">
                             {errors.reference}

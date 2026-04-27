@@ -1559,6 +1559,7 @@
 //       </Form>
 //     </div>
 //   );
+/* eslint-disable no-unused-vars */
 // };
 
 // export default BookForm;
@@ -4565,6 +4566,7 @@
 
 
 
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Image, Table, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -5652,21 +5654,6 @@ const BookForm = () => {
       } else {
         setSaveMsg({ type: "", text: "" });
         alert(data?.message || data?.error || (isUpdate ? "Failed to update the book." : "Failed to save the book."));
-
-        alert(
-          isUpdate ? "Book updated successfully!" : "Book saved successfully!",
-        );
-      } else {
-        setSaveMsg({ type: "", text: "" });
-        alert(
-          data?.message ||
-            data?.error ||
-            (isUpdate
-              ? "Failed to update the book."
-              : "Failed to save the book."),
-        );
-
-        console.error("Error response from server:", data);
       }
     } catch (error) {
       console.error("Error submitting book:", error);
@@ -6119,11 +6106,9 @@ const BookForm = () => {
                           }}
                         />
                         {!frontCover?.preview && (
-
-                          <small className="text-muted d-block mt-1">Front cover not available</small>
-
                           <small className="text-muted d-block mt-1">
                             Front cover not available
+                          </small>
 
                         )}
                       </>
@@ -6156,13 +6141,9 @@ const BookForm = () => {
                           }}
                         />
                         {!backCover?.preview && (
-
-                          <small className="text-muted d-block mt-1">Back cover not available</small>
-
                           <small className="text-muted d-block mt-1">
                             Back cover not available
                           </small>
-
                         )}
                       </>
                     )}
